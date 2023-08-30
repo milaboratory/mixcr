@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
+import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.FieldExtractorsFactory
@@ -443,14 +444,14 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
 
 object ExportMiXCRMixins {
 
-    class All : Modifiers, Generic, ExportClonesMixins, GeneralExportClonesMixins, MiXCRMixinCollector()
+    class All : Modifiers, Generic, ExportClonesMixins, ExportCloneGroupsMixins, MiXCRMixinCollector()
 
     class CommandSpecific {
         class ExportAlignments : Modifiers, MiXCRMixinCollector()
 
         class ExportClones : Modifiers, ExportClonesMixins, GeneralExportClonesMixins, MiXCRMixinCollector()
 
-        class ExportCloneGroups : Modifiers, GeneralExportClonesMixins, MiXCRMixinCollector()
+        class ExportCloneGroups : Modifiers, ExportCloneGroupsMixins, MiXCRMixinCollector()
     }
 
     private interface Modifiers : MiXCRMixinRegister {
@@ -460,7 +461,7 @@ object ExportMiXCRMixins {
             arity = "0",
             order = OptionsOrder.mixins.exports + 100
         )
-        fun imputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        fun imputeGermlineOnExport(ignored: Boolean) =
             mixIn(ImputeGermlineOnExport)
 
         @Option(
@@ -469,7 +470,7 @@ object ExportMiXCRMixins {
             arity = "0",
             order = OptionsOrder.mixins.exports + 200
         )
-        fun dontImputeGermlineOnExport(@Suppress("UNUSED_PARAMETER") ignored: Boolean) =
+        fun dontImputeGermlineOnExport(ignored: Boolean) =
             mixIn(DontImputeGermlineOnExport)
     }
 
@@ -594,7 +595,28 @@ object ExportMiXCRMixins {
             mixIn(ExportMixins.ExportProductiveClonesOnly)
     }
 
-    private interface ExportClonesMixins : MiXCRMixinRegister {
+    private interface ExportCloneGroupsMixins : GeneralExportClonesMixins {
+        @Option(
+            description = ["Export clone groups for given cell type. Possible values: \${COMPLETION-CANDIDATES}"],
+            names = [ExportMixins.ExportCloneGroupsForCellTypes.CMD_OPTION],
+            order = OptionsOrder.mixins.exports + 5_100,
+            paramLabel = "<cell_type>",
+            arity = "1..*"
+        )
+        fun exportCloneGroupsForCellTypes(types: List<CellType>) =
+            mixIn(ExportMixins.ExportCloneGroupsForCellTypes(types))
+
+        @Option(
+            description = ["Export clone groups for all cell types."],
+            names = [ExportMixins.ExportCloneGroupsForAllCellTypes.CMD_OPTION],
+            order = OptionsOrder.mixins.exports + 5_200,
+            arity = "0",
+        )
+        fun exportCloneGroupsForAllCellTypes(ignored: Boolean) =
+            mixIn(ExportMixins.ExportCloneGroupsForAllCellTypes)
+    }
+
+    private interface ExportClonesMixins : GeneralExportClonesMixins {
         @Option(
             description = ["Add key to split output files with clone tables."],
             names = [ExportMixins.ExportClonesAddFileSplitting.CMD_OPTION],

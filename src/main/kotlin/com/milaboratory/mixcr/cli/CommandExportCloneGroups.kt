@@ -66,18 +66,6 @@ object CommandExportCloneGroups {
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandExportCloneGroupsParams> {
         @Option(
             description = [
-                "Limit export to specific cell types. Possible values: \${COMPLETION-CANDIDATES}.",
-                DEFAULT_VALUE_FROM_PRESET
-            ],
-            names = ["--types"],
-            paramLabel = "<type>",
-            order = OptionsOrder.main + 10_100,
-            completionCandidates = ChainsCandidates::class
-        )
-        private var types: List<CellType> = emptyList()
-
-        @Option(
-            description = [
                 "Exclude clones with out-of-frame clone sequences (fractions will be recalculated).",
                 DEFAULT_VALUE_FROM_PRESET
             ],
@@ -116,7 +104,6 @@ object CommandExportCloneGroups {
         override val paramsResolver =
             object : MiXCRParamsResolver<CommandExportCloneGroupsParams>(MiXCRParamsBundle::exportCloneGroups) {
                 override fun POverridesBuilderOps<CommandExportCloneGroupsParams>.paramsOverrides() {
-                    CommandExportCloneGroupsParams::types setIfNotEmpty types
                     CommandExportCloneGroupsParams::filterOutOfFrames setIfTrue filterOutOfFrames
                     CommandExportCloneGroupsParams::filterStops setIfTrue filterStops
                     CommandExportCloneGroupsParams::filterOutGroupsWithOneClone setIfTrue filterOutGroupsWithOneClone
@@ -202,31 +189,29 @@ object CommandExportCloneGroups {
         private fun cloneGroups(
             recalculatedClones: CloneSet,
             tagsInfo: TagsInfo
-        ): List<CloneGroup> {
-            val groups = recalculatedClones
-                .groupBy { it.group!! }
-                .map { (groupId, clones) ->
-                    val clonesGroupedByChains = clones.groupBy { it.chains }
-                    val totalTagsCount = TagCountAggregator().also { aggregator ->
-                        clones.forEach { clone -> aggregator.add(clone.tagCount) }
-                    }.createAndDestroy()
-                    CloneGroup(
-                        groupId = groupId,
-                        clonePairs = clonesGroupedByChains.mapValues { (_, clonesWithChain) ->
-                            val sorted = clonesWithChain.sortedByDescending { it.count }
-                            CloneGroup.ClonePair(
-                                sorted.first(),
-                                sorted.getOrNull(1)
-                            )
-                        },
-                        cellsCount = totalTagsCount.getTagDiversity(tagsInfo.getDepthFor(TagType.Cell)),
-                        cloneCount = clonesGroupedByChains.mapValues { it.value.size },
-                        totalReadsCount = clones.sumOf { it.count },
-                        totalTagsCount = totalTagsCount
-                    )
-                }
-            return groups
-        }
+        ): List<CloneGroup> = recalculatedClones
+            .groupBy { it.group!! }
+            .map { (groupId, clones) ->
+                val clonesGroupedByChains = clones.groupBy { it.chains }
+                val totalTagsCount = TagCountAggregator().also { aggregator ->
+                    clones.forEach { clone -> aggregator.add(clone.tagCount) }
+                }.createAndDestroy()
+                CloneGroup(
+                    groupId = groupId,
+                    clonePairs = clonesGroupedByChains.mapValues { (_, clonesWithChain) ->
+                        val sorted = clonesWithChain.sortedByDescending { it.count }
+                        CloneGroup.ClonePair(
+                            sorted.first(),
+                            sorted.getOrNull(1)
+                        )
+                    },
+                    cellsCount = totalTagsCount.getTagDiversity(tagsInfo.getDepthFor(TagType.Cell)),
+                    cloneCount = clonesGroupedByChains.mapValues { it.value.size },
+                    totalReadsCount = clones.sumOf { it.count },
+                    totalTagsCount = totalTagsCount
+                )
+            }
+            .sortedBy { it.groupId }
 
         private fun filterClones(
             initialSet: CloneSet,

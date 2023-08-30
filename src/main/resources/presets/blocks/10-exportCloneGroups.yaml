@@ -28,6 +28,10 @@ exportCloneGroups-single-cell-with-umi-base:
   exportCloneGroups:
     types: [ ]
     fields:
+      - field: "-cellGroup"
+      - field: "-groupCellsCount"
+      - field: "-groupReadsCount"
+      - field: "-uniqClonesPerChainCount"
       - field: "-cloneId"
       - field: "-readCount"
       - field: "-uniqueTagCount"
