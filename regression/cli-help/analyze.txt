@@ -12,16 +12,20 @@ Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [
                      [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
                      [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
                      [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
+                     [--prepend-export-clone-groups-field <field> [<param>...]]...
+                     [--append-export-clone-groups-field <field> [<param>...]]...
                      [--prepend-export-alignments-field <field> [<param>...]]...
                      [--append-export-alignments-field <field> [<param>...]]...
                      [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                      [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                      (geneLabel|tag):key>] [--reset-export-clone-grouping]
-                     [--export-productive-clones-only] [--no-reports] [--no-json-reports]
-                     [--output-not-used-reads] [--strict-sample-sheet-matching] [--use-local-temp]
-                     [--threads <n>] [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M
-                     <key=value>]... <preset> ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.
-                     fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam)) output_prefix
+                     [--export-productive-clones-only] [--export-clone-groups-for-cell-type
+                     <cell_type>...]... [--export-clone-groups-for-all-cell-types] [--no-reports]
+                     [--no-json-reports] [--output-not-used-reads] [--strict-sample-sheet-matching]
+                     [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
+                     [--verbose] [--help] [-M <key=value>]... <preset> ([file_I1.fastq[.gz]
+                     [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
+                     (fasta|bam|sam)) output_prefix
 Run full MiXCR pipeline for specific input.
       <preset>               Name of the analysis preset.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
@@ -146,6 +150,14 @@ Params for export commands:
                              Add clones export column after other columns. First param is field
                                name as it is in `exportClones` command, left params are params of
                                the field
+      --prepend-export-clone-groups-field <field> [<param>...]
+                             Add clone groups export column before other columns. First param is
+                               field name as it is in `exportCloneGroups` command, left params are
+                               params of the field
+      --append-export-clone-groups-field <field> [<param>...]
+                             Add clone groups export column after other columns. First param is
+                               field name as it is in `exportCloneGroups` command, left params are
+                               params of the field
       --prepend-export-alignments-field <field> [<param>...]
                              Add clones export column before other columns. First param is field
                                name as it is in `exportAlignments` command, left params are params
@@ -164,3 +176,8 @@ Params for export commands:
                              Reset all clone grouping in the output clone tables.
       --export-productive-clones-only
                              Export only productive clonotypes.
+      --export-clone-groups-for-cell-type <cell_type>...
+                             Export clone groups for given cell type. Possible values: IGH-IGK,
+                               IGH-IGL, TRB-TRA, TRD-TRG
+      --export-clone-groups-for-all-cell-types
+                             Export clone groups for all cell types.

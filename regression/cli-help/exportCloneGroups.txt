@@ -1,0 +1,383 @@
+Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
+                               [--filter-groups-with-one-chain] [--impute-germline-on-export]
+                               [--dont-impute-germline-on-export] [--export-productive-clones-only]
+                               [--export-clone-groups-for-cell-type <cell_type>...]...
+                               [--export-clone-groups-for-all-cell-types] [--no-header]
+                               [--drop-default-fields] [--prepend-columns] [--not-covered-as-empty]
+                               [-targets] [-vHit] [-dHit] [-jHit] [-cHit] [-vGene] [-dGene]
+                               [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily] [-cFamily]
+                               [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                               [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore]
+                               [-cHitsWithScore] [-vHits] [-dHits] [-jHits] [-cHits] [-vGenes]
+                               [-dGenes] [-jGenes] [-cGenes] [-vFamilies] [-dFamilies] [-jFamilies]
+                               [-cFamilies] [-vAlignment] [-dAlignment] [-jAlignment] [-cAlignment]
+                               [-vAlignments] [-dAlignments] [-jAlignments] [-cAlignments]
+                               [-nFeature <gene_feature>]... [-allNFeatures [<from_reference_point>
+                               <to_reference_point>]]... [-qFeature <gene_feature>]...
+                               [-allQFeatures [<from_reference_point> <to_reference_point>]]...
+                               [-aaFeature <gene_feature>]... [-allAAFeatures
+                               [<from_reference_point> <to_reference_point>]]... [-nFeatureImputed
+                               <gene_feature>]... [-allNFeaturesImputed [<from_reference_point>
+                               <to_reference_point>]]... [-aaFeatureImputed <gene_feature>]...
+                               [-allAAFeaturesImputed [<from_reference_point>
+                               <to_reference_point>]]... [-minFeatureQuality <gene_feature>]...
+                               [-allMinFeaturesQuality [<from_reference_point>
+                               <to_reference_point>]]... [-allNFeaturesWithMinQuality
+                               [<from_reference_point> <to_reference_point>]]...
+                               [-allNFeaturesImputedWithMinQuality [<from_reference_point>
+                               <to_reference_point>]]... [-avrgFeatureQuality <gene_feature>]...
+                               [-allAvrgFeaturesQuality [<from_reference_point>
+                               <to_reference_point>]]... [-lengthOf <gene_feature>]...
+                               [-allLengthOf [<from_reference_point> <to_reference_point>]]...
+                               [-nMutations <gene_feature>]... [-allNMutations
+                               [<from_reference_point> <to_reference_point>]]...
+                               [-nMutationsRelative <gene_feature> <relative_to_gene_feature>]...
+                               [-aaMutations <gene_feature>]... [-allAAMutations
+                               [<from_reference_point> <to_reference_point>]]...
+                               [-aaMutationsRelative <gene_feature> <relative_to_gene_feature>]...
+                               [-mutationsDetailed <gene_feature>]... [-allMutationsDetailed
+                               [<from_reference_point> <to_reference_point>]]...
+                               [-mutationsDetailedRelative <gene_feature>
+                               <relative_to_gene_feature>]... [-biochemicalProperty <property>
+                               <gene_feature>]... [-positionInReferenceOf <reference_point>]...
+                               [-allPositionsInReference [<from_reference_point>
+                               <to_reference_point>]]... [-positionOf <reference_point>]...
+                               [-allPositions [<from_reference_point> <to_reference_point>]]...
+                               [-defaultAnchorPoints] [-cellGroup] [-groupCellsCount]
+                               [-groupReadsCount] [-uniqClonesPerChainCount] [-cloneId]
+                               [-readCount] [-rankByReads] [-readFraction] [-targetSequences]
+                               [-targetQualities] [-vIdentityPercents] [-dIdentityPercents]
+                               [-jIdentityPercents] [-cIdentityPercents] [-vBestIdentityPercent]
+                               [-dBestIdentityPercent] [-jBestIdentityPercent]
+                               [-cBestIdentityPercent] [-chains] [-topChains] [-geneLabel
+                               <label>]... [-tagCounts] [-uniqueTagCount <(Molecule|Cell|Sample)
+                               >]... [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-rankByTag <
+                               (Molecule|Cell|Sample)>]... [-hasStops <gene_feature>]... [-isOOF
+                               <gene_feature>]... [-isProductive <gene_feature>]...
+                               [--force-overwrite] [--no-warnings] [--verbose] [--help] data.
+                               (clns|clna) [table.tsv]
+Export clone groups into tab delimited file.
+      data.(clns|clna)       Path to input file with clones
+      [table.tsv]            Path where to write export table.
+  -o, --filter-out-of-frames Exclude clones with out-of-frame clone sequences (fractions will be
+                               recalculated).
+                               Default value determined by the preset.
+  -t, --filter-stops         Exclude sequences containing stop codons (fractions will be
+                               recalculated).
+                               Default value determined by the preset.
+      --filter-groups-with-one-chain
+                             Exclude groups containing only one clone (fractions will be
+                               recalculated).
+                               Default value determined by the preset.
+      --impute-germline-on-export
+                             Export nucleotide sequences using letters from germline (marked
+                               lowercase) for uncovered regions
+      --dont-impute-germline-on-export
+                             Export nucleotide sequences only from covered region
+      --export-productive-clones-only
+                             Export only productive clonotypes.
+      --export-clone-groups-for-cell-type <cell_type>...
+                             Export clone groups for given cell type. Possible values: IGH-IGK,
+                               IGH-IGL, TRB-TRA, TRD-TRG
+      --export-clone-groups-for-all-cell-types
+                             Export clone groups for all cell types.
+      --no-header            Don't print first header line, print only data
+                               Default value determined by the preset.
+      --drop-default-fields  Don't export fields from preset.
+      --prepend-columns      Added columns will be inserted before default columns. By default
+                               columns will be added after default columns
+      --not-covered-as-empty Export not covered regions as empty text.
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
+Possible fields to export
+      -targets               Export number of targets. For clones from all chains.
+      -vHit                  Export best V hit. For clones from all chains.
+      -dHit                  Export best D hit. For clones from all chains.
+      -jHit                  Export best J hit. For clones from all chains.
+      -cHit                  Export best C hit. For clones from all chains.
+      -vGene                 Export best V hit gene name (e.g. TRBV12-3 for TRBV12-3*00). For
+                               clones from all chains.
+      -dGene                 Export best D hit gene name (e.g. TRBV12-3 for TRBV12-3*00). For
+                               clones from all chains.
+      -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00). For
+                               clones from all chains.
+      -cGene                 Export best C hit gene name (e.g. TRBV12-3 for TRBV12-3*00). For
+                               clones from all chains.
+      -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -dFamily               Export best D hit family name (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -cFamily               Export best C hit family name (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -vHitScore             Export score for best V hit. For clones from all chains.
+      -dHitScore             Export score for best D hit. For clones from all chains.
+      -jHitScore             Export score for best J hit. For clones from all chains.
+      -cHitScore             Export score for best C hit. For clones from all chains.
+      -vHitsWithScore        Export all V hits with score. For clones from all chains.
+      -dHitsWithScore        Export all D hits with score. For clones from all chains.
+      -jHitsWithScore        Export all J hits with score. For clones from all chains.
+      -cHitsWithScore        Export all C hits with score. For clones from all chains.
+      -vHits                 Export all V hits. For clones from all chains.
+      -dHits                 Export all D hits. For clones from all chains.
+      -jHits                 Export all J hits. For clones from all chains.
+      -cHits                 Export all C hits. For clones from all chains.
+      -vGenes                Export all V gene names (e.g. TRBV12-3 for TRBV12-3*00). For clones
+                               from all chains.
+      -dGenes                Export all D gene names (e.g. TRBV12-3 for TRBV12-3*00). For clones
+                               from all chains.
+      -jGenes                Export all J gene names (e.g. TRBV12-3 for TRBV12-3*00). For clones
+                               from all chains.
+      -cGenes                Export all C gene names (e.g. TRBV12-3 for TRBV12-3*00). For clones
+                               from all chains.
+      -vFamilies             Export all V gene family anmes (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -dFamilies             Export all D gene family anmes (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -jFamilies             Export all J gene family anmes (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -cFamilies             Export all C gene family anmes (e.g. TRBV12 for TRBV12-3*00). For
+                               clones from all chains.
+      -vAlignment            Export best V alignment. For clones from all chains.
+      -dAlignment            Export best D alignment. For clones from all chains.
+      -jAlignment            Export best J alignment. For clones from all chains.
+      -cAlignment            Export best C alignment. For clones from all chains.
+      -vAlignments           Export all V alignments. For clones from all chains.
+      -dAlignments           Export all D alignments. For clones from all chains.
+      -jAlignments           Export all J alignments. For clones from all chains.
+      -cAlignments           Export all C alignments. For clones from all chains.
+      -nFeature <gene_feature>
+                             Export nucleotide sequence of specified gene feature. For clones from
+                               all chains.
+      -allNFeatures [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequences for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allNFeatures FR3Begin FR4End` will export `-nFeature
+                               FR3`, `-nFeature CDR3`, `-nFeature FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -qFeature <gene_feature>
+                             Export quality string of specified gene feature. For clones from all
+                               chains.
+      -allQFeatures [<from_reference_point> <to_reference_point>]
+                             Export quality string for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allQFeatures FR3Begin FR4End` will export `-qFeature
+                               FR3`, `-qFeature CDR3`, `-qFeature FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -aaFeature <gene_feature>
+                             Export amino acid sequence of specified gene feature. For clones from
+                               all chains.
+      -allAAFeatures [<from_reference_point> <to_reference_point>]
+                             Export amino acid sequence for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allAAFeatures FR3Begin FR4End` will export `-aaFeature
+                               FR3`, `-aaFeature CDR3`, `-aaFeature FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -nFeatureImputed <gene_feature>
+                             Export nucleotide sequence of specified gene feature using letters
+                               from germline (marked lowercase) for uncovered regions. For clones
+                               from all chains.
+      -allNFeaturesImputed [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequence using letters from germline (marked
+                               lowercase) for uncovered regions for all gene features between
+                               specified reference points (in separate columns).
+                             For example, `-allNFeaturesImputed FR3Begin FR4End` will export
+                               `-nFeatureImputed FR3`, `-nFeatureImputed CDR3`, `-nFeatureImputed
+                               FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -aaFeatureImputed <gene_feature>
+                             Export amino acid sequence of specified gene feature using letters
+                               from germline (marked lowercase) for uncovered regions. For clones
+                               from all chains.
+      -allAAFeaturesImputed [<from_reference_point> <to_reference_point>]
+                             Export amino acid sequence using letters from germline (marked
+                               lowercase) for uncovered regions for all gene features between
+                               specified reference points (in separate columns).
+                             For example, `-allAAFeaturesImputed FR3Begin FR4End` will export
+                               `-aaFeatureImputed FR3`, `-aaFeatureImputed CDR3`,
+                               `-aaFeatureImputed FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -minFeatureQuality <gene_feature>
+                             Export minimal quality of specified gene feature. For clones from all
+                               chains.
+      -allMinFeaturesQuality [<from_reference_point> <to_reference_point>]
+                             Export minimal quality for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allMinFeaturesQuality FR3Begin FR4End` will export
+                               `-minFeatureQuality FR3`, `-minFeatureQuality CDR3`,
+                               `-minFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -allNFeaturesWithMinQuality [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequences and minimal quality for all gene features
+                               between specified reference points (in separate columns).
+                             For example, `-allNFeaturesWithMinQuality FR3Begin FR4End` will export
+                               `-nFeature FR3`, `-minFeatureQuality FR3`, `-nFeature CDR3`,
+                               `-minFeatureQuality CDR3`, `-nFeature FR4`, `-minFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -allNFeaturesImputedWithMinQuality [<from_reference_point> <to_reference_point>]
+                             Export nucleotide sequences and minimal quality for all gene features
+                               between specified reference points (in separate columns).
+                             For example, `-allNFeaturesImputedWithMinQuality FR3Begin FR4End` will
+                               export `-nFeatureImputed FR3`, `-minFeatureQuality FR3`,
+                               `-nFeatureImputed CDR3`, `-minFeatureQuality CDR3`,
+                               `-nFeatureImputed FR4`, `-minFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -avrgFeatureQuality <gene_feature>
+                             Export average quality of specified gene feature. For clones from all
+                               chains.
+      -allAvrgFeaturesQuality [<from_reference_point> <to_reference_point>]
+                             Export average quality for all gene features between specified
+                               reference points (in separate columns).
+                             For example, `-allAvrgFeaturesQuality FR3Begin FR4End` will export
+                               `-avrgFeatureQuality FR3`, `-avrgFeatureQuality CDR3`,
+                               `-avrgFeatureQuality FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -lengthOf <gene_feature>
+                             Export length of specified gene feature. For clones from all chains.
+      -allLengthOf [<from_reference_point> <to_reference_point>]
+                             Export length for all gene features between specified reference points
+                               (in separate columns).
+                             For example, `-allLengthOf FR3Begin FR4End` will export `-lengthOf
+                               FR3`, `-lengthOf CDR3`, `-lengthOf FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -nMutations <gene_feature>
+                             Extract nucleotide mutations for specific gene feature; relative to
+                               germline sequence. For clones from all chains.
+      -allNMutations [<from_reference_point> <to_reference_point>]
+                             Extract nucleotide mutations relative to germline sequence for all
+                               gene features between specified reference points (in separate
+                               columns).
+                             For example, `-allNMutations FR3Begin FR4End` will export `-nMutations
+                               FR3`, `-nMutations CDR3`, `-nMutations FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -nMutationsRelative <gene_feature> <relative_to_gene_feature>
+                             Extract nucleotide mutations for specific gene feature relative to
+                               another feature. For clones from all chains.
+      -aaMutations <gene_feature>
+                             Extract amino acid mutations for specific gene feature. For clones
+                               from all chains.
+      -allAAMutations [<from_reference_point> <to_reference_point>]
+                             Extract amino acid nucleotide mutations relative to germline sequence
+                               for all gene features between specified reference points (in
+                               separate columns).
+                             For example, `-allAAMutations FR3Begin FR4End` will export
+                               `-aaMutations FR3`, `-aaMutations CDR3`, `-aaMutations FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -aaMutationsRelative <gene_feature> <relative_to_gene_feature>
+                             Extract amino acid mutations for specific gene feature relative to
+                               another feature. For clones from all chains.
+      -mutationsDetailed <gene_feature>
+                             Detailed list of nucleotide and corresponding amino acid mutations.
+                               Format <nt_mutation>:<aa_mutation_individual>:
+                               <aa_mutation_cumulative>, where <aa_mutation_individual> is an
+                               expected amino acid mutation given no other mutations have occurred,
+                               and <aa_mutation_cumulative> amino acid mutation is the observed
+                               amino acid mutation combining effect from all other. WARNING: format
+                               may change in following versions. For clones from all chains.
+      -allMutationsDetailed [<from_reference_point> <to_reference_point>]
+                             Detailed list of nucleotide and corresponding amino acid mutations for
+                               all gene features between specified reference points (in separate
+                               columns).
+                             For example, `-allMutationsDetailed FR3Begin FR4End` will export
+                               `-mutationsDetailed FR3`, `-mutationsDetailed CDR3`,
+                               `-mutationsDetailed FR4`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -mutationsDetailedRelative <gene_feature> <relative_to_gene_feature>
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               written, positions relative to specified gene feature. Format
+                               <nt_mutation>:<aa_mutation_individual>:<aa_mutation_cumulative>,
+                               where <aa_mutation_individual> is an expected amino acid mutation
+                               given no other mutations have occurred, and <aa_mutation_cumulative>
+                               amino acid mutation is the observed amino acid mutation combining
+                               effect from all other. WARNING: format may change in following
+                               versions. For clones from all chains.
+      -biochemicalProperty <property> <gene_feature>
+                             Biochemical property of specified gene feature. For clones from all
+                               chains.
+      -positionInReferenceOf <reference_point>
+                             Export position of specified reference point inside reference
+                               sequences (clonal sequence / read sequence). For clones from all
+                               chains.
+      -allPositionsInReference [<from_reference_point> <to_reference_point>]
+                             Export position inside reference sequences (clonal sequence / read
+                               sequence) for all reference points between specified (in separate
+                               columns).
+                             For example, `-allPositionsInReference FR3Begin FR4End` will export
+                               `-positionInReferenceOf FR3Begin`, -positionInReferenceOf
+                               CDR3Begin`, -positionInReferenceOf CDR3End` and
+                               `-positionInReferenceOf FR4End`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -positionOf <reference_point>
+                             Export position of specified reference point inside target sequences
+                               (clonal sequence / read sequence). For clones from all chains.
+      -allPositions [<from_reference_point> <to_reference_point>]
+                             Export position inside target sequences (clonal sequence / read
+                               sequence) for all reference points between specified (in separate
+                               columns).
+                             For example, `-allPositions FR3Begin FR4End` will export `-positionOf
+                               FR3Begin`, -positionOf CDR3Begin`, -positionOf CDR3End` and
+                               `-positionOf FR4End`.
+                             By default, boundaries will be got from analysis parameters if
+                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+      -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
+                               etc. see documentation for the full list and formatting). For clones
+                               from all chains.
+      -cellGroup             Unique cell group identifier
+      -groupCellsCount       Count of cells representing this group
+      -groupReadsCount       Total reads count in all cells representing this group
+      -uniqClonesPerChainCount
+                             Count of different clones in this group per each chain type
+      -cloneId               Unique clone identifier. For clones from all chains.
+      -readCount             Number of reads assigned to the clonotype. For clones from all chains.
+      -rankByReads           Rank by number of reads assigned to the clonotype, i.e how many clones
+                               have equal or more count. For clones from all chains.
+      -readFraction          Fraction of reads assigned to the clonotype. For clones from all
+                               chains.
+      -targetSequences       Export aligned sequences (targets), separated with comma. For clones
+                               from all chains.
+      -targetQualities       Export aligned sequence (target) qualities, separated with comma. For
+                               clones from all chains.
+      -vIdentityPercents     V alignment identity percents. For clones from all chains.
+      -dIdentityPercents     D alignment identity percents. For clones from all chains.
+      -jIdentityPercents     J alignment identity percents. For clones from all chains.
+      -cIdentityPercents     C alignment identity percents. For clones from all chains.
+      -vBestIdentityPercent  V best alignment identity percent. For clones from all chains.
+      -dBestIdentityPercent  D best alignment identity percent. For clones from all chains.
+      -jBestIdentityPercent  J best alignment identity percent. For clones from all chains.
+      -cBestIdentityPercent  C best alignment identity percent. For clones from all chains.
+      -chains                Chains. For clones from all chains.
+      -topChains             Top chains. For clones from all chains.
+      -geneLabel <label>     Export gene label (i.e. ReliableChain). For clones from all chains.
+      -tagCounts             All tags with counts. For clones from all chains.
+      -uniqueTagCount <(Molecule|Cell|Sample)>
+                             Unique tag count. For clones from all chains.
+      -uniqueTagFraction <(Molecule|Cell|Sample)>
+                             Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
+                               collected. For clones from all chains.
+      -rankByTag <(Molecule|Cell|Sample)>
+                             Rank by count of unique tags, i.e how many clones have equal or more
+                               count. For clones from all chains.
+      -hasStops <gene_feature>
+                             Whether gene feature has stop codons inside. For clones from all
+                               chains.
+      -isOOF <gene_feature>  Whether gene feature is OOF. For clones from all chains.
+      -isProductive <gene_feature>
+                             Whether specified gene feature is productive (no stops and not OOF).
+                               For clones from all chains.
