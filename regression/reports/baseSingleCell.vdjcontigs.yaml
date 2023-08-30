@@ -288,11 +288,11 @@ assemblePartial:
   type: partialAlignmentsAssemblerReport
   commandLine: assemblePartial --report baseSingleCell.vdjcontigs.assemblePartial.report.txt
     --json-report baseSingleCell.vdjcontigs.assemblePartial.report.json baseSingleCell.vdjcontigs.refined.vdjca
-    baseSingleCell.vdjcontigspassembled.1.vdjca
+    baseSingleCell.vdjcontigs.passembled.1.vdjca
   inputFiles:
   - baseSingleCell.vdjcontigs.refined.vdjca
   outputFiles:
-  - baseSingleCell.vdjcontigspassembled.1.vdjca
+  - baseSingleCell.vdjcontigs.passembled.1.vdjca
   independentRuns: 62
   totalProcessed: 28166
   outputAlignments: 28024
@@ -311,10 +311,10 @@ assemblePartial:
 extend:
   type: extenderReport
   commandLine: extend --report baseSingleCell.vdjcontigs.extend.report.txt --json-report
-    baseSingleCell.vdjcontigs.extend.report.json baseSingleCell.vdjcontigspassembled.1.vdjca
+    baseSingleCell.vdjcontigs.extend.report.json baseSingleCell.vdjcontigs.passembled.1.vdjca
     baseSingleCell.vdjcontigs.extended.vdjca
   inputFiles:
-  - baseSingleCell.vdjcontigspassembled.1.vdjca
+  - baseSingleCell.vdjcontigs.passembled.1.vdjca
   outputFiles:
   - baseSingleCell.vdjcontigs.extended.vdjca
   totalProcessed: 28024

@@ -376,7 +376,7 @@ Possible fields to export
       -uniqueTagFraction <(Molecule|Cell|Sample)>
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected. (only for nodes with clones)
-      -cellGroup             Cell group (only for nodes with clones)
+      -cellGroup             Unique cell group identifier (only for nodes with clones)
       -rankByTag <(Molecule|Cell|Sample)>
                              Rank by count of unique tags, i.e how many clones have equal or more
                                count (only for nodes with clones)

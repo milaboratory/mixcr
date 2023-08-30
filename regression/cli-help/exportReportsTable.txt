@@ -13,12 +13,14 @@ Usage: mixcr exportReportsTable [--without-upstreams] [--preset <preset>] [--pre
                                 inputGroups] [-assemble.preCloneAssembler.preClones] [-assemble.
                                 preCloneAssembler.assemblingFeatureSequencesInZeroPreClones]
                                 [-assemble.preCloneAssembler.unassignedAlignments]
-                                [-assembleContigs.inputFiles] [-findAlleles.inputFiles]
-                                [-findAlleles.found] [-findAlleles.deNova] [-findAlleles.
-                                notEnoughInformation] [-findTrees.inputFiles] [-findTrees.
-                                treesCount] [-findTrees.cloneInTrees] [--force-overwrite]
-                                [--no-warnings] [--verbose] [--help] (data.(vdjca|clns|clna|shmt)
-                                |directory)... [report.tsv]
+                                [-assembleContigs.inputFiles] [-groupClones.inputFiles]
+                                [-groupClones.numberOfGroups] [-groupClones.unassignedClonotypes]
+                                [-groupClones.invalidGroups] [-groupClones.
+                                groupsWithTooMatchClones] [-findAlleles.inputFiles] [-findAlleles.
+                                found] [-findAlleles.deNova] [-findAlleles.notEnoughInformation]
+                                [-findTrees.inputFiles] [-findTrees.treesCount] [-findTrees.
+                                cloneInTrees] [--force-overwrite] [--no-warnings] [--verbose]
+                                [--help] (data.(vdjca|clns|clna|shmt)|directory)... [report.tsv]
 Export reports from files in tabular format.
       (data.(vdjca|clns|clna|shmt)|directory)...
                              Path to input files or directories.
@@ -100,6 +102,16 @@ Possible fields to export
                              Unassigned alignments as absolute and percentage of input alignments
       -assembleContigs.inputFiles
                              Input files on `assembleContigs` command.
+      -groupClones.inputFiles
+                             Input files on `groupClones` command.
+      -groupClones.numberOfGroups
+                             Number of formed groups of clones
+      -groupClones.unassignedClonotypes
+                             Number of clones that haven't been included in any group
+      -groupClones.invalidGroups
+                             Count of groups with incompatible chains
+      -groupClones.groupsWithTooMatchClones
+                             Groups with more than two chains of the same type
       -findAlleles.inputFiles
                              Input files on `findAlleles` command.
       -findAlleles.found     Count of found alleles.

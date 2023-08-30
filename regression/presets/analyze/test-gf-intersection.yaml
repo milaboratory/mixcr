@@ -345,9 +345,6 @@ exportAlignments:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
-  - field: -aaFeature
-    args:
-    - VDJRegion
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
