@@ -45,7 +45,10 @@
       features: ["{CDR2Begin:FR4End}"]
 
 "irepertoire-human-rna-xcr-repseq-plus":
-  inheritFrom: irepertoire-human-rna-xcr-repseq-lr
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR2Begin:FR4End}" ]
 
 "irepertoire-mouse-rna-xcr-repseq-plus":
   inheritFrom: irepertoire-mouse-rna-xcr-repseq-lr
