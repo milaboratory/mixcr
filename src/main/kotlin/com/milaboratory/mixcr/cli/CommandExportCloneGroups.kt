@@ -114,12 +114,12 @@ object CommandExportCloneGroups {
     }
 
     @Command(
-        description = ["Export assembled clones into tab delimited file."]
+        description = ["Export clone groups into tab delimited file."]
     )
     class Cmd : CmdBase() {
         @Parameters(
             description = ["Path to input file with clones"],
-            paramLabel = "data.clns",
+            paramLabel = "data.(clns|clna)",
             index = "0"
         )
         lateinit var inputFile: Path
@@ -146,7 +146,7 @@ object CommandExportCloneGroups {
             get() = listOfNotNull(outputFile)
 
         override fun validate() {
-            ValidationException.requireFileType(inputFile, InputFileType.CLNS)
+            ValidationException.requireFileType(inputFile, InputFileType.CLNX)
         }
 
         override fun run1() {

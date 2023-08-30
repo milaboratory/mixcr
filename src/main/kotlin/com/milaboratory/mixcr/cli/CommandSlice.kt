@@ -44,6 +44,7 @@ import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -75,6 +76,9 @@ class CommandSlice : MiXCRCommandWithOutputs() {
         order = OptionsOrder.main + 10_100
     )
     lateinit var idsOptions: IdsFilterOptions
+
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
 
     class IdsFilterOptions {
         @Option(
@@ -146,7 +150,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
 
     private fun sliceClnA() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-            ClnAWriter(out.toFile(), TempFileManager.smartTempDestination(out, "", false)).use { writer ->
+            ClnAWriter(out.toFile(), TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)).use { writer ->
                 // Getting full clone set
                 val cloneSet = reader.readCloneSet()
 
