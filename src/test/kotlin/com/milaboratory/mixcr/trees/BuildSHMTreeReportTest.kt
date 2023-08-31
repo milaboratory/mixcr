@@ -21,10 +21,11 @@ class BuildSHMTreeReportTest {
             listOf(
                 BuildSHMTreeReport.StepResult(
                     BuildSHMTreeStep.BuildingInitialTrees(
-                        CommandFindShmTreesParams.ClusterizationAlgorithm.SingleLinkage(
+                        CommandFindShmTreesParams.ClusterPredictor(
                             5,
                             1.0
-                        )
+                        ),
+                        CommandFindShmTreesParams.ClusterizationAlgorithm.SingleLinkage
                     ),
                     10,
                     10,
