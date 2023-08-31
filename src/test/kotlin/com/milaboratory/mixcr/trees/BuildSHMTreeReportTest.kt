@@ -20,13 +20,8 @@ class BuildSHMTreeReportTest {
             "version",
             listOf(
                 BuildSHMTreeReport.StepResult(
-                    BuildSHMTreeStep.BuildingInitialTrees(
-                        CommandFindShmTreesParams.ClusterPredictor(
-                            5,
-                            1.0
-                        ),
-                        CommandFindShmTreesParams.ClusterizationAlgorithm.SingleLinkage
-                    ),
+                    null,
+                    BuildSHMTreeReport.StepType.BuildingInitialTrees,
                     10,
                     10,
                     2,
