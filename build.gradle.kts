@@ -133,7 +133,7 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.4.2-9-fixes"
+val mixcrAlgoVersion = "4.4.2-10-fixes"
 val milibVersion = ""
 val mitoolVersion = ""
 val repseqioVersion = ""
