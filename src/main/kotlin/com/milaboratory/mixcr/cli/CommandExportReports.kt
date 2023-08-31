@@ -13,6 +13,9 @@ package com.milaboratory.mixcr.cli
 
 import com.fasterxml.jackson.core.JacksonException
 import com.milaboratory.app.InputFileType
+import com.milaboratory.app.InputFileType.JSON
+import com.milaboratory.app.InputFileType.TXT
+import com.milaboratory.app.InputFileType.YAML
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -85,38 +88,36 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
 
     override fun validate() {
         ValidationException.requireFileType(inputPath, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)
+        ValidationException.requireFileType(outputPath, JSON, YAML, TXT)
+        // check consistency if format specified
         outputFormatFlags?.let { outputFormatFlags ->
             if (outputFormatFlags.json) {
-                ValidationException.requireFileType(outputPath, InputFileType.JSON)
+                ValidationException.requireFileType(outputPath, JSON)
             }
             if (outputFormatFlags.yaml) {
-                ValidationException.requireFileType(outputPath, InputFileType.YAML)
+                ValidationException.requireFileType(outputPath, YAML)
             }
-        }
-        if (outputFormatFlags == null) {
-            ValidationException.requireFileType(outputPath, InputFileType.TXT)
         }
     }
 
     override fun run1() {
         val footer = IOUtil.extractFooter(inputPath)
+        val format = when (outputPath) {
+            null -> when {
+                outputFormatFlags == null -> TXT
+                outputFormatFlags!!.json -> JSON
+                outputFormatFlags!!.yaml -> YAML
+                else -> throw IllegalStateException()
+            }
+
+            else -> listOf(TXT, JSON, YAML).first { it.matches(outputPath!!) }
+        }
         when (outputPath) {
             null -> CloseShieldOutputStream.wrap(System.out)
             else -> outputPath!!.outputStream()
         }.use { o ->
-            when {
-                outputFormatFlags?.json == true || outputFormatFlags?.yaml == true -> {
-                    val tree = when {
-                        step != null -> K_OM.valueToTree(footer.reports.getTrees(step!!))
-                        else -> footer.reports.asTree()
-                    }
-                    when (outputFormatFlags?.json) {
-                        true -> K_OM.writeValue(o, tree)
-                        else -> K_YAML_OM.writeValue(o, tree)
-                    }
-                }
-
-                else -> {
+            when (format) {
+                TXT -> {
                     val helper = ReportHelper(o, outputPath != null)
                     val steps = when {
                         step != null -> listOf(step!!)
@@ -141,6 +142,18 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
                                 report.writeReport(helper)
                             }
                         }
+                }
+
+                else -> {
+                    val tree = when {
+                        step != null -> K_OM.valueToTree(footer.reports.getTrees(step!!))
+                        else -> footer.reports.asTree()
+                    }
+                    when (format) {
+                        JSON -> K_OM.writeValue(o, tree)
+                        YAML -> K_YAML_OM.writeValue(o, tree)
+                        else -> throw IllegalStateException()
+                    }
                 }
             }
         }
