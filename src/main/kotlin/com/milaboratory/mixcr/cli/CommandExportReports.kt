@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.core.JacksonException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.InputFileType.JSON
 import com.milaboratory.app.InputFileType.TXT
@@ -19,6 +18,7 @@ import com.milaboratory.app.InputFileType.YAML
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.getReportSafe
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.ReportHelper
@@ -123,25 +123,18 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
                         step != null -> listOf(step!!)
                         else -> footer.reports.collection.steps
                     }
-                    steps
-                        .map { MiXCRCommandDescriptor.fromString(it) }
-                        .flatMap { commandDescriptor ->
-                            footer.reports.getBytes(commandDescriptor).map {
-                                try {
-                                    K_OM.readValue(it, commandDescriptor.reportClass.java)
-                                } catch (e: JacksonException) {
-                                    null
-                                }
-                            }
-                        }
-                        .forEach { report ->
-                            if (report == null) {
-                                helper.println("Can't read report, file has too old version")
-                            } else {
+                    steps.forEach { step ->
+                        val command = MiXCRCommandDescriptor.fromString(step)
+                        val reports = footer.reports.getReportSafe(command)
+                        if (reports == null) {
+                            helper.println("Can't read report for $step, file has too old version")
+                        } else {
+                            reports.forEach { report ->
                                 report.writeHeader(helper)
                                 report.writeReport(helper)
                             }
                         }
+                    }
                 }
 
                 else -> {
