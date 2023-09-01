@@ -11,6 +11,8 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.flatten
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -25,6 +27,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNS
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.clonegrouping.CloneGroupingParams.Companion.mkGrouper
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -127,8 +130,15 @@ object CommandGroupClones {
 
                 val tempDest = TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp.value)
                 ClnAWriter(outputFile, tempDest).use { writer ->
+                    var newNumberOfAlignments: Long = 0
+                    val allAlignmentsList = mutableListOf<OutputPort<VDJCAlignments>>()
+                    for (clone in result) {
+                        newNumberOfAlignments += reader.numberOfAlignmentsInClone(clone.id)
+                        allAlignmentsList += reader.readAlignmentsOfClone(clone.id)
+                    }
+
                     writer.writeClones(result)
-                    writer.collateAlignments(reader.readAllAlignments(), reader.numberOfAlignments())
+                    writer.collateAlignments(allAlignmentsList.flatten(), newNumberOfAlignments)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
                     val report = reportBuilder.buildReport()
                     writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.groupClones, report))
