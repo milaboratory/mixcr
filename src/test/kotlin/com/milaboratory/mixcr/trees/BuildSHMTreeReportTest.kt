@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mixcr.cli.MiXCRCommandReport
 import com.milaboratory.util.K_OM
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.instanceOf
 import org.junit.Test
 import java.util.*
 
@@ -20,12 +19,8 @@ class BuildSHMTreeReportTest {
             "version",
             listOf(
                 BuildSHMTreeReport.StepResult(
-                    BuildSHMTreeStep.BuildingInitialTrees(
-                        CommandFindShmTreesParams.ClusterizationAlgorithm.SingleLinkage(
-                            5,
-                            1.0
-                        )
-                    ),
+                    null,
+                    BuildSHMTreeReport.StepType.BuildingInitialTrees,
                     10,
                     10,
                     2,
@@ -42,7 +37,7 @@ class BuildSHMTreeReportTest {
         val asJson = K_OM.writeValueAsString(report)
         val deserialized = K_OM.readValue<BuildSHMTreeReport>(asJson)
         deserialized.commandLine shouldBe "from test"
-        deserialized.stepResults.first().step shouldBe instanceOf<BuildSHMTreeStep.BuildingInitialTrees>()
+        deserialized.stepResults.first().stepName shouldBe BuildSHMTreeReport.StepType.BuildingInitialTrees
         deserialized.stepResults.first().clonesCountInTrees.size shouldBe 10L
         deserialized.date shouldBe null
         deserialized.executionTimeMillis shouldBe null
