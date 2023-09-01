@@ -298,23 +298,21 @@ object Main {
     private fun CommandLine.registerExceptionHandlers(cmdArgs: Array<out String>?): CommandLine {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
-            err.println(MiXCRVersionInfo.get().shortestVersionString)
+            err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
             when (val cause = ex.cause) {
                 is ValidationException -> ex.commandLine.handleValidationException(cause)
                 else -> defaultParameterExceptionHandler.handleParseException(ex, args)
             }
         }
         setExecutionExceptionHandler { ex, commandLine, _ ->
-            err.println("Please copy the following information along with the stacktrace:")
-            err.println("   Version: " + MiXCRVersionInfo.get().shortestVersionString)
-            err.println("        OS: " + System.getProperty("os.name"))
-            err.println("      Java: " + System.getProperty("java.version"))
-            if (cmdArgs != null) {
-                err.println("  Cmd args: " + cmdArgs.joinToString(" "))
-            }
             when (ex) {
-                is ValidationException -> commandLine.handleValidationException(ex)
+                is ValidationException -> {
+                    err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+                    commandLine.handleValidationException(ex)
+                }
+
                 is ApplicationException -> {
+                    err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
                     commandLine.printErrorMessage(ex.message)
                     if (ex.printHelp) {
                         commandLine.printHelp()
@@ -326,6 +324,13 @@ object Main {
                 }
 
                 else -> {
+                    err.println("Please copy the following information along with the stacktrace:")
+                    err.println("   Version: " + MiXCRVersionInfo.get().shortestVersionString)
+                    err.println("        OS: " + System.getProperty("os.name"))
+                    err.println("      Java: " + System.getProperty("java.version"))
+                    if (cmdArgs != null) {
+                        err.println("  Cmd args: " + cmdArgs.joinToString(" "))
+                    }
                     ex.rethrowOOM()
                     throw CommandLine.ExecutionException(
                         commandLine,

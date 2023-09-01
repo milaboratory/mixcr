@@ -8,12 +8,7 @@ findShmTrees:
   outputFiles:
   - trees/result.shmt
   stepResults:
-  - step:
-      name: BuildingInitialTrees
-      algorithm:
-        type: BronKerbosch
-        commonMutationsCountForClustering: 5
-        maxNDNDistanceForClustering: 1.0
+  - stepName: BuildingInitialTrees
     clonesWasAdded: 337
     cloneNodesWasAdded: 337
     treesCountDelta: 126
@@ -83,10 +78,7 @@ findShmTrees:
       percentile25: 0.0
       percentile50: 0.0
       percentile75: 0.0
-  - step:
-      name: AttachClonesByDistanceChange
-      threshold: 0.4
-      maxNDNDistance: 1.5
+  - stepName: AttachClonesByDistanceChange
     clonesWasAdded: 6
     cloneNodesWasAdded: 6
     treesCountDelta: 0
@@ -156,9 +148,7 @@ findShmTrees:
       percentile25: NaN
       percentile50: NaN
       percentile75: NaN
-  - step:
-      name: CombineTrees
-      maxNDNDistanceBetweenRoots: 0.5
+  - stepName: CombineTrees
     clonesWasAdded: 0
     cloneNodesWasAdded: 0
     treesCountDelta: 0

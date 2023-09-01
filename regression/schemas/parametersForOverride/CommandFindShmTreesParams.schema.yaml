@@ -1,4 +1,37 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  BronKerbosch:
+    type: object
+    properties:
+      type:
+        const: BronKerbosch
+    required:
+    - type
+  BronKerboschWithFallback-1:
+    type: object
+    properties:
+      fallback:
+        anyOf:
+        - $ref: '#/$defs/BronKerbosch'
+        - $ref: '#/$defs/BronKerboschWithFallback-2'
+        - $ref: '#/$defs/SingleLinkage'
+      limit:
+        type: integer
+  BronKerboschWithFallback-2:
+    $ref: '#/$defs/BronKerboschWithFallback-1'
+    type: object
+    properties:
+      type:
+        const: BronKerboschWithFallback
+    required:
+    - type
+  SingleLinkage:
+    type: object
+    properties:
+      type:
+        const: SingleLinkage
+    required:
+    - type
 type: object
 properties:
   productiveOnly:
@@ -16,32 +49,11 @@ properties:
         properties:
           algorithm:
             anyOf:
-            - allOf:
-              - type: object
-                properties:
-                  maxNDNDistanceForHeavyChain:
-                    type: number
-                  maxNDNDistanceForLightChain:
-                    type: number
-              - type: object
-                properties:
-                  type:
-                    const: BronKerbosch
-                required:
-                - type
-            - allOf:
-              - type: object
-                properties:
-                  maxNDNDistanceForHeavyChain:
-                    type: number
-                  maxNDNDistanceForLightChain:
-                    type: number
-              - type: object
-                properties:
-                  type:
-                    const: SingleLinkage
-                required:
-                - type
+            - $ref: '#/$defs/BronKerbosch'
+            - $ref: '#/$defs/BronKerboschWithFallback-2'
+            - $ref: '#/$defs/SingleLinkage'
+          predictor:
+            type: object
       - type: object
         properties:
           type:
@@ -81,32 +93,16 @@ properties:
           properties:
             algorithm:
               anyOf:
-              - allOf:
-                - type: object
-                  properties:
-                    commonMutationsCountForClustering:
-                      type: integer
-                    maxNDNDistanceForClustering:
-                      type: number
-                - type: object
-                  properties:
-                    type:
-                      const: BronKerbosch
-                  required:
-                  - type
-              - allOf:
-                - type: object
-                  properties:
-                    commonMutationsCountForClustering:
-                      type: integer
-                    maxNDNDistanceForClustering:
-                      type: number
-                - type: object
-                  properties:
-                    type:
-                      const: SingleLinkage
-                  required:
-                  - type
+              - $ref: '#/$defs/BronKerbosch'
+              - $ref: '#/$defs/BronKerboschWithFallback-2'
+              - $ref: '#/$defs/SingleLinkage'
+            predictor:
+              type: object
+              properties:
+                commonMutationsCountForClustering:
+                  type: integer
+                maxNDNDistanceForClustering:
+                  type: number
         - type: object
           properties:
             name:
