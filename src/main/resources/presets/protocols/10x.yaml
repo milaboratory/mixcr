@@ -1,4 +1,7 @@
 "10x-sc-xcr-vdj":
+  vendor: "10x Genomics"
+  label: "5' Single cell VDJ"
+  category: non-generic
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   mixins:
     - type: SetTagPattern
@@ -153,6 +156,9 @@
                     share: 0.95
 
 "10x-sc-5gex":
+  vendor: "10x Genomics"
+  label: "5' Single cell gene expression"
+  category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern

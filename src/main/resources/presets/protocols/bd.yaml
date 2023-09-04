@@ -6265,6 +6265,9 @@
 # HUMAN
 
 "bd-human-sc-xcr-rhapsody-cdr3":
+  vendor: "BD biosciences"
+  label: "Rhapsody Human VDJ CDR3 Assay"
+  category: non-generic
   inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
   mixins:
     - type: SetSpecies
@@ -6291,6 +6294,9 @@
 # MOUSE
 
 "bd-mouse-sc-xcr-rhapsody-cdr3":
+  vendor: "BD biosciences"
+  label: "Rhapsody Mouse VDJ CDR3 Assay"
+  category: non-generic
   inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
   mixins:
     - type: SetSpecies
@@ -6320,11 +6326,17 @@
         ^cagtgtggctttgttttcct(R2:*)
 
 "bd-sc-xcr-rhapsody-full-length":
+  vendor: "BD biosciences"
+  label: "Rhapsody Full-length TCR/BCR Multiomic Assay"
+  category: non-generic
   inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
   flags:
     - species
 
 "bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2":
+  vendor: "BD biosciences"
+  label: "Rhapsody Full-length TCR/BCR Multiomic Assay Enhaced Beads V2"
+  category: non-generic
   inheritFrom: bd-rhapsody-full-length-single-cell-B384-base
   flags:
     - species

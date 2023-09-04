@@ -1,4 +1,5 @@
 generic-amplicon:
+  category: generic
   inheritFrom: bundle-base
   flags:
     - species
@@ -39,6 +40,7 @@ generic-amplicon:
         upper: 0.05
 
 generic-amplicon-with-umi:
+  category: generic
   mixins:
     - type: AddTagsValidation
       validation:

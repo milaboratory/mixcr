@@ -1,4 +1,7 @@
 "parsebio-sc-3gex-evercode-wt-mega":
+  vendor: "Parse Biosciences"
+  label: "Evercode single-cell WT Mega"
+  category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
@@ -817,6 +820,9 @@
                 name: CELL3CONVERTED
 
 "parsebio-sc-3gex-evercode-wt":
+  vendor: "Parse Biosciences"
+  label: "Evercode single-cell WT"
+  category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
@@ -1443,6 +1449,9 @@
                 name: CELL3CONVERTED
 
 "parsebio-sc-3gex-evercode-wt-mini":
+  vendor: "Parse Biosciences"
+  label: "Evercode single-cell WT Mini"
+  category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
@@ -1925,6 +1934,8 @@
                 name: CELL3CONVERTED
 
 "split-seq-3gex":
+  label: "SPLIT-seq 3' Gene expression"
+  category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern

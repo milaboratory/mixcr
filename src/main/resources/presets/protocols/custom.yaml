@@ -1,4 +1,6 @@
 "mikelov-et-al-2021":
+  label: "Mikelov et al., 2021"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSpecies
@@ -44,6 +46,8 @@
       features: [ "VDJRegion" ]
 
 "han-et-al-2014":
+  label: "Han et al., 2014"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -201,6 +205,8 @@
       - field: "-defaultAnchorPoints"
 
 "vergani-et-al-2017-cdr3":
+  label: "Vergani et al., 2017"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSpecies

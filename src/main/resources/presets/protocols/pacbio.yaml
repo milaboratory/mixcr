@@ -1,4 +1,5 @@
 generic-pacbio:
+  category: generic
   inheritFrom: bundle-base
   flags:
     - species
@@ -27,6 +28,7 @@ generic-pacbio:
         upper: 0.85
 
 generic-pacbio-with-umi:
+  category: generic
   inheritFrom: bundle-base
   flags:
     - species

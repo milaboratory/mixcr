@@ -1,4 +1,5 @@
 "generic-ont":
+  category: generic
   inheritFrom: bundle-base
   flags:
     - species
@@ -35,6 +36,7 @@
         upper: 0.5
 
 "generic-ont-with-umi":
+  category: generic
   inheritFrom: bundle-base
   flags:
     - species

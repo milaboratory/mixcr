@@ -1,4 +1,6 @@
 "biomed2-human-rna-igh":
+  label: "BIOMED2 IGH"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -24,6 +26,8 @@
           upper: 0.9
 
 "biomed2-human-rna-igkl":
+  label: "BIOMED2 IGK/IGL"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -40,6 +44,8 @@
     - type: MaterialTypeRNA
 
 "biomed2-human-rna-trbdg":
+  label: "BIOMED2 TCR Beta/Delta/Gamma"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align

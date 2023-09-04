@@ -1,4 +1,6 @@
 "seq-well-vdj":
+  label: "Seq-well VDJ"
+  category: non-generic
   inheritFrom: generic-ht-single-cell-amplicon-with-umi
   flags:
     - species
