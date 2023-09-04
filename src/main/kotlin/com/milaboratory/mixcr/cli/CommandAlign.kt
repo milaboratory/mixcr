@@ -996,7 +996,7 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups)
+            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
 
             // Validating output tags if required
             for (tagsValidation in cmdParams.tagsValidations)
@@ -1154,7 +1154,7 @@ object CommandAlign {
                             notAlignedWriter?.write(bundle.read)
 
                         val alignment = when {
-                            bundle.alignment != null -> bundle.alignment
+                            bundle.alignment != null -> bundle.alignment!!
 
                             cmdParams.writeFailedAlignments && bundle.status == NotAligned -> {
                                 // Creating empty alignment object if alignment for current read failed
@@ -1210,7 +1210,7 @@ object CommandAlign {
 
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
 
-                if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
+                if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg!!.report)
                 reportBuilder.setNotMatchedByHeader(tagsExtractor.notMatchedByHeader.get())
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 
