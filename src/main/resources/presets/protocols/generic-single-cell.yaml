@@ -1,5 +1,6 @@
 # Low throughput (plates etc) amplicon-based single cell, no UMIs
 generic-lt-single-cell-amplicon:
+  label: "Generic low throughput amplicon single-cell"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -73,6 +74,7 @@ generic-lt-single-cell-amplicon:
 
 # Low throughput (plates etc) amplicon-based single cell, with UMIs
 generic-lt-single-cell-amplicon-with-umi:
+  label: "Generic low throughput amplicon single-cell with UMIs"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -208,6 +210,7 @@ generic-lt-single-cell-amplicon-with-umi:
 
 # Low throughput (plates etc) shotgun single cell, no UMIs
 generic-lt-single-cell-fragmented:
+  label: "Generic low throughput shotgun single-cell"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -265,6 +268,7 @@ generic-lt-single-cell-fragmented:
 
 # Low throughput (plates etc) shotgun single cell, with UMIs
 generic-lt-single-cell-fragmented-with-umi:
+  label: "Generic low throughput shotgun single-cell with UMIs"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -369,6 +373,7 @@ generic-lt-single-cell-fragmented-with-umi:
 
 # High throughput amplicon-based single cell, no UMIs
 generic-ht-single-cell-amplicon:
+  label: "Generic high throughput amplicon single-cell"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -470,6 +475,7 @@ generic-ht-single-cell-amplicon:
 
 # High throughput amplicon-based single cell, with UMIs
 generic-ht-single-cell-amplicon-with-umi:
+  label: "Generic high throughput amplicon single-cell with UMIs"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -634,6 +640,7 @@ generic-ht-single-cell-amplicon-with-umi:
 
 # High throughput fragmented-based single cell, no UMIs
 generic-ht-single-cell-fragmented:
+  label: "Generic high throughput shotgun single-cell"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -729,6 +736,7 @@ generic-ht-single-cell-fragmented:
 
 # High throughput fragmented-based single cell, with UMIs
 generic-ht-single-cell-fragmented-with-umi:
+  label: "Generic high throughput shotgun single-cell with UMIs"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -885,6 +893,7 @@ generic-single-cell-gex-base:
 
 # Single cell GEX without UMI
 generic-single-cell-gex:
+  label: "Generic single-cell gene expression"
   category: generic
   inheritFrom: generic-single-cell-gex-base
   flags:
@@ -901,6 +910,7 @@ generic-single-cell-gex:
 
 # Single cell GEX with UMI
 generic-single-cell-gex-with-umi:
+  label: "Generic single-cell gene expression with UMIs"
   category: generic
   inheritFrom: generic-single-cell-gex-base
   flags:

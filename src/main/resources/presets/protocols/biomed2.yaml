@@ -1,4 +1,5 @@
 "biomed2-human-rna-igh":
+  vendor: "Public"
   label: "BIOMED2 IGH"
   category: non-generic
   inheritFrom: generic-amplicon
@@ -26,6 +27,7 @@
           upper: 0.9
 
 "biomed2-human-rna-igkl":
+  vendor: "Public"
   label: "BIOMED2 IGK/IGL"
   category: non-generic
   inheritFrom: generic-amplicon
@@ -44,6 +46,7 @@
     - type: MaterialTypeRNA
 
 "biomed2-human-rna-trbdg":
+  vendor: "Public"
   label: "BIOMED2 TCR Beta/Delta/Gamma"
   category: non-generic
   inheritFrom: generic-amplicon

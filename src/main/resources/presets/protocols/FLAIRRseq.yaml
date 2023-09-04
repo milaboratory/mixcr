@@ -1,4 +1,5 @@
 "flairr-seq-bcr":
+  vendor: "Public"
   label: "FLLAIRR-seq"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi

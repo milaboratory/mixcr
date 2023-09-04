@@ -1934,6 +1934,7 @@
                 name: CELL3CONVERTED
 
 "split-seq-3gex":
+  vendor: "Public"
   label: "SPLIT-seq 3' Gene expression"
   category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi

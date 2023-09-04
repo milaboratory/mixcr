@@ -1,4 +1,5 @@
 generic-amplicon:
+  label: "Generic amplicon"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -40,6 +41,7 @@ generic-amplicon:
         upper: 0.05
 
 generic-amplicon-with-umi:
+  label: "Generic amplicon with UMI barcodes"
   category: generic
   mixins:
     - type: AddTagsValidation
