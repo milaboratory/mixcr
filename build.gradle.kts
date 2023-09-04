@@ -140,7 +140,7 @@ val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
-val milmVersion = "3.8.0"
+val milmVersion = "3.9.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
