@@ -609,11 +609,29 @@ object ExportMiXCRMixins {
         @Option(
             description = ["Export clone groups for all cell types."],
             names = [ExportMixins.ExportCloneGroupsForAllCellTypes.CMD_OPTION],
-            order = OptionsOrder.mixins.exports + 5_200,
+            order = OptionsOrder.mixins.exports + 5_101,
             arity = "0",
         )
         fun exportCloneGroupsForAllCellTypes(ignored: Boolean) =
             mixIn(ExportMixins.ExportCloneGroupsForAllCellTypes)
+
+        @Option(
+            description = ["Show columns for secondary chains in export for cell groups."],
+            names = [ExportMixins.ShowSecondaryChainOnExportCellGroups.CMD_OPTION_FOR_SHOW],
+            order = OptionsOrder.mixins.exports + 5_200,
+            arity = "0",
+        )
+        fun showSecondaryChainOnExportCellGroups(ignored: Boolean) =
+            mixIn(ExportMixins.ShowSecondaryChainOnExportCellGroups(true))
+
+        @Option(
+            description = ["Don't show columns for secondary chains in export for cell groups."],
+            names = [ExportMixins.ShowSecondaryChainOnExportCellGroups.CMD_OPTION_FOR_DONT_SHOW],
+            order = OptionsOrder.mixins.exports + 5_201,
+            arity = "0",
+        )
+        fun dontShowSecondaryChainOnExportCellGroups(ignored: Boolean) =
+            mixIn(ExportMixins.ShowSecondaryChainOnExportCellGroups(false))
     }
 
     private interface ExportClonesMixins : GeneralExportClonesMixins {

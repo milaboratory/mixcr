@@ -193,14 +193,14 @@ class PresetsTest {
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                     MiXCRCommandDescriptor.groupClones in bundle.pipeline!!.steps
                 }
-                .forEach { presetName ->
+                .forAll { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                     val exportClonesFields = bundle.exportClones!!.fields
                     val exportCloneGroupsFields = bundle.exportCloneGroups!!.fields
 
                     presetName.asClue {
                         exportCloneGroupsFields shouldContainAll exportClonesFields
-                            .filter { it.field !in CloneGroupFieldsExtractorsFactory.excludeCloneFields }
+                            .filter { it.field !in (CloneGroupFieldsExtractorsFactory.excludeCloneFields + "-cloneId") }
                         exportCloneGroupsFields.forAll {
                             it.field shouldNotBeIn (CloneGroupFieldsExtractorsFactory.excludeCloneFields - "-cellGroup")
                         }

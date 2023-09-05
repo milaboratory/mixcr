@@ -23,8 +23,6 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.export.CloneGroup
@@ -162,10 +160,13 @@ object CommandExportCloneGroups {
             )
 
             val recalculatedClones = filterClones(initialSet, params, fileInfo)
-            val groups = cloneGroups(recalculatedClones, tagsInfo)
+            val groups = cloneGroups(recalculatedClones)
 
             val headerForExport = MetaForExport(fileInfo)
-            val fieldExtractors = CloneGroupFieldsExtractorsFactory(params.types.ifEmpty { CellType.values().toList() })
+            val fieldExtractors = CloneGroupFieldsExtractorsFactory(
+                params.types.ifEmpty { CellType.values().toList() },
+                params.showSecondaryChains
+            )
                 .createExtractors(params.fields, headerForExport)
 
             val rowMetaForExport = RowMetaForExport(
@@ -186,16 +187,10 @@ object CommandExportCloneGroups {
             }
         }
 
-        private fun cloneGroups(
-            recalculatedClones: CloneSet,
-            tagsInfo: TagsInfo
-        ): List<CloneGroup> = recalculatedClones
+        private fun cloneGroups(recalculatedClones: CloneSet): List<CloneGroup> = recalculatedClones
             .groupBy { it.group!! }
             .map { (groupId, clones) ->
                 val clonesGroupedByChains = clones.groupBy { it.chains }
-                val totalTagsCount = TagCountAggregator().also { aggregator ->
-                    clones.forEach { clone -> aggregator.add(clone.tagCount) }
-                }.createAndDestroy()
                 CloneGroup(
                     groupId = groupId,
                     clonePairs = clonesGroupedByChains.mapValues { (_, clonesWithChain) ->
@@ -205,10 +200,11 @@ object CommandExportCloneGroups {
                             sorted.getOrNull(1)
                         )
                     },
-                    cellsCount = totalTagsCount.getTagDiversity(tagsInfo.getDepthFor(TagType.Cell)),
                     cloneCount = clonesGroupedByChains.mapValues { it.value.size },
                     totalReadsCount = clones.sumOf { it.count },
-                    totalTagsCount = totalTagsCount
+                    totalTagsCount = TagCountAggregator().also { aggregator ->
+                        clones.forEach { clone -> aggregator.add(clone.tagCount) }
+                    }.createAndDestroy()
                 )
             }
             .sortedBy { it.groupId }
