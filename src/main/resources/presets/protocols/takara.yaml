@@ -1,4 +1,7 @@
 "takara-human-rna-bcr-umi-smartseq":
+  vendor: "Takara Bio"
+  label: "SMART-Seq Human BCR (with UMIs)"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -39,18 +42,30 @@
         readsLayout: ReverseOnly
 
 "takara-human-rna-bcr-umi-smarter":
+  vendor: "Takara Bio"
+  label: "SMARTer Human BCR IgG IgM H/K/L Profiling Kit"
+  category: non-generic
   inheritFrom: takara-human-rna-bcr-umi-smartseq
 
 "takara-human-rna-tcr-umi-smartseq":
+  vendor: "Takara Bio"
+  label: "SMART-Seq Human TCR (with UMIs)"
+  category: non-generic
   inheritFrom: takara-human-rna-bcr-umi-smartseq
   mixins:
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
 
 "takara-human-rna-tcr-umi-smarter-v2":
+  vendor: "Takara Bio"
+  label: "SMARTer Human TCR a/b Profiling Kit v2"
+  category: non-generic
   inheritFrom: takara-human-rna-tcr-umi-smartseq
 
 "takara-human-rna-tcr-smarter":
+  vendor: "Takara Bio"
+  label: "SMARTer Human TCR a/b Profiling Kit"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -90,6 +105,9 @@
         readsLayout: ReverseOnly
 
 "takara-mouse-rna-bcr-smarter":
+  vendor: "Takara Bio"
+  label: "SMARTer Mouse BCR IgG H/K/L Profiling Kit"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -129,4 +147,18 @@
         readsLayout: ReverseOnly
 
 "takara-mouse-rna-tcr-smarter":
+  vendor: "Takara Bio"
+  label: "SMARTer Mouse TCR a/b Profiling Kit"
+  category: non-generic
   inheritFrom: takara-mouse-rna-bcr-smarter
+
+"takara-mouse-rna-tcr-umi-smarseq":
+  vendor: "Takara Bio"
+  label: "SMART-Seq Mouse TCR (with UMIs)"
+  category: non-generic
+  inheritFrom: takara-human-rna-bcr-umi-smartseq
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetTagPattern
+      tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)

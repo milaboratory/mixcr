@@ -1,4 +1,7 @@
 "illumina-human-rna-trb-ampliseq-sr":
+  vendor: "Illumina"
+  label: "Human TCR Beta Ampliseq Short Read"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -25,6 +28,9 @@
         readsLayout: DirectOnly
 
 "illumina-human-rna-trb-ampliseq-plus":
+  vendor: "Illumina"
+  label: "Human TCR Beta Ampliseq Plus"
+  category: non-generic
   inheritFrom: illumina-human-rna-trb-ampliseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures

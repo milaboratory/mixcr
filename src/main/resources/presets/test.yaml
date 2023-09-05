@@ -671,6 +671,7 @@
       - field: "-defaultAnchorPoints"
 
 "test-gf-intersection":
+  deprecation: "This preset is only for tests"
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetTagPattern
@@ -692,12 +693,14 @@
       insertIndex: -1
 
 "generic-tcr-amplicon-separate-samples-umi":
+  deprecation: "This preset is only for tests"
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSplitBySample
       value: true
 
 "test-tag-from-header":
+  deprecation: "This preset is only for tests"
   inheritFrom: generic-amplicon
   mixins:
     - type: SetSpecies
