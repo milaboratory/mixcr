@@ -18,7 +18,9 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
+import com.milaboratory.mixcr.presets.PresetSpecification
 import com.milaboratory.util.K_OM
+import com.milaboratory.util.K_YAML_OM
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -38,7 +40,7 @@ class CommandPresetSpecificationsForBack : MiXCRCommand(), MiXCRPresetAwareComma
     override fun run0() {
         output.toAbsolutePath().parent.toFile().mkdirs()
         val preset = if (InputFileType.YAML.matches(Path.of(input))) {
-            K_OM.readValue(Path.of(input).toFile())
+            K_YAML_OM.readValue(Path.of(input).toFile())
         } else {
             paramsResolver.resolve(
                 MiXCRParamsSpec(input),
@@ -46,7 +48,7 @@ class CommandPresetSpecificationsForBack : MiXCRCommand(), MiXCRPresetAwareComma
                 validate = false
             ).first
         }
-        K_OM.writeValue(output.toFile(), preset)
+        K_OM.writeValue(output.toFile(), PresetSpecification.ForBackend.build(preset, emptyList()))
     }
 
     override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
