@@ -181,8 +181,11 @@ object Main {
                     .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty::class.java)
                     .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
                     .addSubcommand("exportClonesPretty", CommandExportClonesPretty::class.java)
-                    .addSubcommand("exportShmTreesWithNodes", CommandExportShmTreesTableWithNodes.mkCommandSpec())
-                    .addSubcommand("exportShmTrees", CommandExportShmTreesTable.mkCommandSpec())
+                    .addSubcommand(
+                        CommandExportShmTreesTableWithNodes.COMMAND_NAME,
+                        CommandExportShmTreesTableWithNodes.mkCommandSpec()
+                    )
+                    .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
                     .addSubcommand("exportShmTreesNewick", CommandExportShmTreesNewick::class.java)
                     .addSubcommand("exportReports", CommandExportReports::class.java)
                     .addSubcommand(

@@ -220,6 +220,8 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     }
 
     companion object {
+        val COMMAND_NAME = SplittedTreeNodeFieldsExtractorsFactory.commandForUsage
+
         fun mkCommandSpec(): CommandSpec {
             val command = CommandExportShmTreesTableWithNodes()
             val spec = CommandSpec.forAnnotatedObject(command)

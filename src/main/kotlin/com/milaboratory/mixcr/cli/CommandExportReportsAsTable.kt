@@ -115,7 +115,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             }
             upstreamRecords + ReportsWithSource(
                 input.toString(),
-                MiXCRCommandDescriptor.values.mapNotNull { footer.reports.getReportSafe(it) }.flatten(),
+                MiXCRCommandDescriptor.values().mapNotNull { footer.reports.getReportSafe(it) }.flatten(),
                 upstreamRecords.flatMap { it.reports }
             )
         }
@@ -133,7 +133,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             val upstreamReports = collection.upstreamReportsWithSources()
             upstreamReports + ReportsWithSource(
                 sourceName,
-                MiXCRCommandDescriptor.values.mapNotNull { collection.getReportSafe(it) }.flatten(),
+                MiXCRCommandDescriptor.values().mapNotNull { collection.getReportSafe(it) }.flatten(),
                 upstreamReports.flatMap { it.reports }
             )
         }
