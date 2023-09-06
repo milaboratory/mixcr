@@ -918,6 +918,12 @@ exportAlignments:
   noHeader: false
   fields:
   - field: -readIds
+  - field: -tags
+    args:
+    - Cell
+  - field: -tags
+    args:
+    - Molecule
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore
@@ -931,6 +937,7 @@ exportAlignments:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -959,6 +966,7 @@ exportClones:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
 qc:
