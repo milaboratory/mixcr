@@ -33,6 +33,7 @@ import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.MultiFastqWriter
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
+import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
@@ -41,6 +42,7 @@ import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
 import com.milaboratory.mitool.pattern.search.SearchSettings
+import com.milaboratory.mitool.report.ReadTrimmerReportBuilder
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -1118,7 +1120,7 @@ object CommandAlign {
 
                 val step1 = if (cmdParams.trimmingQualityThreshold > 0) {
                     val rep = ReadTrimmerReportBuilder()
-                    val trimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep)
+                    val trimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep, NSQTuple::mapWithIndex)
                     reportBuilder.setTrimmingReportBuilder(rep)
                     step0.mapUnchunked {
                         it.mapSequence(trimmerProcessor::process)
