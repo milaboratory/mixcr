@@ -1120,7 +1120,10 @@ object CommandAlign {
 
                 val step1 = if (cmdParams.trimmingQualityThreshold > 0) {
                     val rep = ReadTrimmerReportBuilder()
-                    val trimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep, NSQTuple::mapWithIndex)
+                    val trimmerProcessor =
+                        ReadTrimmerProcessor(qualityTrimmerParameters, rep) { read: NSQTuple, mapper ->
+                            read.mapWithIndex(mapper)
+                        }
                     reportBuilder.setTrimmingReportBuilder(rep)
                     step0.mapUnchunked {
                         it.mapSequence(trimmerProcessor::process)
