@@ -133,14 +133,14 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.4.2-10-fixes"
+val mixcrAlgoVersion = "4.4.2-17-trimming-quality"
 val milibVersion = ""
-val mitoolVersion = ""
+val mitoolVersion = "2.0.1-11-trimming-quality"
 val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
-val milmVersion = "3.8.0"
+val milmVersion = "4.0.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
@@ -304,7 +304,7 @@ tasks.processResources {
 }
 
 val checkObfuscation by tasks.registering(Test::class) {
-    group = "verification"
+    group = "build"
 
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath

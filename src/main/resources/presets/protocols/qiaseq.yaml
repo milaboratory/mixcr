@@ -1,4 +1,7 @@
 "qiagen-human-rna-tcr-umi-qiaseq":
+  vendor: "QIAGEN"
+  label: "QIAseq Human TCR Panel Immune Repertoire RNA Library Kit"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -54,6 +57,9 @@
         readsLayout: ReverseOnly
 
 "qiagen-mouse-rna-tcr-umi-qiaseq":
+  vendor: "QIAGEN"
+  label: "QIAseq Mouse TCR Panel Immune Repertoire RNA Library Kit"
+  category: non-generic
   inheritFrom: qiagen-human-rna-tcr-umi-qiaseq
   mixins:
     - type: SetSpecies

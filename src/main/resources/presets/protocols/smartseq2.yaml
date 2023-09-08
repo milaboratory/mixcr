@@ -1,4 +1,6 @@
 "smart-seq2-vdj":
+  label: "Smart-Seq2"
+  category: generic
   inheritFrom: generic-single-cell-gex
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base

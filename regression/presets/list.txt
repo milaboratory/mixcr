@@ -62,13 +62,6 @@ generic-pacbio-with-umi                            --species <name>
 generic-single-cell-gex                            --species <name>
 generic-single-cell-gex-with-umi                   --species <name>
                                                    --tag-pattern <pattern>
-generic-tcr-amplicon-separate-samples-umi          (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   (--dna|--rna)
-                                                   --tag-pattern <pattern>
 han-et-al-2014                                     --species <name>
 illumina-human-rna-trb-ampliseq-plus
 illumina-human-rna-trb-ampliseq-sr
@@ -106,8 +99,7 @@ takara-human-rna-tcr-umi-smarter-v2
 takara-human-rna-tcr-umi-smartseq
 takara-mouse-rna-bcr-smarter
 takara-mouse-rna-tcr-smarter
-test-gf-intersection                               (--dna|--rna)
-test-tag-from-header
+takara-mouse-rna-tcr-umi-smarseq
 thermofisher-human-dna-bcr-oncomine-pan-clonality
 thermofisher-human-dna-igh-oncomine-fr1-j
 thermofisher-human-dna-igh-oncomine-fr2-j

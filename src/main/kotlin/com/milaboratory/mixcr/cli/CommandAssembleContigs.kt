@@ -358,19 +358,7 @@ object CommandAssembleContigs {
                     clones += clone.withId(cloneId++)
                 }
             }
-            @Suppress("DEPRECATION")
-            val allFullyCoveredBy = when {
-                assemblingRegions == null -> false
-                assemblingRegions != cmdParams.parameters.subCloningRegions -> false
-                else -> when (val postFiltering = cmdParams.parameters.postFiltering) {
-                    is PostFiltering.OnlyUnambiguouslyCovering -> postFiltering.geneFeatures == assemblingRegions
-                    PostFiltering.OnlyFullyDefined -> true
-                    is PostFiltering.OnlyCovering -> false
-                    PostFiltering.OnlyFullyAssembled -> false
-                    is PostFiltering.MinimalContigLength -> false
-                    PostFiltering.NoFiltering -> false
-                }
-            }
+            val allFullyCoveredBy = cmdParams.allClonesWillBeCoveredByFeature()
             val resultHeader = header
                 .copy(allFullyCoveredBy = if (allFullyCoveredBy) assemblingRegions else null)
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)

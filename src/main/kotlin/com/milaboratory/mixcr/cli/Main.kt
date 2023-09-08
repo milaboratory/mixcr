@@ -233,6 +233,8 @@ object Main {
             .addSubcommand("exportHelp", CommandExportHelp::class.java)
             .addSubcommand("exportAllPresets", CommandExportAllPresets::class.java)
             .addSubcommand("exportSchemas", CommandExportSchemas::class.java)
+            .addSubcommand("listPresetSpecificationsForUI", CommandListPresetSpecificationsForUI::class.java)
+            .addSubcommand("presetSpecificationsForBack", CommandPresetSpecificationsForBack::class.java)
 
         cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
         cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = IHelpSectionRenderer { help ->

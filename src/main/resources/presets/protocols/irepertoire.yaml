@@ -1,4 +1,7 @@
 "irepertoire-human-rna-xcr-repseq-sr":
+  vendor: "iRepertoire"
+  label: "Human IGH/TCR Repseq Short Read"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -25,18 +28,27 @@
         readsLayout: ReverseOnly
 
 "irepertoire-human-rna-xcr-repseq-lr":
+  vendor: "iRepertoire"
+  label: "Human IGH/TCR Repseq Long Read"
+  category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:FR4End}"]
 
 "irepertoire-mouse-rna-xcr-repseq-sr":
+  vendor: "iRepertoire"
+  label: "Mouse IGH/TCR Repseq Short Read"
+  category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetSpecies
       species: mmu
 
 "irepertoire-mouse-rna-xcr-repseq-lr":
+  vendor: "iRepertoire"
+  label: "Mouse IGH/TCR Repseq Long Read"
+  category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetSpecies
@@ -45,16 +57,25 @@
       features: ["{CDR2Begin:FR4End}"]
 
 "irepertoire-human-rna-xcr-repseq-plus":
+  vendor: "iRepertoire"
+  label: "Human IGH/TCR Repseq Plus"
+  category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:FR4End}" ]
 
 "irepertoire-mouse-rna-xcr-repseq-plus":
+  vendor: "iRepertoire"
+  label: "Mouse IGH/TCR Repseq Plus"
+  category: non-generic
   inheritFrom: irepertoire-mouse-rna-xcr-repseq-lr
 
 
 "irepertoire-human-dna-xcr-repseq-sr":
+  vendor: "iRepertoire"
+  label: "Human DNA IGH/TCR Repseq Short Read"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align
@@ -81,6 +102,9 @@
         readsLayout: ReverseOnly
 
 "irepertoire-human-dna-xcr-repseq-lr":
+  vendor: "iRepertoire"
+  label: "Human DNA IGH/TCR Repseq Long Read"
+  category: non-generic
   inheritFrom: irepertoire-human-dna-xcr-repseq-sr
   mixins:
     - type: SetClonotypeAssemblingFeatures

@@ -266,7 +266,6 @@ upstreams:
             isOOF: 722
             hasStops: 333
       trimmingReport:
-        type: readTrimmerReport
         total: 49700
         r1LeftTrimmedEvents: 0
         r1RightTrimmedEvents: 0
@@ -927,36 +926,36 @@ upstreams:
         preClonesPerGroup:
           "1": 2942
         assemblingFeatureSequencesInZeroPreClones: 0
-        coreAlignments: 45357
+        coreAlignments: 45369
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
-        discardedCoreAlignments: 25
-        empiricallyAssignedAlignments: 1332
+        discardedCoreAlignments: 13
+        empiricallyAssignedAlignments: 1334
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 1332
+        geneAndTagEmpiricallyAssignedAlignments: 1334
         empiricalAssignmentConflicts: 0
         ignoredAlignments: 0
-        unassignedAlignments: 30
+        unassignedAlignments: 16
       totalReadsProcessed: 49700
       totalAlignmentsProcessed: 2942
-      totalAlignedReadsProcessed: 46689
+      totalAlignedReadsProcessed: 46703
       initialClonesCreated: 1312
       readsDroppedNoTargetSequence: 2321
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 46514
+      coreReads: 46528
       readsDroppedFailedMapping: 148
       lowQualityRescued: 17
       clonesClustered: 23
-      readsClustered: 364
+      readsClustered: 367
       clones: 1287
       clonesDroppedAsLowQuality: 2
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 46167
-      readsInClonesBeforeClustering: 46531
+      readsInClones: 46178
+      readsInClonesBeforeClustering: 46545
       readsDroppedWithLowQualityClones: 10
       clonalChainUsage:
         type: chainUsage
@@ -990,7 +989,7 @@ upstreams:
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
         size: 282
-        sum: 11827.09997
+        sum: 11827.10000
         min: -58.0
         max: 145.00003
         avg: 41.94007
@@ -1150,7 +1149,6 @@ upstreams:
             isOOF: 367
             hasStops: 220
       trimmingReport:
-        type: readTrimmerReport
         total: 29871
         r1LeftTrimmedEvents: 0
         r1RightTrimmedEvents: 0
@@ -1829,26 +1827,26 @@ upstreams:
         preClonesPerGroup:
           "1": 69
         assemblingFeatureSequencesInZeroPreClones: 0
-        coreAlignments: 26491
+        coreAlignments: 26503
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
-        discardedCoreAlignments: 20
-        empiricallyAssignedAlignments: 988
+        discardedCoreAlignments: 8
+        empiricallyAssignedAlignments: 1131
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 988
+        geneAndTagEmpiricallyAssignedAlignments: 1131
         empiricalAssignmentConflicts: 0
         ignoredAlignments: 0
-        unassignedAlignments: 248
+        unassignedAlignments: 93
       totalReadsProcessed: 29871
       totalAlignmentsProcessed: 69
-      totalAlignedReadsProcessed: 27479
+      totalAlignedReadsProcessed: 27634
       initialClonesCreated: 47
       readsDroppedNoTargetSequence: 2292
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 27479
+      coreReads: 27634
       readsDroppedFailedMapping: 0
       lowQualityRescued: 0
       clonesClustered: 0
@@ -1857,8 +1855,8 @@ upstreams:
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 27479
-      readsInClonesBeforeClustering: 27479
+      readsInClones: 27634
+      readsInClonesBeforeClustering: 27634
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
@@ -1892,7 +1890,7 @@ upstreams:
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
         size: 282
-        sum: 11827.09997
+        sum: 11827.10000
         min: -58.0
         max: 145.00003
         avg: 41.94007
