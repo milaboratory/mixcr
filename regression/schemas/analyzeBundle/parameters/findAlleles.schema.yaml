@@ -12,6 +12,12 @@ $defs:
             type: array
             items:
               type: string
+              enum:
+              - A
+              - D
+              - G
+              - E
+              - M
           seedForShuffle:
             type: integer
       coefficientForNaiveClonesInScore:
