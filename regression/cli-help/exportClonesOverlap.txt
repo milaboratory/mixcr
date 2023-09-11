@@ -35,7 +35,8 @@ Usage: mixcr exportClonesOverlap [--chains <chain>[,<chain>...]]... [--criteria 
                                  <gene_feature>]... [-allMutationsDetailed [<from_reference_point>
                                  <to_reference_point>]]... [-mutationsDetailedRelative
                                  <gene_feature> <relative_to_gene_feature>]...
-                                 [-biochemicalProperty <property> <gene_feature>]...
+                                 [-biochemicalProperty <gene_feature> <property>]...
+                                 [-baseBiochemicalProperties <gene_feature>]...
                                  [-positionInReferenceOf <reference_point>]...
                                  [-allPositionsInReference [<from_reference_point>
                                  <to_reference_point>]]... [-positionOf <reference_point>]...
@@ -46,14 +47,14 @@ Usage: mixcr exportClonesOverlap [--chains <chain>[,<chain>...]]... [--criteria 
                                  [-cIdentityPercents] [-vBestIdentityPercent]
                                  [-dBestIdentityPercent] [-jBestIdentityPercent]
                                  [-cBestIdentityPercent] [-chains] [-topChains] [-geneLabel
-                                 <label>]... [-tagCounts] [-cellId [<(none|space|dash)>]]... [-tags
-                                 <(Molecule|Cell|Sample)>]... [-uniqueTagCount <
-                                 (Molecule|Cell|Sample)>]... [-uniqueTagFraction <
-                                 (Molecule|Cell|Sample)>]... [-cellGroup] [-rankByTag <
-                                 (Molecule|Cell|Sample)>]... [-hasStops <gene_feature>]... [-isOOF
-                                 <gene_feature>]... [-isProductive <gene_feature>]...
-                                 [--force-overwrite] [--no-warnings] [--verbose] [--help] cloneset.
-                                 (clns|clna)... output.tsv
+                                 <label>]... [-isotype [<(primary|subclass|auto)>]]... [-tagCounts]
+                                 [-cellId [<(none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)
+                                 >]... [-uniqueTagCount <(Molecule|Cell|Sample)>]...
+                                 [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
+                                 [-rankByTag <(Molecule|Cell|Sample)>]... [-hasStops
+                                 <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
+                                 <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
+                                 [--help] cloneset.(clns|clna)... output.tsv
 Build cloneset overlap and export into tab delimited file.
       cloneset.(clns|clna)...
                              Paths to input files
@@ -269,8 +270,16 @@ Possible fields to export
                                amino acid mutation is the observed amino acid mutation combining
                                effect from all other. WARNING: format may change in following
                                versions.
-      -biochemicalProperty <property> <gene_feature>
-                             Biochemical property of specified gene feature
+      -biochemicalProperty <gene_feature> <property>
+                             Biochemical property of specified gene feature normalized by AA
+                               sequence size. Possible values: Hydropathy, Charge, Polarity,
+                               Volume, Strength, MjEnergy, Kf1, Kf2, Kf3, Kf4, Kf5, Kf6, Kf7, Kf8,
+                               Kf9, Kf10, Rim, Surface, Turn, Alpha, Beta, Core, Disorder,
+                               N2Strength, N2Hydrophobicity, N2Volume, N2Surface
+      -baseBiochemicalProperties <gene_feature>
+                             Base biochemical properties of specified gene feature normalized by AA
+                               sequence size: N2Strength, N2Hydrophobicity, N2Surface, N2Volume,
+                               Charge
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence).
@@ -316,6 +325,11 @@ Possible fields to export
       -chains                Chains
       -topChains             Top chains
       -geneLabel <label>     Export gene label (i.e. ReliableChain)
+      -isotype [<(primary|subclass|auto)>]
+                             Export isotype for IGH chains if it's can be distinguishable.
+                               `primary` will resolve 'IgA', 'IgD', 'IgG', 'IgE', 'IgM'. `subtype`
+                               will try resolve isotypes like 'IgA1' or 'IgA2'. `auto` will resolve
+                               the best resolution as possible. By default `auto` will be used
       -tagCounts             All tags with counts
       -cellId [<(none|space|dash)>]
                              Concatenated all cell tags with specified delimiter, default delimiter
