@@ -90,6 +90,7 @@ import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.util.use
@@ -413,7 +414,7 @@ object CommandAlign {
     fun checkInputTemplates(paths: List<Path>) {
         when (paths.size) {
             1 -> ValidationException.requireFileType(
-                paths[0],
+                paths.first(),
                 InputFileType.FASTQ,
                 InputFileType.FASTA,
                 InputFileType.BAM,
@@ -658,6 +659,13 @@ object CommandAlign {
     )
     class Cmd : CmdBase() {
         @Option(
+            description = ["Put temporary files in the same folder as the output files."],
+            names = ["--use-local-temp"],
+            order = OptionsOrder.localTemp
+        )
+        var useLocalTemp = false
+
+        @Option(
             description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
                     "It is critical to carefully select the most appropriate preset for the data you analyse."],
             names = ["-p", "--preset"],
@@ -806,6 +814,11 @@ object CommandAlign {
         )
         private var outputFileList: Path? = null
 
+        private val tempDest by lazy {
+            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
+        }
+
+
         private val paramsSpec by lazy {
             MiXCRParamsSpec(
                 presetName, mixins.mixins +
@@ -903,13 +916,6 @@ object CommandAlign {
             QuadEndFastq(4, true),
             Fasta(1, false),
             BAM(2, false);
-
-            val pairedRecords: Boolean?
-                get() = when (numberOfReads) {
-                    1 -> false
-                    2 -> true
-                    else -> null
-                }
         }
 
         private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
@@ -926,7 +932,7 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
+                    BAMReader(files, cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards, tempDest)
                         .map { ProcessingBundle(it) }
                 }
 
@@ -1005,9 +1011,19 @@ object CommandAlign {
                 tagsValidation.validate(tagsExtractor.tagsInfo)
 
             // true if final NSQTuple will have two reads, false otherwise
-            val pairedPayload = tagsExtractor.pairedPatternPayload
-                ?: inputFileGroups.inputType.pairedRecords
-                ?: throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
+            val pairedPayload = when (tagsExtractor.pairedPatternPayload) {
+                null -> when (inputFileGroups.inputType) {
+                    BAM -> VDJCAligner.ReadsCount.ONE_OR_TWO
+                    else -> when (inputFileGroups.inputType.numberOfReads) {
+                        1 -> VDJCAligner.ReadsCount.ONE
+                        2 -> VDJCAligner.ReadsCount.TWO
+                        else -> throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
+                    }
+                }
+
+                true -> VDJCAligner.ReadsCount.TWO
+                false -> VDJCAligner.ReadsCount.ONE
+            }
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
