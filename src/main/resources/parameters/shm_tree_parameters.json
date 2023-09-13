@@ -13,10 +13,16 @@
     "steps": [
       {
         "name": "BuildingInitialTrees",
-        "algorithm": {
-          "type": "BronKerbosch",
+        "predictor": {
           "commonMutationsCountForClustering": 5,
           "maxNDNDistanceForClustering": 1.0
+        },
+        "algorithm": {
+          "type": "BronKerboschWithFallback",
+          "limit": 10000000,
+          "fallback": {
+            "type": "SingleLinkage"
+          }
         }
       },
       {

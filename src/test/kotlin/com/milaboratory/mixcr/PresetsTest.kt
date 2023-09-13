@@ -13,13 +13,17 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.MiXCRPresetCategory
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.test.TestUtil.assertJson
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
 import io.kotest.assertions.asClue
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.Assert
 import org.junit.Test
@@ -130,7 +134,7 @@ class PresetsTest {
 
     @Test
     fun `backward capability of deserialization of presets`() {
-        val dir = Paths.get(PresetsTest::class.java.getResource("/backward_compatibility/presets/").file)
+        val dir = Paths.get(PresetsTest::class.java.getResource("/backward_compatibility/presets/")!!.file)
         dir.listDirectoryEntries()
             .flatMap { it.listDirectoryEntries() }
             .forEach { filesToCheck ->
@@ -158,5 +162,25 @@ class PresetsTest {
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                 bundle.exportAlignments == null
             } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all visible presets should have label, etc`() {
+        Presets.visiblePresets.forAll { presetName ->
+            assertSoftly {
+                val bundle = Presets.rawResolve(presetName)
+                "category".asClue {
+                    bundle.resolvedCategory.shouldNotBeNull()
+                }
+                "label (the property will not inherit)".asClue {
+                    bundle.label.shouldNotBeNull()
+                }
+                if (bundle.resolvedCategory == MiXCRPresetCategory.`non-generic`) {
+                    "vendor".asClue {
+                        bundle.resolvedVendor.shouldNotBeNull()
+                    }
+                }
+            }
+        }
     }
 }

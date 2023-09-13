@@ -94,6 +94,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     }
 
     companion object {
+        val COMMAND_NAME = SHMTreeFieldsExtractorsFactory.commandForUsage
         fun mkCommandSpec(): CommandLine.Model.CommandSpec {
             val command = CommandExportShmTreesTable()
             val spec = CommandLine.Model.CommandSpec.forAnnotatedObject(command)

@@ -74,7 +74,6 @@ align:
         isOOF: 0
         hasStops: 0
   trimmingReport:
-    type: readTrimmerReport
     total: 46879
     r1LeftTrimmedEvents: 78
     r1RightTrimmedEvents: 2

@@ -1,4 +1,7 @@
 "singleron-human-sc-xcr-gexscope-vdj":
+  vendor: "Singleron Biotechnologies"
+  label: "GEXSCOPE Human Single Cell V(D)J Kit "
+  category: non-generic
   inheritFrom: generic-ht-single-cell-amplicon-with-umi
   mixins:
     - type: SetSpecies

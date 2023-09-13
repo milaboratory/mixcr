@@ -1,4 +1,7 @@
 "abhelix-human-rna-xcr":
+  vendor: "AbHelix"
+  label: "Human immunoglobulin repertoire"
+  category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
     - align

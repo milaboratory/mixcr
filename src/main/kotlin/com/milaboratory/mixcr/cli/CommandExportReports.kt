@@ -11,11 +11,14 @@
  */
 package com.milaboratory.mixcr.cli
 
-import com.fasterxml.jackson.core.JacksonException
 import com.milaboratory.app.InputFileType
+import com.milaboratory.app.InputFileType.JSON
+import com.milaboratory.app.InputFileType.TXT
+import com.milaboratory.app.InputFileType.YAML
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.getReportSafe
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.ReportHelper
@@ -85,62 +88,65 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
 
     override fun validate() {
         ValidationException.requireFileType(inputPath, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)
+        ValidationException.requireFileType(outputPath, JSON, YAML, TXT)
+        // check consistency if format specified
         outputFormatFlags?.let { outputFormatFlags ->
             if (outputFormatFlags.json) {
-                ValidationException.requireFileType(outputPath, InputFileType.JSON)
+                ValidationException.requireFileType(outputPath, JSON)
             }
             if (outputFormatFlags.yaml) {
-                ValidationException.requireFileType(outputPath, InputFileType.YAML)
+                ValidationException.requireFileType(outputPath, YAML)
             }
-        }
-        if (outputFormatFlags == null) {
-            ValidationException.requireFileType(outputPath, InputFileType.TXT)
         }
     }
 
     override fun run1() {
         val footer = IOUtil.extractFooter(inputPath)
+        val format = when (outputPath) {
+            null -> when {
+                outputFormatFlags == null -> TXT
+                outputFormatFlags!!.json -> JSON
+                outputFormatFlags!!.yaml -> YAML
+                else -> throw IllegalStateException()
+            }
+
+            else -> listOf(TXT, JSON, YAML).first { it.matches(outputPath!!) }
+        }
         when (outputPath) {
             null -> CloseShieldOutputStream.wrap(System.out)
             else -> outputPath!!.outputStream()
         }.use { o ->
-            when {
-                outputFormatFlags?.json == true || outputFormatFlags?.yaml == true -> {
-                    val tree = when {
-                        step != null -> K_OM.valueToTree(footer.reports.getTrees(step!!))
-                        else -> footer.reports.asTree()
-                    }
-                    when (outputFormatFlags?.json) {
-                        true -> K_OM.writeValue(o, tree)
-                        else -> K_YAML_OM.writeValue(o, tree)
-                    }
-                }
-
-                else -> {
+            when (format) {
+                TXT -> {
                     val helper = ReportHelper(o, outputPath != null)
                     val steps = when {
                         step != null -> listOf(step!!)
                         else -> footer.reports.collection.steps
                     }
-                    steps
-                        .map { MiXCRCommandDescriptor.fromString(it) }
-                        .flatMap { commandDescriptor ->
-                            footer.reports.getBytes(commandDescriptor).map {
-                                try {
-                                    K_OM.readValue(it, commandDescriptor.reportClass.java)
-                                } catch (e: JacksonException) {
-                                    null
-                                }
-                            }
-                        }
-                        .forEach { report ->
-                            if (report == null) {
-                                helper.println("Can't read report, file has too old version")
-                            } else {
+                    steps.forEach { step ->
+                        val command = MiXCRCommandDescriptor.fromString(step)
+                        val reports = footer.reports.getReportSafe(command)
+                        if (reports == null) {
+                            helper.println("Can't read report for $step, file has too old version")
+                        } else {
+                            reports.forEach { report ->
                                 report.writeHeader(helper)
                                 report.writeReport(helper)
                             }
                         }
+                    }
+                }
+
+                else -> {
+                    val tree = when {
+                        step != null -> K_OM.valueToTree(footer.reports.getTrees(step!!))
+                        else -> footer.reports.asTree()
+                    }
+                    when (format) {
+                        JSON -> K_OM.writeValue(o, tree)
+                        YAML -> K_YAML_OM.writeValue(o, tree)
+                        else -> throw IllegalStateException()
+                    }
                 }
             }
         }

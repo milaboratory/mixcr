@@ -1,4 +1,7 @@
 "cellecta-human-rna-xcr-umi-drivermap-air":
+  vendor: "Cellecta"
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
