@@ -61,6 +61,19 @@ elif [ "${1}" == "int" ] || [ "${1}" == "reg"  ]; then
         curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/CD4M1_test_R2.fastq.gz
     fi
 
+    if [[ ! -f subset_B004-7_S247_L001_I1_001.fastq.gz ]]; then
+        curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/subset_B004-7_S247_L001_I1_001.fastq.gz
+    fi
+    if [[ ! -f subset_B004-7_S247_L001_I2_001.fastq.gz ]]; then
+        curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/subset_B004-7_S247_L001_I2_001.fastq.gz
+    fi
+    if [[ ! -f subset_B004-7_S247_L001_R1_001.fastq.gz ]]; then
+        curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/subset_B004-7_S247_L001_R1_001.fastq.gz
+    fi
+    if [[ ! -f subset_B004-7_S247_L001_R2_001.fastq.gz ]]; then
+        curl -sS -O https://s3.amazonaws.com/files.milaboratory.com/test-data/subset_B004-7_S247_L001_R2_001.fastq.gz
+    fi
+
     mkdir -p regression
     cd regression
     files=$(cat $dir/regression/list)

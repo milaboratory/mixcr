@@ -35,3 +35,9 @@ mixcr align --preset test-generic -s hs --rna --floating-left-alignment-boundary
 mixcr alignmentsDiff bam.vdjca fq.vdjca > diff
 
 assert "cat diff | grep 'Total number of different reads'" "Total number of different reads: 0"
+
+# can parse file with single and paired reads in the same file
+mixcr align -f --preset test-generic -s hs --rna \
+  --floating-left-alignment-boundary \
+  --rigid-right-alignment-boundary C \
+  unpaired.bam bam.vdjca

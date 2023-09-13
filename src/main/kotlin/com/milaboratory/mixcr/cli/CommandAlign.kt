@@ -26,8 +26,10 @@ import com.milaboratory.app.logger
 import com.milaboratory.app.matches
 import com.milaboratory.cli.FastqGroupReader
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.io.sequence.SequenceWriter
+import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.MultiFastqWriter
@@ -915,10 +917,10 @@ object CommandAlign {
             TripleEndFastq(3, true),
             QuadEndFastq(4, true),
             Fasta(1, false),
-            BAM(2, false);
+            BAM(-1 /* 1 or 2*/, false);
         }
 
-        private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
+        private fun createReader(pairedPatternPayload: Boolean?): OutputPortWithProgress<ProcessingBundle> {
             MiXCRMain.lm.reportApplicationInputs(
                 true, false,
                 allInputFiles,
@@ -932,8 +934,22 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    BAMReader(files, cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards, tempDest)
+                    val reader = BAMReader(files, cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards, tempDest)
                         .map { ProcessingBundle(it) }
+                    when (pairedPatternPayload) {
+                        null -> reader
+                        true -> reader.onEach { record ->
+                            ValidationException.require(record.read is PairedRead) {
+                                "Tag pattern require BAM file to contain only paired reads"
+                            }
+                        }
+
+                        false -> reader.onEach { record ->
+                            ValidationException.require(record.read is SingleRead) {
+                                "Tag pattern require BAM file to contain only single reads"
+                            }
+                        }
+                    }
                 }
 
                 Fasta -> {
@@ -943,8 +959,7 @@ object CommandAlign {
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
-                    )
-                        .map { ProcessingBundle(it) }
+                    ).map { ProcessingBundle(it) }
                 }
 
                 else -> { // All fastq file types
@@ -1010,15 +1025,30 @@ object CommandAlign {
             for (tagsValidation in cmdParams.tagsValidations)
                 tagsValidation.validate(tagsExtractor.tagsInfo)
 
-            // true if final NSQTuple will have two reads, false otherwise
-            val pairedPayload = when (tagsExtractor.pairedPatternPayload) {
-                null -> when (inputFileGroups.inputType) {
-                    BAM -> VDJCAligner.ReadsCount.ONE_OR_TWO
-                    else -> when (inputFileGroups.inputType.numberOfReads) {
-                        1 -> VDJCAligner.ReadsCount.ONE
-                        2 -> VDJCAligner.ReadsCount.TWO
-                        else -> throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
+            // Validating count of inputs with tag pattern
+            tagsExtractor.usedReadsCount?.let { requiredInputs ->
+                when (val inputType = inputFileGroups.inputType) {
+                    BAM -> ValidationException.require(requiredInputs <= 2) {
+                        "Can't use pattern with more than 2 reads with BAM input"
                     }
+
+                    else -> ValidationException.require(inputType.numberOfReads == requiredInputs) {
+                        "Tag pattern require $requiredInputs input ${if (requiredInputs == 1) "file" else "files"}, got ${inputType.numberOfReads}"
+                    }
+                }
+            }
+
+            // structure of final NSQTuple
+            val readsCountInTuple = when (tagsExtractor.pairedPatternPayload) {
+                null -> when (inputFileGroups.inputType.numberOfReads) {
+                    -1 -> {
+                        check(inputFileGroups.inputType == BAM)
+                        VDJCAligner.ReadsCount.ONE_OR_TWO
+                    }
+
+                    1 -> VDJCAligner.ReadsCount.ONE
+                    2 -> VDJCAligner.ReadsCount.TWO
+                    else -> throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
                 }
 
                 true -> VDJCAligner.ReadsCount.TWO
@@ -1028,7 +1058,7 @@ object CommandAlign {
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
                 alignerParameters,
-                pairedPayload,
+                readsCountInTuple,
                 cmdParams.overlapPairedReads
             )
             var numberOfExcludedNFGenes = 0
@@ -1077,7 +1107,7 @@ object CommandAlign {
             aligner.setEventsListener(reportBuilder)
 
             use(
-                createReader(),
+                createReader(tagsExtractor.pairedPatternPayload),
                 alignedWriter(outputFile),
                 failedReadsWriter(
                     pathsForNotAligned.notAlignedReadsI1,
