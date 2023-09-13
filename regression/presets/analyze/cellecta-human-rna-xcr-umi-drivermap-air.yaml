@@ -14,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(R1:*) \\ ^(UMI:N{14})"
+  tagPattern: "^(R1:*) \\ ^(UMI:N{18})(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []

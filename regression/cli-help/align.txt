@@ -25,10 +25,10 @@ Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimmin
                    [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                    (geneLabel|tag):key>] [--reset-export-clone-grouping]
                    [--export-productive-clones-only] [-O <key=value>]... [--report <path>]
-                   [--json-report <path>] [--threads <n>] [--force-overwrite] [--no-warnings]
-                   [--verbose] [--help] [-M <key=value>]... ([file_I1.fastq[.gz] [file_I2.fastq[.
-                   gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam)) alignments.
-                   vdjca
+                   [--json-report <path>] [--use-local-temp] [--threads <n>] [--force-overwrite]
+                   [--no-warnings] [--verbose] [--help] [-M <key=value>]... ([file_I1.fastq[.gz]
+                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
+                   (fasta|bam|sam)) alignments.vdjca
 Builds alignments with V,D,J and C genes for input sequencing reads.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
         (fasta|bam|sam))
@@ -147,6 +147,7 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.
+      --use-local-temp       Put temporary files in the same folder as the output files.
   -t, --threads <n>          Processing threads
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
