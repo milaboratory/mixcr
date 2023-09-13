@@ -17,3 +17,75 @@ exportAlignments-base:
       - field: "-allNFeaturesWithMinQuality"
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
+      - field: "-topChains"
+
+exportAlignments-umi-base:
+  abstract: true
+  exportAlignments:
+    chains: ALL
+    fields:
+      - field: "-readIds"
+      - field: "-tags"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+      - field: "-topChains"
+
+exportAlignments-single-cell-no-umi-base:
+  abstract: true
+  exportAlignments:
+    chains: ALL
+    fields:
+      - field: "-readIds"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+      - field: "-topChains"
+
+exportAlignments-single-cell-with-umi-base:
+  abstract: true
+  exportAlignments:
+    chains: ALL
+    fields:
+      - field: "-readIds"
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-tags"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+      - field: "-topChains"
