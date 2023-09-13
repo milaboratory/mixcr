@@ -266,7 +266,6 @@ upstreams:
             isOOF: 722
             hasStops: 333
       trimmingReport:
-        type: readTrimmerReport
         total: 49700
         r1LeftTrimmedEvents: 0
         r1RightTrimmedEvents: 0
@@ -1150,7 +1149,6 @@ upstreams:
             isOOF: 367
             hasStops: 220
       trimmingReport:
-        type: readTrimmerReport
         total: 29871
         r1LeftTrimmedEvents: 0
         r1RightTrimmedEvents: 0

@@ -17,6 +17,7 @@ import com.github.victools.jsonschema.generator.SchemaGenerator
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder
 import com.github.victools.jsonschema.generator.SchemaVersion
 import com.github.victools.jsonschema.module.jackson.JacksonModule
+import com.milaboratory.mitool.report.ReadTrimmerReport
 import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
 import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters

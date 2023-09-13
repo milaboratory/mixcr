@@ -11,8 +11,8 @@
       "clonesToSearchCap": {
         "limitClones": 10000,
         "preferIsotypes": [
-          "IGHM",
-          "IGHD"
+          "IgM",
+          "IgD"
         ],
         "seedForShuffle": 0
       },
@@ -36,8 +36,8 @@
       "clonesToSearchCap": {
         "limitClones": 10000,
         "preferIsotypes": [
-          "IGHM",
-          "IGHD"
+          "IgM",
+          "IgD"
         ],
         "seedForShuffle": 0
       },
