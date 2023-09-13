@@ -40,17 +40,17 @@ mixcr analyze generic-lt-single-cell-amplicon \
     output_with_template
 
 ## R2 as UMI
-#mixcr analyze generic-lt-single-cell-amplicon-with-umi \
-#    --tag-pattern "^(R1:*)\^(UMI:*)\^(CELL1:*)\^(CELL2:*)" \
-#    --species hsa \
-#    --rna \
-#    --floating-left-alignment-boundary \
-#    --floating-right-alignment-boundary C \
-#    subset_B004-7_S247_L001_R1_001.fastq.gz \
-#    subset_B004-7_S247_L001_R2_001.fastq.gz \
-#    subset_B004-7_S247_L001_I1_001.fastq.gz \
-#    subset_B004-7_S247_L001_I2_001.fastq.gz \
-#    output_UMI1
+mixcr analyze generic-lt-single-cell-amplicon-with-umi \
+    --tag-pattern "^(R1:*)\^(UMI:*)\^(CELL1:*)\^(CELL2:*)" \
+    --species hsa \
+    --rna \
+    --floating-left-alignment-boundary \
+    --floating-right-alignment-boundary C \
+    subset_B004-7_S247_L001_R1_001.fastq.gz \
+    subset_B004-7_S247_L001_R2_001.fastq.gz \
+    subset_B004-7_S247_L001_I1_001.fastq.gz \
+    subset_B004-7_S247_L001_I2_001.fastq.gz \
+    output_UMI1
 
 # R1 as UMI and payload
 mixcr analyze generic-lt-single-cell-amplicon-with-umi \
