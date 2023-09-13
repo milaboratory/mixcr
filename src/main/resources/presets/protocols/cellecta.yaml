@@ -12,7 +12,7 @@
     - type: SetSpecies
       species: hsa
     - type: SetTagPattern
-      tagPattern: ^(R1:*) \ ^(UMI:N{14})
+      tagPattern: ^(R1:*) \ ^(UMI:N{18})(R2:*)
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
