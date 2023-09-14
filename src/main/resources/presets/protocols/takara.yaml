@@ -30,6 +30,11 @@
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter

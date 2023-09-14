@@ -29,6 +29,7 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
 
+
 "thermofisher-human-rna-trb-oncomine-sr":
   label: "Oncomine RNA TCR Beta‑SR Assay"
   inheritFrom: thermofisher-human-oncomine-base
@@ -50,6 +51,14 @@
       geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "thermofisher-human-rna-igh-oncomine-sr":
   label: "Oncomine RNA IGH SR Assay"
