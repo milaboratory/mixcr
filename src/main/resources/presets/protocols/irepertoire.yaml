@@ -110,3 +110,11 @@
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:CDR3End}"]
 
+"irepertoire-human-rna-xcr-repseq-plus-umi":
+  vendor: "iRepertoire"
+  label: "Human IGH/TCR Repseq Plus with UMI"
+  category: non-generic
+  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR2Begin:FR4End}" ]
