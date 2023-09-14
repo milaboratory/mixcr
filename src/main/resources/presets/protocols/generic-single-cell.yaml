@@ -71,6 +71,8 @@ generic-lt-single-cell-amplicon:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-no-umi-base
 
 # Low throughput (plates etc) amplicon-based single cell, with UMIs
 generic-lt-single-cell-amplicon-with-umi:
@@ -207,6 +209,8 @@ generic-lt-single-cell-amplicon-with-umi:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-with-umi-base
 
 # Low throughput (plates etc) shotgun single cell, no UMIs
 generic-lt-single-cell-fragmented:
@@ -265,6 +269,8 @@ generic-lt-single-cell-fragmented:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-no-umi-base
 
 # Low throughput (plates etc) shotgun single cell, with UMIs
 generic-lt-single-cell-fragmented-with-umi:
@@ -369,6 +375,8 @@ generic-lt-single-cell-fragmented-with-umi:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-with-umi-base
 
 
 # High throughput amplicon-based single cell, no UMIs
@@ -472,6 +480,8 @@ generic-ht-single-cell-amplicon:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-no-umi-base
 
 # High throughput amplicon-based single cell, with UMIs
 generic-ht-single-cell-amplicon-with-umi:
@@ -637,6 +647,8 @@ generic-ht-single-cell-amplicon-with-umi:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-with-umi-base
 
 # High throughput fragmented-based single cell, no UMIs
 generic-ht-single-cell-fragmented:
@@ -733,6 +745,8 @@ generic-ht-single-cell-fragmented:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-no-umi-base
 
 # High throughput fragmented-based single cell, with UMIs
 generic-ht-single-cell-fragmented-with-umi:
@@ -862,6 +876,8 @@ generic-ht-single-cell-fragmented-with-umi:
                     share: 0.95
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-with-umi-base
 
 generic-single-cell-gex-base:
   category: generic
@@ -906,6 +922,8 @@ generic-single-cell-gex:
         tagType: Molecule
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-no-umi-base
 
 
 # Single cell GEX with UMI
@@ -924,5 +942,7 @@ generic-single-cell-gex-with-umi:
         tagType: Molecule
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-with-umi-base
 
 
