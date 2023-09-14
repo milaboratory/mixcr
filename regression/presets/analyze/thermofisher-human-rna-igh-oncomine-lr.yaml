@@ -232,7 +232,7 @@ assemble:
         scoring: null
     separateByV: false
     separateByJ: false
-    separateByC: false
+    separateByC: true
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
@@ -283,6 +283,9 @@ exportAlignments:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -isotype
+    args:
+    - auto
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -306,6 +309,9 @@ exportClones:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -isotype
+    args:
+    - auto
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []

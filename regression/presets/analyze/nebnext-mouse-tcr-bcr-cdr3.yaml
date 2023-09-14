@@ -344,6 +344,9 @@ exportAlignments:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -isotype
+    args:
+    - auto
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -373,6 +376,9 @@ exportClones:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -isotype
+    args:
+    - auto
   splitFilesBy:
   - geneLabel:ReliableChain
   groupClonesBy: []
