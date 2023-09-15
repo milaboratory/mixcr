@@ -156,7 +156,7 @@ object CommandAlign {
                 when {
                     f0.matches(InputFileType.FASTQ) -> SingleEndFastq
                     f0.matches(InputFileType.FASTA) -> Fasta
-                    f0.matches(InputFileType.BAM) -> BAM
+                    f0.matches(InputFileType.BAM_SAM_CRAM) -> BAM
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
             } else if (first.size <= 4) {
@@ -419,7 +419,7 @@ object CommandAlign {
                 paths.first(),
                 InputFileType.FASTQ,
                 InputFileType.FASTA,
-                InputFileType.BAM,
+                InputFileType.BAM_SAM_CRAM,
                 InputFileType.TSV
             )
 
@@ -446,7 +446,7 @@ object CommandAlign {
     }
 
     const val inputsLabel =
-        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam))"
+        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam|cram))"
 
     val inputsDescription = arrayOf(
         "Two fastq files for paired reads or one file for single read data.",
