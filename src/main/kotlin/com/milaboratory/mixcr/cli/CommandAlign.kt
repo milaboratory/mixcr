@@ -832,7 +832,7 @@ object CommandAlign {
         i.e. all external presets and will be packed into the spec object.*/
         private val paramsSpecPacked by lazy { paramsSpec.pack() }
 
-        private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
+        private val bpPair by lazy { paramsResolver.resolve(paramsSpec) }
 
         private val cmdParams by lazy {
             var params = bpPair.second

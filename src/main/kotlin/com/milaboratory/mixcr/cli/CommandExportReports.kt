@@ -16,6 +16,7 @@ import com.milaboratory.app.InputFileType.JSON
 import com.milaboratory.app.InputFileType.TXT
 import com.milaboratory.app.InputFileType.YAML
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.getReportSafe
@@ -85,6 +86,11 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
 
     override val outputFiles
         get() = listOfNotNull(outputPath)
+
+    override fun initialize() {
+        if (outputPath == null)
+            logger.redirectSysOutToSysErr()
+    }
 
     override fun validate() {
         ValidationException.requireFileType(inputPath, InputFileType.VDJCA, InputFileType.CLNX, InputFileType.SHMT)

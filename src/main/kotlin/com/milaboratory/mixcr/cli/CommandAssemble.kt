@@ -242,7 +242,7 @@ object CommandAssemble {
                 val numberOfAlignments = alignmentsReader.numberOfAlignments
 
                 val paramSpec = resetPreset.overridePreset(inputHeader.paramsSpec).addMixins(mixins)
-                val (_, cmdParam) = paramsResolver.resolve(paramSpec, printParameters = logger.verbose) { cp ->
+                val (_, cmdParam) = paramsResolver.resolve(paramSpec) { cp ->
                     if (!cp.inferMinRecordsPerConsensus || cp.consensusAssemblerParameters == null)
                         return@resolve cp
 
@@ -389,7 +389,7 @@ object CommandAssemble {
                         .withAssemblerParameters(cloneAssemblerParameters)
                         .addStepParams(
                             MiXCRCommandDescriptor.assemble,
-                            paramsResolver.resolve(paramSpec, printParameters = logger.verbose).second
+                            paramsResolver.resolve(paramSpec).second
                         )
                         .copy(paramsSpec = dontSavePresetOption.presetToSave(paramSpec))
                     val cloneSet = assemblerRunner

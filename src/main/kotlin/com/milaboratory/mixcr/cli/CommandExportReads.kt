@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -15,13 +15,13 @@ import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.util.SmartProgressReporter
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -62,28 +62,35 @@ class CommandExportReads : MiXCRCommandWithOutputs() {
         }
     }
 
+    override fun initialize() {
+        if (outputFiles.isEmpty())
+            logger.redirectSysOutToSysErr()
+    }
+
     override fun run1() {
         VDJCAlignmentsReader(inputFiles.first()).use { reader ->
             createWriter().use { writer ->
-                SmartProgressReporter.startProgressReport("Extracting reads", reader, System.err)
-                reader.forEach { alignments ->
-                    val reads = alignments.originalReads
-                        ?: throw ApplicationException("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).")
-                    for (read in reads) {
-                        when (writer) {
-                            is PairedFastqWriter -> {
-                                if (read.numberOfReads() == 1)
-                                    throw ValidationException("VDJCA file contains single-end reads, but two output files are specified.")
-                                writer.write(read as PairedRead)
-                            }
-                            is SingleFastqWriter -> {
-                                if (read.numberOfReads() == 2)
-                                    throw ValidationException("VDJCA file contains paired-end reads, but only one / no output file is specified.")
-                                writer.write(read as SingleRead)
+                reader
+                    .reportProgress("Extracting reads")
+                    .forEach { alignments ->
+                        val reads = alignments.originalReads
+                            ?: throw ApplicationException("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).")
+                        for (read in reads) {
+                            when (writer) {
+                                is PairedFastqWriter -> {
+                                    if (read.numberOfReads() == 1)
+                                        throw ValidationException("VDJCA file contains single-end reads, but two output files are specified.")
+                                    writer.write(read as PairedRead)
+                                }
+
+                                is SingleFastqWriter -> {
+                                    if (read.numberOfReads() == 2)
+                                        throw ValidationException("VDJCA file contains paired-end reads, but only one / no output file is specified.")
+                                    writer.write(read as SingleRead)
+                                }
                             }
                         }
                     }
-                }
             }
         }
     }

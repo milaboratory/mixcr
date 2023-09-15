@@ -97,12 +97,16 @@ object CommandQcChecks {
             }
         }
 
+        override fun initialize() {
+            if (printToStdout || outputFiles.isEmpty())
+                logger.redirectSysOutToSysErr()
+        }
+
         override fun run1() {
             val fileInfo = IOUtil.extractFileInfo(input)
 
             val (_, params) = paramsResolver.resolve(
-                resetPreset.overridePreset(fileInfo.header.paramsSpec),
-                printParameters = logger.verbose && outputFiles.isNotEmpty()
+                resetPreset.overridePreset(fileInfo.header.paramsSpec)
             )
 
             val results = params.checks

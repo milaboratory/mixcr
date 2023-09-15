@@ -213,13 +213,18 @@ object CommandExportClones {
             ValidationException.requireFileType(inputFile, InputFileType.CLNX)
         }
 
+        override fun initialize() {
+            if (outputFile == null) {
+                logger.redirectSysOutToSysErr()
+            }
+        }
+
         override fun run1() {
             val fileInfo = IOUtil.extractFileInfo(inputFile)
             val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val (_, params) = paramsResolver.resolve(
-                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins),
-                printParameters = logger.verbose && outputFile != null
+                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins)
             )
 
             ValidationException.chainsExist(Chains.parse(params.chains), initialSet.usedGenes)
@@ -252,7 +257,7 @@ object CommandExportClones {
                         }
                         val newSpitBy = tagsExportedByGroups.maxOrNull()
                         if (newSpitBy != null && outputFile != null) {
-                            println("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
+                            logger.log("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
                         }
                         newSpitBy
                     }
@@ -276,7 +281,7 @@ object CommandExportClones {
                         .split { clone -> groupByKeyExtractors.map { it.getLabel(clone) } }
                         .values
                     val exportClones = ExportClones(setsByGroup, writer, Long.MAX_VALUE)
-                    SmartProgressReporter.startProgressReport(exportClones, System.err)
+                    SmartProgressReporter.startProgressReport(exportClones)
                     exportClones.run()
                     if (initialSet.size() > set.size()) {
                         val initialCount = initialSet.clones.sumOf { obj: Clone -> obj.count }
@@ -284,13 +289,13 @@ object CommandExportClones {
                         val di = initialSet.size() - set.size()
                         val cdi = initialCount - count
                         val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
-                        logger.warnUnfomatted(
+                        logger.log {
                             "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
-                        )
+                        }
                         val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
-                        logger.warnUnfomatted(
+                        logger.log {
                             "Filtered $count of $initialCount reads ($percentageCDI%)."
-                        )
+                        }
                     }
                 }
             }
@@ -320,8 +325,10 @@ object CommandExportClones {
                             fileNameSV.add(keyValue, "$i", keyName)
                             i++
                         }
-                        val keyString = labels.joinToString("_")
-                        System.err.println("Exporting $keyString")
+                        if (labels.isNotEmpty()) {
+                            val keyString = labels.joinToString("_")
+                            logger.progress { "Exporting $keyString" }
+                        }
                         runExport(set, Path(sFileName.render(fileNameSV)))
                     }
 

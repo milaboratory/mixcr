@@ -18,7 +18,6 @@ import cc.redberry.pipe.util.asSequence
 import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
@@ -235,7 +234,7 @@ object CommandExtend {
             paramsSpec: MiXCRParamsSpec,
             alignerParameters: VDJCAlignerParameters
         ): ProcessWrapper<T> {
-            val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
+            val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
 
             val extender = VDJCObjectExtender<T>(
                 chains, extensionQuality,

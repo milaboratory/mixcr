@@ -15,6 +15,7 @@ import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
@@ -52,7 +53,6 @@ import com.milaboratory.mixcr.export.FieldExtractor
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.util.OutputPortWithProgress
-import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.exhaustive
 import com.milaboratory.util.limit
 import com.milaboratory.util.withExpectedSize
@@ -236,6 +236,12 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(out, InputFileType.TSV)
     }
 
+    override fun initialize() {
+        if (out == null) {
+            logger.redirectSysOutToSysErr()
+        }
+    }
+
     override fun run1() {
         val extractors: List<FieldExtractor<AirrVDJCObjectWrapper>>
         val closeable: AutoCloseable
@@ -287,11 +293,6 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         if (limit != null) {
             port = port.limit(limit!!.toLong())
         }
-        SmartProgressReporter.startProgressReport(
-            "Exporting to AIRR format",
-            port,
-            if (out != null) System.out else System.err
-        )
         val rowMetaForExport = RowMetaForExport(
             fileInfo.header.tagsInfo,
             MetaForExport(fileInfo),
@@ -299,25 +300,27 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
         )
         (out?.let { PrintStream(it.toFile()) } ?: System.out).use { output ->
             closeable.use {
-                port.use {
-                    var first = true
-                    for (extractor in extractors) {
-                        if (!first) output.print("\t")
-                        first = false
-                        output.print(extractor.header)
-                    }
-                    output.println()
-                    port.forEach { obj ->
-                        first = true
-                        val wrapper = AirrVDJCObjectWrapper(obj)
+                port
+                    .reportProgress("Exporting to AIRR format")
+                    .use {
+                        var first = true
                         for (extractor in extractors) {
                             if (!first) output.print("\t")
                             first = false
-                            output.print(extractor.extractValue(rowMetaForExport, wrapper))
+                            output.print(extractor.header)
                         }
                         output.println()
+                        port.forEach { obj ->
+                            first = true
+                            val wrapper = AirrVDJCObjectWrapper(obj)
+                            for (extractor in extractors) {
+                                if (!first) output.print("\t")
+                                first = false
+                                output.print(extractor.extractValue(rowMetaForExport, wrapper))
+                            }
+                            output.println()
+                        }
                     }
-                }
             }
         }
     }

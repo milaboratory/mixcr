@@ -138,7 +138,7 @@ object CommandAssemblePartial {
             ) { reader, writer ->
                 val header = reader.header
                 val paramsSpec = resetPreset.overridePreset(header.paramsSpec)
-                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
+                val cmdParams = paramsResolver.resolve(paramsSpec).second
                 val groupingDepth =
                     header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                 writer.writeHeader(

@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
@@ -147,6 +148,11 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
         order = OptionsOrder.mixins.generic
     )
     var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
+
+    override fun initialize() {
+        if (outputFile == null)
+            logger.redirectSysOutToSysErr()
+    }
 
     override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
