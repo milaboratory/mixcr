@@ -36,6 +36,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
 
 @Command(
     description = ["Export report schemas"],
@@ -57,7 +58,7 @@ class CommandExportSchemas : Runnable {
         config.forTypesInGeneral()
             .withSubtypeResolver { declaredType, context ->
                 val kClass = declaredType.erasedType.kotlin
-                if (kClass.isSealed && kClass != MiXCRCommandDescriptor::class) {
+                if (kClass.isSealed && kClass.findAnnotation<JsonSchemaType>() == null) {
                     val typeContext = context.typeContext
                     kClass.sealedFinalSubclasses()
                         .map { typeContext.resolveSubtype(declaredType, it.java) }
