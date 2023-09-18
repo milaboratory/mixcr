@@ -1,12 +1,13 @@
 Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimming-quality-threshold
                    <n>] [--trimming-window-size <n>] [--write-all] [--tag-pattern-file <path>]
                    [--tag-parse-unstranded] [--tag-max-budget <n>] [--read-id-as-cell-tag]
-                   [--read-buffer <n>] [--high-compression] [--not-aligned-I1 <path.fastq[.gz]>]
-                   [--not-aligned-I2 <path.fastq[.gz]>] [--not-aligned-R1 <path.fastq[.gz]>]
-                   [--not-aligned-R2 <path.fastq[.gz]>] [--not-parsed-I1 <path.fastq[.gz]>]
-                   [--not-parsed-I2 <path.fastq[.gz]>] [--not-parsed-R1 <path.fastq[.gz]>]
-                   [--not-parsed-R2 <path.fastq[.gz]>] [--species <species>] [--library <library>]
-                   [--split-by-sample] [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
+                   [--read-buffer <n>] [--high-compression] [--reference-for-cram genome.fasta[.
+                   gz]] [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2 <path.fastq[.gz]>]
+                   [--not-aligned-R1 <path.fastq[.gz]>] [--not-aligned-R2 <path.fastq[.gz]>]
+                   [--not-parsed-I1 <path.fastq[.gz]>] [--not-parsed-I2 <path.fastq[.gz]>]
+                   [--not-parsed-R1 <path.fastq[.gz]>] [--not-parsed-R2 <path.fastq[.gz]>]
+                   [--species <species>] [--library <library>] [--split-by-sample]
+                   [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
                    [--sample-sheet-strict sample_sheet.tsv] [--dna] [--rna]
                    [--floating-left-alignment-boundary [<anchor_point>]]
                    [--rigid-left-alignment-boundary [<anchor_point>]]
@@ -27,11 +28,11 @@ Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimmin
                    [--export-productive-clones-only] [-O <key=value>]... [--report <path>]
                    [--json-report <path>] [--use-local-temp] [--threads <n>] [--force-overwrite]
                    [--no-warnings] [--verbose] [--help] [-M <key=value>]... ([file_I1.fastq[.gz]
-                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-                   (fasta|bam|sam)) alignments.vdjca
+                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]
+                   |bam|sam|cram)) alignments.vdjca
 Builds alignments with V,D,J and C genes for input sequencing reads.
-      ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-        (fasta|bam|sam))
+      ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta
+        [.gz]|bam|sam|cram))
                              Two fastq files for paired reads or one file for single read data.
                              Use {{n}} if you want to concatenate files from multiple lanes, like:
                              my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz
@@ -73,6 +74,8 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
       --read-buffer <n>      Size of buffer for FASTQ readers in bytes. Default: 4Mb
       --high-compression     Use higher compression for output file, 10~25% slower, minus 30~50% of
                                file size.
+      --reference-for-cram genome.fasta[.gz]
+                             Reference to the genome that was used for build a cram file
       --not-aligned-I1 <path.fastq[.gz]>
                              Pipe not aligned I1 reads into separate file.
       --not-aligned-I2 <path.fastq[.gz]>
