@@ -32,8 +32,7 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import com.milaboratory.util.CanReportProgress
-import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.VDJCLibraryRegistry
@@ -147,6 +146,11 @@ object CommandExportCloneGroups {
             ValidationException.requireFileType(inputFile, InputFileType.CLNX)
         }
 
+        override fun initialize() {
+            if (outputFile == null)
+                logger.redirectSysOutToSysErr()
+        }
+
         override fun run1() {
             val fileInfo = IOUtil.extractFileInfo(inputFile)
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
@@ -155,8 +159,7 @@ object CommandExportCloneGroups {
                 "Not all clones have a group. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones."
             }
             val (_, params) = paramsResolver.resolve(
-                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins),
-                printParameters = logger.verbose && outputFile != null
+                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins)
             )
 
             val recalculatedClones = filterClones(initialSet, params, fileInfo)
@@ -179,11 +182,10 @@ object CommandExportCloneGroups {
                 fieldExtractors,
                 !params.noHeader
             ) { rowMetaForExport }.use { writer ->
-                val reader = groups.asOutputPort()
-                if (reader is CanReportProgress) {
-                    SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
-                }
-                reader.forEach { writer.put(it) }
+                groups.asOutputPort()
+                    .withExpectedSize(groups.size.toLong())
+                    .reportProgress("Exporting clone groups")
+                    .forEach { writer.put(it) }
             }
         }
 
