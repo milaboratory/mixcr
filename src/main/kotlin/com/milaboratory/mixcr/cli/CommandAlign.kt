@@ -156,7 +156,7 @@ object CommandAlign {
                 val f0 = first[0]
                 when {
                     f0.matches(InputFileType.FASTQ) -> SingleEndFastq
-                    f0.matches(InputFileType.FASTA) -> Fasta
+                    f0.matches(InputFileType.FASTA) || f0.matches(InputFileType.FASTA_GZ) -> Fasta
                     f0.matches(InputFileType.BAM_SAM_CRAM) -> BAM
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
