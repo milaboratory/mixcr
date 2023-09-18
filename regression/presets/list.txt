@@ -1,117 +1,578 @@
-PresetName                                         Required mix-ins
-10x-sc-5gex                                        --species <name>
-10x-sc-xcr-vdj                                     --species <name>
-abhelix-human-rna-xcr
-bd-human-sc-xcr-rhapsody-cdr3
-bd-mouse-sc-xcr-rhapsody-cdr3
-bd-sc-xcr-rhapsody-full-length                     --species <name>
-bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2    --species <name>
-biomed2-human-rna-igh
-biomed2-human-rna-igkl
-biomed2-human-rna-trbdg
-cellecta-human-rna-xcr-umi-drivermap-air
-exome-seq                                          --species <name>
-flairr-seq-bcr                                     --species <name>
-generic-amplicon                                   (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   (--dna|--rna)
-generic-amplicon-with-umi                          (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   (--dna|--rna)
-                                                   --tag-pattern <pattern>
-generic-ht-single-cell-amplicon                    (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   --tag-pattern <pattern>
-generic-ht-single-cell-amplicon-with-umi           (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-                                                   --tag-pattern <pattern>
-generic-ht-single-cell-fragmented                  --species <name>
-                                                   --tag-pattern <pattern>
-generic-ht-single-cell-fragmented-with-umi         --species <name>
-                                                   --tag-pattern <pattern>
-generic-lt-single-cell-amplicon                    (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-generic-lt-single-cell-amplicon-with-umi           (--floating-left-alignment-boundary [<anchor_point>]|
-                                                   --rigid-left-alignment-boundary [<anchor_point>])
-                                                   --species <name>
-                                                   (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|
-                                                   --rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-generic-lt-single-cell-fragmented                  --species <name>
-generic-lt-single-cell-fragmented-with-umi         --species <name>
-generic-ont                                        --species <name>
-generic-ont-with-umi                               --species <name>
-                                                   --tag-pattern <pattern>
-generic-pacbio                                     --species <name>
-generic-pacbio-with-umi                            --species <name>
-                                                   --tag-pattern <pattern>
-generic-single-cell-gex                            --species <name>
-generic-single-cell-gex-with-umi                   --species <name>
-                                                   --tag-pattern <pattern>
-han-et-al-2014                                     --species <name>
-illumina-human-rna-trb-ampliseq-plus
-illumina-human-rna-trb-ampliseq-sr
-irepertoire-human-dna-xcr-repseq-lr
-irepertoire-human-dna-xcr-repseq-sr
-irepertoire-human-rna-xcr-repseq-lr
-irepertoire-human-rna-xcr-repseq-plus
-irepertoire-human-rna-xcr-repseq-sr
-irepertoire-mouse-rna-xcr-repseq-lr
-irepertoire-mouse-rna-xcr-repseq-plus
-irepertoire-mouse-rna-xcr-repseq-sr
-mikelov-et-al-2021
-milab-human-dna-tcr-multiplex
-milab-human-dna-xcr-7genes-multiplex
-milab-human-rna-ig-umi-multiplex
-milab-human-rna-tcr-umi-multiplex
-milab-human-rna-tcr-umi-race
-milab-mouse-rna-tcr-umi-race
-neb-human-rna-xcr-umi-nebnext
-neb-mouse-rna-xcr-umi-nebnext
-parsebio-sc-3gex-evercode-wt                       --species <name>
-parsebio-sc-3gex-evercode-wt-mega                  --species <name>
-parsebio-sc-3gex-evercode-wt-mini                  --species <name>
-qiagen-human-rna-tcr-umi-qiaseq
-qiagen-mouse-rna-tcr-umi-qiaseq
-rna-seq                                            --species <name>
-seq-well-vdj                                       --species <name>
-singleron-human-sc-xcr-gexscope-vdj
-smart-seq2-vdj                                     --species <name>
-split-seq-3gex                                     --species <name>
-takara-human-rna-bcr-umi-smarter
-takara-human-rna-bcr-umi-smartseq
-takara-human-rna-tcr-smarter
-takara-human-rna-tcr-umi-smarter-v2
-takara-human-rna-tcr-umi-smartseq
-takara-mouse-rna-bcr-smarter
-takara-mouse-rna-tcr-smarter
-takara-mouse-rna-tcr-umi-smarseq
-thermofisher-human-dna-bcr-oncomine-pan-clonality
-thermofisher-human-dna-igh-oncomine-fr1-j
-thermofisher-human-dna-igh-oncomine-fr2-j
-thermofisher-human-dna-igh-oncomine-fr3-j
-thermofisher-human-dna-igh-oncomine-sr
-thermofisher-human-dna-igh-oncomine-v-leader-j
-thermofisher-human-dna-tcr-oncomine-pan-clonality
-thermofisher-human-dna-trb-oncomine-sr
-thermofisher-human-rna-igh-oncomine-lr
-thermofisher-human-rna-igh-oncomine-sr
-thermofisher-human-rna-trb-oncomine-lr
-thermofisher-human-rna-trb-oncomine-sr
-vergani-et-al-2017-cdr3
-vergani-et-al-2017-full-length
+Generic presets:
+generic-single-cell-gex (Generic single-cell gene expression)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+generic-ont (Generic Oxford Nanopore data)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+generic-pacbio-with-umi (Generic PacBio data with UMIs)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+generic-lt-single-cell-fragmented (Generic low throughput shotgun single-cell)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+generic-amplicon (Generic amplicon)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+generic-ont-with-umi (Generic Oxford Nanopore data with UMIs)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+generic-single-cell-gex-with-umi (Generic single-cell gene expression with UMIs)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+generic-ht-single-cell-fragmented-with-umi (Generic high throughput shotgun single-cell with UMIs)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+smart-seq2-vdj (Smart-Seq2)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+generic-lt-single-cell-amplicon-with-umi (Generic low throughput amplicon single-cell with UMIs)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+generic-amplicon-with-umi (Generic amplicon with UMI barcodes)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+generic-ht-single-cell-fragmented (Generic high throughput shotgun single-cell)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+generic-lt-single-cell-amplicon (Generic low throughput amplicon single-cell)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+generic-ht-single-cell-amplicon-with-umi (Generic high throughput amplicon single-cell with UMIs)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+generic-pacbio (Generic PacBio data)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+rna-seq (Generic RNA-Seq data)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+exome-seq (Generic Exome-Seq data)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+generic-ht-single-cell-amplicon (Generic high throughput amplicon single-cell)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+generic-lt-single-cell-fragmented-with-umi (Generic low throughput shotgun single-cell with UMIs)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
+-----iRepertoire-----
+irepertoire-human-dna-xcr-repseq-sr (Human DNA IGH/TCR Repseq Short Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-mouse-rna-xcr-repseq-lr (Mouse IGH/TCR Repseq Long Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-human-dna-xcr-repseq-lr (Human DNA IGH/TCR Repseq Long Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-mouse-rna-xcr-repseq-sr (Mouse IGH/TCR Repseq Short Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-mouse-rna-xcr-repseq-plus (Mouse IGH/TCR Repseq Plus)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-human-rna-xcr-repseq-sr (Human IGH/TCR Repseq Short Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-human-rna-xcr-repseq-plus (Human IGH/TCR Repseq Plus)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+irepertoire-human-rna-xcr-repseq-lr (Human IGH/TCR Repseq Long Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+-----Takara Bio-----
+takara-human-rna-tcr-umi-smarter-v2 (SMARTer Human TCR a/b Profiling Kit v2)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+takara-mouse-rna-tcr-smarter (SMARTer Mouse TCR a/b Profiling Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+takara-mouse-rna-tcr-umi-smarseq (SMART-Seq Mouse TCR (with UMIs))
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+takara-human-rna-tcr-umi-smartseq (SMART-Seq Human TCR (with UMIs))
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+takara-mouse-rna-bcr-smarter (SMARTer Mouse BCR IgG H/K/L Profiling Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+takara-human-rna-bcr-umi-smarter (SMARTer Human BCR IgG IgM H/K/L Profiling Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+takara-human-rna-tcr-smarter (SMARTer Human TCR a/b Profiling Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+-----Thermo Fisher-----
+thermofisher-human-dna-igh-oncomine-sr (Oncomine DNA IGH SR Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-trb-oncomine-sr (Oncomine DNA TCR Beta‑LR Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-bcr-oncomine-pan-clonality (Oncomine BCR Pan-Clonality Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-igh-oncomine-v-leader-j (Oncomine IGH Leader-J Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-igh-oncomine-fr1-j (Oncomine IGH FR1-J Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-rna-igh-oncomine-lr (Oncomine RNA IGH LR Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-tcr-oncomine-pan-clonality (Oncomine TCR Pan-Clonality Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-rna-igh-oncomine-sr (Oncomine RNA IGH SR Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-igh-oncomine-fr3-j (Oncomine IGH FR3(d)-J Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-rna-trb-oncomine-sr (Oncomine RNA TCR Beta‑SR Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-rna-trb-oncomine-lr (Oncomine RNA TCR Beta‑LR Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+thermofisher-human-dna-igh-oncomine-fr2-j (Oncomine IGH FR2-J Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+-----MiLaboratories-----
+milab-human-rna-tcr-umi-multiplex (Human TCR RNA Multiplex)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+milab-mouse-rna-tcr-umi-race (Mouse TCR RNA 5'RACE)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+milab-human-rna-tcr-umi-race (Human TCR RNA 5'RACE)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+milab-human-dna-xcr-7genes-multiplex (Human 7GENES DNA Multiplex)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+milab-human-dna-tcr-multiplex (Human TCR DNA Multiplex)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+-----Illumina-----
+illumina-human-rna-trb-ampliseq-plus (Human TCR Beta Ampliseq Plus)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+illumina-human-rna-trb-ampliseq-sr (Human TCR Beta Ampliseq Short Read)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+-----Public-----
+vergani-et-al-2017-full-length (Vergani et al., 2017)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+seq-well-vdj (Seq-well VDJ)
+  Required args:
+    --species <name>
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+mikelov-et-al-2021 (Mikelov et al., 2021)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+split-seq-3gex (SPLIT-seq 3' Gene expression)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+biomed2-human-rna-igkl (BIOMED2 IGK/IGL)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+vergani-et-al-2017-cdr3 (Vergani et al., 2017)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+han-et-al-2014 (Han et al., 2014)
+  Required args:
+    --species <name>
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+flairr-seq-bcr (FLLAIRR-seq)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+biomed2-human-rna-igh (BIOMED2 IGH)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+biomed2-human-rna-trbdg (BIOMED2 TCR Beta/Delta/Gamma)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+-----Parse Biosciences-----
+parsebio-sc-3gex-evercode-wt (Evercode single-cell WT)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+parsebio-sc-3gex-evercode-wt-mini (Evercode single-cell WT Mini)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+parsebio-sc-3gex-evercode-wt-mega (Evercode single-cell WT Mega)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+-----BD biosciences-----
+bd-mouse-sc-xcr-rhapsody-cdr3 (Rhapsody Mouse VDJ CDR3 Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+bd-sc-xcr-rhapsody-full-length (Rhapsody Full-length TCR/BCR Multiomic Assay)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2 (Rhapsody Full-length TCR/BCR Multiomic Assay Enhaced Beads V2)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+bd-human-sc-xcr-rhapsody-cdr3 (Rhapsody Human VDJ CDR3 Assay)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+-----QIAGEN-----
+qiagen-human-rna-tcr-umi-qiaseq (QIAseq Human TCR Panel Immune Repertoire RNA Library Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+qiagen-mouse-rna-tcr-umi-qiaseq (QIAseq Mouse TCR Panel Immune Repertoire RNA Library Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+-----New England BioLabs-----
+neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
+
+-----10x Genomics-----
+10x-sc-5gex (5' Single cell gene expression)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+10x-sc-xcr-vdj (5' Single cell VDJ)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+-----AbHelix-----
+abhelix-human-rna-xcr (Human immunoglobulin repertoire)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
+-----Singleron Biotechnologies-----
+singleron-human-sc-xcr-gexscope-vdj (GEXSCOPE Human Single Cell V(D)J Kit )
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
+-----Cellecta-----
+cellecta-human-rna-xcr-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+    --tag-pattern <pattern>
 

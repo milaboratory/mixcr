@@ -1,5 +1,6 @@
-Usage: mixcr listPresets [--no-warnings] [--verbose] [--help]
+Usage: mixcr listPresets [--no-warnings] [--verbose] [--help] [<query>]
 Show all available presets
+      [<query>]            Will export only presets that contains a specified parameter.
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.
   -h, --help               Show this help message and exit.
