@@ -819,7 +819,7 @@ object CommandAlign {
 
         @Option(
             names = [BAMReader.referenceForCramOption],
-            description = ["Reference for genome that was used for build a cram file"],
+            description = ["Reference to the genome that was used for build a cram file"],
             order = OptionsOrder.main + 10_900,
             paramLabel = "genome.fasta[.gz]"
         )
