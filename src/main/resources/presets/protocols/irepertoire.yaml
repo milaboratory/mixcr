@@ -114,7 +114,41 @@
   vendor: "iRepertoire"
   label: "Human IGH/TCR Repseq Plus with UMI"
   category: non-generic
-  inheritFrom: irepertoire-human-rna-xcr-repseq-sr
+  inheritFrom: generic-amplicon-with-umi
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
   mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{10})N{8}(R1:*)\^N{3}(R2:*)
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:FR4End}" ]
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
+
+"irepertoire-mouse-rna-xcr-repseq-plus-umi":
+  vendor: "iRepertoire"
+  label: "Mouse IGH/TCR Repseq Plus with UMI"
+  category: non-generic
+  inheritFrom: irepertoire-human-rna-xcr-repseq-plus-umi
+  mixins:
+    - type: SetSpecies
+      species: mmu
