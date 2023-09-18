@@ -68,6 +68,8 @@ generic-amplicon-with-umi:
     inheritFrom: assemble-with-consensus-base
   exportClones:
     inheritFrom: exportClones-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-umi-base
   qc:
     checks:
       - type: SuccessfullyAlignedReads

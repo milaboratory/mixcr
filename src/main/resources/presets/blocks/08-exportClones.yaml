@@ -71,6 +71,7 @@ exportClones-single-cell-no-umi-base:
       - field: "-allNFeaturesWithMinQuality"
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
+      - field: "-topChains"
 
 exportClones-single-cell-with-umi-base:
   abstract: true
@@ -97,3 +98,4 @@ exportClones-single-cell-with-umi-base:
       - field: "-allNFeaturesWithMinQuality"
       - field: "-allAAFeatures"
       - field: "-defaultAnchorPoints"
+      - field: "-topChains"
