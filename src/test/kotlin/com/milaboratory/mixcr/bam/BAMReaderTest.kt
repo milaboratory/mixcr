@@ -1,8 +1,6 @@
 package com.milaboratory.mixcr.bam
 
 import cc.redberry.pipe.util.asSequence
-import cc.redberry.pipe.util.map
-import cc.redberry.pipe.util.onEach
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
@@ -77,7 +75,13 @@ class BAMReaderTest {
         unpairedFastqName: List<Path>?
     ) {
         val tempFileDest = systemTempFolderDestination("test")
-        BAMReader(readers, dropNonVDJChromosomes = false, replaceWildcards = false, tempFileDest).use { converter ->
+        BAMReader(
+            readers,
+            dropNonVDJChromosomes = false,
+            replaceWildcards = false,
+            tempFileDest,
+            referenceForCram = null
+        ).use { converter ->
             val resF1 = File.createTempFile("my_r1", ".fastq")
             val resF2 = File.createTempFile("my_r2", ".fastq")
             val resFu = File.createTempFile("my_ru", ".fastq")

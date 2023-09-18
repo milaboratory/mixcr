@@ -95,6 +95,7 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
+import com.milaboratory.util.unzippedInputStream
 import com.milaboratory.util.use
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
@@ -294,6 +295,18 @@ object CommandAlign {
             "I1,I2,R1,R2",
         )
 
+        val outputFiles
+            get() = listOfNotNull(
+                notAlignedReadsI1,
+                notAlignedReadsI2,
+                notAlignedReadsR1,
+                notAlignedReadsR2,
+                notParsedReadsI1,
+                notParsedReadsI2,
+                notParsedReadsR1,
+                notParsedReadsR2,
+            )
+
         fun fillWithDefaults(inputType: Cmd.InputType, outputDir: Path, prefix: String) {
             fun fill(type: String) {
                 when (type) {
@@ -419,6 +432,7 @@ object CommandAlign {
                 paths.first(),
                 InputFileType.FASTQ,
                 InputFileType.FASTA,
+                InputFileType.FASTA_GZ,
                 InputFileType.BAM_SAM_CRAM,
                 InputFileType.TSV
             )
@@ -446,7 +460,7 @@ object CommandAlign {
     }
 
     const val inputsLabel =
-        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam|cram))"
+        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]|bam|sam|cram))"
 
     val inputsDescription = arrayOf(
         "Two fastq files for paired reads or one file for single read data.",
@@ -768,9 +782,9 @@ object CommandAlign {
             }
         }
 
-        override val inputFiles get() = inputFileGroups.allFiles
+        override val inputFiles get() = inputFileGroups.allFiles + listOfNotNull(referenceForCram)
 
-        override val outputFiles get() = listOf(outputFile)
+        override val outputFiles get() = listOf(outputFile) + pathsForNotAligned.outputFiles
 
         @Option(
             description = ["Size of buffer for FASTQ readers in bytes. Default: 4Mb"],
@@ -802,6 +816,14 @@ object CommandAlign {
             hidden = true
         )
         var alignOnAllVariants = false
+
+        @Option(
+            names = [BAMReader.referenceForCramOption],
+            description = ["Reference for genome that was used for build a cram file"],
+            order = OptionsOrder.main + 10_900,
+            paramLabel = "genome.fasta[.gz]"
+        )
+        var referenceForCram: Path? = null
 
         @Mixin
         lateinit var pathsForNotAligned: PathsForNotAligned
@@ -934,8 +956,13 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    val reader = BAMReader(files, cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards, tempDest)
-                        .map { ProcessingBundle(it) }
+                    val reader = BAMReader(
+                        files,
+                        cmdParams.bamDropNonVDJ,
+                        cmdParams.replaceWildcards,
+                        tempDest,
+                        referenceForCram
+                    ).map { ProcessingBundle(it) }
                     when (pairedPatternPayload) {
                         null -> reader
                         true -> reader.onEach { record ->
@@ -957,7 +984,7 @@ object CommandAlign {
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
                     FastaSequenceReaderWrapper(
-                        FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
+                        FastaReader(inputFile.unzippedInputStream(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
                     ).map { ProcessingBundle(it) }
                 }
@@ -972,6 +999,12 @@ object CommandAlign {
 
         override fun validate() {
             checkInputTemplates(inputTemplates)
+            ValidationException.requireFileType(referenceForCram, InputFileType.FASTA, InputFileType.FASTA_GZ)
+            if (referenceForCram != null) {
+                ValidationException.require(inputTemplates.first().matches(InputFileType.CRAM)) {
+                    "--reference-for-cram could be specified only with CRAM input"
+                }
+            }
             ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
             pathsForNotAligned.validate(inputFileGroups.inputType)
 
