@@ -288,6 +288,7 @@ exportAlignments:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false

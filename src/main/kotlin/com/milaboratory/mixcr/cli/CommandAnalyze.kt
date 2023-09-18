@@ -11,8 +11,11 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.matches
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
@@ -96,6 +99,15 @@ object CommandAnalyze {
             order = OptionsOrder.forceOverride
         )
         var forceOverwrite = false
+
+
+        @Option(
+            names = [BAMReader.referenceForCramOption],
+            description = ["Reference to the genome that was used for build a cram file"],
+            order = OptionsOrder.main + 100,
+            paramLabel = "genome.fasta[.gz]"
+        )
+        var referenceForCram: Path? = null
 
         @Parameters(
             index = "0",
@@ -283,6 +295,12 @@ object CommandAnalyze {
 
         override fun validate() {
             CommandAlign.checkInputTemplates(inputTemplates)
+            ValidationException.requireFileType(referenceForCram, InputFileType.FASTA, InputFileType.FASTA_GZ)
+            if (referenceForCram != null) {
+                ValidationException.require(inputTemplates.first().matches(InputFileType.CRAM)) {
+                    "--reference-for-cram could be specified only with CRAM input"
+                }
+            }
             pathsForNotAligned.validate(inputFileGroups.inputType)
             inputFileGroups.allFiles.forEach { input ->
                 ValidationException.requireFileExists(input)
@@ -327,9 +345,17 @@ object CommandAnalyze {
             // Adding an option to save output files by align
             val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
                 .takeIf { bundle.align!!.splitBySample && !dryRun }
-            val extraAlignArgs =
-                (sampleFileList?.let { listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, it.toString()) } ?: emptyList()) +
-                        (if (strictMatching) listOf(STRICT_SAMPLE_NAME_MATCHING_OPTION) else emptyList())
+            val extraAlignArgs: List<String> = buildList {
+                sampleFileList?.let { sampleFileList ->
+                    this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
+                }
+                if (strictMatching) {
+                    this += STRICT_SAMPLE_NAME_MATCHING_OPTION
+                }
+                referenceForCram?.let { referenceForCram ->
+                    this += listOf(BAMReader.referenceForCramOption, referenceForCram.toString())
+                }
+            }
 
             // Adding "align" step
             if (outputNoUsedReads)

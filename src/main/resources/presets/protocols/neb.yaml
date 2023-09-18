@@ -1,4 +1,7 @@
 neb-human-rna-xcr-umi-nebnext:
+  vendor: "New England BioLabs"
+  label: "NEBNext® Immune Sequencing Kit (Human) BCR & TCR"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -27,6 +30,11 @@ neb-human-rna-xcr-umi-nebnext:
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -39,6 +47,9 @@ neb-human-rna-xcr-umi-nebnext:
         readsLayout: ReverseOnly
 
 neb-mouse-rna-xcr-umi-nebnext:
+  vendor: "New England BioLabs"
+  label: "NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR"
+  category: non-generic
   inheritFrom: neb-human-rna-xcr-umi-nebnext
   mixins:
     - type: SetSpecies

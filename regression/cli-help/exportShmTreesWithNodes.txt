@@ -5,13 +5,13 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [--not-covered-as-empty] [-treeId] [-numberOfClonesInTree]
                                      [-totalReadsCountInTree] [-totalUniqueTagCountInTree <
                                      (Molecule|Cell|Sample)>]... [-nodeId] [-isObserved]
-                                     [-parentId] [-distance <(germline|mrca|parent)>]... [-targets]
-                                     [-vHit] [-dHit] [-jHit] [-cHit] [-vGene] [-dGene] [-jGene]
-                                     [-cGene] [-vFamily] [-dFamily] [-jFamily] [-cFamily]
-                                     [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
-                                     [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore]
-                                     [-cHitsWithScore] [-vHits] [-dHits] [-jHits] [-cHits]
-                                     [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
+                                     [-parentId] [-distance <(germline|mrca|parent)>]...
+                                     [-mutationRate [<gene_feature>]]... [-targets] [-vHit] [-dHit]
+                                     [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily]
+                                     [-dFamily] [-jFamily] [-cFamily] [-vHitScore] [-dHitScore]
+                                     [-jHitScore] [-cHitScore] [-vHitsWithScore] [-dHitsWithScore]
+                                     [-jHitsWithScore] [-cHitsWithScore] [-vHits] [-dHits] [-jHits]
+                                     [-cHits] [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
                                      [-dFamilies] [-jFamilies] [-cFamilies] [-vAlignment]
                                      [-dAlignment] [-jAlignment] [-cAlignment] [-vAlignments]
                                      [-dAlignments] [-jAlignments] [-cAlignments] [-nFeature
@@ -46,8 +46,10 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      <(germline|mrca|parent)>]... [-allMutationsDetailed <
                                      (germline|mrca|parent)>]... [-mutationsDetailedRelative
                                      <gene_feature> <relative_to_gene_feature> <
-                                     (germline|mrca|parent)>]... [-biochemicalProperty <property>
-                                     <gene_feature>]... [-positionInReferenceOf
+                                     (germline|mrca|parent)>]... [-biochemicalProperty
+                                     <gene_feature> <property> [<(germline|mrca|parent)>]]...
+                                     [-baseBiochemicalProperties <gene_feature> [<
+                                     (germline|mrca|parent)>]]... [-positionInReferenceOf
                                      <reference_point>]... [-allPositionsInReference
                                      [<from_reference_point> <to_reference_point>]]... [-positionOf
                                      <reference_point>]... [-allPositions [<from_reference_point>
@@ -57,7 +59,8 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
                                      [-vBestIdentityPercent] [-dBestIdentityPercent]
                                      [-jBestIdentityPercent] [-cBestIdentityPercent] [-chains]
-                                     [-topChains] [-geneLabel <label>]... [-tagCounts] [-cellId [<
+                                     [-topChains] [-geneLabel <label>]... [-isotype [<
+                                     (primary|subclass|auto)>]]... [-tagCounts] [-cellId [<
                                      (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
                                      [-uniqueTagCount <(Molecule|Cell|Sample)>]...
                                      [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
@@ -113,6 +116,9 @@ Possible fields to export
       -parentId              Parent node id in SHM tree
       -distance <(germline|mrca|parent)>
                              Distance from another node in number of mutations.
+      -mutationRate [<gene_feature>]
+                             Number of mutations from germline divided by target sequence size. By
+                               default, will be used all covered features
       -targets               Export number of targets (only for nodes with clones)
       -vHit                  Export best V hit
       -dHit                  Export best D hit (only for nodes with clones)
@@ -307,9 +313,17 @@ Possible fields to export
                                amino acid mutation is the observed amino acid mutation combining
                                effect from all other. WARNING: format may change in following
                                versions.
-      -biochemicalProperty <property> <gene_feature>
-                             Biochemical property of specified gene feature (only for nodes with
-                               clones)
+      -biochemicalProperty <gene_feature> <property> [<(germline|mrca|parent)>]
+                             Biochemical property of specified gene feature normalized by AA
+                               sequence size. CDR3 can be exported only for nodes with clones.
+                               Possible values: Hydropathy, Charge, Polarity, Volume, Strength,
+                               MjEnergy, Kf1, Kf2, Kf3, Kf4, Kf5, Kf6, Kf7, Kf8, Kf9, Kf10, Rim,
+                               Surface, Turn, Alpha, Beta, Core, Disorder, N2Strength,
+                               N2Hydrophobicity, N2Volume, N2Surface
+      -baseBiochemicalProperties <gene_feature> [<(germline|mrca|parent)>]
+                             Base biochemical properties of specified gene feature normalized by AA
+                               sequence size: N2Strength, N2Hydrophobicity, N2Surface, N2Volume,
+                               Charge
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence). (only for nodes with
@@ -361,6 +375,12 @@ Possible fields to export
       -chains                Chains (only for nodes with clones)
       -topChains             Top chains (only for nodes with clones)
       -geneLabel <label>     Export gene label (i.e. ReliableChain) (only for nodes with clones)
+      -isotype [<(primary|subclass|auto)>]
+                             Export isotype for IGH chains if it's can be distinguishable.
+                               `primary` will resolve 'IgA', 'IgD', 'IgG', 'IgE', 'IgM'. `subtype`
+                               will try resolve isotypes like 'IgA1' or 'IgA2'. `auto` will resolve
+                               the best resolution as possible. By default `auto` will be used
+                               (only for nodes with clones)
       -tagCounts             All tags with counts (only for nodes with clones)
       -cellId [<(none|space|dash)>]
                              Concatenated all cell tags with specified delimiter, default delimiter

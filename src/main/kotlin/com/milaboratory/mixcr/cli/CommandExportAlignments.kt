@@ -11,9 +11,9 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.drainToAndClose
 import cc.redberry.pipe.util.filter
-import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.onCloseOrLast
 import cc.redberry.primitives.Filter
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -33,8 +33,8 @@ import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.util.CanReportProgress
-import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.OutputPortWithProgress
+import com.milaboratory.util.delegateProgress
 import com.milaboratory.util.exhaustive
 import io.repseq.core.Chains
 import io.repseq.core.GeneType
@@ -129,12 +129,17 @@ object CommandExportAlignments {
             ValidationException.requireFileType(inputFile, InputFileType.VDJCA, InputFileType.CLNA)
         }
 
+        override fun initialize() {
+            if (outputFile == null) {
+                logger.redirectSysOutToSysErr()
+            }
+        }
+
         override fun run1() {
             openAlignmentsPort(inputFile).use { data ->
                 val header = data.info.header
                 val (_, params) = paramsResolver.resolve(
-                    resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins),
-                    printParameters = logger.verbose && outputFile != null
+                    resetPreset.overridePreset(header.paramsSpec).addMixins(exportMixins.mixins)
                 )
 
                 ValidationException.chainsExist(Chains.parse(params.chains), data.usedGenes)
@@ -155,20 +160,17 @@ object CommandExportAlignments {
                     VDJCAlignmentsFieldsExtractorsFactory.createExtractors(params.fields, headerForExport),
                     !params.noHeader
                 ) { rowMetaForExport }.use { writer ->
-                    val reader = data.port
-                    if (reader is CanReportProgress) {
-                        SmartProgressReporter.startProgressReport("Exporting alignments", reader, System.err)
-                    }
-                    reader
+                    data.port
+                        .reportProgress("Exporting alignments")
                         .filter(params.mkFilter())
-                        .forEach { writer.put(it) }
+                        .drainToAndClose(writer)
                 }
             }
         }
     }
 
     data class AlignmentsAndMetaInfo(
-        val port: OutputPort<VDJCAlignments>,
+        val port: OutputPortWithProgress<VDJCAlignments>,
         val closeable: AutoCloseable,
         val info: MiXCRFileInfo,
         val usedGenes: List<VDJCGene>
@@ -187,16 +189,12 @@ object CommandExportAlignments {
 
             IOUtil.MiXCRFileType.CLNA -> {
                 val clnaReader = ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4))
-                val source = clnaReader.readAllAlignments()
-                val port = object : OutputPort<VDJCAlignments> {
-                    override fun close() {
-                        source.close()
-                        clnaReader.close()
-                    }
-
-                    override fun take(): VDJCAlignments? = source.take()
-                }
-                AlignmentsAndMetaInfo(port, clnaReader, clnaReader, clnaReader.usedGenes)
+                val readAllAlignments = clnaReader
+                    .readAllAlignments()
+                val source = readAllAlignments
+                    .onCloseOrLast { clnaReader.close() }
+                    .delegateProgress(readAllAlignments)
+                AlignmentsAndMetaInfo(source, clnaReader, clnaReader, clnaReader.usedGenes)
             }
 
             IOUtil.MiXCRFileType.CLNS -> throw RuntimeException("Can't export alignments from *.clns file: $inputFile")

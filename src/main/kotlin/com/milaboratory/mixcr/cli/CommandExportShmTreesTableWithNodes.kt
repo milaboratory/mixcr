@@ -119,6 +119,12 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     override val outputFiles
         get() = listOfNotNull(out)
 
+    override fun initialize() {
+        if (out == null) {
+            logger.redirectSysOutToSysErr()
+        }
+    }
+
     override fun run1() {
         out?.toAbsolutePath()?.parent?.createDirectories()
         SHMTreesReader(input, VDJCLibraryRegistry.getDefault()).use { reader ->
@@ -139,7 +145,7 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                     .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0])!! }
                 val newSpitBy = tagsExportedByGroups.maxOrNull()
                 if (newSpitBy != null && out != null) {
-                    println("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
+                    logger.log("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
                 }
                 newSpitBy
             }
@@ -220,6 +226,8 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     }
 
     companion object {
+        val COMMAND_NAME = SplittedTreeNodeFieldsExtractorsFactory.commandForUsage
+
         fun mkCommandSpec(): CommandSpec {
             val command = CommandExportShmTreesTableWithNodes()
             val spec = CommandSpec.forAnnotatedObject(command)

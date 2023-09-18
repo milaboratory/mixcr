@@ -1,4 +1,6 @@
 "thermofisher-human-oncomine-base":
+  vendor: "Thermo Fisher"
+  category: non-generic
   abstract: true
   inheritFrom: generic-amplicon
   pipeline:
@@ -18,6 +20,7 @@
         readsLayout: ReverseOnly
 
 "thermofisher-human-rna-trb-oncomine-lr":
+  label: "Oncomine RNA TCR Beta‑LR Assay"
   inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
@@ -26,7 +29,9 @@
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
 
+
 "thermofisher-human-rna-trb-oncomine-sr":
+  label: "Oncomine RNA TCR Beta‑SR Assay"
   inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
@@ -34,9 +39,11 @@
       geneType: J
 
 "thermofisher-human-dna-trb-oncomine-sr":
+  label: "Oncomine DNA TCR Beta‑LR Assay"
   inheritFrom: thermofisher-human-rna-trb-oncomine-sr
 
 "thermofisher-human-rna-igh-oncomine-lr":
+  label: "Oncomine RNA IGH LR Assay"
   inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
@@ -44,8 +51,17 @@
       geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "thermofisher-human-rna-igh-oncomine-sr":
+  label: "Oncomine RNA IGH SR Assay"
   inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: RightAlignmentBoundaryNoPoint
@@ -53,10 +69,12 @@
       geneType: J
 
 "thermofisher-human-dna-igh-oncomine-sr":
+  label: "Oncomine DNA IGH SR Assay"
   inheritFrom: thermofisher-human-rna-igh-oncomine-sr
 
 
 "thermofisher-human-dna-bcr-oncomine-pan-clonality":
+  label: "Oncomine BCR Pan-Clonality Assay"
   inheritFrom: thermofisher-human-oncomine-base
   mixins:
     - type: MaterialTypeDNA
@@ -65,25 +83,30 @@
       geneType: J
 
 "thermofisher-human-dna-igh-oncomine-fr3-j":
+  label: "Oncomine IGH FR3(d)-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
 
 "thermofisher-human-dna-igh-oncomine-fr2-j":
+  label: "Oncomine IGH FR2-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:CDR3End}" ]
 
 "thermofisher-human-dna-igh-oncomine-fr1-j":
+  label: "Oncomine IGH FR1-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:CDR3End}" ]
 
 "thermofisher-human-dna-igh-oncomine-v-leader-j":
+  label: "Oncomine IGH Leader-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{FR1Begin:CDR3End}" ]
 
 "thermofisher-human-dna-tcr-oncomine-pan-clonality":
+  label: "Oncomine TCR Pan-Clonality Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality

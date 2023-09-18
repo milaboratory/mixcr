@@ -258,14 +258,14 @@ assemble:
           subsMatrix: "simple(match = 5, mismatch = -4)"
           gapPenalty: -14
         minAlignmentScore: 40
-        maxNormalizedAlignmentPenalty: 0.15
+        maxNormalizedAlignmentPenalty: 0.2
         trimMinimalSumQuality: 0
         trimReferenceRegion: false
         maxQuality: 45
       maxIterations: 6
       minAltSeedQualityScore: 11
       minAltSeedNormalizedPenalty: 0.35
-      altSeedPenaltyTolerance: 0.3
+      altSeedPenaltyTolerance: 0.5
       minRecordSharePerConsensus: 0.02
       minRecordsPerConsensus: 0
       minRecursiveRecordShare: 0.1
@@ -381,6 +381,12 @@ exportAlignments:
   noHeader: false
   fields:
   - field: -readIds
+  - field: -tags
+    args:
+    - Cell
+  - field: -tags
+    args:
+    - Molecule
   - field: -targetSequences
   - field: -targetQualities
   - field: -vHitsWithScore
@@ -394,6 +400,7 @@ exportAlignments:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -423,6 +430,7 @@ exportClones:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
 exportCloneGroups:

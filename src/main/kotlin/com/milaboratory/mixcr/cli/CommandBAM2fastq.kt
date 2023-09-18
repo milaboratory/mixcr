@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -12,11 +12,13 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.util.forEach
+import com.milaboratory.app.logger
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.bam.BAMReader
+import com.milaboratory.util.TempFileManager
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.nio.file.Path
@@ -28,13 +30,20 @@ import java.nio.file.Path
 )
 class CommandBAM2fastq : MiXCRCommandWithOutputs() {
     @Option(
+        description = ["Put temporary files in the same folder as the output files."],
+        names = ["--use-local-temp"],
+        order = OptionsOrder.localTemp
+    )
+    var useLocalTemp = false
+
+    @Option(
         names = ["-b", "--bam"],
         description = ["BAM files for conversion."],
         required = true,
         paramLabel = "<path>",
         order = OptionsOrder.main + 10_100
     )
-    lateinit var bamFiles: Array<Path>
+    lateinit var bamFiles: List<Path>
 
     @Option(
         names = ["-r1"],
@@ -77,6 +86,13 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
     )
     var keepWildcards = false
 
+    @Option(
+        names = [BAMReader.referenceForCramOption],
+        description = ["Reference for genome that was used for build a cram file"],
+        order = OptionsOrder.main + 10_700
+    )
+    var referenceForCram: Path? = null
+
     override val inputFiles
         get() = bamFiles.toList()
 
@@ -84,7 +100,8 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
         get() = listOf(fastq1, fastq2, fastqUnpaired)
 
     override fun run1() {
-        BAMReader(bamFiles, dropNonVDJ, !keepWildcards).use { converter ->
+        val tempFileDest = TempFileManager.smartTempDestination(fastq1, "", !useLocalTemp)
+        BAMReader(bamFiles, dropNonVDJ, !keepWildcards, tempFileDest, referenceForCram).use { converter ->
             PairedFastqWriter(fastq1.toFile(), fastq2.toFile()).use { wr ->
                 SingleFastqWriter(fastqUnpaired.toFile()).use { swr ->
                     converter.forEach { read ->
@@ -96,10 +113,10 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
                     }
                 }
             }
-            println("Your fastq files are ready.")
-            println(converter.numberOfProcessedAlignments.toString() + " alignments processed.")
-            println(converter.numberOfPairedReads.toString() + " paired reads.")
-            println(converter.numberOfUnpairedReads.toString() + " unpaired reads.")
+            logger.log("Your fastq files are ready.")
+            logger.log("${converter.numberOfProcessedAlignments()} alignments processed.")
+            logger.log("${converter.numberOfPairedReads()} paired reads.")
+            logger.log("${converter.numberOfUnpairedReads()} unpaired reads.")
         }
     }
 }

@@ -1,4 +1,7 @@
 milab-human-rna-ig-umi-multiplex:
+  vendor: "MiLaboratories"
+  label: "Human Ig RNA Multiplex"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   pipeline:
     - align
@@ -27,6 +30,11 @@ milab-human-rna-ig-umi-multiplex:
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -39,6 +47,9 @@ milab-human-rna-ig-umi-multiplex:
         readsLayout: ReverseOnly
 
 milab-human-rna-tcr-umi-race:
+  vendor: "MiLaboratories"
+  label: "Human TCR RNA 5'RACE"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSpecies
@@ -71,6 +82,9 @@ milab-human-rna-tcr-umi-race:
         readsLayout: ReverseOnly
 
 milab-human-rna-tcr-umi-multiplex:
+  vendor: "MiLaboratories"
+  label: "Human TCR RNA Multiplex"
+  category: non-generic
   inheritFrom: generic-amplicon-with-umi
   mixins:
     - type: SetSpecies
@@ -101,6 +115,9 @@ milab-human-rna-tcr-umi-multiplex:
         readsLayout: ReverseOnly
 
 milab-human-dna-tcr-multiplex:
+  vendor: "MiLaboratories"
+  label: "Human TCR DNA Multiplex"
+  category: non-generic
   inheritFrom: generic-amplicon
   mixins:
     - type: SetSpecies
@@ -123,10 +140,16 @@ milab-human-dna-tcr-multiplex:
         readsLayout: ReverseOnly
 
 milab-human-dna-xcr-7genes-multiplex:
+  vendor: "MiLaboratories"
+  label: "Human 7GENES DNA Multiplex"
+  category: non-generic
   inheritFrom: milab-human-dna-tcr-multiplex
 
 
 milab-mouse-rna-tcr-umi-race:
+  vendor: "MiLaboratories"
+  label: "Mouse TCR RNA 5'RACE"
+  category: non-generic
   inheritFrom: milab-human-rna-tcr-umi-race
   mixins:
     - type: SetSpecies

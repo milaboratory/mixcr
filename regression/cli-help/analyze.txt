@@ -1,5 +1,6 @@
-Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [-b <library>]
-                     [--split-by-sample] [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
+Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--add-step <step>] [--remove-step
+                     <step>] [-s <species>] [-b <library>] [--split-by-sample]
+                     [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
                      [--sample-sheet-strict sample_sheet.tsv] [--dna] [--rna]
                      [--floating-left-alignment-boundary [<anchor_point>]]
                      [--rigid-left-alignment-boundary [<anchor_point>]]
@@ -12,30 +13,28 @@ Usage: mixcr analyze [--add-step <step>] [--remove-step <step>] [-s <species>] [
                      [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
                      [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
                      [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
-                     [--prepend-export-clone-groups-field <field> [<param>...]]...
-                     [--append-export-clone-groups-field <field> [<param>...]]...
                      [--prepend-export-alignments-field <field> [<param>...]]...
                      [--append-export-alignments-field <field> [<param>...]]...
                      [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                      [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                      (geneLabel|tag):key>] [--reset-export-clone-grouping]
-                     [--export-productive-clones-only] [--export-clone-groups-for-cell-type
-                     <cell_type>...]... [--export-clone-groups-for-all-cell-types] [--no-reports]
-                     [--no-json-reports] [--output-not-used-reads] [--strict-sample-sheet-matching]
-                     [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
-                     [--verbose] [--help] [-M <key=value>]... <preset> ([file_I1.fastq[.gz]
-                     [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-                     (fasta|bam|sam)) output_prefix
+                     [--export-productive-clones-only] [--no-reports] [--no-json-reports]
+                     [--output-not-used-reads] [--strict-sample-sheet-matching] [--use-local-temp]
+                     [--threads <n>] [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M
+                     <key=value>]... <preset> ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.
+                     fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]|bam|sam|cram)) output_prefix
 Run full MiXCR pipeline for specific input.
       <preset>               Name of the analysis preset.
-      ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.
-        (fasta|bam|sam))
+      ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta
+        [.gz]|bam|sam|cram))
                              Two fastq files for paired reads or one file for single read data.
                              Use {{n}} if you want to concatenate files from multiple lanes, like:
                              my_file_L{{n}}_R1.fastq.gz my_file_L{{n}}_R2.fastq.gz
       output_prefix          Path prefix telling mixcr where to put all output files. If arguments
                                ends with file separator, then outputs will be written in specified
                                directory.
+      --reference-for-cram genome.fasta[.gz]
+                             Reference to the genome that was used for build a cram file
   -M  <key=value>            Overrides arbitrary preset parameter
       --no-reports           Don't output report files for each of the steps
       --no-json-reports      Don't output json report files for each of the steps
@@ -150,14 +149,6 @@ Params for export commands:
                              Add clones export column after other columns. First param is field
                                name as it is in `exportClones` command, left params are params of
                                the field
-      --prepend-export-clone-groups-field <field> [<param>...]
-                             Add clone groups export column before other columns. First param is
-                               field name as it is in `exportCloneGroups` command, left params are
-                               params of the field
-      --append-export-clone-groups-field <field> [<param>...]
-                             Add clone groups export column after other columns. First param is
-                               field name as it is in `exportCloneGroups` command, left params are
-                               params of the field
       --prepend-export-alignments-field <field> [<param>...]
                              Add clones export column before other columns. First param is field
                                name as it is in `exportAlignments` command, left params are params
@@ -176,8 +167,3 @@ Params for export commands:
                              Reset all clone grouping in the output clone tables.
       --export-productive-clones-only
                              Export only productive clonotypes.
-      --export-clone-groups-for-cell-type <cell_type>...
-                             Export clone groups for given cell type. Possible values: IGH-IGK,
-                               IGH-IGL, TRB-TRA, TRD-TRG
-      --export-clone-groups-for-all-cell-types
-                             Export clone groups for all cell types.

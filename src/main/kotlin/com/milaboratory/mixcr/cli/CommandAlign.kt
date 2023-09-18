@@ -26,13 +26,16 @@ import com.milaboratory.app.logger
 import com.milaboratory.app.matches
 import com.milaboratory.cli.FastqGroupReader
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.io.sequence.SequenceWriter
+import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.MultiFastqWriter
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
+import com.milaboratory.core.sequence.NSQTuple
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
@@ -41,6 +44,7 @@ import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
 import com.milaboratory.mitool.pattern.search.SearchSettings
+import com.milaboratory.mitool.report.ReadTrimmerReportBuilder
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -88,8 +92,10 @@ import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
+import com.milaboratory.util.unzippedInputStream
 import com.milaboratory.util.use
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
@@ -150,8 +156,8 @@ object CommandAlign {
                 val f0 = first[0]
                 when {
                     f0.matches(InputFileType.FASTQ) -> SingleEndFastq
-                    f0.matches(InputFileType.FASTA) -> Fasta
-                    f0.matches(InputFileType.BAM) -> BAM
+                    f0.matches(InputFileType.FASTA) || f0.matches(InputFileType.FASTA_GZ) -> Fasta
+                    f0.matches(InputFileType.BAM_SAM_CRAM) -> BAM
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
             } else if (first.size <= 4) {
@@ -289,6 +295,18 @@ object CommandAlign {
             "I1,I2,R1,R2",
         )
 
+        val outputFiles
+            get() = listOfNotNull(
+                notAlignedReadsI1,
+                notAlignedReadsI2,
+                notAlignedReadsR1,
+                notAlignedReadsR2,
+                notParsedReadsI1,
+                notParsedReadsI2,
+                notParsedReadsR1,
+                notParsedReadsR2,
+            )
+
         fun fillWithDefaults(inputType: Cmd.InputType, outputDir: Path, prefix: String) {
             fun fill(type: String) {
                 when (type) {
@@ -411,10 +429,11 @@ object CommandAlign {
     fun checkInputTemplates(paths: List<Path>) {
         when (paths.size) {
             1 -> ValidationException.requireFileType(
-                paths[0],
+                paths.first(),
                 InputFileType.FASTQ,
                 InputFileType.FASTA,
-                InputFileType.BAM,
+                InputFileType.FASTA_GZ,
+                InputFileType.BAM_SAM_CRAM,
                 InputFileType.TSV
             )
 
@@ -441,7 +460,7 @@ object CommandAlign {
     }
 
     const val inputsLabel =
-        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta|bam|sam))"
+        "([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]|bam|sam|cram))"
 
     val inputsDescription = arrayOf(
         "Two fastq files for paired reads or one file for single read data.",
@@ -656,6 +675,13 @@ object CommandAlign {
     )
     class Cmd : CmdBase() {
         @Option(
+            description = ["Put temporary files in the same folder as the output files."],
+            names = ["--use-local-temp"],
+            order = OptionsOrder.localTemp
+        )
+        var useLocalTemp = false
+
+        @Option(
             description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
                     "It is critical to carefully select the most appropriate preset for the data you analyse."],
             names = ["-p", "--preset"],
@@ -756,9 +782,9 @@ object CommandAlign {
             }
         }
 
-        override val inputFiles get() = inputFileGroups.allFiles
+        override val inputFiles get() = inputFileGroups.allFiles + listOfNotNull(referenceForCram)
 
-        override val outputFiles get() = listOf(outputFile)
+        override val outputFiles get() = listOf(outputFile) + pathsForNotAligned.outputFiles
 
         @Option(
             description = ["Size of buffer for FASTQ readers in bytes. Default: 4Mb"],
@@ -791,6 +817,14 @@ object CommandAlign {
         )
         var alignOnAllVariants = false
 
+        @Option(
+            names = [BAMReader.referenceForCramOption],
+            description = ["Reference to the genome that was used for build a cram file"],
+            order = OptionsOrder.main + 10_900,
+            paramLabel = "genome.fasta[.gz]"
+        )
+        var referenceForCram: Path? = null
+
         @Mixin
         lateinit var pathsForNotAligned: PathsForNotAligned
 
@@ -804,6 +838,11 @@ object CommandAlign {
         )
         private var outputFileList: Path? = null
 
+        private val tempDest by lazy {
+            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
+        }
+
+
         private val paramsSpec by lazy {
             MiXCRParamsSpec(
                 presetName, mixins.mixins +
@@ -815,7 +854,7 @@ object CommandAlign {
         i.e. all external presets and will be packed into the spec object.*/
         private val paramsSpecPacked by lazy { paramsSpec.pack() }
 
-        private val bpPair by lazy { paramsResolver.resolve(paramsSpec, printParameters = logger.verbose) }
+        private val bpPair by lazy { paramsResolver.resolve(paramsSpec) }
 
         private val cmdParams by lazy {
             var params = bpPair.second
@@ -900,17 +939,10 @@ object CommandAlign {
             TripleEndFastq(3, true),
             QuadEndFastq(4, true),
             Fasta(1, false),
-            BAM(2, false);
-
-            val pairedRecords: Boolean?
-                get() = when (numberOfReads) {
-                    1 -> false
-                    2 -> true
-                    else -> null
-                }
+            BAM(-1 /* 1 or 2*/, false);
         }
 
-        private fun createReader(): OutputPortWithProgress<ProcessingBundle> {
+        private fun createReader(pairedPatternPayload: Boolean?): OutputPortWithProgress<ProcessingBundle> {
             MiXCRMain.lm.reportApplicationInputs(
                 true, false,
                 allInputFiles,
@@ -924,8 +956,27 @@ object CommandAlign {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val files = inputFileGroups.fileGroups.first().files
-                    BAMReader(files.toTypedArray(), cmdParams.bamDropNonVDJ, cmdParams.replaceWildcards)
-                        .map { ProcessingBundle(it) }
+                    val reader = BAMReader(
+                        files,
+                        cmdParams.bamDropNonVDJ,
+                        cmdParams.replaceWildcards,
+                        tempDest,
+                        referenceForCram
+                    ).map { ProcessingBundle(it) }
+                    when (pairedPatternPayload) {
+                        null -> reader
+                        true -> reader.onEach { record ->
+                            ValidationException.require(record.read is PairedRead) {
+                                "Tag pattern require BAM file to contain only paired reads"
+                            }
+                        }
+
+                        false -> reader.onEach { record ->
+                            ValidationException.require(record.read is SingleRead) {
+                                "Tag pattern require BAM file to contain only single reads"
+                            }
+                        }
+                    }
                 }
 
                 Fasta -> {
@@ -933,10 +984,9 @@ object CommandAlign {
                         throw ValidationException("File concatenation supported only for fastq files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
                     FastaSequenceReaderWrapper(
-                        FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
+                        FastaReader(inputFile.unzippedInputStream(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
-                    )
-                        .map { ProcessingBundle(it) }
+                    ).map { ProcessingBundle(it) }
                 }
 
                 else -> { // All fastq file types
@@ -949,6 +999,12 @@ object CommandAlign {
 
         override fun validate() {
             checkInputTemplates(inputTemplates)
+            ValidationException.requireFileType(referenceForCram, InputFileType.FASTA, InputFileType.FASTA_GZ)
+            if (referenceForCram != null) {
+                ValidationException.require(inputTemplates.first().matches(InputFileType.CRAM)) {
+                    "--reference-for-cram could be specified only with CRAM input"
+                }
+            }
             ValidationException.requireFileType(outputFile, InputFileType.VDJCA)
             pathsForNotAligned.validate(inputFileGroups.inputType)
 
@@ -996,21 +1052,46 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups)
+            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
 
             // Validating output tags if required
             for (tagsValidation in cmdParams.tagsValidations)
                 tagsValidation.validate(tagsExtractor.tagsInfo)
 
-            // true if final NSQTuple will have two reads, false otherwise
-            val pairedPayload = tagsExtractor.pairedPatternPayload
-                ?: inputFileGroups.inputType.pairedRecords
-                ?: throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
+            // Validating count of inputs with tag pattern
+            tagsExtractor.usedReadsCount?.let { requiredInputs ->
+                when (val inputType = inputFileGroups.inputType) {
+                    BAM -> ValidationException.require(requiredInputs <= 2) {
+                        "Can't use pattern with more than 2 reads with BAM input"
+                    }
+
+                    else -> ValidationException.require(inputType.numberOfReads == requiredInputs) {
+                        "Tag pattern require $requiredInputs input ${if (requiredInputs == 1) "file" else "files"}, got ${inputType.numberOfReads}"
+                    }
+                }
+            }
+
+            // structure of final NSQTuple
+            val readsCountInTuple = when (tagsExtractor.pairedPatternPayload) {
+                null -> when (inputFileGroups.inputType.numberOfReads) {
+                    -1 -> {
+                        check(inputFileGroups.inputType == BAM)
+                        VDJCAligner.ReadsCount.ONE_OR_TWO
+                    }
+
+                    1 -> VDJCAligner.ReadsCount.ONE
+                    2 -> VDJCAligner.ReadsCount.TWO
+                    else -> throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
+                }
+
+                true -> VDJCAligner.ReadsCount.TWO
+                false -> VDJCAligner.ReadsCount.ONE
+            }
 
             // Creating aligner
             val aligner = VDJCAligner.createAligner(
                 alignerParameters,
-                pairedPayload,
+                readsCountInTuple,
                 cmdParams.overlapPairedReads
             )
             var numberOfExcludedNFGenes = 0
@@ -1059,7 +1140,7 @@ object CommandAlign {
             aligner.setEventsListener(reportBuilder)
 
             use(
-                createReader(),
+                createReader(tagsExtractor.pairedPatternPayload),
                 alignedWriter(outputFile),
                 failedReadsWriter(
                     pathsForNotAligned.notAlignedReadsI1,
@@ -1118,7 +1199,10 @@ object CommandAlign {
 
                 val step1 = if (cmdParams.trimmingQualityThreshold > 0) {
                     val rep = ReadTrimmerReportBuilder()
-                    val trimmerProcessor = ReadTrimmerProcessor(qualityTrimmerParameters, rep)
+                    val trimmerProcessor =
+                        ReadTrimmerProcessor(qualityTrimmerParameters, rep) { read: NSQTuple, mapper ->
+                            read.mapWithIndex(mapper)
+                        }
                     reportBuilder.setTrimmingReportBuilder(rep)
                     step0.mapUnchunked {
                         it.mapSequence(trimmerProcessor::process)
@@ -1154,7 +1238,7 @@ object CommandAlign {
                             notAlignedWriter?.write(bundle.read)
 
                         val alignment = when {
-                            bundle.alignment != null -> bundle.alignment
+                            bundle.alignment != null -> bundle.alignment!!
 
                             cmdParams.writeFailedAlignments && bundle.status == NotAligned -> {
                                 // Creating empty alignment object if alignment for current read failed
@@ -1210,7 +1294,7 @@ object CommandAlign {
 
                 reportBuilder.setFinishMillis(System.currentTimeMillis())
 
-                if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg.report)
+                if (tagsExtractor.reportAgg != null) reportBuilder.setTagReport(tagsExtractor.reportAgg!!.report)
                 reportBuilder.setNotMatchedByHeader(tagsExtractor.notMatchedByHeader.get())
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 

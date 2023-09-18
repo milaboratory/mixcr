@@ -182,8 +182,11 @@ object Main {
                     .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
                     .addSubcommand(CommandExportCloneGroups.COMMAND_NAME, CommandExportCloneGroups.mkSpec())
                     .addSubcommand("exportClonesPretty", CommandExportClonesPretty::class.java)
-                    .addSubcommand("exportShmTreesWithNodes", CommandExportShmTreesTableWithNodes.mkCommandSpec())
-                    .addSubcommand("exportShmTrees", CommandExportShmTreesTable.mkCommandSpec())
+                    .addSubcommand(
+                        CommandExportShmTreesTableWithNodes.COMMAND_NAME,
+                        CommandExportShmTreesTableWithNodes.mkCommandSpec()
+                    )
+                    .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
                     .addSubcommand("exportShmTreesNewick", CommandExportShmTreesNewick::class.java)
                     .addSubcommand("exportReports", CommandExportReports::class.java)
                     .addSubcommand(
@@ -231,6 +234,8 @@ object Main {
             .addSubcommand("exportHelp", CommandExportHelp::class.java)
             .addSubcommand("exportAllPresets", CommandExportAllPresets::class.java)
             .addSubcommand("exportSchemas", CommandExportSchemas::class.java)
+            .addSubcommand("listPresetSpecificationsForUI", CommandListPresetSpecificationsForUI::class.java)
+            .addSubcommand("presetSpecificationsForBack", CommandPresetSpecificationsForBack::class.java)
 
         cmd.helpSectionMap.remove(SECTION_KEY_COMMAND_LIST_HEADING)
         cmd.helpSectionMap[SECTION_KEY_COMMAND_LIST] = IHelpSectionRenderer { help ->
@@ -420,9 +425,13 @@ object Main {
     private fun CommandLine.registerLogger(): CommandLine {
         setExecutionStrategy { parseResult ->
             val setVerbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
-            logger.verbose = logger.verbose || setVerbose
-            logger.noWarnings = logger.noWarnings ||
+            val verbose = logger.verbose || setVerbose
+            if (verbose)
+                logger.debugDestination = logger.Destination.SystemOut
+            val noWarnings = logger.warningDestination == logger.Destination.NoDev ||
                     parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            if (noWarnings)
+                logger.debugDestination = logger.Destination.NoDev
             if (setVerbose) {
                 logger.debug {
                     val memoryInJVMMessage = "${Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB} Mb"

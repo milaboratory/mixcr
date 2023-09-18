@@ -18,7 +18,6 @@ import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.mapInParallelOrdered
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
@@ -172,7 +171,7 @@ object CommandAssembleContigs {
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
                 paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec).addMixins(mixinsToAdd)
-                cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
+                cmdParams = paramsResolver.resolve(paramsSpec).second
                 assemblingRegions = cmdParams.parameters.assemblingRegions
 
                 validateParams(cmdParams, reader.header)
@@ -349,19 +348,7 @@ object CommandAssembleContigs {
                     clones += clone.withId(cloneId++)
                 }
             }
-            @Suppress("DEPRECATION")
-            val allFullyCoveredBy = when {
-                assemblingRegions == null -> false
-                assemblingRegions != cmdParams.parameters.subCloningRegions -> false
-                else -> when (val postFiltering = cmdParams.parameters.postFiltering) {
-                    is PostFiltering.OnlyUnambiguouslyCovering -> postFiltering.geneFeatures == assemblingRegions
-                    PostFiltering.OnlyFullyDefined -> true
-                    is PostFiltering.OnlyCovering -> false
-                    PostFiltering.OnlyFullyAssembled -> false
-                    is PostFiltering.MinimalContigLength -> false
-                    PostFiltering.NoFiltering -> false
-                }
-            }
+            val allFullyCoveredBy = cmdParams.allClonesWillBeCoveredByFeature()
             val resultHeader = header
                 .copy(allFullyCoveredBy = if (allFullyCoveredBy) assemblingRegions else null)
                 .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)

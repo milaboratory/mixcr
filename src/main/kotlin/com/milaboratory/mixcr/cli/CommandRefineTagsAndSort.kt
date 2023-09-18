@@ -17,7 +17,6 @@ import cc.redberry.pipe.util.withCounting
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.ShortSequenceSet
@@ -258,7 +257,7 @@ object CommandRefineTagsAndSort {
                 val tagsInfo = header.tagsInfo
                 require(!tagsInfo.hasNoTags()) { "input file has no tags" }
                 val paramsSpec = resetPreset.overridePreset(header.paramsSpec).addMixins(mixins)
-                val cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
+                val cmdParams = paramsResolver.resolve(paramsSpec).second
 
                 // These tags will be corrected, other used as grouping keys
                 val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }

@@ -15,6 +15,7 @@ import cc.redberry.pipe.VoidProcessor
 import cc.redberry.pipe.util.forEachInParallel
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.info.AlignmentInfoCollector
@@ -85,6 +86,11 @@ class CommandAlignmentsStats : MiXCRCommandWithOutputs() {
     override fun validate() {
         ValidationException.requireFileType(input, InputFileType.VDJCA)
         ValidationException.requireFileType(out, InputFileType.TXT)
+    }
+
+    override fun initialize() {
+        if (out == null)
+            logger.redirectSysOutToSysErr()
     }
 
     override fun run1() {
