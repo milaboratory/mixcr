@@ -16,6 +16,7 @@ import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.map
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
@@ -67,6 +68,12 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
 
     override val outputFiles
         get() = listOfNotNull(out)
+
+    override fun initialize() {
+        if (out == null) {
+            logger.redirectSysOutToSysErr()
+        }
+    }
 
     override fun run1() {
         out?.toAbsolutePath()?.parent?.createDirectories()

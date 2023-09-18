@@ -46,15 +46,16 @@ Usage: mixcr exportClonesOverlap [--chains <chain>[,<chain>...]]... [--criteria 
                                  [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
                                  [-cIdentityPercents] [-vBestIdentityPercent]
                                  [-dBestIdentityPercent] [-jBestIdentityPercent]
-                                 [-cBestIdentityPercent] [-chains] [-topChains] [-geneLabel
-                                 <label>]... [-isotype [<(primary|subclass|auto)>]]... [-tagCounts]
-                                 [-cellId [<(none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)
-                                 >]... [-uniqueTagCount <(Molecule|Cell|Sample)>]...
-                                 [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
-                                 [-rankByTag <(Molecule|Cell|Sample)>]... [-hasStops
-                                 <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
-                                 <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
-                                 [--help] cloneset.(clns|clna)... output.tsv
+                                 [-cBestIdentityPercent] [-mutationRate [<gene_feature>]]...
+                                 [-chains] [-topChains] [-geneLabel <label>]... [-isotype [<
+                                 (primary|subclass|auto)>]]... [-tagCounts] [-cellId [<
+                                 (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
+                                 [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-uniqueTagFraction <
+                                 (Molecule|Cell|Sample)>]... [-cellGroup] [-rankByTag <
+                                 (Molecule|Cell|Sample)>]... [-hasStops <gene_feature>]... [-isOOF
+                                 <gene_feature>]... [-isProductive <gene_feature>]...
+                                 [--force-overwrite] [--no-warnings] [--verbose] [--help] cloneset.
+                                 (clns|clna)... output.tsv
 Build cloneset overlap and export into tab delimited file.
       cloneset.(clns|clna)...
                              Paths to input files
@@ -322,6 +323,12 @@ Possible fields to export
       -dBestIdentityPercent  D best alignment identity percent
       -jBestIdentityPercent  J best alignment identity percent
       -cBestIdentityPercent  C best alignment identity percent
+      -mutationRate [<gene_feature>]
+                             Number of mutations from divided by target sequence size. VJJunction
+                               is excluded from calculation (germline is unknown). By default, will
+                               be used all covered features. It's recommended to run `findAlleles`
+                               before exporting `-mutationRate` because otherwise mutations count
+                               will include allelic mutations.
       -chains                Chains
       -topChains             Top chains
       -geneLabel <label>     Export gene label (i.e. ReliableChain)

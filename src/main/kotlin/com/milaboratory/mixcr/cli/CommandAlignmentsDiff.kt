@@ -14,6 +14,7 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriterI
@@ -26,7 +27,6 @@ import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.Ali
 import com.milaboratory.mixcr.util.VDJCAlignmentsDifferenceReader.DiffStatus.AlignmentsAreSame
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import picocli.CommandLine.Command
@@ -138,6 +138,11 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(in1, InputFileType.VDJCA)
         ValidationException.requireFileType(in2, InputFileType.VDJCA)
         ValidationException.requireFileType(report, InputFileType.TXT)
+    }
+
+    override fun initialize() {
+        if (report == null)
+            logger.redirectSysOutToSysErr()
     }
 
     override fun run1() {

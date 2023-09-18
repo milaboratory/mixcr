@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
@@ -94,6 +95,11 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(in1, InputFileType.CLNX)
         ValidationException.requireFileType(in2, InputFileType.CLNX)
         ValidationException.requireFileType(report, InputFileType.TXT)
+    }
+
+    override fun initialize() {
+        if (report == null)
+            logger.redirectSysOutToSysErr()
     }
 
     override fun run1() {

@@ -139,6 +139,10 @@ if [[ $run_tests == true ]]; then
 
   ln -s -f ../src/test/resources/sequences/big/CD4M1_test_R1.fastq.gz ${dir}/test_target/CD4M1_test_R1.fastq.gz
   ln -s -f ../src/test/resources/sequences/big/CD4M1_test_R2.fastq.gz ${dir}/test_target/CD4M1_test_R2.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/subset_B004-7_S247_L001_R1_001.fastq.gz ${dir}/test_target/subset_B004-7_S247_L001_R1_001.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/subset_B004-7_S247_L001_R2_001.fastq.gz ${dir}/test_target/subset_B004-7_S247_L001_R2_001.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/subset_B004-7_S247_L001_I1_001.fastq.gz ${dir}/test_target/subset_B004-7_S247_L001_I1_001.fastq.gz
+  ln -s -f ../src/test/resources/sequences/big/subset_B004-7_S247_L001_I2_001.fastq.gz ${dir}/test_target/subset_B004-7_S247_L001_I2_001.fastq.gz
   ln -s -f ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R1.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R1.fastq.gz
   ln -s -f ../src/test/resources/sequences/big/single_cell_vdj_t_subset_R2.fastq.gz ${dir}/test_target/single_cell_vdj_t_subset_R2.fastq.gz
   ln -s -f ../src/test/resources/sequences/big/trees_samples ${dir}/test_target/trees_samples
@@ -146,6 +150,7 @@ if [[ $run_tests == true ]]; then
   ln -s -f ../src/test/resources/sequences/umi_ig_data_2_subset_R1.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R1.fastq.gz
   ln -s -f ../src/test/resources/sequences/umi_ig_data_2_subset_R2.fastq.gz ${dir}/test_target/umi_ig_data_2_subset_R2.fastq.gz
   ln -s -f ../src/test/resources/bam/unsorted.bam ${dir}/test_target/unsorted.bam
+  ln -s -f ../src/test/resources/bam/unpairedSortedByCoord.bam ${dir}/test_target/unpaired.bam
   ln -s -f ../src/test/resources/library_for_alleles_test.json ${dir}/test_target/library_for_alleles_test.json
   ln -s -f ../src/test/resources/sligtly_broken_library_for_alleles_test.json ${dir}/test_target/sligtly_broken_library_for_alleles_test.json
   cd ${dir}

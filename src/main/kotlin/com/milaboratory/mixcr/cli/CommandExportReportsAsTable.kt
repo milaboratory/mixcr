@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.app.matches
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
@@ -90,6 +91,11 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
 
     override val outputFiles: List<Path>
         get() = listOfNotNull(out)
+
+    override fun initialize() {
+        if (out == null)
+            logger.redirectSysOutToSysErr()
+    }
 
     override fun validate() {
         ValidationException.requireFileType(
