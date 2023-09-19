@@ -349,9 +349,6 @@ exportAlignments:
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
   - field: -topChains
-  - field: -aaFeature
-    args:
-    - VDJRegion
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false

@@ -20,6 +20,8 @@ properties:
     type: boolean
   noHeader:
     type: boolean
+  showSecondaryChains:
+    type: boolean
   types:
     type: array
     items:

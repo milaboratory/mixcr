@@ -365,14 +365,19 @@ exportCloneGroups:
   filterOutOfFrames: false
   filterStops: false
   filterOutGroupsWithOneClone: false
+  showSecondaryChains: true
   types: []
   noHeader: false
   fields:
   - field: -cellGroup
-  - field: -groupCellsCount
-  - field: -groupReadsCount
+  - field: -groupReadCount
+  - field: -groupUniqueTagCount
+    args:
+    - Cell
+  - field: -groupUniqueTagCount
+    args:
+    - Molecule
   - field: -uniqClonesPerChainCount
-  - field: -cloneId
   - field: -readCount
   - field: -uniqueTagCount
     args:
