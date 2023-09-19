@@ -21,9 +21,11 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           (geneLabel|tag):key>] [--reset-export-clone-grouping]
                           [--export-productive-clones-only] [--export-clone-groups-for-cell-type
                           <cell_type>...]... [--export-clone-groups-for-all-cell-types]
-                          [--force-overwrite] [--no-warnings] [--verbose] [--help] (--preset-name
-                          <preset> | --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]...
-                          [preset_file.(yaml|yml)]
+                          [--show-secondary-chain-on-export-cell-groups]
+                          [--dont-show-secondary-chain-on-export-cell-groups] [--force-overwrite]
+                          [--no-warnings] [--verbose] [--help] (--preset-name <preset> |
+                          --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.
+                          (yaml|yml)]
 Export a preset file given the preset name or source file and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
@@ -156,3 +158,7 @@ Params for export commands:
                                IGH-IGL, TRB-TRA, TRD-TRG
       --export-clone-groups-for-all-cell-types
                              Export clone groups for all cell types.
+      --show-secondary-chain-on-export-cell-groups
+                             Show columns for secondary chains in export for cell groups.
+      --dont-show-secondary-chain-on-export-cell-groups
+                             Don't show columns for secondary chains in export for cell groups.

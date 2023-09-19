@@ -348,9 +348,6 @@ exportAlignments:
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
   - field: -topChains
-  - field: -isotype
-    args:
-    - auto
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
