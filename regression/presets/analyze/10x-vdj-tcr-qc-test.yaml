@@ -505,6 +505,7 @@ assembleContigs:
 groupClones:
   algorithm:
     type: BaseSingleCellGrouping
+    maxCountOfChainsInACell: 3
 exportAlignments:
   chains: ALL
   noHeader: false
