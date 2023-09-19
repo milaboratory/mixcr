@@ -410,6 +410,7 @@ assembleContigs:
 groupClones:
   algorithm:
     type: BaseSingleCellGrouping
+    maxCountOfChainsInACell: 3
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -528,11 +529,3 @@ qc:
     upper: 0.2
     middle: 0.1
     label: Reads dropped in tags filtering
-  - type: InvalidCellGroups
-    upper: 0.0
-    middle: 0.0
-    label: Cell groups with incompatible chains
-  - type: CellGroupsWithMoreThanTwoChainsOfTheSameType
-    upper: 0.01
-    middle: 0.0
-    label: Cell groups with more than two chains of the same type
