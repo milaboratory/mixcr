@@ -15,7 +15,6 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.flatten
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
@@ -160,7 +159,7 @@ object CommandGroupClones {
             }
 
             val paramsSpec = resetPreset.overridePreset(header.paramsSpec)
-            val (_, cmdParams) = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose)
+            val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
 
 
             reportBuilder.setStartMillis(System.currentTimeMillis())
@@ -168,7 +167,7 @@ object CommandGroupClones {
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
 
-            val grouper = cmdParams.algorithm.mkGrouper<Clone>(input.tagsInfo)
+            val grouper = cmdParams.algorithm.mkGrouper<Clone>(input.tagsInfo, input.cloneSetInfo.assemblingFeatures)
             SmartProgressReporter.startProgressReport(grouper)
             val grouppedClones = grouper.groupClones(input.clones)
             reportBuilder.grouperReport = grouper.getReport()

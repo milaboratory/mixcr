@@ -11,7 +11,6 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -25,6 +24,7 @@ import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.clonegrouping.CellType
+import com.milaboratory.mixcr.clonegrouping.CloneGrouper
 import com.milaboratory.mixcr.export.CloneGroup
 import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
@@ -32,7 +32,7 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import com.milaboratory.util.withExpectedSize
+import com.milaboratory.util.asOutputPortWithProgress
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.VDJCLibraryRegistry
@@ -182,14 +182,14 @@ object CommandExportCloneGroups {
                 fieldExtractors,
                 !params.noHeader
             ) { rowMetaForExport }.use { writer ->
-                groups.asOutputPort()
-                    .withExpectedSize(groups.size.toLong())
+                groups.asOutputPortWithProgress()
                     .reportProgress("Exporting clone groups")
                     .forEach { writer.put(it) }
             }
         }
 
         private fun cloneGroups(recalculatedClones: CloneSet): List<CloneGroup> = recalculatedClones
+            .filter { it.group != CloneGrouper.undefinedGroup }
             .groupBy { it.group!! }
             .map { (groupId, clones) ->
                 val clonesGroupedByChains = clones.groupBy { it.chains }
