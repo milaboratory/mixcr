@@ -19,6 +19,9 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -54,6 +57,9 @@
       geneType: C
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
 
 "cellecta-mouse-rna-xcr-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
@@ -67,3 +73,6 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true

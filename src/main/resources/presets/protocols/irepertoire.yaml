@@ -110,9 +110,9 @@
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:CDR3End}"]
 
-"irepertoire-human-rna-xcr-repseq-plus-umi":
+"irepertoire-human-rna-xcr-repseq-plus-umi-pe":
   vendor: "iRepertoire"
-  label: "Human IGH/TCR Repseq Plus with UMI"
+  label: "Human IGH/TCR Repseq Plus with UMI Paired End"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
   pipeline:
@@ -126,13 +126,16 @@
     - type: SetTagPattern
       tagPattern: ^(UMI:N{10})N{8}(R1:*)\^N{3}(R2:*)
     - type: SetClonotypeAssemblingFeatures
-      features: [ "{CDR2Begin:FR4End}" ]
+      features: [ "{CDR1Begin:FR4End}" ]
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
       floating: true
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -143,12 +146,55 @@
     overrides:
       parameters:
         readsLayout: ReverseOnly
+  assemble:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      consensusAssemblerParameters:
+        assembler:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: simple(match = 5, mismatch = -4)
+              gapPenalty: -14
+            minAlignmentScore: 40
+            maxNormalizedAlignmentPenalty: 0.2
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: false
+            maxQuality: 45
+          minAltSeedQualityScore: 11
+          minAltSeedNormalizedPenalty: 0.35
+          altSeedPenaltyTolerance: 0.5
+          minRecordsPerConsensus: 0
+          minQualityScore: 0
+          maxIterations: 10
+          minRecordSharePerConsensus: 0.01
+          minRecursiveRecordShare: 0.01
+          maxConsensuses: 10
 
-"irepertoire-mouse-rna-xcr-repseq-plus-umi":
+
+"irepertoire-human-rna-xcr-repseq-plus-umi-se":
   vendor: "iRepertoire"
-  label: "Mouse IGH/TCR Repseq Plus with UMI"
+  label: "Human IGH/TCR Repseq Plus with UMI Single End"
   category: non-generic
-  inheritFrom: irepertoire-human-rna-xcr-repseq-plus-umi
+  inheritFrom: irepertoire-human-rna-xcr-repseq-plus-umi-pe
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{10})N{8}(R1:*)
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR3Begin:FR4End}" ]
+
+
+"irepertoire-mouse-rna-xcr-repseq-plus-umi-pe":
+  vendor: "iRepertoire"
+  label: "Mouse IGH/TCR Repseq Plus with UMI Paired End"
+  category: non-generic
+  inheritFrom: irepertoire-human-rna-xcr-repseq-plus-umi-pe
   mixins:
     - type: SetSpecies
       species: mmu
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR2Begin:FR4End}" ]
+  assemble:
+    inheritFrom: generic-amplicon-with-umi
