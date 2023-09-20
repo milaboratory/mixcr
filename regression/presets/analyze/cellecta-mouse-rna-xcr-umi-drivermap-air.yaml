@@ -5,7 +5,7 @@ pipeline:
 - assemble
 - exportClones
 align:
-  species: hsa
+  species: mmu
   libraryName: default
   trimmingQualityThreshold: 10
   trimmingWindowSize: 6

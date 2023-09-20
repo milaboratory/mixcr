@@ -14,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(R1:*) \\ ^(UMI:N{18})(R2:*)"
+  tagPattern: "^(UMI:N{10})N{8}(R1:*)\\^N{3}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []
@@ -139,7 +139,7 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: DirectOnly
+    readsLayout: ReverseOnly
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
@@ -246,19 +246,19 @@ assemble:
         trimMinimalSumQuality: 0
         trimReferenceRegion: false
         maxQuality: 45
-      maxIterations: 6
+      maxIterations: 10
       minAltSeedQualityScore: 11
       minAltSeedNormalizedPenalty: 0.35
       altSeedPenaltyTolerance: 0.5
-      minRecordSharePerConsensus: 0.2
+      minRecordSharePerConsensus: 0.01
       minRecordsPerConsensus: 0
-      minRecursiveRecordShare: 0.4
+      minRecursiveRecordShare: 0.01
       minQualityScore: 0
-      maxConsensuses: 3
+      maxConsensuses: 10
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+    - CDR1_TO_FR4
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
