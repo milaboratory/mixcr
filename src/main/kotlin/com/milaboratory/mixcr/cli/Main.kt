@@ -424,9 +424,13 @@ object Main {
     private fun CommandLine.registerLogger(): CommandLine {
         setExecutionStrategy { parseResult ->
             val setVerbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
-            logger.verbose = logger.verbose || setVerbose
-            logger.noWarnings = logger.noWarnings ||
+            val verbose = logger.verbose || setVerbose
+            if (verbose)
+                logger.debugDestination = logger.Destination.SystemOut
+            val noWarnings = logger.warningDestination == logger.Destination.NoDev ||
                     parseResult.subcommands().any { it.matchedOption("--no-warnings")?.getValue() ?: false }
+            if (noWarnings)
+                logger.debugDestination = logger.Destination.NoDev
             if (setVerbose) {
                 logger.debug {
                     val memoryInJVMMessage = "${Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB} Mb"

@@ -30,6 +30,11 @@ milab-human-rna-ig-umi-multiplex:
       value: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter

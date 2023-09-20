@@ -168,6 +168,11 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     override val outputFiles
         get() = listOfNotNull(out)
 
+    override fun initialize() {
+        if (out == null)
+            logger.redirectSysOutToSysErr()
+    }
+
     private fun getReadIds(): TLongHashSet? = if (readIds.isEmpty()) null else TLongHashSet(readIds)
 
     private fun getCloneIds(): TLongHashSet? = if (cloneIds.isEmpty()) null else TLongHashSet(cloneIds)

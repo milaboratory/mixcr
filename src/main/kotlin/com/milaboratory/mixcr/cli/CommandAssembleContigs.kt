@@ -18,7 +18,6 @@ import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.mapInParallelOrdered
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
@@ -174,7 +173,7 @@ object CommandAssembleContigs {
 
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
                 paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec).addMixins(mixinsToAdd)
-                cmdParams = paramsResolver.resolve(paramsSpec, printParameters = logger.verbose).second
+                cmdParams = paramsResolver.resolve(paramsSpec).second
                 assemblingRegions = cmdParams.parameters.assemblingRegions
 
                 validateParams(cmdParams, reader.header)

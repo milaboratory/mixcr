@@ -15,6 +15,7 @@ import cc.redberry.primitives.Filter
 import cc.redberry.primitives.and
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSetIO
@@ -111,6 +112,11 @@ class CommandExportClonesPretty : MiXCRCommandWithOutputs() {
         order = OptionsOrder.main + 10_700
     )
     var csContain: NucleotideSequence? = null
+
+    override fun initialize() {
+        if (out == null)
+            logger.redirectSysOutToSysErr()
+    }
 
     override val inputFiles
         get() = listOf(input)

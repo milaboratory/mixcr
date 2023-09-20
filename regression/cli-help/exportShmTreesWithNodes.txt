@@ -5,13 +5,13 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [--not-covered-as-empty] [-treeId] [-numberOfClonesInTree]
                                      [-totalReadsCountInTree] [-totalUniqueTagCountInTree <
                                      (Molecule|Cell|Sample)>]... [-nodeId] [-isObserved]
-                                     [-parentId] [-distance <(germline|mrca|parent)>]... [-targets]
-                                     [-vHit] [-dHit] [-jHit] [-cHit] [-vGene] [-dGene] [-jGene]
-                                     [-cGene] [-vFamily] [-dFamily] [-jFamily] [-cFamily]
-                                     [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
-                                     [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore]
-                                     [-cHitsWithScore] [-vHits] [-dHits] [-jHits] [-cHits]
-                                     [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
+                                     [-parentId] [-distance <(germline|mrca|parent)>]...
+                                     [-mutationRate [<gene_feature>]]... [-targets] [-vHit] [-dHit]
+                                     [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily]
+                                     [-dFamily] [-jFamily] [-cFamily] [-vHitScore] [-dHitScore]
+                                     [-jHitScore] [-cHitScore] [-vHitsWithScore] [-dHitsWithScore]
+                                     [-jHitsWithScore] [-cHitsWithScore] [-vHits] [-dHits] [-jHits]
+                                     [-cHits] [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
                                      [-dFamilies] [-jFamilies] [-cFamilies] [-vAlignment]
                                      [-dAlignment] [-jAlignment] [-cAlignment] [-vAlignments]
                                      [-dAlignments] [-jAlignments] [-cAlignments] [-nFeature
@@ -116,6 +116,9 @@ Possible fields to export
       -parentId              Parent node id in SHM tree
       -distance <(germline|mrca|parent)>
                              Distance from another node in number of mutations.
+      -mutationRate [<gene_feature>]
+                             Number of mutations from germline divided by target sequence size. By
+                               default, will be used all covered features
       -targets               Export number of targets (only for nodes with clones)
       -vHit                  Export best V hit
       -dHit                  Export best D hit (only for nodes with clones)

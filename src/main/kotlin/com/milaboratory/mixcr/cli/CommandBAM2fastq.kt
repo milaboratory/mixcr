@@ -86,6 +86,13 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
     )
     var keepWildcards = false
 
+    @Option(
+        names = [BAMReader.referenceForCramOption],
+        description = ["Reference for genome that was used for build a cram file"],
+        order = OptionsOrder.main + 10_700
+    )
+    var referenceForCram: Path? = null
+
     override val inputFiles
         get() = bamFiles.toList()
 
@@ -94,7 +101,7 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
 
     override fun run1() {
         val tempFileDest = TempFileManager.smartTempDestination(fastq1, "", !useLocalTemp)
-        BAMReader(bamFiles, dropNonVDJ, !keepWildcards, tempFileDest).use { converter ->
+        BAMReader(bamFiles, dropNonVDJ, !keepWildcards, tempFileDest, referenceForCram).use { converter ->
             PairedFastqWriter(fastq1.toFile(), fastq2.toFile()).use { wr ->
                 SingleFastqWriter(fastqUnpaired.toFile()).use { swr ->
                     converter.forEach { read ->

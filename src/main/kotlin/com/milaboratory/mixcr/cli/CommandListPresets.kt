@@ -14,35 +14,66 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.Flags
+import com.milaboratory.mixcr.presets.MiXCRPresetCategory
+import com.milaboratory.mixcr.presets.PresetSpecification
 import com.milaboratory.mixcr.presets.Presets
-import picocli.CommandLine
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
+import java.io.PrintWriter
 
 @Command(
     description = ["Show all available presets"]
 )
 class CommandListPresets : MiXCRCommand() {
-    override fun run0() {
-        val maxPresetNameLength = Presets.visiblePresets.maxOf { it.length }
-        val table = CommandLine.Help.TextTable.forColumns(
-            spec.commandLine().colorScheme,
-            CommandLine.Help.Column(maxPresetNameLength, 0, CommandLine.Help.Column.Overflow.WRAP),
-            CommandLine.Help.Column(
-                flagOptions.values.flatMap { message -> message.split("\n").map { it.length } }.max() + 2,
-                2,
-                CommandLine.Help.Column.Overflow.SPAN
-            )
-        )
-        table.addRowValues("PresetName", "Required mix-ins")
+    @Parameters(
+        description = ["Will export only presets that contains a specified parameter."],
+        paramLabel = "<query>",
+        arity = "0..1"
+    )
+    var query: String? = null
 
-        Presets.visiblePresets.sorted().forEach { presetName ->
-            val preset = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-            table.addRowValues(
-                presetName,
-                preset.flags.joinToString("\n") { flagOptions[it]!! }
-            )
+    override fun run0() {
+        val forExport = when {
+            query != null -> Presets.visiblePresets.filter { it.contains(query!!) }
+            else -> Presets.visiblePresets
         }
-        println(table.toString())
+        val presetsByCategory = forExport
+            .map { presetName -> PresetSpecification.ForUI.build(presetName) }
+            .groupBy { it.category }
+
+        val ansi = Ansi.AUTO
+        PrintWriter(System.out).use { writer ->
+            presetsByCategory[MiXCRPresetCategory.generic]?.let { genericPresets ->
+                writer.println("Generic presets:")
+                genericPresets.forEach { preset ->
+                    writer.printPresetInfo(preset, ansi)
+                    writer.println()
+                }
+            }
+
+            presetsByCategory[MiXCRPresetCategory.`non-generic`]?.groupBy { it.vendor!! }?.let { byVendors ->
+                byVendors.forEach { (vendor, presets) ->
+                    if (byVendors.size != 1) {
+                        writer.println("-----$vendor-----")
+                    }
+                    presets.forEach { preset ->
+                        writer.printPresetInfo(preset, ansi)
+                        writer.println()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun PrintWriter.printPresetInfo(preset: PresetSpecification.ForUI, ansi: Ansi) {
+        println(ansi.Text("@|bold ${preset.presetName}|@ @|faint (${preset.label})|@").toString())
+        if (preset.requiredFlags.isNotEmpty()) {
+            println("  Required args:")
+            preset.requiredFlags.forEach { flag ->
+                println("    ${flagOptions[flag]!!.replace("\n", "")}")
+            }
+        }
     }
 }
 
