@@ -1,0 +1,5 @@
+groupClones-base:
+  abstract: true
+  groupClones:
+    algorithm:
+      type: BaseSingleCellGrouping

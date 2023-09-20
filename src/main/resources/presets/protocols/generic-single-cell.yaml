@@ -11,7 +11,9 @@ generic-lt-single-cell-amplicon:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -73,6 +75,10 @@ generic-lt-single-cell-amplicon:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-no-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-no-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 # Low throughput (plates etc) amplicon-based single cell, with UMIs
 generic-lt-single-cell-amplicon-with-umi:
@@ -87,7 +93,9 @@ generic-lt-single-cell-amplicon-with-umi:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -211,6 +219,10 @@ generic-lt-single-cell-amplicon-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-with-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 # Low throughput (plates etc) shotgun single cell, no UMIs
 generic-lt-single-cell-fragmented:
@@ -226,7 +238,9 @@ generic-lt-single-cell-fragmented:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -271,6 +285,10 @@ generic-lt-single-cell-fragmented:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-no-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-no-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 # Low throughput (plates etc) shotgun single cell, with UMIs
 generic-lt-single-cell-fragmented-with-umi:
@@ -286,7 +304,9 @@ generic-lt-single-cell-fragmented-with-umi:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -377,6 +397,10 @@ generic-lt-single-cell-fragmented-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-with-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 
 # High throughput amplicon-based single cell, no UMIs
@@ -393,7 +417,9 @@ generic-ht-single-cell-amplicon:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -482,6 +508,10 @@ generic-ht-single-cell-amplicon:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-no-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-no-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 # High throughput amplicon-based single cell, with UMIs
 generic-ht-single-cell-amplicon-with-umi:
@@ -497,7 +527,9 @@ generic-ht-single-cell-amplicon-with-umi:
     - align
     - refineTagsAndSort
     - assemble
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -649,6 +681,10 @@ generic-ht-single-cell-amplicon-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-with-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 # High throughput fragmented-based single cell, no UMIs
 generic-ht-single-cell-fragmented:
@@ -665,7 +701,9 @@ generic-ht-single-cell-fragmented:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -747,6 +785,10 @@ generic-ht-single-cell-fragmented:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-no-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-no-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 # High throughput fragmented-based single cell, with UMIs
 generic-ht-single-cell-fragmented-with-umi:
@@ -763,7 +805,9 @@ generic-ht-single-cell-fragmented-with-umi:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: SuccessfullyAlignedReads
@@ -878,6 +922,10 @@ generic-ht-single-cell-fragmented-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-with-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
+  groupClones:
+    inheritFrom: groupClones-base
 
 generic-single-cell-gex-base:
   category: generic
@@ -890,7 +938,9 @@ generic-single-cell-gex-base:
     - extend
     - assemble
     - assembleContigs
+    - groupClones
     - exportClones
+    - exportCloneGroups
   qc:
     checks:
       - type: AlignmentsDroppedLowQuality
@@ -906,6 +956,8 @@ generic-single-cell-gex-base:
     inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
+  groupClones:
+    inheritFrom: groupClones-base
 
 # Single cell GEX without UMI
 generic-single-cell-gex:
@@ -924,6 +976,8 @@ generic-single-cell-gex:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-no-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-no-umi-base
 
 
 # Single cell GEX with UMI
@@ -944,5 +998,7 @@ generic-single-cell-gex-with-umi:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
     inheritFrom: exportAlignments-single-cell-with-umi-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
 
 

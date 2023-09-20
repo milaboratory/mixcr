@@ -139,8 +139,8 @@ object Main {
             .addSubcommand(CommandAssemblePartial.COMMAND_NAME, CommandAssemblePartial.Cmd::class.java)
             .addSubcommand(CommandExtend.COMMAND_NAME, CommandExtend.Cmd::class.java)
             .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd::class.java)
-            // .addSubcommand("groupCells", CommandGroupCells.class)
             .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd::class.java)
+            .addSubcommand(CommandGroupClones.COMMAND_NAME, CommandGroupClones.Cmd::class.java)
             .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles::class.java)
             .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.mkCommandSpec())
             .addSubcommand("downsample", CommandDownsample::class.java)
@@ -180,6 +180,7 @@ object Main {
                     .addSubcommand(CommandExportAlignments.COMMAND_NAME, CommandExportAlignments.mkSpec())
                     .addSubcommand("exportAlignmentsPretty", CommandExportAlignmentsPretty::class.java)
                     .addSubcommand(CommandExportClones.COMMAND_NAME, CommandExportClones.mkSpec())
+                    .addSubcommand(CommandExportCloneGroups.COMMAND_NAME, CommandExportCloneGroups.mkSpec())
                     .addSubcommand("exportClonesPretty", CommandExportClonesPretty::class.java)
                     .addSubcommand(
                         CommandExportShmTreesTableWithNodes.COMMAND_NAME,

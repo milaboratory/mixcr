@@ -209,13 +209,6 @@ object CommandAnalyze {
         private var dryRun: Boolean = false
 
         @Option(
-            hidden = true,
-            names = ["--run-qc-on-each-step"],
-            order = OptionsOrder.qcOnEveryStep
-        )
-        private var qcAfterEachStep: Boolean = false
-
-        @Option(
             description = ["Don't output report files for each of the steps"],
             names = ["--no-reports"],
             order = OptionsOrder.report + 100
@@ -337,18 +330,7 @@ object CommandAnalyze {
             // Resolving parameters and sorting the pipeline according to the natural command order
             // (it must already be sorted, but just in case)
             val (bundle, pipeline) = paramsResolver.resolve(paramsSpec, printParameters = false)
-                .let {
-                    it.first to it.second.steps.sorted()
-                }
-
-            // Pre-calculating set of actions requiring a QC to be executed after them
-            val commandToRunQcFor = mutableSetOf<AnyMiXCRCommand>()
-            if (bundle.qc?.checks?.isNotEmpty() == true) {
-                commandToRunQcFor +=
-                    pipeline.findLast { it.outputSupportsQc } as AnyMiXCRCommand
-                if (qcAfterEachStep)
-                    commandToRunQcFor += pipeline.filter { it.outputSupportsQc }
-            }
+                .let { (first, second) -> first to second.steps.sortedBy { it.order } }
 
             // Creating execution plan
             if (pipeline[0] != MiXCRCommandDescriptor.align)
@@ -359,17 +341,6 @@ object CommandAnalyze {
                 !noReports, !noJsonReports,
                 inputTemplates, threadsOption, useLocalTemp
             )
-
-            // Helper function, captures commandToRunQcFor
-            fun PlanBuilder.addStepAndQc(
-                cmd: AnyMiXCRCommand,
-                extraArgs: (outputFolder: Path, prefix: String, sampleName: String, bundle: MiXCRParamsBundle, round: Int) -> List<String> =
-                    { _, _, _, _, _ -> emptyList() }
-            ) {
-                addStep(cmd, extraArgs)
-                if (cmd in commandToRunQcFor)
-                    addQC()
-            }
 
             // Adding an option to save output files by align
             val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
@@ -389,7 +360,7 @@ object CommandAnalyze {
             // Adding "align" step
             if (outputNoUsedReads)
                 pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
-            planBuilder.addStepAndQc(MiXCRCommandDescriptor.align) { _, _, _, _, _ ->
+            planBuilder.addStep(MiXCRCommandDescriptor.align) { _, _, _ ->
                 listOf("--preset", presetName) + extraAlignArgs +
                         mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
             }
@@ -402,37 +373,49 @@ object CommandAnalyze {
                 sampleFileList.deleteExisting()
             }
 
-            // Adding all other steps
-            pipeline.drop(1).forEach { cmd ->
-                planBuilder.addStepAndQc(cmd) { outputFolder, prefix, sampleName, bundle, round ->
-                    when (cmd) {
-                        MiXCRCommandDescriptor.assemble ->
-                            (if (consensusAlignments) listOf(
-                                "--consensus-alignments",
-                                outputFolder.resolve(
-                                    MiXCRCommandDescriptor.assemble.consensusAlignments(
-                                        prefix,
-                                        sampleName
+            // Adding all steps with calculations
+            pipeline
+                .drop(1)
+                .filter { cmd -> cmd !is MiXCRCommandDescriptor.ExportCommandDescriptor }
+                .forEach { cmd ->
+                    planBuilder.addStep(cmd) { outputFolder, prefix, sampleName ->
+                        when (cmd) {
+                            MiXCRCommandDescriptor.assemble -> {
+                                val additionalArgs = mutableListOf<String>()
+                                if (consensusAlignments)
+                                    additionalArgs += listOf(
+                                        "--consensus-alignments",
+                                        outputFolder.resolve(
+                                            MiXCRCommandDescriptor.assemble.consensusAlignments(prefix, sampleName)
+                                        ).toString()
                                     )
-                                ).toString()
-                            )
-                            else emptyList()) + (if (consensusStateStats) listOf(
-                                "--consensus-state-stat",
-                                outputFolder.resolve(
-                                    MiXCRCommandDescriptor.assemble.consensusStateStats(
-                                        prefix,
-                                        sampleName
+                                if (consensusStateStats)
+                                    additionalArgs += listOf(
+                                        "--consensus-state-stat",
+                                        outputFolder.resolve(
+                                            MiXCRCommandDescriptor.assemble.consensusStateStats(prefix, sampleName)
+                                        ).toString()
                                     )
-                                ).toString()
-                            )
-                            else emptyList()) + (consensusStateStatsDownsampling?.let {
-                                listOf("--downsample-consensus-state-stat", it.toString())
-                            } ?: emptyList())
+                                consensusStateStatsDownsampling?.let {
+                                    additionalArgs += listOf("--downsample-consensus-state-stat", it.toString())
+                                }
+                                additionalArgs
+                            }
 
-                        else -> emptyList()
+                            else -> emptyList()
+                        }
                     }
                 }
+
+            if (bundle.qc?.checks?.isNotEmpty() == true) {
+                planBuilder.addQC()
             }
+
+            pipeline
+                .filterIsInstance<MiXCRCommandDescriptor.ExportCommandDescriptor<*>>()
+                .forEach { cmd ->
+                    planBuilder.addExportStep(cmd)
+                }
 
             // Executing all actions after align
             planBuilder.executeSteps(forceOverwrite, dryRun)
@@ -455,8 +438,7 @@ object CommandAnalyze {
             private val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
-
-            private var qcRounds = 0
+            private val outputsForCommands = mutableListOf<Pair<AnyMiXCRCommand, List<InputFileSet>>>()
 
             fun setActualAlignOutputs(fileNames: List<String>) {
                 val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
@@ -507,56 +489,71 @@ object CommandAnalyze {
             private fun String.removeExtension() = substring(0, lastIndexOf('.'))
 
             fun addQC() {
-                for (nextInput in nextInputs) {
-                    check(nextInput.fileNames.size == 1)
+                val inputsForQc = outputsForCommands.findLast { (command) -> command.outputSupportsQc }!!.second
+                for (input in inputsForQc) {
+                    check(input.fileNames.size == 1)
+                    val round = 0
+                    val cmd = MiXCRCommandDescriptor.qc
+                    val outputName = cmd.outputName(outputNamePrefix, input.sampleName, paramsBundle, round)
                     executionPlan += ExecutionStep(
-                        MiXCRCommandDescriptor.qc.command,
-                        qcRounds++,
+                        cmd.command,
+                        round,
                         listOf("--print-to-stdout"),
                         emptyList(),
-                        listOf(nextInput.fileNames.first()),
+                        listOf(input.fileNames.first()),
                         listOf(
-                            nextInput.fileNames.first().removeExtension() + ".qc.txt",
-                            nextInput.fileNames.first().removeExtension() + ".qc.json"
+                            outputFolder.resolve(outputName.removeExtension() + ".txt").toString(),
+                            outputFolder.resolve(outputName.removeExtension() + ".json").toString()
                         )
+                    )
+                }
+            }
+
+            fun addExportStep(cmd: MiXCRCommandDescriptor.ExportCommandDescriptor<*>) {
+                val runAfter = cmd.runAfterLastOf()
+                val inputsForExport = outputsForCommands.findLast { (cmd) -> cmd in runAfter }!!.second
+                for (input in inputsForExport) {
+                    check(input.fileNames.size == 1)
+                    val round = 0
+                    val outputName = cmd.outputName(outputNamePrefix, input.sampleName, paramsBundle, round)
+
+                    executionPlan += ExecutionStep(
+                        cmd.command,
+                        round,
+                        emptyList(),
+                        emptyList(),
+                        listOf(input.fileNames.first()),
+                        listOf(outputFolder.resolve(outputName).toString())
                     )
                 }
             }
 
             fun addStep(
                 cmd: AnyMiXCRCommand,
-                extraArgs: (outputFolder: Path, prefix: String, sampleName: String, bundle: MiXCRParamsBundle, round: Int) -> List<String> =
-                    { _, _, _, _, _ -> emptyList() }
+                extraArgs: (outputFolder: Path, prefix: String, sampleName: String) -> List<String> = { _, _, _ -> emptyList() }
             ) {
                 val round = rounds.compute(cmd) { c, p ->
-                    if (p == null)
-                        0
-                    else {
-                        if (!c.allowMultipleRounds)
-                            throw IllegalArgumentException("${c.command} don't allow multiple rounds of execution")
-                        p + 1
+                    when {
+                        p == null -> 0
+                        !c.allowMultipleRounds -> throw IllegalArgumentException("${c.command} don't allow multiple rounds of execution")
+                        else -> p + 1
                     }
                 }!!
 
                 val nextInputsBuilder = mutableListOf<InputFileSet>()
 
                 nextInputs.forEach { inputs ->
-                    // val outputNamePrefixFull = if (inputs.sampleName != "")
-                    //     outputNamePrefix.dotIfNotBlank() + inputs.sampleName else outputNamePrefix
-
                     val arguments = mutableListOf<String>()
 
                     if (outputReports)
-                        cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
-                            ?.let {
-                                arguments += listOf("--report", outputFolder.resolve(it).toString())
-                            }
+                        cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
+                            arguments += listOf("--report", outputFolder.resolve(it).toString())
+                        }
 
                     if (outputJsonReports)
-                        cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
-                            ?.let {
-                                arguments += listOf("--json-report", outputFolder.resolve(it).toString())
-                            }
+                        cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
+                            arguments += listOf("--json-report", outputFolder.resolve(it).toString())
+                        }
 
                     if (cmd.hasThreadsOption && threadsOption.isSet) {
                         arguments += listOf("--threads", threadsOption.value.toString())
@@ -566,37 +563,22 @@ object CommandAnalyze {
                         arguments += "--use-local-temp"
                     }
 
-                    val output = listOf(
-                        outputFolder.resolve(cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round))
-                            .toString()
-                    )
+                    val outputName = cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
+                    val output = listOf(outputFolder.resolve(outputName).toString())
 
                     executionPlan += ExecutionStep(
                         cmd.command,
                         round,
                         arguments,
-                        extraArgs(outputFolder, outputNamePrefix, inputs.sampleName, paramsBundle, round),
+                        extraArgs(outputFolder, outputNamePrefix, inputs.sampleName),
                         inputs.fileNames,
                         output,
                     )
 
-                    nextInputsBuilder +=
-                        InputFileSet(
-                            inputs.sampleName,
-                            listOf(
-                                outputFolder.resolve(
-                                    cmd.outputName(
-                                        outputNamePrefix,
-                                        inputs.sampleName,
-                                        paramsBundle,
-                                        round
-                                    )
-                                )
-                                    .toString()
-                            )
-                        )
+                    nextInputsBuilder += InputFileSet(inputs.sampleName, output)
                 }
 
+                outputsForCommands += cmd to nextInputsBuilder
                 nextInputs = nextInputsBuilder
             }
 

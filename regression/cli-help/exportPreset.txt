@@ -12,14 +12,20 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
                           [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
                           [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
+                          [--prepend-export-clone-groups-field <field> [<param>...]]...
+                          [--append-export-clone-groups-field <field> [<param>...]]...
                           [--prepend-export-alignments-field <field> [<param>...]]...
                           [--append-export-alignments-field <field> [<param>...]]...
                           [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                           [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                           (geneLabel|tag):key>] [--reset-export-clone-grouping]
-                          [--export-productive-clones-only] [--force-overwrite] [--no-warnings]
-                          [--verbose] [--help] (--preset-name <preset> | --mixcr-file <input.
-                          (vdjca|clns|clna)>) [-M <key=value>]... [preset_file.(yaml|yml)]
+                          [--export-productive-clones-only] [--export-clone-groups-for-cell-type
+                          <cell_type>...]... [--export-clone-groups-for-all-cell-types]
+                          [--show-secondary-chain-on-export-cell-groups]
+                          [--dont-show-secondary-chain-on-export-cell-groups] [--force-overwrite]
+                          [--no-warnings] [--verbose] [--help] (--preset-name <preset> |
+                          --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.
+                          (yaml|yml)]
 Export a preset file given the preset name or source file and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
@@ -121,6 +127,14 @@ Params for export commands:
                              Add clones export column after other columns. First param is field
                                name as it is in `exportClones` command, left params are params of
                                the field
+      --prepend-export-clone-groups-field <field> [<param>...]
+                             Add clone groups export column before other columns. First param is
+                               field name as it is in `exportCloneGroups` command, left params are
+                               params of the field
+      --append-export-clone-groups-field <field> [<param>...]
+                             Add clone groups export column after other columns. First param is
+                               field name as it is in `exportCloneGroups` command, left params are
+                               params of the field
       --prepend-export-alignments-field <field> [<param>...]
                              Add clones export column before other columns. First param is field
                                name as it is in `exportAlignments` command, left params are params
@@ -139,3 +153,12 @@ Params for export commands:
                              Reset all clone grouping in the output clone tables.
       --export-productive-clones-only
                              Export only productive clonotypes.
+      --export-clone-groups-for-cell-type <cell_type>...
+                             Export clone groups for given cell type. Possible values: IGH-IGK,
+                               IGH-IGL, TRB-TRA, TRD-TRG
+      --export-clone-groups-for-all-cell-types
+                             Export clone groups for all cell types.
+      --show-secondary-chain-on-export-cell-groups
+                             Show columns for secondary chains in export for cell groups.
+      --dont-show-secondary-chain-on-export-cell-groups
+                             Don't show columns for secondary chains in export for cell groups.

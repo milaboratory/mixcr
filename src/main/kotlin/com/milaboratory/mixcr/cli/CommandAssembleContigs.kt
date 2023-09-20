@@ -34,8 +34,6 @@ import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
-import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -217,14 +215,7 @@ object CommandAssembleContigs {
                                 bufferSize = 1024
                             ) { cloneAlignments: CloneAlignments ->
                                 val clone = when {
-                                    cmdParams.ignoreTags -> cloneAlignments.clone.withTagCount(
-                                        TagCount(
-                                            TagTuple.NO_TAGS,
-                                            cloneAlignments.clone.tagCount.sum()
-                                        ),
-                                        false
-                                    )
-
+                                    cmdParams.ignoreTags -> cloneAlignments.clone.removeInfoAboutTags()
                                     else -> cloneAlignments.clone
                                 }
                                 try {

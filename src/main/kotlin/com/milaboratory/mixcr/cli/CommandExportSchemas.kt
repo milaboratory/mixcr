@@ -11,29 +11,23 @@
  */
 package com.milaboratory.mixcr.cli
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.github.victools.jsonschema.generator.CustomDefinition
 import com.github.victools.jsonschema.generator.OptionPreset
 import com.github.victools.jsonschema.generator.SchemaGenerator
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder
 import com.github.victools.jsonschema.generator.SchemaVersion
 import com.github.victools.jsonschema.module.jackson.JacksonModule
-import com.milaboratory.mitool.report.ReadTrimmerReport
 import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
-import com.milaboratory.mixcr.alleles.FindAllelesReport
 import com.milaboratory.mixcr.assembler.CloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
-import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerReport
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
-import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerReport
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
-import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerReport
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRMixin
-import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
-import com.milaboratory.mixcr.util.VDJCObjectExtenderReport
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
 import com.milaboratory.util.JsonSchemaType
 import com.milaboratory.util.K_PRETTY_OM
@@ -42,6 +36,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
 
 @Command(
     description = ["Export report schemas"],
@@ -63,7 +58,7 @@ class CommandExportSchemas : Runnable {
         config.forTypesInGeneral()
             .withSubtypeResolver { declaredType, context ->
                 val kClass = declaredType.erasedType.kotlin
-                if (kClass.isSealed) {
+                if (kClass.isSealed && kClass.findAnnotation<JsonSchemaType>() == null) {
                     val typeContext = context.typeContext
                     kClass.sealedFinalSubclasses()
                         .map { typeContext.resolveSubtype(declaredType, it.java) }
@@ -80,21 +75,8 @@ class CommandExportSchemas : Runnable {
 
         val generator = SchemaGenerator(config.build())
 
-        //TODO replace with sealedSubclasses after migration
-        val reports = arrayOf(
-            PreCloneAssemblerReport::class,
-            TagReport::class,
-            ReadTrimmerReport::class,
-            VDJCObjectExtenderReport::class,
-            FullSeqAssemblerReport::class,
-            RefineTagsAndSortReport::class,
-            CloneAssemblerReport::class,
-            PartialAlignmentsAssemblerReport::class,
-            AlignerReport::class,
-            BuildSHMTreeReport::class,
-            FindAllelesReport::class,
-            ChainUsageStats::class,
-        )
+        // TODO replace with sealedSubclasses after migration
+        val reports = MiXCRReport::class.java.getAnnotation(JsonSubTypes::class.java).value.map { it.value }
 
         val reportsDir = outputPath.resolve("reports")
         reportsDir.toFile().mkdirs()
@@ -105,7 +87,7 @@ class CommandExportSchemas : Runnable {
             )
         }
 
-        //TODO replace with sealedSubclasses after migration
+        // TODO replace with sealedSubclasses after migration
         val parametersForOverride = arrayOf(
             VDJCAlignerParameters::class,
             CloneAssemblerParameters::class,

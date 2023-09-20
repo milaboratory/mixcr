@@ -31,6 +31,23 @@ anyOf:
   - type: object
     properties:
       type:
+        const: AddExportCloneGroupsField
+    required:
+    - type
+- allOf:
+  - type: object
+    properties:
+      args:
+        type: array
+        items:
+          type: string
+      field:
+        type: string
+      insertIndex:
+        type: integer
+  - type: object
+    properties:
+      type:
         const: AddExportClonesField
     required:
     - type

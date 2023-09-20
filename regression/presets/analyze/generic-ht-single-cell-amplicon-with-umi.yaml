@@ -7,7 +7,9 @@ pipeline:
 - align
 - refineTagsAndSort
 - assemble
+- groupClones
 - exportClones
+- exportCloneGroups
 align:
   species: ""
   libraryName: default
@@ -403,6 +405,10 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+groupClones:
+  algorithm:
+    type: BaseSingleCellGrouping
+    maxCountOfChainsInACell: 3
 exportAlignments:
   chains: ALL
   noHeader: false
@@ -436,6 +442,7 @@ exportClones:
   noHeader: false
   fields:
   - field: -cloneId
+  - field: -cellGroup
   - field: -tags
     args:
     - Cell
@@ -459,6 +466,40 @@ exportClones:
   - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
+exportCloneGroups:
+  filterOutOfFrames: false
+  filterStops: false
+  filterOutGroupsWithOneClone: false
+  showSecondaryChains: true
+  types: []
+  noHeader: false
+  fields:
+  - field: -cellGroup
+  - field: -groupReadCount
+  - field: -groupUniqueTagCount
+    args:
+    - Cell
+  - field: -groupUniqueTagCount
+    args:
+    - Molecule
+  - field: -uniqClonesPerChainCount
+  - field: -readCount
+  - field: -uniqueTagCount
+    args:
+    - Molecule
+  - field: -targetSequences
+  - field: -targetQualities
+  - field: -vHitsWithScore
+  - field: -dHitsWithScore
+  - field: -jHitsWithScore
+  - field: -cHitsWithScore
+  - field: -vAlignments
+  - field: -dAlignments
+  - field: -jAlignments
+  - field: -cAlignments
+  - field: -allNFeaturesWithMinQuality
+  - field: -allAAFeatures
+  - field: -defaultAnchorPoints
 qc:
   checks:
   - type: SuccessfullyAlignedReads

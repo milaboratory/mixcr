@@ -9,6 +9,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -23,6 +24,9 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainAnyOf
+import io.kotest.matchers.collections.shouldNotBeIn
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.Assert
@@ -152,6 +156,59 @@ class PresetsTest {
             val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             MiXCRCommandDescriptor.exportClones !in bundle.pipeline!!.steps
         } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets with export steps should have required depended steps`() {
+        Presets.nonAbstractPresetNames.forEach { presetName ->
+            presetName.asClue {
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                bundle.pipeline!!.steps
+                    .filterIsInstance<MiXCRCommandDescriptor.ExportCommandDescriptor<*>>()
+                    .forEach { exportStep ->
+                        exportStep.command.asClue {
+                            bundle.pipeline!!.steps shouldContainAnyOf exportStep.runAfterLastOf()
+                        }
+                    }
+            }
+        }
+    }
+
+    @Test
+    fun `all presets with group clones should have exportCloneGroups step`() {
+        Presets.nonAbstractPresetNames
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                MiXCRCommandDescriptor.groupClones in bundle.pipeline!!.steps
+            }
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                MiXCRCommandDescriptor.exportCloneGroups !in bundle.pipeline!!.steps
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `exportClones should be consistent with exportCloneGroups`() {
+        assertSoftly {
+            Presets.nonAbstractPresetNames
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    MiXCRCommandDescriptor.groupClones in bundle.pipeline!!.steps
+                }
+                .forAll { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val exportClonesFields = bundle.exportClones!!.fields
+                    val exportCloneGroupsFields = bundle.exportCloneGroups!!.fields
+
+                    presetName.asClue {
+                        exportCloneGroupsFields shouldContainAll exportClonesFields
+                            .filter { it.field !in (CloneGroupFieldsExtractorsFactory.excludeCloneFields + "-cloneId") }
+                        exportCloneGroupsFields.forAll {
+                            it.field shouldNotBeIn (CloneGroupFieldsExtractorsFactory.excludeCloneFields - "-cellGroup")
+                        }
+                    }
+                }
+        }
     }
 
     @Test

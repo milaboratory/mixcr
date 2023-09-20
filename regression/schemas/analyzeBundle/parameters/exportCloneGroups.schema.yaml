@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+properties:
+  fields:
+    type: array
+    items:
+      type: object
+      properties:
+        args:
+          type: array
+          items:
+            type: string
+        field:
+          type: string
+  filterOutGroupsWithOneClone:
+    type: boolean
+  filterOutOfFrames:
+    type: boolean
+  filterStops:
+    type: boolean
+  noHeader:
+    type: boolean
+  showSecondaryChains:
+    type: boolean
+  types:
+    type: array
+    items:
+      type: string
+      enum:
+      - HK
+      - HL
+      - AB
+      - GD

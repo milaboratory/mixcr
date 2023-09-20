@@ -33,10 +33,12 @@ mixcr analyze --verbose 10x-vdj-tcr \
 
 assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
 
-assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.contigs.clns | wc -l" "6"
-assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.contigs.clns | wc -l" "6"
-assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "59"
-assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.contigs.clns | wc -l" "59"
+assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.grouped.clns | wc -l" "6"
+assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.grouped.clns | wc -l" "6"
+assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.grouped.clns | wc -l" "59"
+assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.grouped.clns | wc -l" "59"
+assert "mixcr exportClones --no-header --drop-default-fields -cellGroup base_single_cell.vdjcontigs.grouped.clns | sort | uniq | wc -l" "3"
 
-assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -readFraction base_single_cell.vdjcontigs.contigs.clns | jq -s add" "3"
-assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -uniqueTagFraction Molecule base_single_cell.vdjcontigs.contigs.clns | jq -s add" "3"
+assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -readFraction base_single_cell.vdjcontigs.grouped.clns | jq -s add" "3"
+assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -uniqueTagFraction Molecule base_single_cell.vdjcontigs.grouped.clns | jq -s add" "3"
+

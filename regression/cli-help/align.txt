@@ -20,16 +20,21 @@ Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimmin
                    [--impute-germline-on-export] [--dont-impute-germline-on-export]
                    [--prepend-export-clones-field <field> [<param>...]]...
                    [--append-export-clones-field <field> [<param>...]]...
+                   [--prepend-export-clone-groups-field <field> [<param>...]]...
+                   [--append-export-clone-groups-field <field> [<param>...]]...
                    [--prepend-export-alignments-field <field> [<param>...]]...
                    [--append-export-alignments-field <field> [<param>...]]...
                    [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                    [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                    (geneLabel|tag):key>] [--reset-export-clone-grouping]
-                   [--export-productive-clones-only] [-O <key=value>]... [--report <path>]
-                   [--json-report <path>] [--use-local-temp] [--threads <n>] [--force-overwrite]
-                   [--no-warnings] [--verbose] [--help] [-M <key=value>]... ([file_I1.fastq[.gz]
-                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]
-                   |bam|sam|cram)) alignments.vdjca
+                   [--export-productive-clones-only] [--export-clone-groups-for-cell-type
+                   <cell_type>...]... [--export-clone-groups-for-all-cell-types]
+                   [--show-secondary-chain-on-export-cell-groups]
+                   [--dont-show-secondary-chain-on-export-cell-groups] [-O <key=value>]...
+                   [--report <path>] [--json-report <path>] [--use-local-temp] [--threads <n>]
+                   [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M <key=value>]...
+                   ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.
+                   gz]]|file.(fasta[.gz]|bam|sam|cram)) alignments.vdjca
 Builds alignments with V,D,J and C genes for input sequencing reads.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta
         [.gz]|bam|sam|cram))
@@ -196,6 +201,14 @@ Params for export commands:
                              Add clones export column after other columns. First param is field
                                name as it is in `exportClones` command, left params are params of
                                the field
+      --prepend-export-clone-groups-field <field> [<param>...]
+                             Add clone groups export column before other columns. First param is
+                               field name as it is in `exportCloneGroups` command, left params are
+                               params of the field
+      --append-export-clone-groups-field <field> [<param>...]
+                             Add clone groups export column after other columns. First param is
+                               field name as it is in `exportCloneGroups` command, left params are
+                               params of the field
       --prepend-export-alignments-field <field> [<param>...]
                              Add clones export column before other columns. First param is field
                                name as it is in `exportAlignments` command, left params are params
@@ -214,3 +227,12 @@ Params for export commands:
                              Reset all clone grouping in the output clone tables.
       --export-productive-clones-only
                              Export only productive clonotypes.
+      --export-clone-groups-for-cell-type <cell_type>...
+                             Export clone groups for given cell type. Possible values: IGH-IGK,
+                               IGH-IGL, TRB-TRA, TRD-TRG
+      --export-clone-groups-for-all-cell-types
+                             Export clone groups for all cell types.
+      --show-secondary-chain-on-export-cell-groups
+                             Show columns for secondary chains in export for cell groups.
+      --dont-show-secondary-chain-on-export-cell-groups
+                             Don't show columns for secondary chains in export for cell groups.
