@@ -207,26 +207,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
     }
 
-    @set:Option(
-        description = [
-            "If specified, trees will be build from data in the file. Main logic of command will be omitted.",
-            "File must be formatted as tsv and have 3 columns: treeId, fileName, cloneId",
-            "V and J genes will be chosen by majority of clones in a clonal group. CDR3 length must be the same in all clones.",
-            "treeId - uniq id for clonal group,",
-            "fileName - file name as was used in command line to search for clone,",
-            "cloneId - clone id in the specified file"
-        ],
-        names = ["-bf", "--build-from"],
-        paramLabel = "<path>",
-        order = OptionsOrder.main + 10_500
-    )
-    var buildFrom: Path? = null
-        set(value) {
-            ValidationException.requireFileType(value, InputFileType.TSV)
-            ValidationException.requireFileExists(value)
-            field = value
-        }
-
     @Mixin
     lateinit var useLocalTemp: UseLocalTempOption
 
@@ -255,20 +235,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         ValidationException.requireFileType(outputTreesPath, InputFileType.SHMT)
         if (shmTreeBuilderParameters.steps.first() !is BuildingInitialTrees) {
             throw ValidationException("First step must be BuildingInitialTrees")
-        }
-        if (buildFrom != null) {
-            if (VGenesToFilter.isNotEmpty()) {
-                throw ValidationException("--v-gene-names must be empty if --build-from is specified")
-            }
-            if (JGenesToFilter.isNotEmpty()) {
-                throw ValidationException("--j-gene-names must be empty if --build-from is specified")
-            }
-            if (CDR3LengthToFilter.isNotEmpty()) {
-                throw ValidationException("--cdr3-lengths must be empty if --build-from is specified")
-            }
-            if (minCountForClone != null) {
-                throw ValidationException("--min-count must be empty if --build-from is specified")
-            }
         }
     }
 
@@ -346,12 +312,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
             val writer = shmTreesWriter.treesWriter()
 
-            buildFrom?.let { buildFrom ->
-                val result =
-                    shmTreeBuilderOrchestrator.buildByUserData(readUserInput(buildFrom), threads.value)
-                writeResults(writer, result, datasets, scoringSet, generateGlobalTreeIds = false)
-                return
-            }
             val allDatasetsHasCellTags = datasets.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
             if (allDatasetsHasCellTags) {
                 when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
@@ -361,7 +321,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
                     is CommandFindShmTreesParams.SingleCell.SimpleClustering -> {
                         shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) { result ->
-                            writeResults(writer, result, datasets, scoringSet, generateGlobalTreeIds = true)
+                            writeResults(writer, result, datasets, scoringSet)
                         }
                         return
                     }
@@ -370,7 +330,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
             SmartProgressReporter.startProgressReport(progressAndStage)
             shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) { result ->
-                writeResults(writer, result, datasets, scoringSet, generateGlobalTreeIds = true)
+                writeResults(writer, result, datasets, scoringSet)
             }
             progressAndStage.finish()
             reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -407,8 +367,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         writer: InputPort<SHMTreeResult>,
         result: OutputPortWithProgress<TreeWithMetaBuilder>,
         datasets: List<ClnsReader>,
-        scoringSet: ScoringSet,
-        generateGlobalTreeIds: Boolean
+        scoringSet: ScoringSet
     ) {
         var treeIdGenerator = 1
         val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
@@ -418,12 +377,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)
                 SHMTreeResult(
                     rebuildFromMRCA.buildResult(),
-                    rebuildFromMRCA.rootInfo,
-                    if (generateGlobalTreeIds) {
-                        treeIdGenerator++
-                    } else {
-                        rebuildFromMRCA.treeId.id
-                    }
+                    listOf(rebuildFromMRCA.rootInfo),
+                    treeIdGenerator++
                 )
             }
             .cached(tempDest, stateBuilder, blockSize = 100)
@@ -456,16 +411,20 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                         val withReplacedClones = shmTreeResult.tree
                             .map { _, content ->
                                 content.copy(
-                                    clones = content.clones.map { (clone, datasetId) ->
-                                        val newRanks = recalculatedRanks[datasetId]!![clone.id]!!
-                                        CloneWithDatasetId(
-                                            datasetId = datasetId,
-                                            clone = clone.withRanks(newRanks)
+                                    chains = content.chains.map { reconstructedChain ->
+                                        reconstructedChain.copy(
+                                            clones = reconstructedChain.clones.map { (clone, datasetId) ->
+                                                val newRanks = recalculatedRanks[datasetId]!![clone.id]!!
+                                                CloneWithDatasetId(
+                                                    datasetId = datasetId,
+                                                    clone = clone.withRanks(newRanks)
+                                                )
+                                            }
                                         )
                                     }
                                 )
                             }
-                        SHMTreeResult(withReplacedClones, shmTreeResult.rootInfo, shmTreeResult.treeId)
+                        SHMTreeResult(withReplacedClones, shmTreeResult.rootInfos, shmTreeResult.treeId)
                     }
                     .drainToAndClose(writer)
             }
