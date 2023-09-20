@@ -121,26 +121,7 @@
             aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
-              - clone
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - allTags:Cell
-              predicates:
-                - metrics:
-                    - type: group_metric_nunique
-                      reportHist:
-                        log: true
-                        binNumber: 0
-                        minBinWidth: 0.1
-                      keys:
-                        - allTags:Molecule
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.99
-            aggregateReport: true
-          - type: filter_in_groups
-            isolationKeys:
+              - geneLabel:ReliableChain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -148,12 +129,30 @@
                 - clone
               predicates:
                 - metrics:
-                    - type: group_metric_nunique
-                      keys:
-                        - allTags:Molecule
+                    - type: group_metric_sum_weight
+                      reportHist: null
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+            aggregateReport: true
+          - type: filter_in_groups
+            isolationKeys:
+              - clone
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.1
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+            aggregateReport: true
 
 "10x-sc-5gex":
   vendor: "10x Genomics"

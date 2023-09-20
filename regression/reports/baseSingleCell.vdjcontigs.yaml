@@ -225,11 +225,11 @@ assemble:
         - null
     nestedPerGroupReports: {}
   - type: filter_in_groups_report
-    numberOfGroups: 7
+    numberOfGroups: 6
     nestedAggregatedReport:
       type: filter_groups_report
       groupingKeys:
-      - allTags:Cell
+      - clone
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
       totalWeight: 14107.0
@@ -242,11 +242,11 @@ assemble:
         - null
     nestedPerGroupReports: {}
   - type: filter_in_groups_report
-    numberOfGroups: 3
+    numberOfGroups: 7
     nestedAggregatedReport:
       type: filter_groups_report
       groupingKeys:
-      - clone
+      - allTags:Cell
       numberOfGroups: 7
       numberOfGroupsAccepted: 7
       totalWeight: 14107.0
