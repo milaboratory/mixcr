@@ -27,7 +27,7 @@ align:
   limit: null
   parameters:
     vParameters:
-      geneFeatureToAlign: VTranscriptWithP
+      geneFeatureToAlign: VGeneWithP
       minSumScore: 150
       relativeMinScore: 0.97
       parameters:
@@ -78,7 +78,7 @@ align:
         mapperNValue: 8
         mapperKValue: 1
         floatingLeftBound: true
-        floatingRightBound: false
+        floatingRightBound: true
         mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
         mapperMatchScore: 95
@@ -102,33 +102,6 @@ align:
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
-    cParameters:
-      geneFeatureToAlign: CExon1
-      minSumScore: 40
-      relativeMinScore: 0.97
-      parameters:
-        type: kaligner
-        mapperKValue: 5
-        floatingLeftBound: false
-        floatingRightBound: true
-        mapperAbsoluteMinScore: 1.5
-        mapperRelativeMinScore: 0.75
-        mapperMatchScore: 1.0
-        mapperMismatchPenalty: -0.1
-        mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 4
-        mapperMaxSeedsDistance: 10
-        minAlignmentLength: 15
-        maxAdjacentIndels: 2
-        alignmentStopPenalty: -1000
-        absoluteMinScore: 40.0
-        relativeMinScore: 0.87
-        maxHits: 7
-        scoring:
-          type: linear
-          alphabet: nucleotide
-          subsMatrix: "simple(match = 5, mismatch = -9)"
-          gapPenalty: -12
     vjAlignmentOrder: VThenJ
     libraryStructure: Unknown
     includeDScore: false

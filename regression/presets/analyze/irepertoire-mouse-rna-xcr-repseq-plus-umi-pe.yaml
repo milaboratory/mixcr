@@ -5,7 +5,7 @@ pipeline:
 - assemble
 - exportClones
 align:
-  species: hsa
+  species: mmu
   libraryName: default
   trimmingQualityThreshold: 10
   trimmingWindowSize: 6
@@ -14,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(R1:*) \\ ^(UMI:N{18})(R2:*)"
+  tagPattern: "^(UMI:N{10})N{8}(R1:*)\\^N{3}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []
@@ -139,7 +139,7 @@ align:
     allowPartialAlignments: false
     allowNoCDR3PartAlignments: false
     allowChimeras: false
-    readsLayout: DirectOnly
+    readsLayout: ReverseOnly
     mergerParameters:
       qualityMergingAlgorithm: MaxSubtraction
       partsLayout: null
@@ -258,7 +258,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+    - CDR2_TO_FR4
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
