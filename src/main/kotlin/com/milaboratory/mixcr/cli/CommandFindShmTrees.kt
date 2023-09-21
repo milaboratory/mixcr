@@ -58,7 +58,6 @@ import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.XSV
 import com.milaboratory.util.cached
 import com.milaboratory.util.exhaustive
 import com.milaboratory.util.groupByOnDisk
@@ -277,9 +276,9 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         ValidationException.require(datasets.all { it.header.foundAlleles != null }) {
             "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
         }
-        ValidationException.requireTheSame(datasets.map { it.header.foundAlleles }) {
+        val foundAlleles = ValidationException.requireTheSame(datasets.map { it.header.foundAlleles }) {
             "All input files must be assembled with the same alleles"
-        }
+        }!!
 
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
@@ -308,7 +307,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            shmTreesWriter.writeHeader(datasets, shmTreeBuilderParameters)
+            shmTreesWriter.writeHeader(datasets, shmTreeBuilderParameters, foundAlleles)
 
             val writer = shmTreesWriter.treesWriter()
 
@@ -345,22 +344,6 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
         ReportUtil.writeReportToStdout(report)
         reportOptions.appendToFiles(report)
-    }
-
-    private fun readUserInput(userInputFile: Path): Map<CloneWithDatasetId.ID, Int> {
-        val fileNameToDatasetId = inputFiles.withIndex().associate { it.value.toString() to it.index }
-        return XSV.readXSV(userInputFile, listOf("treeId", "fileName", "cloneId"), "\t") { rows ->
-            rows.associate { row ->
-                val datasetId = (fileNameToDatasetId[row["fileName"]!!]
-                    ?: throw IllegalArgumentException("No such file ${row["fileName"]} in arguments"))
-                val datasetIdWithCloneId = CloneWithDatasetId.ID(
-                    datasetId = datasetId,
-                    cloneId = row["cloneId"]!!.toInt()
-                )
-                val treeId = row["treeId"]!!.toInt()
-                datasetIdWithCloneId to treeId
-            }
-        }
     }
 
     private fun writeResults(
@@ -430,7 +413,11 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             }
     }
 
-    private fun SHMTreesWriter.writeHeader(cloneReaders: List<ClnsReader>, params: CommandFindShmTreesParams) {
+    private fun SHMTreesWriter.writeHeader(
+        cloneReaders: List<ClnsReader>,
+        params: CommandFindShmTreesParams,
+        library: MiXCRHeader.FoundAlleles
+    ) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
         val headers = cloneReaders.map { it.cloneSetInfo }
         writeHeader(
@@ -442,7 +429,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 .addStepParams(MiXCRCommandDescriptor.findShmTrees, params),
             inputFiles.map { it.toString() },
             headers,
-            usedGenes
+            usedGenes,
+            library
         )
     }
 }

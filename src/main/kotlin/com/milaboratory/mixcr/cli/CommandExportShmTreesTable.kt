@@ -92,7 +92,7 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 reader.readTrees()
                     .filter { treeFilter?.match(it.treeId) != false }
                     .map { shmTree ->
-                        shmTree.forPostanalysis(reader.fileNames, reader.libraryRegistry)
+                        shmTree.forPostanalysis(reader.fileNames, reader.library)
                     }
                     .filter { treeFilter?.match(it) != false }
                     .forEach { output.put(it) }

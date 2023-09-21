@@ -55,7 +55,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
             reader.readTrees()
                 .filter { treeFilter?.match(it.treeId) != false }
                 .map {
-                    it.forPostanalysis(reader.fileNames, reader.libraryRegistry)
+                    it.forPostanalysis(reader.fileNames, reader.library)
                 }
                 .filter { treeFilter?.match(it) != false }
                 .forEach { shmTree ->
