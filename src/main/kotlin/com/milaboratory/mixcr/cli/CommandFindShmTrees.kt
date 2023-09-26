@@ -22,12 +22,12 @@ import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.CloneRanks
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
-import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -39,29 +39,29 @@ import com.milaboratory.mixcr.trees.BuildSHMTreeReport
 import com.milaboratory.mixcr.trees.BuildSHMTreeStep.BuildingInitialTrees
 import com.milaboratory.mixcr.trees.CloneWithDatasetId
 import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
+import com.milaboratory.mixcr.trees.MultiRootTree
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
 import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
 import com.milaboratory.mixcr.trees.SHMTreeResult
+import com.milaboratory.mixcr.trees.SHMTreesCombiner
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
-import com.milaboratory.mixcr.trees.TreeWithMetaBuilder
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.util.DebugDir
+import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.JsonOverrider
-import com.milaboratory.util.OutputPortWithProgress
-import com.milaboratory.util.ProgressAndStage
 import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.asOutputPortWithProgress
 import com.milaboratory.util.cached
-import com.milaboratory.util.exhaustive
 import com.milaboratory.util.groupByOnDisk
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneVariantName
@@ -270,7 +270,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val scoringSet = ScoringSet(
             datasets.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
             MutationsUtils.NDNScoring(),
-            datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
+            datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring,
+            shmTreeBuilderParameters.topologyBuilder.multiplierForNDNScore
         )
 
         ValidationException.require(datasets.all { it.header.foundAlleles != null }) {
@@ -286,9 +287,19 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
         }
-        ValidationException.require(allFullyCoveredBy != GeneFeatures(GeneFeature.CDR3)) {
+        ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
         }
+
+        val featuresWithMutations: VJPair<GeneFeatures> = VJPair(
+            allFullyCoveredBy.intersection(featureToAlign.getFeatureToAlign(GeneType.Variable)!!)!!,
+            allFullyCoveredBy.intersection(featureToAlign.getFeatureToAlign(GeneType.Joining)!!)!!
+        )
+        val shmTreeBuilder = SHMTreeBuilder(
+            shmTreeBuilderParameters.topologyBuilder,
+            featuresWithMutations,
+            scoringSet
+        )
 
         val shmTreeBuilderOrchestrator = SHMTreeBuilderOrchestrator(
             shmTreeBuilderParameters,
@@ -296,7 +307,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             datasets,
             featureToAlign,
             datasets.flatMap { it.usedGenes }.distinct(),
-            allFullyCoveredBy,
+            featuresWithMutations,
+            shmTreeBuilder,
             tempDest,
             debugDirectoryPath,
             VGenesToFilter,
@@ -311,27 +323,23 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
             val writer = shmTreesWriter.treesWriter()
 
-            val allDatasetsHasCellTags = datasets.all { reader -> reader.tagsInfo.any { it.type == TagType.Cell } }
-            if (allDatasetsHasCellTags) {
-                when (val singleCellParams = shmTreeBuilderParameters.singleCell) {
-                    is CommandFindShmTreesParams.SingleCell.NoOP -> {
-//                    warn("Single cell tags will not be used, but it's possible on this data")
+            shmTreeBuilderOrchestrator.buildTreesBySteps(reportBuilder, threads.value) { result ->
+                val shmTreesCombiner = SHMTreesCombiner(
+                    datasets,
+                    featuresWithMutations,
+                    shmTreeBuilder
+                )
+                if (shmTreesCombiner.datasetsThatShouldHaveGroups.isNotEmpty()) {
+                    logger.warn {
+                        val filesToGroup = inputFiles
+                            .filterIndexed { index, _ -> index in shmTreesCombiner.datasetsThatShouldHaveGroups }
+                            .joinToString(", ")
+                        "Can't use information about cell, run `${MiXCRCommandDescriptor.groupClones}` for $filesToGroup"
                     }
-
-                    is CommandFindShmTreesParams.SingleCell.SimpleClustering -> {
-                        shmTreeBuilderOrchestrator.buildTreesByCellTags(singleCellParams, threads.value) { result ->
-                            writeResults(writer, result, datasets, scoringSet)
-                        }
-                        return
-                    }
-                }.exhaustive
+                }
+                val singleCellTrees = shmTreesCombiner.groupByChains(result.toList())
+                writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
             }
-            val progressAndStage = ProgressAndStage("Search for clones with the same targets", 0.0)
-            SmartProgressReporter.startProgressReport(progressAndStage)
-            shmTreeBuilderOrchestrator.buildTreesBySteps(progressAndStage, reportBuilder, threads.value) { result ->
-                writeResults(writer, result, datasets, scoringSet)
-            }
-            progressAndStage.finish()
             reportBuilder.setFinishMillis(System.currentTimeMillis())
             report = reportBuilder.buildReport()
             shmTreesWriter.setFooter(
@@ -348,19 +356,19 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private fun writeResults(
         writer: InputPort<SHMTreeResult>,
-        result: OutputPortWithProgress<TreeWithMetaBuilder>,
+        result: List<MultiRootTree>,
         datasets: List<ClnsReader>,
-        scoringSet: ScoringSet
+        shmTreeBuilder: SHMTreeBuilder
     ) {
         var treeIdGenerator = 1
-        val shmTreeBuilder = SHMTreeBuilder(shmTreeBuilderParameters.topologyBuilder, scoringSet)
         val stateBuilder = datasets.first().header.constructStateBuilder(datasets.first().usedGenes)
         result
+            .asOutputPortWithProgress()
+            .map { shmTreeBuilder.rebuildFromMRCA(it) }
             .map { tree ->
-                val rebuildFromMRCA = shmTreeBuilder.rebuildFromMRCA(tree)
                 SHMTreeResult(
-                    rebuildFromMRCA.buildResult(),
-                    listOf(rebuildFromMRCA.rootInfo),
+                    tree.buildResult(),
+                    tree.roots,
                     treeIdGenerator++
                 )
             }
