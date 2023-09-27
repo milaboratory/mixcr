@@ -133,13 +133,15 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.5.0"
+val mixcrAlgoVersion = "4.5.0-2-fixes"
 // may be blank (will be inherited from mixcr-algo)
 val milibVersion = ""
+// may be blank (will be inherited from mixcr-algo or milib)
+val miuVersion = "1.1.0-1-fixes"
 // may be blank (will be inherited from mixcr-algo)
 val mitoolVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val repseqioVersion = ""
+val repseqioVersion = "2.3.0-2-fixes"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
@@ -149,7 +151,12 @@ val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
 
 dependencies {
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
+        if (milibVersion.isNotBlank()) {
+            // prefer miu version from milib
+            exclude("com.milaboratory", "miu")
+        }
+    }
 
     api("com.milaboratory:mitool:$mitoolVersion") {
         exclude("com.milaboratory", "milib")
@@ -160,9 +167,8 @@ dependencies {
         exclude("com.milaboratory", "miu")
     }
 
-    api("com.milaboratory:milib:$milibVersion") {
-        exclude("com.milaboratory", "miu")
-    }
+    api("com.milaboratory:milib:$milibVersion")
+    api("com.milaboratory:miu:$miuVersion")
 
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
