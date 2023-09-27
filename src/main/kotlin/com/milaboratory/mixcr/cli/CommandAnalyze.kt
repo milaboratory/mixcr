@@ -339,7 +339,7 @@ object CommandAnalyze {
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
                 !noReports, !noJsonReports,
-                inputTemplates, threadsOption, useLocalTemp
+                inputTemplates, threadsOption, useLocalTemp, forceOverwrite
             )
 
             // Adding an option to save output files by align
@@ -365,7 +365,7 @@ object CommandAnalyze {
                         mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
             }
 
-            planBuilder.executeSteps(forceOverwrite, dryRun)
+            planBuilder.executeSteps(dryRun)
 
             // Taking into account that there are multiple outputs from the align command
             if (sampleFileList != null) {
@@ -418,7 +418,7 @@ object CommandAnalyze {
                 }
 
             // Executing all actions after align
-            planBuilder.executeSteps(forceOverwrite, dryRun)
+            planBuilder.executeSteps(dryRun)
 
             println("Analysis finished successfully.")
         }
@@ -434,6 +434,7 @@ object CommandAnalyze {
             initialInputs: List<Path>,
             private val threadsOption: ThreadsOption,
             private val useLocalTemp: UseLocalTempOption,
+            private val forceOverride: Boolean
         ) {
             private val executionPlan = mutableListOf<ExecutionStep>()
             private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
@@ -448,27 +449,11 @@ object CommandAnalyze {
                 }
             }
 
-            fun executeSteps(forceOverwrite: Boolean, dryRun: Boolean) {
+            fun executeSteps(dryRun: Boolean) {
                 if (dryRun) {
                     // Printing commands that would have been executed
                     executionPlan.forEach { pe -> println(pe) }
                 } else {
-                    // Cleanup output files before executing the plan, if requested by the user
-                    if (forceOverwrite) {
-                        var removedOne = false
-                        executionPlan.flatMap { it.output }.forEach {
-                            val op = Path(it)
-                            if (op.exists()) {
-                                if (!removedOne) {
-                                    println("Cleanup:")
-                                    removedOne = true
-                                }
-                                println("  - removing: $it")
-                                op.deleteExisting()
-                            }
-                        }
-                    }
-
                     // Executing the plan
                     for (executionStep in executionPlan) {
                         println("\n" + Util.surround("mixcr ${executionStep.command}", ">", "<"))
@@ -495,10 +480,14 @@ object CommandAnalyze {
                     val round = 0
                     val cmd = MiXCRCommandDescriptor.qc
                     val outputName = cmd.outputName(outputNamePrefix, input.sampleName, paramsBundle, round)
+                    val arguments = mutableListOf("--print-to-stdout")
+                    if (forceOverride)
+                        arguments += "-f"
+
                     executionPlan += ExecutionStep(
                         cmd.command,
                         round,
-                        listOf("--print-to-stdout"),
+                        arguments,
                         emptyList(),
                         listOf(input.fileNames.first()),
                         listOf(
@@ -517,10 +506,14 @@ object CommandAnalyze {
                     val round = 0
                     val outputName = cmd.outputName(outputNamePrefix, input.sampleName, paramsBundle, round)
 
+                    val arguments = mutableListOf<String>()
+                    if (forceOverride)
+                        arguments += "-f"
+
                     executionPlan += ExecutionStep(
                         cmd.command,
                         round,
-                        emptyList(),
+                        arguments,
                         emptyList(),
                         listOf(input.fileNames.first()),
                         listOf(outputFolder.resolve(outputName).toString())
@@ -544,6 +537,9 @@ object CommandAnalyze {
 
                 nextInputs.forEach { inputs ->
                     val arguments = mutableListOf<String>()
+
+                    if (forceOverride)
+                        arguments += "-f"
 
                     if (outputReports)
                         cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
