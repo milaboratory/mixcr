@@ -1,8 +1,9 @@
 align:
   type: alignerReport
-  commandLine: align --report baseSingleCell.raw.align.report.txt --json-report baseSingleCell.raw.align.report.json
-    --preset 10x-vdj-bcr --save-output-file-names baseSingleCell.raw.align.list --species
-    hs single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.raw.vdjca
+  commandLine: align -f --report baseSingleCell.raw.align.report.txt --json-report
+    baseSingleCell.raw.align.report.json --preset 10x-vdj-bcr --save-output-file-names
+    baseSingleCell.raw.align.list --species hs single_cell_vdj_t_subset_R1.fastq.gz
+    single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.raw.vdjca
   inputFiles:
   - single_cell_vdj_t_subset_R1.fastq.gz
   - single_cell_vdj_t_subset_R2.fastq.gz
@@ -137,7 +138,7 @@ align:
     CDR3: 792
 assemble:
   type: assemblerReport
-  commandLine: assemble --report baseSingleCell.raw.assemble.report.txt --json-report
+  commandLine: assemble -f --report baseSingleCell.raw.assemble.report.txt --json-report
     baseSingleCell.raw.assemble.report.json baseSingleCell.raw.extended.vdjca baseSingleCell.raw.clna
   inputFiles:
   - baseSingleCell.raw.extended.vdjca
@@ -259,7 +260,7 @@ assemble:
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: fullSeqAssemblerReport
-  commandLine: assembleContigs --report baseSingleCell.raw.assembleContigs.report.txt
+  commandLine: assembleContigs -f --report baseSingleCell.raw.assembleContigs.report.txt
     --json-report baseSingleCell.raw.assembleContigs.report.json baseSingleCell.raw.clna
     baseSingleCell.raw.contigs.clns
   inputFiles:
@@ -283,7 +284,7 @@ assembleContigs:
   assemblePrematureTerminationEvents: 0.0
 assemblePartial:
   type: partialAlignmentsAssemblerReport
-  commandLine: assemblePartial --report baseSingleCell.raw.assemblePartial.report.txt
+  commandLine: assemblePartial -f --report baseSingleCell.raw.assemblePartial.report.txt
     --json-report baseSingleCell.raw.assemblePartial.report.json baseSingleCell.raw.refined.vdjca
     baseSingleCell.raw.passembled.1.vdjca
   inputFiles:
@@ -307,7 +308,7 @@ assemblePartial:
   partialAlignmentsAsIs: 27088
 extend:
   type: extenderReport
-  commandLine: extend --report baseSingleCell.raw.extend.report.txt --json-report
+  commandLine: extend -f --report baseSingleCell.raw.extend.report.txt --json-report
     baseSingleCell.raw.extend.report.json baseSingleCell.raw.passembled.1.vdjca baseSingleCell.raw.extended.vdjca
   inputFiles:
   - baseSingleCell.raw.passembled.1.vdjca
@@ -324,8 +325,8 @@ extend:
   meanJExtensionLength: 3.111111111111111
 refineTagsAndSort:
   type: refineTagsAndSort
-  commandLine: refineTagsAndSort --report baseSingleCell.raw.refine.report.txt --json-report
-    baseSingleCell.raw.refine.report.json baseSingleCell.raw.vdjca baseSingleCell.raw.refined.vdjca
+  commandLine: refineTagsAndSort -f --report baseSingleCell.raw.refine.report.txt
+    --json-report baseSingleCell.raw.refine.report.json baseSingleCell.raw.vdjca baseSingleCell.raw.refined.vdjca
   inputFiles:
   - baseSingleCell.raw.vdjca
   outputFiles:
