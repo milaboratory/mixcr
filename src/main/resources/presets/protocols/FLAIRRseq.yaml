@@ -9,6 +9,8 @@
     - assemble
     - exportClones
   mixins:
+    - type: SetSpecies
+      species: hs
     - type: SetTagPattern
       tagPattern: aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)CTCATGctccgtgatgcatg(SAMPLE:N{16})$ |
                   aagcagtggtatcaacgCAGAGt(UMI:NNNNtNNNNtNNNN)tcttggg(R1:*)GAATGGaacacgggggagac(SAMPLE:N{16})$
