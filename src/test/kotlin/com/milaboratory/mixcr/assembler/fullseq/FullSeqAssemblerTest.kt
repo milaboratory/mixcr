@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.assembler.fullseq
 
 import cc.redberry.pipe.CUtils
-import com.milaboratory.core.alignment.Alignment
+import cc.redberry.pipe.util.asOutputPort
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.io.sequence.SequenceReader
@@ -34,8 +34,10 @@ import gnu.trove.set.hash.TIntHashSet
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Variable
 import org.apache.commons.math3.random.RandomDataGenerator
 import org.apache.commons.math3.random.Well19937c
 import org.apache.commons.math3.random.Well44497b
@@ -212,7 +214,7 @@ class FullSeqAssemblerTest {
         )
         val prep = agg.calculateRawData {
             CUtils.asOutputPort(
-                align.alignments.stream().filter { a: VDJCAlignments -> a.getFeature(GeneFeature.CDR3) != null }
+                align.alignments.stream().filter { a: VDJCAlignments -> a.getFeature(CDR3) != null }
                     .collect(
                         Collectors.toList()
                     )
@@ -227,7 +229,7 @@ class FullSeqAssemblerTest {
                 println(clone.numberOfTargets())
                 println(clone.count)
                 println(clone.fraction)
-                println(clone.getBestHit(GeneType.Variable).getAlignment(0).absoluteMutations)
+                println(clone.getBestHit(Variable).getAlignment(0).absoluteMutations)
                 println(clone.getBestHit(GeneType.Joining).getAlignment(0).absoluteMutations)
                 println()
                 //            ActionExportClonesPretty.outputCompact(System.out, clone);
@@ -378,8 +380,8 @@ class FullSeqAssemblerTest {
         val align = RunMiXCR.align(params)
         val assemble = RunMiXCR.assemble(align)
         for (al in align.alignments) {
-            if (al.getFeature(GeneFeature.CDR3) == null) continue
-            if (NucleotideSequence("TACGGGTTTGACTACTGG") != al.getFeature(GeneFeature.CDR3).sequence) continue
+            if (al.getFeature(CDR3) == null) continue
+            if (NucleotideSequence("TACGGGTTTGACTACTGG") != al.getFeature(CDR3).sequence) continue
             for (i in 0 until al.numberOfTargets()) {
                 println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format())
                 println()
@@ -394,17 +396,17 @@ class FullSeqAssemblerTest {
 
         // Assert.assertEquals(1, assemble.cloneSet.size());
         val initialClone = assemble.cloneSet[0]
-        val cdr3 = initialClone.getFeature(GeneFeature.CDR3)
-        val alignments = align.alignments.stream()
-            .filter { al: VDJCAlignments -> cdr3 == al.getFeature(GeneFeature.CDR3) }
-            .collect(Collectors.toList())
-        alignments.stream().filter { al: VDJCAlignments ->
-            Arrays.stream(al.getBestHit(GeneType.Variable).alignments)
-                .filter { obj: Alignment<NucleotideSequence?>? -> Objects.nonNull(obj) }
-                .anyMatch { a: Alignment<NucleotideSequence?> -> !a.absoluteMutations.isEmpty }
-        }
-            .filter { al: VDJCAlignments -> al.getBestHit(GeneType.Variable).gene.name.name.contains("3-74") }
-            .forEach { al: VDJCAlignments ->
+        val cdr3 = initialClone.getFeature(CDR3)
+        val alignments = align.alignments
+            .filter { al -> cdr3 == al.getFeature(CDR3) }
+        alignments
+            .filter { al ->
+                al.getBestHit(Variable).alignments
+                    .filter { obj -> Objects.nonNull(obj) }
+                    .any { a -> !a.absoluteMutations.isEmpty }
+            }
+            .filter { al -> al.getBestHit(Variable).gene.name.name.contains("3-74") }
+            .forEach { al ->
                 for (i in 0 until al.numberOfTargets()) {
                     println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format())
                     println()
@@ -428,7 +430,7 @@ class FullSeqAssemblerTest {
             initialClone,
             align.parameters.alignerParameters
         )
-        val prep = agg.calculateRawData { CUtils.asOutputPort(alignments) }
+        val prep = agg.calculateRawData { alignments.asOutputPort() }
         val clones = listOf(*agg.callVariants(prep))
             .sortedWith(Comparator.comparingDouble { obj: Clone -> obj.count }
                 .reversed())

@@ -14,7 +14,8 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.blocks.ParallelProcessor
 import cc.redberry.pipe.util.asOutputPort
-import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.ordered
 import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -49,6 +50,7 @@ import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
+
 
 object CommandExtend {
     const val COMMAND_NAME = MiXCRCommandDescriptor.extend.name
@@ -217,11 +219,11 @@ object CommandExtend {
                     // may break the alignment (gaps there are already consolidated as much as possible)
                     val gtRequiringIndelShifts = reader.parameters.geneTypesWithLinearScoring
                     process.output
-                        .asSequence()
-                        .sortedBy { it.alignmentsIndex }
+                        .ordered { it.alignmentsIndex }
                         .forEach { alignments ->
                             writer.write(alignments.shiftIndelsAtHomopolymers(gtRequiringIndelShifts))
                         }
+
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
                     val report = process.finish()
                     writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.extend, report))
