@@ -80,7 +80,7 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
-    applicationDefaultJvmArgs = listOf("-Xmx8g")
+    applicationDefaultJvmArgs = listOf("-Xmx8g", "-XX:+HeapDumpOnOutOfMemoryError")
 }
 
 tasks.withType<JavaExec> {
