@@ -173,7 +173,6 @@ dependencies {
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }
-    toObfuscate("com.milaboratory:miu") { exclude("*", "*") }
     toObfuscate("com.milaboratory:mitool") { exclude("*", "*") }
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
