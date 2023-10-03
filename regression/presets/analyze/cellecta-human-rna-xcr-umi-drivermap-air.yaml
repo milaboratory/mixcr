@@ -293,7 +293,7 @@ assemble:
         scoring: null
     separateByV: false
     separateByJ: false
-    separateByC: false
+    separateByC: true
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0

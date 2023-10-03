@@ -68,8 +68,6 @@ milab-human-rna-tcr-umi-race:
     - type: SetSplitClonesBy
       geneType: J
       value: true
-    - type: SetClonotypeAssemblingFeatures
-      features: [ "VDJRegion" ]
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter

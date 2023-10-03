@@ -19,6 +19,9 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -29,3 +32,47 @@
     overrides:
       parameters:
         readsLayout: DirectOnly
+
+
+"cellecta-human-dna-xcr-umi-drivermap-air":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA"
+  mixins:
+    - type: MaterialTypeDNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+
+"cellecta-human-rna-xcr-full-length-umi-drivermap-air":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA"
+  mixins:
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:FR4End}" ]
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+
+"cellecta-mouse-rna-xcr-umi-drivermap-air":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA"
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true

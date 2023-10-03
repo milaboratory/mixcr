@@ -80,7 +80,7 @@ tasks.withType<KotlinCompile> {
 
 application {
     mainClass.set("com.milaboratory.mixcr.cli.Main")
-    applicationDefaultJvmArgs = listOf("-Xmx8g")
+    applicationDefaultJvmArgs = listOf("-Xmx8g", "-XX:+HeapDumpOnOutOfMemoryError")
 }
 
 tasks.withType<JavaExec> {
@@ -133,9 +133,14 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.4.2-78-cell-grouping"
+val mixcrAlgoVersion = "4.5.0-10-exports"
+// may be blank (will be inherited from mixcr-algo)
 val milibVersion = ""
+// may be blank (will be inherited from mixcr-algo or milib)
+val miuVersion = ""
+// may be blank (will be inherited from mixcr-algo)
 val mitoolVersion = ""
+// may be blank (will be inherited from mixcr-algo)
 val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
@@ -146,17 +151,25 @@ val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"
 
 dependencies {
-    if (milibVersion.isNotBlank()) {
-        api("com.milaboratory:milib:$milibVersion")
-    }
-    if (mitoolVersion.isNotBlank()) {
-        api("com.milaboratory:mitool:$mitoolVersion")
-    }
-    if (repseqioVersion.isNotBlank()) {
-        api("io.repseq:repseqio:$repseqioVersion")
+    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion") {
+        if (milibVersion.isNotBlank()) {
+            // prefer miu version from milib
+            exclude("com.milaboratory", "miu")
+        }
     }
 
-    api("com.milaboratory:mixcr-algo:$mixcrAlgoVersion")
+    api("com.milaboratory:mitool:$mitoolVersion") {
+        exclude("com.milaboratory", "milib")
+        exclude("com.milaboratory", "miu")
+    }
+    api("io.repseq:repseqio:$repseqioVersion") {
+        exclude("com.milaboratory", "milib")
+        exclude("com.milaboratory", "miu")
+    }
+
+    api("com.milaboratory:milib:$milibVersion")
+    api("com.milaboratory:miu:$miuVersion")
+
 
     toObfuscate("com.milaboratory:mixcr-algo") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milib") { exclude("*", "*") }

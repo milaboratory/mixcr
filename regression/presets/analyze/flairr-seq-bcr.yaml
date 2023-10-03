@@ -1,12 +1,11 @@
-flags:
-- species
+flags: []
 pipeline:
 - align
 - refineTagsAndSort
 - assemble
 - exportClones
 align:
-  species: ""
+  species: hs
   libraryName: default
   trimmingQualityThreshold: 0
   trimmingWindowSize: 6

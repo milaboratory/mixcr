@@ -1,6 +1,6 @@
 align:
   type: alignerReport
-  commandLine: align --report baseSingleCell.vdjcontigs.align.report.txt --json-report
+  commandLine: align -f --report baseSingleCell.vdjcontigs.align.report.txt --json-report
     baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --save-output-file-names
     baseSingleCell.vdjcontigs.align.list --species hs --assemble-contigs-by VDJRegion
     single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.vdjca
@@ -138,8 +138,8 @@ align:
     CDR3: 792
 assemble:
   type: assemblerReport
-  commandLine: assemble --report baseSingleCell.vdjcontigs.assemble.report.txt --json-report
-    baseSingleCell.vdjcontigs.assemble.report.json baseSingleCell.vdjcontigs.extended.vdjca
+  commandLine: assemble -f --report baseSingleCell.vdjcontigs.assemble.report.txt
+    --json-report baseSingleCell.vdjcontigs.assemble.report.json baseSingleCell.vdjcontigs.extended.vdjca
     baseSingleCell.vdjcontigs.clna
   inputFiles:
   - baseSingleCell.vdjcontigs.extended.vdjca
@@ -225,6 +225,23 @@ assemble:
         - null
     nestedPerGroupReports: {}
   - type: filter_in_groups_report
+    numberOfGroups: 6
+    nestedAggregatedReport:
+      type: filter_groups_report
+      groupingKeys:
+      - clone
+      numberOfGroups: 7
+      numberOfGroupsAccepted: 7
+      totalWeight: 14107.0
+      totalWeightAccepted: 14107.0
+      operatorReports:
+      - operatorReport:
+          type: generic_hist_report
+          threshold: NaN
+        metricHists:
+        - null
+    nestedPerGroupReports: {}
+  - type: filter_in_groups_report
     numberOfGroups: 7
     nestedAggregatedReport:
       type: filter_groups_report
@@ -241,27 +258,10 @@ assemble:
         metricHists:
         - null
     nestedPerGroupReports: {}
-  - type: filter_in_groups_report
-    numberOfGroups: 3
-    nestedAggregatedReport:
-      type: filter_groups_report
-      groupingKeys:
-      - clone
-      numberOfGroups: 7
-      numberOfGroupsAccepted: 7
-      totalWeight: 14107.0
-      totalWeightAccepted: 14107.0
-      operatorReports:
-      - operatorReport:
-          type: generic_hist_report
-          threshold: NaN
-        metricHists:
-        - null
-    nestedPerGroupReports: {}
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: fullSeqAssemblerReport
-  commandLine: assembleContigs --report baseSingleCell.vdjcontigs.assembleContigs.report.txt
+  commandLine: assembleContigs -f --report baseSingleCell.vdjcontigs.assembleContigs.report.txt
     --json-report baseSingleCell.vdjcontigs.assembleContigs.report.json baseSingleCell.vdjcontigs.clna
     baseSingleCell.vdjcontigs.contigs.clns
   inputFiles:
@@ -285,7 +285,7 @@ assembleContigs:
   assemblePrematureTerminationEvents: 0.0
 assemblePartial:
   type: partialAlignmentsAssemblerReport
-  commandLine: assemblePartial --report baseSingleCell.vdjcontigs.assemblePartial.report.txt
+  commandLine: assemblePartial -f --report baseSingleCell.vdjcontigs.assemblePartial.report.txt
     --json-report baseSingleCell.vdjcontigs.assemblePartial.report.json baseSingleCell.vdjcontigs.refined.vdjca
     baseSingleCell.vdjcontigs.passembled.1.vdjca
   inputFiles:
@@ -309,7 +309,7 @@ assemblePartial:
   partialAlignmentsAsIs: 27088
 extend:
   type: extenderReport
-  commandLine: extend --report baseSingleCell.vdjcontigs.extend.report.txt --json-report
+  commandLine: extend -f --report baseSingleCell.vdjcontigs.extend.report.txt --json-report
     baseSingleCell.vdjcontigs.extend.report.json baseSingleCell.vdjcontigs.passembled.1.vdjca
     baseSingleCell.vdjcontigs.extended.vdjca
   inputFiles:
@@ -327,7 +327,7 @@ extend:
   meanJExtensionLength: 3.111111111111111
 refineTagsAndSort:
   type: refineTagsAndSort
-  commandLine: refineTagsAndSort --report baseSingleCell.vdjcontigs.refine.report.txt
+  commandLine: refineTagsAndSort -f --report baseSingleCell.vdjcontigs.refine.report.txt
     --json-report baseSingleCell.vdjcontigs.refine.report.json baseSingleCell.vdjcontigs.vdjca
     baseSingleCell.vdjcontigs.refined.vdjca
   inputFiles:

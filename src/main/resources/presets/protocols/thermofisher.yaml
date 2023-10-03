@@ -110,3 +110,29 @@
 "thermofisher-human-dna-tcr-oncomine-pan-clonality":
   label: "Oncomine TCR Pan-Clonality Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
+
+"thermofisher-mouse-rna-tcb-ampliseq-sr":
+  label: "Ion AmpliSeq Mouse TCR Beta‑SR RNA"
+  inheritFrom: thermofisher-human-rna-trb-oncomine-sr
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"thermofisher-mouse-dna-tcb-ampliseq-sr":
+  label: "Ion AmpliSeq Mouse TCR Beta‑SR DNA"
+  inheritFrom: thermofisher-mouse-rna-tcb-ampliseq-sr
+  mixins:
+    - type: MaterialTypeRNA
+
+"thermofisher-mouse-rna-igh-ampliseq-sr":
+  label: "Ion AmpliSeq Mouse IGH‑SR RNA"
+  inheritFrom: thermofisher-human-rna-igh-oncomine-sr
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"thermofisher-mouse-dna-igh-ampliseq-sr":
+  label: "Ion AmpliSeq Mouse IGH‑SR DNA"
+  inheritFrom: thermofisher-mouse-rna-igh-ampliseq-sr
+  mixins:
+    - type: MaterialTypeRNA

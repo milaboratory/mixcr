@@ -1,0 +1,62 @@
+"invivoscribe-human-lymphotrack-base":
+  vendor: "Invivoscribe"
+  category: non-generic
+  abstract: true
+  inheritFrom: generic-amplicon
+  pipeline:
+    - align
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hs
+    - type: MaterialTypeDNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+
+"invivoscribe-human-dna-trg-lymphotrack":
+  label: "LymphoTrack TRG Assay Panel"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+
+"invivoscribe-human-dna-trb-lymphotrack":
+  label: "LymphoTrack TRB Assay Panel"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+
+"invivoscribe-human-dna-igk-lymphotrack":
+  label: "LymphoTrack IGK Assay Panel"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+
+"invivoscribe-human-dna-ighv-leader-lymphotrack":
+  label: "LymphoTrack IGHV Leader Somatic Hypermutation"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{FR1Begin:CDR3End}" ]
+
+"invivoscribe-human-dna-igh-fr3-lymphotrack":
+  label: "LymphoTrack IGH FR3"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+
+"invivoscribe-human-dna-igh-fr2-lymphotrack":
+  label: "LymphoTrack IGH FR2"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR2Begin:CDR3End}" ]
+
+"invivoscribe-human-dna-igh-fr123-lymphotrack":
+  label: "LymphoTrack IGH FR1/2/3"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:CDR3End}" ]
+
+"invivoscribe-human-dna-igh-fr1-lymphotrack":
+  label: "LymphoTrack IGH FR1"
+  inheritFrom: invivoscribe-human-lymphotrack-base
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:CDR3End}" ]
