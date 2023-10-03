@@ -198,7 +198,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     @Option(
         description = ["Build trees only on productive clones (no stop codons in all features and no out of frame in CDR3)"],
         names = ["--productive-only"],
-        order = OptionsOrder.main + 10_500,
+        order = OptionsOrder.main + 10_600,
         arity = "0"
     )
     var productiveOnly: Boolean = false
