@@ -63,6 +63,7 @@ import com.milaboratory.util.cached
 import com.milaboratory.util.exhaustive
 import com.milaboratory.util.groupByOnDisk
 import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneVariantName
@@ -194,6 +195,14 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     )
     var minCountForClone: Int? = null
 
+    @Option(
+        description = ["Build trees only on productive clones (no stop codons in all features and no out of frame in CDR3)"],
+        names = ["--productive-only"],
+        order = OptionsOrder.main + 10_600,
+        arity = "0"
+    )
+    var productiveOnly: Boolean = false
+
     @Mixin
     lateinit var debugDir: DebugDirOption
 
@@ -231,13 +240,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     lateinit var useLocalTemp: UseLocalTempOption
 
     private val shmTreeBuilderParameters: CommandFindShmTreesParams by lazy {
-        val presetNAme = "default"
-        var result = CommandFindShmTreesParams.presets.getByName(presetNAme)
-            ?: throw ValidationException("Unknown parameters: $presetNAme")
+        val presetName = "default"
+        var result = CommandFindShmTreesParams.presets.getByName(presetName)
+            ?: throw ValidationException("Unknown parameters: $presetName")
         if (overrides.isNotEmpty()) {
             result = JsonOverrider.override(result, CommandFindShmTreesParams::class.java, overrides)
                 ?: throw ValidationException("Failed to override some parameter: $overrides")
         }
+        if (productiveOnly)
+            result = result.copy(productiveOnly = true)
         result
     }
 
@@ -321,7 +332,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
         }
-        ValidationException.require(allFullyCoveredBy != GeneFeatures(GeneFeature.CDR3)) {
+        ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
         }
 

@@ -51,6 +51,7 @@ mixcr findShmTrees \
   -j trees/report.json \
   -r trees/report.txt \
   --debug-dir trees/debug \
+  --productive-only \
   $(ls alleles/*.clns) base_build_trees.shmt
 
 mixcr exportShmTrees base_build_trees.shmt trees/trees.tsv
