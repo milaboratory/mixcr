@@ -16,7 +16,7 @@ import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.map
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.trees.NewickTreePrinter
-import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis
+import com.milaboratory.mixcr.trees.SHMTreeForPostanalysis.NodeWithAllChains
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import io.repseq.core.VDJCLibraryRegistry
@@ -47,7 +47,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
     override fun run1() {
         out.createDirectories()
 
-        val newickTreePrinter = NewickTreePrinter<SHMTreeForPostanalysis.BaseNode> {
+        val newickTreePrinter = NewickTreePrinter<NodeWithAllChains> {
             it.content.id.toString()
         }
 
@@ -59,7 +59,7 @@ class CommandExportShmTreesNewick : CommandExportShmTreesAbstract() {
                 }
                 .filter { treeFilter?.match(it) != false }
                 .forEach { shmTree ->
-                    val newickFileOutput = out.resolve("${shmTree.meta.treeId}.tree")
+                    val newickFileOutput = out.resolve("${shmTree.treeId}.tree")
                     newickFileOutput.writeText(newickTreePrinter.print(shmTree.tree))
                 }
         }

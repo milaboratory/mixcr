@@ -319,16 +319,22 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            shmTreesWriter.writeHeader(datasets, shmTreeBuilderParameters, foundAlleles)
+            val shmTreesCombiner = SHMTreesCombiner(
+                datasets,
+                featuresWithMutations,
+                shmTreeBuilder
+            )
+
+            shmTreesWriter.writeHeader(
+                datasets,
+                shmTreeBuilderParameters,
+                foundAlleles,
+                shmTreesCombiner.datasetsThatShouldHaveGroups.isNotEmpty()
+            )
 
             val writer = shmTreesWriter.treesWriter()
 
             shmTreeBuilderOrchestrator.buildTreesBySteps(reportBuilder, threads.value) { result ->
-                val shmTreesCombiner = SHMTreesCombiner(
-                    datasets,
-                    featuresWithMutations,
-                    shmTreeBuilder
-                )
                 if (shmTreesCombiner.datasetsThatShouldHaveGroups.isNotEmpty()) {
                     logger.warn {
                         val filesToGroup = inputFiles
@@ -424,7 +430,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     private fun SHMTreesWriter.writeHeader(
         cloneReaders: List<ClnsReader>,
         params: CommandFindShmTreesParams,
-        library: MiXCRHeader.FoundAlleles
+        library: MiXCRHeader.FoundAlleles,
+        singleCell: Boolean
     ) {
         val usedGenes = cloneReaders.flatMap { it.usedGenes }.distinct()
         val headers = cloneReaders.map { it.cloneSetInfo }
@@ -438,7 +445,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             inputFiles.map { it.toString() },
             headers,
             usedGenes,
-            library
+            library,
+            singleCell
         )
     }
 }

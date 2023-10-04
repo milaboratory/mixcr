@@ -11,9 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.util.filter
-import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.asSequence
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -90,11 +88,13 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 !noHeader,
             ) { rowMetaForExport }.use { output ->
                 reader.readTrees()
+                    .asSequence()
                     .filter { treeFilter?.match(it.treeId) != false }
                     .map { shmTree ->
                         shmTree.forPostanalysis(reader.fileNames, reader.library)
                     }
                     .filter { treeFilter?.match(it) != false }
+                    .flatMap { it.splitToChains() }
                     .forEach { output.put(it) }
             }
         }

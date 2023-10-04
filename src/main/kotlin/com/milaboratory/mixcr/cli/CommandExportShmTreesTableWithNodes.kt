@@ -212,11 +212,13 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                     }
                     .filter { treeFilter?.match(it) != false }
                     .flatMap { shmTreeForPostanalysis ->
+                        val chainInfos = shmTreeForPostanalysis.splitToChains()
+                            .associateBy { it.meta.rootInfo }
                         shmTreeForPostanalysis.tree.allNodes()
                             .asSequence()
-                            .filter { !onlyObserved || it.node.content.clones.isNotEmpty() }
+                            .filter { !onlyObserved || it.node.content.hasClones() }
                             .flatMap { it.node.content.split(splitClones) }
-                            .map { node -> Wrapper(shmTreeForPostanalysis, node) }
+                            .map { node -> Wrapper(chainInfos[node.root.rootInfo]!!, node) }
                     }
                     .forEach {
                         output.put(it)
