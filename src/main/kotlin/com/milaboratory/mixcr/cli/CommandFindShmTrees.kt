@@ -44,7 +44,7 @@ import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.SHMTreeBuilder
 import com.milaboratory.mixcr.trees.SHMTreeBuilderOrchestrator
 import com.milaboratory.mixcr.trees.SHMTreeResult
-import com.milaboratory.mixcr.trees.SHMTreesCombiner
+import com.milaboratory.mixcr.trees.SHMTreesCellCombiner
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.trees.SHMTreesWriter.Companion.shmFileExtension
 import com.milaboratory.mixcr.trees.ScoringSet
@@ -319,10 +319,11 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            val shmTreesCombiner = SHMTreesCombiner(
+            val shmTreesCombiner = SHMTreesCellCombiner(
                 datasets,
                 featuresWithMutations,
                 shmTreeBuilder,
+                shmTreeBuilderParameters.cellCombiner,
                 threads.value
             )
 
@@ -347,6 +348,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 val singleCellTrees = shmTreesCombiner.groupByChains(result)
                 writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
             }
+            reportBuilder.cellCombination = shmTreesCombiner.buildReport()
             reportBuilder.setFinishMillis(System.currentTimeMillis())
             report = reportBuilder.buildReport()
             shmTreesWriter.setFooter(
