@@ -54,10 +54,10 @@ import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.JsonOverrider
+import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.asOutputPortWithProgress
 import com.milaboratory.util.cached
 import com.milaboratory.util.groupByOnDisk
 import io.repseq.core.GeneFeature
@@ -322,7 +322,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             val shmTreesCombiner = SHMTreesCombiner(
                 datasets,
                 featuresWithMutations,
-                shmTreeBuilder
+                shmTreeBuilder,
+                threads.value
             )
 
             shmTreesWriter.writeHeader(
@@ -343,7 +344,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                         "Can't use information about cell, run `${MiXCRCommandDescriptor.groupClones}` for $filesToGroup"
                     }
                 }
-                val singleCellTrees = shmTreesCombiner.groupByChains(result.toList())
+                val singleCellTrees = shmTreesCombiner.groupByChains(result)
                 writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
             }
             reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -362,14 +363,13 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private fun writeResults(
         writer: InputPort<SHMTreeResult>,
-        result: List<MultiRootTree>,
+        result: OutputPortWithProgress<MultiRootTree>,
         datasets: List<ClnsReader>,
         shmTreeBuilder: SHMTreeBuilder
     ) {
         var treeIdGenerator = 1
         val stateBuilder = datasets.first().header.constructStateBuilder(datasets.first().usedGenes)
         result
-            .asOutputPortWithProgress()
             .map { shmTreeBuilder.rebuildFromMRCA(it) }
             .map { tree ->
                 SHMTreeResult(
