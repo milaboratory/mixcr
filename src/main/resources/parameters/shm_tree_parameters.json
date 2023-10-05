@@ -1,6 +1,6 @@
 {
   "default": {
-    "productiveOnly": true,
+    "productiveOnly": false,
     "singleCell": {
       "type": "noop"
     },

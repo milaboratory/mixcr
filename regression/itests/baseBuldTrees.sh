@@ -47,6 +47,7 @@ mixcr findAlleles \
 mixcr findShmTrees \
   -j trees/report.json \
   -r trees/report.txt \
+  --productive-only \
   $(ls alleles/*.clns) trees/result.shmt
 
 
