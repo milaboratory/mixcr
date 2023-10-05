@@ -176,6 +176,7 @@ object CommandGroupClones {
                 grouppedClones,
                 input.usedGenes,
                 input.header
+                    .copy(calculatedCloneGroups = true)
                     .addStepParams(MiXCRCommandDescriptor.groupClones, cmdParams)
                     .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
             )

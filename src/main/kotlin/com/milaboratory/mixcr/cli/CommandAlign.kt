@@ -1165,7 +1165,8 @@ object CommandAlign {
                         aligner.parameters.featuresToAlignMap,
                         null,
                         null,
-                        null
+                        null,
+                        false
                     ),
                     aligner.usedGenes
                 )

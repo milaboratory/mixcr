@@ -28,6 +28,7 @@ import com.milaboratory.mixcr.basictypes.CloneRanks
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.basictypes.MiXCRFooterMerger
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -319,36 +320,30 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            val shmTreesCombiner = SHMTreesCellCombiner(
-                datasets,
-                featuresWithMutations,
-                shmTreeBuilder,
-                shmTreeBuilderParameters.cellCombiner,
-                threads.value
-            )
+            val datasetsWithGroups = datasets.withCellGroups()
 
             shmTreesWriter.writeHeader(
                 datasets,
                 shmTreeBuilderParameters,
                 foundAlleles,
-                shmTreesCombiner.datasetsThatShouldHaveGroups.isNotEmpty()
+                datasetsWithGroups.isNotEmpty()
             )
 
             val writer = shmTreesWriter.treesWriter()
 
             shmTreeBuilderOrchestrator.buildTreesBySteps(reportBuilder, threads.value) { result ->
-                if (shmTreesCombiner.datasetsThatShouldHaveGroups.isNotEmpty()) {
-                    logger.warn {
-                        val filesToGroup = inputFiles
-                            .filterIndexed { index, _ -> index in shmTreesCombiner.datasetsThatShouldHaveGroups }
-                            .joinToString(", ")
-                        "Can't use information about cell, run `${MiXCRCommandDescriptor.groupClones}` for $filesToGroup"
-                    }
-                }
+                val shmTreesCombiner = SHMTreesCellCombiner(
+                    datasets,
+                    featuresWithMutations,
+                    shmTreeBuilder,
+                    shmTreeBuilderParameters.cellCombiner,
+                    threads.value,
+                    datasetsWithGroups
+                )
                 val singleCellTrees = shmTreesCombiner.groupByChains(result)
+                reportBuilder.cellCombination = shmTreesCombiner.buildReport()
                 writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
             }
-            reportBuilder.cellCombination = shmTreesCombiner.buildReport()
             reportBuilder.setFinishMillis(System.currentTimeMillis())
             report = reportBuilder.buildReport()
             shmTreesWriter.setFooter(
@@ -361,6 +356,30 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         }
         ReportUtil.writeReportToStdout(report)
         reportOptions.appendToFiles(report)
+    }
+
+    private fun List<ClnsReader>.withCellGroups(): MutableSet<Int> {
+        val datasetsThatShouldHaveGroups = mutableSetOf<Int>()
+        val datasetsWithGroups = mutableSetOf<Int>()
+
+        forEachIndexed { datasetId, reader ->
+            if (reader.tagsInfo.hasTagsWithType(TagType.Cell)) {
+                if (reader.header.calculatedCloneGroups) {
+                    datasetsWithGroups += datasetId
+                } else {
+                    datasetsThatShouldHaveGroups += datasetId
+                }
+            }
+        }
+        if (datasetsThatShouldHaveGroups.isNotEmpty()) {
+            logger.warn {
+                val filesToGroup = inputFiles
+                    .filterIndexed { index, _ -> index in datasetsThatShouldHaveGroups }
+                    .joinToString(", ")
+                "Can't use information about cell, run `${MiXCRCommandDescriptor.groupClones}` for $filesToGroup"
+            }
+        }
+        return datasetsWithGroups
     }
 
     private fun writeResults(
@@ -439,7 +458,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val headers = cloneReaders.map { it.cloneSetInfo }
         writeHeader(
             headers
-                .foldIndexed(MiXCRHeaderMerger()) { index, m, cloneSetInfo ->
+                .foldIndexed(MiXCRHeaderMerger(singleCell)) { index, m, cloneSetInfo ->
                     m.add(inputFiles[index].toString(), cloneSetInfo.header)
                 }
                 .build()
@@ -447,13 +466,14 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             inputFiles.map { it.toString() },
             headers,
             usedGenes,
-            library,
-            singleCell
+            library
         )
     }
 }
 
-private class MiXCRHeaderMerger {
+private class MiXCRHeaderMerger(
+    private val singleCell: Boolean
+) {
     private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
     private var upstreamParams = mutableListOf<Pair<String, MiXCRStepParams>>()
     private var featuresToAlignMap: Map<GeneType, GeneFeature?>? = null
@@ -488,6 +508,7 @@ private class MiXCRHeaderMerger {
             featuresToAlignMap!!,
             null,
             foundAlleles,
-            allFullyCoveredBy
+            allFullyCoveredBy,
+            singleCell
         )
 }
