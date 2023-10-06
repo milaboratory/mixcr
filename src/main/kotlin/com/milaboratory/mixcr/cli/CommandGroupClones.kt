@@ -52,7 +52,7 @@ object CommandGroupClones {
     }
 
     @Command(
-        description = ["Impute alignments or clones with germline sequences."]
+        description = ["Group clones by cells. Required data with cell tags."]
     )
     class Cmd : CmdBase() {
         @Parameters(
