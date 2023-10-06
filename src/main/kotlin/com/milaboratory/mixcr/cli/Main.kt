@@ -37,6 +37,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcAlign
 import com.milaboratory.mixcr.cli.qc.CommandExportQcChainUsage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
+import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.TempFileManager
@@ -364,6 +365,7 @@ object Main {
         registerConverter { GeneVariantName(it) }
         registerConverter { GeneName(it) }
         registerConverter { GeneFamilyName(it) }
+        registerConverter { CellType.parse(it) }
         registerConverter { arg ->
             StandardPlots.PlotType.values().find { it.cliName == arg.lowercase() }
                 ?: throw ValidationException("unknown plot type: $arg")

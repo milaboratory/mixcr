@@ -7,10 +7,10 @@ allOf:
       items:
         type: string
         enum:
-        - HK
-        - HL
-        - AB
-        - GD
+        - IGHK
+        - IGHL
+        - TRAB
+        - TRGD
 - type: object
   properties:
     type:

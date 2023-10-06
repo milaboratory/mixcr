@@ -22,6 +22,9 @@ import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommandExportCloneGroupsParams.SortChainsBy
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.clonegrouping.CloneGrouper
@@ -30,6 +33,7 @@ import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
+import com.milaboratory.mixcr.presets.ExportMixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.util.asOutputPortWithProgress
@@ -111,7 +115,7 @@ object CommandExportCloneGroups {
     }
 
     @Command(
-        description = ["Export clone groups into tab delimited file."]
+        description = ["Export clone groups into tab delimited file. Data should be processed by `${MiXCRCommandDescriptor.groupClones.name}`"]
     )
     class Cmd : CmdBase() {
         @Parameters(
@@ -163,7 +167,7 @@ object CommandExportCloneGroups {
             )
 
             val recalculatedClones = filterClones(initialSet, params, fileInfo)
-            val groups = cloneGroups(recalculatedClones)
+            val groups = cloneGroups(recalculatedClones, params.sortChainsBy, tagsInfo)
 
             val headerForExport = MetaForExport(fileInfo)
             val fieldExtractors = CloneGroupFieldsExtractorsFactory(
@@ -188,7 +192,11 @@ object CommandExportCloneGroups {
             }
         }
 
-        private fun cloneGroups(recalculatedClones: CloneSet): List<CloneGroup> = recalculatedClones
+        private fun cloneGroups(
+            recalculatedClones: CloneSet,
+            sortChainsBy: SortChainsBy,
+            tagsInfo: TagsInfo
+        ): List<CloneGroup> = recalculatedClones
             .filter { it.group != CloneGrouper.undefinedGroup }
             .groupBy { it.group!! }
             .map { (groupId, clones) ->
@@ -196,7 +204,30 @@ object CommandExportCloneGroups {
                 CloneGroup(
                     groupId = groupId,
                     clonePairs = clonesGroupedByChains.mapValues { (_, clonesWithChain) ->
-                        val sorted = clonesWithChain.sortedByDescending { it.count }
+                        val effectiveSortChainsBy = when (sortChainsBy) {
+                            SortChainsBy.Read -> SortChainsBy.Read
+                            SortChainsBy.Molecule -> {
+                                ValidationException.require(tagsInfo.hasTagsWithType(TagType.Molecule)) {
+                                    "Can't sort clones by UMI. Try `${ExportMixins.ExportCloneGroupsSortChainsBy.CMD_OPTION} ${SortChainsBy.Read}"
+                                }
+                                SortChainsBy.Molecule
+                            }
+
+                            SortChainsBy.Auto -> when {
+                                tagsInfo.hasTagsWithType(TagType.Molecule) -> SortChainsBy.Molecule
+                                else -> SortChainsBy.Read
+                            }
+                        }
+
+                        val sorted = when (effectiveSortChainsBy) {
+                            SortChainsBy.Read -> clonesWithChain.sortedByDescending { clone -> clone.count }
+                            SortChainsBy.Molecule -> {
+                                val tag = tagsInfo.allTagsOfType(TagType.Molecule).maxBy { it.index }
+                                clonesWithChain.sortedByDescending { clone -> clone.getTagDiversity(tag) }
+                            }
+
+                            else -> throw IllegalArgumentException()
+                        }
                         CloneGroup.ClonePair(
                             sorted.first(),
                             sorted.getOrNull(1)

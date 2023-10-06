@@ -632,6 +632,19 @@ object ExportMiXCRMixins {
         )
         fun dontShowSecondaryChainOnExportCellGroups(ignored: Boolean) =
             mixIn(ExportMixins.ShowSecondaryChainOnExportCellGroups(false))
+
+        @Option(
+            description = [
+                "How to sort clones for determination of the second chain.",
+                "Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI if it's available, by Read otherwise"
+            ],
+            names = [ExportMixins.ExportCloneGroupsSortChainsBy.CMD_OPTION],
+            order = OptionsOrder.mixins.exports + 5_300,
+            paramLabel = "(Read|Molecule|Auto)",
+            arity = "1"
+        )
+        fun exportCloneGroupsForCellTypes(type: CommandExportCloneGroupsParams.SortChainsBy) =
+            mixIn(ExportMixins.ExportCloneGroupsSortChainsBy(type))
     }
 
     private interface ExportClonesMixins : GeneralExportClonesMixins {

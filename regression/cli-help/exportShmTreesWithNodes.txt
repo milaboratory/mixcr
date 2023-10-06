@@ -35,8 +35,9 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      <to_reference_point>]]... [-nLength <gene_feature>
                                      [(germline|mrca|parent)]]... [-allNLength
                                      [(germline|mrca|parent)]]... [-aaLength <gene_feature>
-                                     [germline]]... [-allAALength [(germline|mrca|parent)]]...
-                                     [-nMutations <gene_feature> [(germline|mrca|parent)]
+                                     [(germline|mrca|parent)]]... [-allAALength
+                                     [(germline|mrca|parent)]]... [-nMutations <gene_feature>
+                                     [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]... [-allNMutations
                                      [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]...
@@ -197,11 +198,11 @@ Possible fields to export
       -nFeature <gene_feature> [(germline|mrca|parent)]
                              Export nucleotide sequence of specified gene feature.
                              If second arg is omitted, then feature will be printed for current
-                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -allNFeatures [(germline|mrca|parent)]
                              Export nucleotide sequences for all covered gene features.
                              If first arg is omitted, then feature will be printed for current
-                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -qFeature <gene_feature>
                              Export quality string of specified gene feature (only for nodes with
                                clones)
@@ -215,11 +216,11 @@ Possible fields to export
       -aaFeature <gene_feature> [(germline|mrca|parent)]
                              Export amino acid sequence of specified gene feature.
                              If second arg is omitted, then feature will be printed for current
-                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -allAAFeatures [(germline|mrca|parent)]
                              Export amino acid sequences for all covered gene features.
                              If first arg is omitted, then feature will be printed for current
-                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -nFeatureImputed <gene_feature>
                              Export nucleotide sequence of specified gene feature using letters
                                from germline (marked lowercase) for uncovered regions (only for
@@ -288,68 +289,70 @@ Possible fields to export
       -nLength <gene_feature> [(germline|mrca|parent)]
                              Export count of nucleotides of specified gene feature.
                              If second arg is omitted, then length will be printed for current
-                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -allNLength [(germline|mrca|parent)]
                              Export count of nucleotides for all covered gene features.
                              If first arg is omitted, then length will be printed for current node.
-                               Otherwise - for corresponding `parent`, `germline` or `mrca`
-      -aaLength <gene_feature> [germline]
-                             Export count of amino acids for specified gene feature. If second
-                               option is `germline` than will be count corresponding top genes,
-                               CDR3 will be excluded from calculation (VJJunction germline is
-                               unknown). It's recommended to run `findAlleles` before exporting
-                               `-aaLength <gene_feature> germline` because otherwise germline
-                               sequence will not incorporate allelic mutations. (only for nodes
-                               with clones)
+                               Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -aaLength <gene_feature> [(germline|mrca|parent)]
+                             Export count of amino acids of specified gene feature.
+                             If second arg is omitted, then length will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -allAALength [(germline|mrca|parent)]
                              Export count of amino acids for all covered gene features.
                              If first arg is omitted, then length will be printed for current node.
-                               Otherwise - for corresponding `parent`, `germline` or `mrca`
+                               Otherwise - for corresponding `parent`, `germline` or `mrca`.
       -nMutations <gene_feature> [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations from specific node for specific gene
                                feature.
                              If second arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
       -allNMutations [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations from specific node for all covered gene
                                features.
                              If first arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
       -nMutationsRelative <gene_feature> <relative_to_gene_feature> [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations from specific node for specific gene
                                feature relative to another feature.
                              If third arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Forth parameter will filter mutations by type, by default no
+                               filtering.
       -aaMutations <gene_feature> [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Extract amino acid mutations from specific node for specific gene
                                feature.
                              If second arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
       -allAAMutations [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
                              Extract amino acid mutations from specific node for all covered gene
                                features.
                              If first arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
       -aaMutationsRelative <gene_feature> <relative_to_gene_feature> [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Extract amino acid mutations from specific node for specific gene
                                feature relative to another feature.
                              If third arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Forth parameter will filter mutations by type, by default no
+                               filtering.
       -mutationsDetailed <gene_feature> [(germline|mrca|parent)]
                              Detailed list of nucleotide and corresponding amino acid mutations
                                from specific node.
                              If second arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`.
                              Format <nt_mutation>:<aa_mutation_individual>:
                                <aa_mutation_cumulative>, where <aa_mutation_individual> is an
                                expected amino acid mutation given no other mutations have occurred,
@@ -361,13 +364,13 @@ Possible fields to export
                                from specific node for all covered gene features.
                              If first arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`.
       -mutationsDetailedRelative <gene_feature> <relative_to_gene_feature> [(germline|mrca|parent)]
                              Detailed list of nucleotide and corresponding amino acid mutations
                                written, positions relative to specified gene feature.
                              If third arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`.
                              Format <nt_mutation>:<aa_mutation_individual>:
                                <aa_mutation_cumulative>, where <aa_mutation_individual> is an
                                expected amino acid mutation given no other mutations have occurred,
@@ -381,13 +384,15 @@ Possible fields to export
                                calculation.
                              If second arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
       -allNMutationsCount [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations for all covered gene features.
                                Resolutions of wildcards in VJJunction are excluded from calculation.
                              If first arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
       -aaMutationsCount [<gene_feature>] [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations. By default, will be used all covered
@@ -395,13 +400,15 @@ Possible fields to export
                                calculation.
                              If second arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
       -allAAMutationsCount [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations for all covered gene features.
                                Resolutions of wildcards in CDR3 are excluded from calculation.
                              If first arg is omitted, then mutations will be calculated from
                                germline. Otherwise - for corresponding `parent`, `germline` or
-                               `mrca`
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence). (only for nodes with
@@ -453,11 +460,15 @@ Possible fields to export
       -nMutationRate [<gene_feature>] [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations from germline divided by target
                                sequence size. By default, will be used all covered features.
-                               Resolutions of wildcards in VJJunction are excluded from calculation.
+                               Resolutions of wildcards in VJJunction are excluded from
+                               calculation. Second parameter will filter mutations by type, by
+                               default no filtering.
       -aaMutationRate [<gene_feature>] [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations from germline divided by target
                                sequence size. By default, will be used all covered features.
                                Resolutions of wildcards in CDR3 are excluded from calculation.
+                               Second parameter will filter mutations by type, by default no
+                               filtering.
       -chains                Chains (only for nodes with clones)
       -topChains             Top chains (only for nodes with clones)
       -geneLabel <label>     Export gene label (i.e. ReliableChain) (only for nodes with clones)

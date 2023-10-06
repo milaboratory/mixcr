@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+- type: object
+  properties:
+    type:
+      type: string
+      enum:
+      - Read
+      - Molecule
+      - Auto
+- type: object
+  properties:
+    type:
+      const: ExportCloneGroupsSortChainsBy
+  required:
+  - type
