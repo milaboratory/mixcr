@@ -4,11 +4,12 @@ Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                [--export-clone-groups-for-cell-type <cell_type>...]...
                                [--export-clone-groups-for-all-cell-types]
                                [--show-secondary-chain-on-export-cell-groups]
-                               [--dont-show-secondary-chain-on-export-cell-groups] [--no-header]
-                               [--drop-default-fields] [--prepend-columns] [--not-covered-as-empty]
-                               [-targets] [-vHit] [-dHit] [-jHit] [-cHit] [-vGene] [-dGene]
-                               [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily] [-cFamily]
-                               [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                               [--dont-show-secondary-chain-on-export-cell-groups]
+                               [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)]
+                               [--no-header] [--drop-default-fields] [--prepend-columns]
+                               [--not-covered-as-empty] [-targets] [-vHit] [-dHit] [-jHit] [-cHit]
+                               [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily]
+                               [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
                                [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore]
                                [-cHitsWithScore] [-vHits] [-dHits] [-jHits] [-cHits] [-vGenes]
                                [-dGenes] [-jGenes] [-cGenes] [-vFamilies] [-dFamilies] [-jFamilies]
@@ -74,7 +75,7 @@ Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                <gene_feature> <property>]... [-baseBiochemicalProperties
                                <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
                                [--help] data.(clns|clna) [table.tsv]
-Export clone groups into tab delimited file.
+Export clone groups into tab delimited file. Data should be processed by `groupClones`
       data.(clns|clna)       Path to input file with clones
       [table.tsv]            Path where to write export table.
   -o, --filter-out-of-frames Exclude clones with out-of-frame clone sequences (fractions will be
@@ -103,6 +104,10 @@ Export clone groups into tab delimited file.
                              Show columns for secondary chains in export for cell groups.
       --dont-show-secondary-chain-on-export-cell-groups
                              Don't show columns for secondary chains in export for cell groups.
+      --export-clone-groups-sort-chains-by (Read|Molecule|Auto)
+                             How to sort clones for determination of the second chain.
+                             Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI
+                               if it's available, by Read otherwise
       --no-header            Don't print first header line, print only data
                                Default value determined by the preset.
       --drop-default-fields  Don't export fields from preset.
@@ -305,7 +310,8 @@ Possible fields to export
                                possible or `FR1Begin FR4End` otherwise. For clones from all chains.
       -nMutations <gene_feature> [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations for specific gene feature; relative to
-                               germline sequence. For clones from all chains.
+                               germline sequence. Second parameter will filter mutations by type,
+                               by default no filtering. For clones from all chains.
       -allNMutations [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations relative to germline sequence for all
@@ -314,14 +320,18 @@ Possible fields to export
                              For example, `-allNMutations FR3Begin FR4End` will export `-nMutations
                                FR3`, `-nMutations CDR3`, `-nMutations FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering. For clones from all
+                               chains.
       -nMutationsRelative <gene_feature> <relative_to_gene_feature>
         [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations for specific gene feature relative to
-                               another feature. For clones from all chains.
+                               another feature. Third parameter will filter mutations by type, by
+                               default no filtering. For clones from all chains.
       -aaMutations <gene_feature> [(substitutions|indels|inserts|deletions)]
-                             Extract amino acid mutations for specific gene feature. For clones
-                               from all chains.
+                             Extract amino acid mutations for specific gene feature. Second
+                               parameter will filter mutations by type, by default no filtering.
+                               For clones from all chains.
       -allAAMutations [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Extract amino acid nucleotide mutations relative to germline sequence
@@ -330,11 +340,14 @@ Possible fields to export
                              For example, `-allAAMutations FR3Begin FR4End` will export
                                `-aaMutations FR3`, `-aaMutations CDR3`, `-aaMutations FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering. For clones from all
+                               chains.
       -aaMutationsRelative <gene_feature> <relative_to_gene_feature>
         [(substitutions|indels|inserts|deletions)]
                              Extract amino acid mutations for specific gene feature relative to
-                               another feature. For clones from all chains.
+                               another feature. Third parameter will filter mutations by type, by
+                               default no filtering. For clones from all chains.
       -mutationsDetailed <gene_feature>
                              Detailed list of nucleotide and corresponding amino acid mutations.
                                Format <nt_mutation>:<aa_mutation_individual>:
@@ -362,8 +375,9 @@ Possible fields to export
                                effect from all other. WARNING: format may change in following
                                versions. For clones from all chains.
       -nMutationsCount <gene_feature> [(substitutions|indels|inserts|deletions)]
-                             Count nucleotide mutations for specific gene feature. For clones from
-                               all chains.
+                             Count nucleotide mutations for specific gene feature. Second parameter
+                               will filter mutations by type, by default no filtering. For clones
+                               from all chains.
       -allNMutationsCount [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Count nucleotide mutations for all gene features between specified
@@ -372,10 +386,13 @@ Possible fields to export
                                `-nMutationsCount FR3`, `-nMutationsCount CDR3`, `-nMutationsCount
                                FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering. For clones from all
+                               chains.
       -aaMutationsCount <gene_feature> [(substitutions|indels|inserts|deletions)]
-                             Count amino acid mutations for specific gene feature. For clones from
-                               all chains.
+                             Count amino acid mutations for specific gene feature. Second parameter
+                               will filter mutations by type, by default no filtering. For clones
+                               from all chains.
       -allAAMutationsCount [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Count amino acid mutations for all gene features between specified
@@ -384,7 +401,9 @@ Possible fields to export
                                `-aaMutationsCount FR3`, `-aaMutationsCount CDR3`,
                                `-aaMutationsCount FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise. For clones from all chains.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering. For clones from all
+                               chains.
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence). For clones from all
@@ -443,13 +462,15 @@ Possible fields to export
                                sequence size. VJJunction is excluded from calculation (germline is
                                unknown). It's recommended to run `findAlleles` before exporting
                                `-nMutationRate` because otherwise mutations count will include
-                               allelic mutations. For clones from all chains.
+                               allelic mutations. Second parameter will filter mutations by type,
+                               by default no filtering. For clones from all chains.
       -aaMutationRate <gene_feature> [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations from germline divided by amino acid
                                sequence size. CDR3 is excluded from calculation (VJJunction
                                germline is unknown). It's recommended to run `findAlleles` before
                                exporting `-aaMutationRate` because otherwise mutations count will
-                               include allelic mutations. For clones from all chains.
+                               include allelic mutations. Second parameter will filter mutations by
+                               type, by default no filtering. For clones from all chains.
       -geneLabel <label>     Export gene label (i.e. ReliableChain). For clones from all chains.
       -isotype [(primary|subclass|auto)]
                              Export isotype for IGH chains if it's can be distinguishable.

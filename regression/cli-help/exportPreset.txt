@@ -22,10 +22,11 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--export-productive-clones-only] [--export-clone-groups-for-cell-type
                           <cell_type>...]... [--export-clone-groups-for-all-cell-types]
                           [--show-secondary-chain-on-export-cell-groups]
-                          [--dont-show-secondary-chain-on-export-cell-groups] [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] (--preset-name <preset> |
-                          --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]... [preset_file.
-                          (yaml|yml)]
+                          [--dont-show-secondary-chain-on-export-cell-groups]
+                          [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)]
+                          [--force-overwrite] [--no-warnings] [--verbose] [--help] (--preset-name
+                          <preset> | --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]...
+                          [preset_file.(yaml|yml)]
 Export a preset file given the preset name or source file and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
@@ -162,3 +163,7 @@ Params for export commands:
                              Show columns for secondary chains in export for cell groups.
       --dont-show-secondary-chain-on-export-cell-groups
                              Don't show columns for secondary chains in export for cell groups.
+      --export-clone-groups-sort-chains-by (Read|Molecule|Auto)
+                             How to sort clones for determination of the second chain.
+                             Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI
+                               if it's available, by Read otherwise

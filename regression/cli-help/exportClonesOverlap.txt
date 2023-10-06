@@ -262,7 +262,8 @@ Possible fields to export
                                possible or `FR1Begin FR4End` otherwise.
       -nMutations <gene_feature> [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations for specific gene feature; relative to
-                               germline sequence.
+                               germline sequence. Second parameter will filter mutations by type,
+                               by default no filtering.
       -allNMutations [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations relative to germline sequence for all
@@ -271,13 +272,16 @@ Possible fields to export
                              For example, `-allNMutations FR3Begin FR4End` will export `-nMutations
                                FR3`, `-nMutations CDR3`, `-nMutations FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering.
       -nMutationsRelative <gene_feature> <relative_to_gene_feature>
         [(substitutions|indels|inserts|deletions)]
                              Extract nucleotide mutations for specific gene feature relative to
-                               another feature.
+                               another feature. Third parameter will filter mutations by type, by
+                               default no filtering.
       -aaMutations <gene_feature> [(substitutions|indels|inserts|deletions)]
-                             Extract amino acid mutations for specific gene feature
+                             Extract amino acid mutations for specific gene feature. Second
+                               parameter will filter mutations by type, by default no filtering.
       -allAAMutations [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Extract amino acid nucleotide mutations relative to germline sequence
@@ -286,11 +290,13 @@ Possible fields to export
                              For example, `-allAAMutations FR3Begin FR4End` will export
                                `-aaMutations FR3`, `-aaMutations CDR3`, `-aaMutations FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering.
       -aaMutationsRelative <gene_feature> <relative_to_gene_feature>
         [(substitutions|indels|inserts|deletions)]
                              Extract amino acid mutations for specific gene feature relative to
-                               another feature.
+                               another feature. Third parameter will filter mutations by type, by
+                               default no filtering.
       -mutationsDetailed <gene_feature>
                              Detailed list of nucleotide and corresponding amino acid mutations.
                                Format <nt_mutation>:<aa_mutation_individual>:
@@ -318,7 +324,8 @@ Possible fields to export
                                effect from all other. WARNING: format may change in following
                                versions.
       -nMutationsCount <gene_feature> [(substitutions|indels|inserts|deletions)]
-                             Count nucleotide mutations for specific gene feature.
+                             Count nucleotide mutations for specific gene feature. Second parameter
+                               will filter mutations by type, by default no filtering.
       -allNMutationsCount [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Count nucleotide mutations for all gene features between specified
@@ -327,9 +334,11 @@ Possible fields to export
                                `-nMutationsCount FR3`, `-nMutationsCount CDR3`, `-nMutationsCount
                                FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering.
       -aaMutationsCount <gene_feature> [(substitutions|indels|inserts|deletions)]
-                             Count amino acid mutations for specific gene feature.
+                             Count amino acid mutations for specific gene feature. Second parameter
+                               will filter mutations by type, by default no filtering.
       -allAAMutationsCount [<from_reference_point> <to_reference_point>]
         [(substitutions|indels|inserts|deletions)]
                              Count amino acid mutations for all gene features between specified
@@ -338,7 +347,8 @@ Possible fields to export
                                `-aaMutationsCount FR3`, `-aaMutationsCount CDR3`,
                                `-aaMutationsCount FR4`.
                              By default, boundaries will be got from analysis parameters if
-                               possible or `FR1Begin FR4End` otherwise.
+                               possible or `FR1Begin FR4End` otherwise. Third parameter will filter
+                               mutations by type, by default no filtering.
       -positionInReferenceOf <reference_point>
                              Export position of specified reference point inside reference
                                sequences (clonal sequence / read sequence).
@@ -386,13 +396,15 @@ Possible fields to export
                                sequence size. VJJunction is excluded from calculation (germline is
                                unknown). It's recommended to run `findAlleles` before exporting
                                `-nMutationRate` because otherwise mutations count will include
-                               allelic mutations.
+                               allelic mutations. Second parameter will filter mutations by type,
+                               by default no filtering.
       -aaMutationRate <gene_feature> [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations from germline divided by amino acid
                                sequence size. CDR3 is excluded from calculation (VJJunction
                                germline is unknown). It's recommended to run `findAlleles` before
                                exporting `-aaMutationRate` because otherwise mutations count will
-                               include allelic mutations.
+                               include allelic mutations. Second parameter will filter mutations by
+                               type, by default no filtering.
       -chains                Chains
       -topChains             Top chains
       -geneLabel <label>     Export gene label (i.e. ReliableChain)
