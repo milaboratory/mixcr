@@ -23,7 +23,8 @@ Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--add-step <step>
                      [--export-productive-clones-only] [--export-clone-groups-for-cell-type
                      <cell_type>...]... [--export-clone-groups-for-all-cell-types]
                      [--show-secondary-chain-on-export-cell-groups]
-                     [--dont-show-secondary-chain-on-export-cell-groups] [--no-reports]
+                     [--dont-show-secondary-chain-on-export-cell-groups]
+                     [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)] [--no-reports]
                      [--no-json-reports] [--output-not-used-reads] [--strict-sample-sheet-matching]
                      [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
                      [--verbose] [--help] [-M <key=value>]... <preset> ([file_I1.fastq[.gz]
@@ -190,3 +191,7 @@ Params for export commands:
                              Show columns for secondary chains in export for cell groups.
       --dont-show-secondary-chain-on-export-cell-groups
                              Don't show columns for secondary chains in export for cell groups.
+      --export-clone-groups-sort-chains-by (Read|Molecule|Auto)
+                             How to sort clones for determination of the second chain.
+                             Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI
+                               if it's available, by Read otherwise

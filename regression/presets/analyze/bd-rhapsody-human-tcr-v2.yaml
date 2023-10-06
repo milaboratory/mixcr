@@ -1141,6 +1141,7 @@ exportCloneGroups:
   - field: -allNFeaturesWithMinQuality
   - field: -allAAFeatures
   - field: -defaultAnchorPoints
+  sortChainsBy: Auto
 qc:
   checks:
   - type: SuccessfullyAlignedReads
