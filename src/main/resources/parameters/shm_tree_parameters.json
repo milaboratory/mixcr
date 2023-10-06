@@ -38,7 +38,7 @@
     "cellCombiner": {
       "minOverlapOfClonesToCombineSecondaryChains": 0.9,
       "maxCountOfChainsInACell": 3,
-      "maxCountOfClonesToRemoveOnOverlap": 1
+      "maxClusterSizeToRemoveOnOverlap": 1
     }
   }
 }

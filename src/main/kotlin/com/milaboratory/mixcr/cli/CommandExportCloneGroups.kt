@@ -155,8 +155,8 @@ object CommandExportCloneGroups {
             val fileInfo = IOUtil.extractFileInfo(inputFile)
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val tagsInfo = initialSet.cloneSetInfo.tagsInfo
-            ValidationException.require(initialSet.clones.all { it.group != null }) {
-                "Not all clones have a group. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones."
+            ValidationException.require(initialSet.header.calculatedCloneGroups) {
+                "Groups are not calculated. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones."
             }
             val (_, params) = paramsResolver.resolve(
                 resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins)

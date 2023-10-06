@@ -318,6 +318,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             datasets,
             featureToAlign,
             datasets.flatMap { it.usedGenes }.distinct(),
+            allFullyCoveredBy,
             featuresWithMutations,
             shmTreeBuilder,
             tempDest,
