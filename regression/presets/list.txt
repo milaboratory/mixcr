@@ -407,6 +407,13 @@ takara-human-rna-tcr-umi-smarter-v2 (SMARTer Human TCR a/b Profiling Kit v2)
     (--dna|--rna)
     --tag-pattern <pattern>
 
+takara-sc-human-rna-tcr-smarter (SMARTer Human scTCR a/b Profiling Kit)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    (--dna|--rna)
+
 takara-mouse-rna-tcr-smarter (SMARTer Mouse TCR a/b Profiling Kit)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
