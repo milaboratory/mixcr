@@ -22,12 +22,18 @@ properties:
     type: boolean
   showSecondaryChains:
     type: boolean
+  sortChainsBy:
+    type: string
+    enum:
+    - Read
+    - Molecule
+    - Auto
   types:
     type: array
     items:
       type: string
       enum:
-      - HK
-      - HL
-      - AB
-      - GD
+      - IGHK
+      - IGHL
+      - TRAB
+      - TRGD

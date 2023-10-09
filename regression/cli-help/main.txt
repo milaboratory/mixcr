@@ -10,7 +10,7 @@ Base commands:
   extend             Impute alignments or clones with germline sequences.
   assemble           Assemble clones.
   assembleContigs    Assemble full sequences.
-  groupClones        Impute alignments or clones with germline sequences.
+  groupClones        Group clones by cells. Required data with cell tags.
   findAlleles        Find allele variants in clnx.
   findShmTrees       Builds SHM trees.
   downsample         Downsample clonesets.
@@ -26,7 +26,8 @@ Export commands:
   exportAlignments         Export V/D/J/C alignments into tab delimited file.
   exportAlignmentsPretty   Export verbose information about alignments.
   exportClones             Export assembled clones into tab delimited file.
-  exportCloneGroups        Export clone groups into tab delimited file.
+  exportCloneGroups        Export clone groups into tab delimited file. Data should be processed by
+                             `groupClones`
   exportClonesPretty       Export verbose information about clones.
   exportShmTreesWithNodes  Export SHMTree as a table with a row for every node
   exportShmTrees           Export SHMTree as a table with a row for every table
