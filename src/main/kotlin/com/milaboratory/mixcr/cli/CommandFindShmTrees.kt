@@ -202,6 +202,14 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     )
     var productiveOnly: Boolean = false
 
+    @Option(
+        description = ["In case of data with cell groups, will not combine trees by cells."],
+        names = ["--dont-combine-tree-by-cells"],
+        order = OptionsOrder.main + 10_700,
+        arity = "0"
+    )
+    var dontCombineTreeByCells: Boolean = false
+
     @Mixin
     lateinit var debugDir: DebugDirOption
 
@@ -331,28 +339,32 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val report: BuildSHMTreeReport
         outputTreesPath.toAbsolutePath().parent.createDirectories()
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
-            val datasetsWithGroups = datasets.withCellGroups()
-
-            shmTreesWriter.writeHeader(
-                datasets,
-                shmTreeBuilderParameters,
-                foundAlleles,
-                datasetsWithGroups.isNotEmpty()
-            )
-
-            val writer = shmTreesWriter.treesWriter()
-
             shmTreeBuilderOrchestrator.buildTreesBySteps(reportBuilder, threads.value) { result ->
-                val shmTreesCombiner = SHMTreesCellCombiner(
+                val datasetsWithGroups = datasets.withCellGroups()
+                val processSingleCell = datasetsWithGroups.isEmpty() || dontCombineTreeByCells
+                val singleCellTrees = if (processSingleCell) {
+                    result.map { shmTreeBuilder.convertToMultiRoot(it) }
+                } else {
+                    val shmTreesCombiner = SHMTreesCellCombiner(
+                        datasets,
+                        featuresWithMutations,
+                        shmTreeBuilder,
+                        shmTreeBuilderParameters.cellCombiner,
+                        threads.value,
+                        datasetsWithGroups
+                    )
+                    val singleCellTrees = shmTreesCombiner.groupByChains(result)
+                    reportBuilder.cellCombination = shmTreesCombiner.buildReport()
+                    singleCellTrees
+                }
+                shmTreesWriter.writeHeader(
                     datasets,
-                    featuresWithMutations,
-                    shmTreeBuilder,
-                    shmTreeBuilderParameters.cellCombiner,
-                    threads.value,
-                    datasetsWithGroups
+                    shmTreeBuilderParameters,
+                    foundAlleles,
+                    processSingleCell
                 )
-                val singleCellTrees = shmTreesCombiner.groupByChains(result)
-                reportBuilder.cellCombination = shmTreesCombiner.buildReport()
+
+                val writer = shmTreesWriter.treesWriter()
                 writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
             }
             reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -382,7 +394,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 }
             }
         }
-        if (datasetsThatShouldHaveGroups.isNotEmpty()) {
+        if (datasetsThatShouldHaveGroups.isNotEmpty() && !dontCombineTreeByCells) {
             logger.warn {
                 val filesToGroup = inputFiles
                     .filterIndexed { index, _ -> index in datasetsThatShouldHaveGroups }
