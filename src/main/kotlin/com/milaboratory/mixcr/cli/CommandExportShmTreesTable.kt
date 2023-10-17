@@ -32,7 +32,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
 @Command(
-    description = ["Export SHMTree as a table with a row for every table"]
+    description = ["Export SHMTree as a table with a row for every SHM root in a table (single row if no single cell data)"]
 )
 class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     @Parameters(
@@ -79,7 +79,8 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
             val headerForExport = MetaForExport(
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
-                reader.footer
+                reader.footer,
+                reader.header.calculatedCloneGroups
             )
             val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport, notCoveredAsEmpty)
             InfoWriter.create(

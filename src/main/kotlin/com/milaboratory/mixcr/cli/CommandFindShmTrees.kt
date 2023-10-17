@@ -341,10 +341,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         SHMTreesWriter(outputTreesPath).use { shmTreesWriter ->
             shmTreeBuilderOrchestrator.buildTreesBySteps(reportBuilder, threads.value) { result ->
                 val datasetsWithGroups = datasets.withCellGroups()
-                val processSingleCell = datasetsWithGroups.isEmpty() || dontCombineTreeByCells
+                val processSingleCell = datasetsWithGroups.isNotEmpty() && !dontCombineTreeByCells
                 val singleCellTrees = if (processSingleCell) {
-                    result.map { shmTreeBuilder.convertToMultiRoot(it) }
-                } else {
                     val shmTreesCombiner = SHMTreesCellCombiner(
                         datasets,
                         featuresWithMutations,
@@ -353,9 +351,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                         threads.value,
                         datasetsWithGroups
                     )
-                    val singleCellTrees = shmTreesCombiner.groupByChains(result)
-                    reportBuilder.cellCombination = shmTreesCombiner.buildReport()
-                    singleCellTrees
+                    reportBuilder.cellCombinationBuilder = shmTreesCombiner.reportBuilder
+                    shmTreesCombiner.groupByChains(result)
+                } else {
+                    result.map { shmTreeBuilder.convertToMultiRoot(it) }
                 }
                 shmTreesWriter.writeHeader(
                     datasets,
