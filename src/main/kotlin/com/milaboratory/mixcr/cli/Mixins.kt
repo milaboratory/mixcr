@@ -643,7 +643,7 @@ object ExportMiXCRMixins {
             paramLabel = "(Read|Molecule|Auto)",
             arity = "1"
         )
-        fun exportCloneGroupsForCellTypes(type: CommandExportCloneGroupsParams.SortChainsBy) =
+        fun sortChainsBy(type: CommandExportCloneGroupsParams.SortChainsBy) =
             mixIn(ExportMixins.ExportCloneGroupsSortChainsBy(type))
     }
 

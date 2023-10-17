@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wra
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.mixcr.trees.splitToChains
 import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager

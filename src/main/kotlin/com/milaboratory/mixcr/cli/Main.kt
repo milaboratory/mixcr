@@ -188,6 +188,10 @@ object Main {
                         CommandExportShmTreesTableWithNodes.mkCommandSpec()
                     )
                     .addSubcommand(CommandExportShmTreesTable.COMMAND_NAME, CommandExportShmTreesTable.mkCommandSpec())
+                    .addSubcommand(
+                        CommandExportShmSingleCellTreesTable.COMMAND_NAME,
+                        CommandExportShmSingleCellTreesTable.mkSpec()
+                    )
                     .addSubcommand("exportShmTreesNewick", CommandExportShmTreesNewick::class.java)
                     .addSubcommand("exportReports", CommandExportReports::class.java)
                     .addSubcommand(
