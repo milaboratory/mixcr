@@ -27,6 +27,7 @@ import com.milaboratory.mixcr.export.SHMMultiRootTreeNodeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.mixcr.trees.splitToChains
+import io.repseq.core.Chains
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -41,15 +42,15 @@ import java.nio.file.Path
 )
 class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
     @Option(
-        description = ["Export only trees that have several roots, i.e. incorporated single cell data"],
-        names = ["--only-with-several-chains"],
+        description = ["Export trees with only one chain, i.e. without single cell data. By default exporting only trees that have several roots"],
+        names = ["--include-one-chain-trees"],
         order = OptionsOrder.main,
         arity = "0"
     )
-    var onlyWithSeveralChains: Boolean = false
+    var includeOneChainTrees: Boolean = false
 
     @Option(
-        description = ["Export SHM trees for given cell type. By default all will be exported. Possible values: \${COMPLETION-CANDIDATES}"],
+        description = ["Export SHM trees for given cell type. By default all will be exported. Possible values: IGHK, IGHL"],
         names = ["--cell-type"],
         order = OptionsOrder.mixins.exports + 5_100,
         paramLabel = "<cell_type>",
@@ -135,6 +136,9 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
 
     override fun validate() {
         ValidationException.requireFileType(inputFile, InputFileType.SHMT)
+        ValidationException.requireEmpty(exportCloneGroupsForCellTypes.filter { it.vdjChain !in Chains.IG }) {
+            "Can't export not IG chains"
+        }
     }
 
     override fun initialize() {
@@ -155,7 +159,7 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
             reader.header.calculatedCloneGroups
         )
         val fieldExtractors = SHMMultiRootTreeNodeFieldsExtractorsFactory(
-            exportCloneGroupsForCellTypes.ifEmpty { CellType.values().toList() },
+            exportCloneGroupsForCellTypes.ifEmpty { CellType.values().toList().filter { it.vdjChain in Chains.IG } },
             !dontShowSecondaryChain
         ).createExtractors(addedFields, headerForExport)
 
@@ -167,7 +171,7 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
         ) { rowMetaForExport }.use { writer ->
             reader.readTrees()
                 .asSequence()
-                .filter { tree -> !onlyWithSeveralChains || tree.rootInfos.size > 1 }
+                .filter { tree -> includeOneChainTrees || tree.rootInfos.size > 1 }
                 .flatMap { tree ->
                     val forPostanalysis = tree.forPostanalysis(reader.fileNames, reader.library)
                     val chains = forPostanalysis.splitToChains()
