@@ -150,7 +150,8 @@ object CommandExportAlignments {
                     allFullyCoveredBy = null,
                     data.info.footer,
                     // doesn't meter for alignments exports
-                    singleCell = false
+                    singleCell = false,
+                    library = null
                 )
                 val rowMetaForExport = RowMetaForExport(
                     header.tagsInfo,

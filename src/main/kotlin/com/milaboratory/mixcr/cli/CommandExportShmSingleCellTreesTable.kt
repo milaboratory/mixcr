@@ -22,8 +22,8 @@ import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
-import com.milaboratory.mixcr.export.SHMMultiRootTreeNodeFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.SHMMultiRootTreeNodeFieldsExtractorsFactory.Wrapper
+import com.milaboratory.mixcr.export.SHMSingleCellTreeNodeFieldsExtractorsFactory
+import com.milaboratory.mixcr.export.SHMSingleCellTreeNodeFieldsExtractorsFactory.Wrapper
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.mixcr.trees.splitToChains
@@ -40,7 +40,7 @@ import java.nio.file.Path
     description = ["Export SHM trees with one row per node. Tree may contain several roots, that will be exported in separate columns. " +
             "Initial data for building tree should contain cell data."]
 )
-class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
+class CommandExportShmSingleCellTreesTable : CommandExportShmTreesAbstract() {
     @Option(
         description = ["Export trees with only one chain, i.e. without single cell data. By default exporting only trees that have several roots"],
         names = ["--include-one-chain-trees"],
@@ -101,22 +101,15 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
     var notCoveredAsEmpty: Boolean = false
 
     @Option(
-        description = ["Export only nodes that have at least one clone."],
+        description = ["Export nodes that have at least one clone."],
         names = ["--only-observed"],
         order = OptionsOrder.main + 10_100
     )
     var onlyObserved: Boolean = false
 
-    @Parameters(
-        description = ["Path to input file with trees"],
-        paramLabel = "data.shmt",
-        index = "0"
-    )
-    lateinit var inputFile: Path
-
     @set:Parameters(
-        description = ["Path where to write export table."],
-        paramLabel = "table.tsv",
+        description = ["Path where to write output export table. Print in stdout if omitted."],
+        paramLabel = "trees.tsv",
         index = "1",
         arity = "0..1"
     )
@@ -129,13 +122,13 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
     val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
     override val inputFiles
-        get() = listOf(inputFile)
+        get() = listOf(input)
 
     override val outputFiles
         get() = listOfNotNull(outputFile)
 
     override fun validate() {
-        ValidationException.requireFileType(inputFile, InputFileType.SHMT)
+        ValidationException.requireFileType(input, InputFileType.SHMT)
         ValidationException.requireEmpty(exportCloneGroupsForCellTypes.filter { it.vdjChain !in Chains.IG }) {
             "Can't export not IG chains"
         }
@@ -147,7 +140,7 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
     }
 
     override fun run1() {
-        val reader = SHMTreesReader(inputFile, VDJCLibraryRegistry.getDefault())
+        val reader = SHMTreesReader(input, VDJCLibraryRegistry.getDefault())
         ValidationException.require(reader.header.calculatedCloneGroups) {
             "SHM trees build without single cell data. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones on sources of trees."
         }
@@ -156,9 +149,10 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
             reader.cloneSetInfos.map { it.tagsInfo },
             reader.header.allFullyCoveredBy,
             reader.footer,
-            reader.header.calculatedCloneGroups
+            reader.header.calculatedCloneGroups,
+            reader.library
         )
-        val fieldExtractors = SHMMultiRootTreeNodeFieldsExtractorsFactory(
+        val fieldExtractors = SHMSingleCellTreeNodeFieldsExtractorsFactory(
             exportCloneGroupsForCellTypes.ifEmpty { CellType.values().toList().filter { it.vdjChain in Chains.IG } },
             !dontShowSecondaryChain
         ).createExtractors(addedFields, headerForExport)
@@ -172,8 +166,12 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
             reader.readTrees()
                 .asSequence()
                 .filter { tree -> includeOneChainTrees || tree.rootInfos.size > 1 }
-                .flatMap { tree ->
-                    val forPostanalysis = tree.forPostanalysis(reader.fileNames, reader.library)
+                .filter { treeFilter?.match(it.treeId) != false }
+                .map {
+                    it.forPostanalysis(reader.fileNames, reader.library)
+                }
+                .filter { treeFilter?.match(it) != false }
+                .flatMap { forPostanalysis ->
                     val chains = forPostanalysis.splitToChains()
                     val subtreeIds = chains.groupBy { it.meta.chains }.mapValues { (_, subtrees) ->
                         val sortedSubtrees = subtrees.sortedByDescending { subtree ->
@@ -213,13 +211,13 @@ class CommandExportShmSingleCellTreesTable : MiXCRCommandWithOutputs() {
     }
 
     companion object {
-        const val COMMAND_NAME = SHMMultiRootTreeNodeFieldsExtractorsFactory.COMMAND_NAME
+        const val COMMAND_NAME = SHMSingleCellTreeNodeFieldsExtractorsFactory.COMMAND_NAME
 
         fun mkSpec(): Model.CommandSpec {
             val cmd = CommandExportShmSingleCellTreesTable()
             val spec = Model.CommandSpec.forAnnotatedObject(cmd)
             cmd.spec = spec // inject spec manually
-            SHMMultiRootTreeNodeFieldsExtractorsFactory.forAllChains.addOptionsToSpec(cmd.addedFields, spec)
+            SHMSingleCellTreeNodeFieldsExtractorsFactory.forAllChains.addOptionsToSpec(cmd.addedFields, spec)
             return spec
         }
     }

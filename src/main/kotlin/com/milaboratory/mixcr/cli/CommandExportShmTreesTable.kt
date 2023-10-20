@@ -81,7 +81,8 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
                 reader.footer,
-                reader.header.calculatedCloneGroups
+                reader.header.calculatedCloneGroups,
+                reader.library
             )
             val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport, notCoveredAsEmpty)
             InfoWriter.create(

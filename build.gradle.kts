@@ -88,6 +88,7 @@ tasks.withType<JavaExec> {
         val runWorkingDir: String by project
         workingDir = file(runWorkingDir)
     }
+    systemProperty("mixcr.command", "mixcr")
 }
 
 tasks.jar {

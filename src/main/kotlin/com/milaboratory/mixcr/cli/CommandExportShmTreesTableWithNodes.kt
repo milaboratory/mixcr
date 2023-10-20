@@ -74,13 +74,6 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
-    @Option(
-        description = ["Exclude nodes that was reconstructed by algorithm"],
-        names = ["--only-observed"],
-        order = OptionsOrder.main + 10_100
-    )
-    var onlyObserved: Boolean = false
-
     @Suppress("unused")
     @Option(
         names = ["--onlyObserved"],
@@ -98,6 +91,13 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         order = OptionsOrder.main + 10_200
     )
     private var splitByTagType: TagType? = null
+
+    @Option(
+        description = ["Exclude nodes that was reconstructed by algorithm"],
+        names = ["--only-observed"],
+        order = OptionsOrder.main + 10_300
+    )
+    var onlyObserved: Boolean = false
 
     @Option(
         description = ["Export not covered regions as empty text."],
@@ -133,7 +133,8 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
                 reader.footer,
-                reader.header.calculatedCloneGroups
+                reader.header.calculatedCloneGroups,
+                reader.library
             )
 
             val splitByTagType = if (splitByTagType != null) {
