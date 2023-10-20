@@ -38,7 +38,13 @@
     "cellCombiner": {
       "minOverlapOfClonesToCombineSecondaryChains": 0.9,
       "maxCountOfChainsInACell": 3,
-      "maxClusterSizeToRemoveOnOverlap": 1
+      "maxClusterSizeToRemoveOnOverlap": 1,
+      "clusterizationOfSecondChain": {
+        "algorithm": {
+          "type": "SingleLinkage"
+        },
+        "maxNDNDistance": 3.0
+      }
     }
   }
 }
