@@ -305,6 +305,9 @@ object Main {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
             err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+            if (cmdArgs != null && "--verbose" in cmdArgs) {
+                ex.printStackTrace()
+            }
             when (val cause = ex.cause) {
                 is ValidationException -> ex.commandLine.handleValidationException(cause)
                 else -> defaultParameterExceptionHandler.handleParseException(ex, args)
@@ -314,6 +317,9 @@ object Main {
             when (ex) {
                 is ValidationException -> {
                     err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+                    if (logger.verbose) {
+                        ex.printStackTrace()
+                    }
                     commandLine.handleValidationException(ex)
                 }
 
