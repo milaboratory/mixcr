@@ -107,6 +107,9 @@ object Main {
             val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
             System.err.println("This run used approximately ${mb}m of memory")
             exitProcess(2)
+        } catch (e: Error) {
+            System.err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+            throw e
         }
     }
 
