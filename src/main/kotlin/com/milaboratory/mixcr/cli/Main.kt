@@ -107,6 +107,9 @@ object Main {
             val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
             System.err.println("This run used approximately ${mb}m of memory")
             exitProcess(2)
+        } catch (e: Error) {
+            System.err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+            throw e
         }
     }
 
@@ -305,6 +308,9 @@ object Main {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
             err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+            if (cmdArgs != null && "--verbose" in cmdArgs) {
+                ex.printStackTrace()
+            }
             when (val cause = ex.cause) {
                 is ValidationException -> ex.commandLine.handleValidationException(cause)
                 else -> defaultParameterExceptionHandler.handleParseException(ex, args)
@@ -314,6 +320,9 @@ object Main {
             when (ex) {
                 is ValidationException -> {
                     err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+                    if (logger.verbose) {
+                        ex.printStackTrace()
+                    }
                     commandLine.handleValidationException(ex)
                 }
 

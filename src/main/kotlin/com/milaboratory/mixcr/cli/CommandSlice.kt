@@ -11,12 +11,12 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.OutputPort
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.asSequence
 import cc.redberry.pipe.util.filter
-import cc.redberry.pipe.util.flatten
-import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.it
 import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.toList
 import cc.redberry.pipe.util.use
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -39,7 +39,6 @@ import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.exhaustive
-import gnu.trove.map.hash.TIntIntHashMap
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
@@ -103,6 +102,16 @@ class CommandSlice : MiXCRCommandWithOutputs() {
         var fileWithIds: Path? = null
     }
 
+    @Option(
+        description = [
+            "Reassigned ids with a new sequence from 0",
+        ],
+        names = ["--reassign-ids"],
+        arity = "0",
+        order = OptionsOrder.main + 10_200
+    )
+    var reassignIds = false
+
     private val ids: List<Long> by lazy {
         val result = idsOptions.ids ?: idsOptions.fileWithIds!!.readLines().map { it.toLong() }
         result.sorted()
@@ -155,22 +164,26 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                 val cloneSet = reader.readCloneSet()
 
                 // old clone id -> new clone id
-                val idMapping = TIntIntHashMap()
                 var newNumberOfAlignments: Long = 0
 
                 // Creating new cloneset
                 val clones = mutableListOf<Clone>()
-                val allAlignmentsList = mutableListOf<OutputPort<VDJCAlignments>>()
-                for ((i, cloneId_) in ids.withIndex()) {
-                    val cloneId = cloneId_.toInt()
-                    newNumberOfAlignments += reader.numberOfAlignmentsInClone(cloneId)
-                    val clone = cloneSet[cloneId]
-                    idMapping.put(clone.id, i)
-                    clones.add(clone.withId(i).withTotalCountsReset())
-                    allAlignmentsList += reader
-                        .readAlignmentsOfClone(cloneId)
-                        .map { it.withCloneIndex(i.toLong()) }
-                }
+                val allAlignmentsList = mutableListOf<VDJCAlignments>()
+
+                cloneSet
+                    .filter { it.id.toLong() in ids }
+                    .forEachIndexed { i, clone ->
+                        val resultId = when {
+                            reassignIds -> i
+                            else -> clone.id
+                        }
+                        clones.add(clone.withId(resultId).withTotalCountsReset())
+                        newNumberOfAlignments += reader.numberOfAlignmentsInClone(clone.id)
+                        allAlignmentsList += reader
+                            .readAlignmentsOfClone(clone.id)
+                            .map { it.withCloneIndex(resultId.toLong()) }
+                            .toList()
+                    }
                 val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header)
                     .sort(cloneSet.ordering)
                     .recalculateRanks()
@@ -178,10 +191,14 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                     .build()
                 val idGen = AtomicLong()
                 val allAlignmentsPort = allAlignmentsList
-                    .flatten()
-                    .map { it.setAlignmentsIndex(idGen.getAndIncrement()) }
+                    .map {
+                        when {
+                            reassignIds -> it.setAlignmentsIndex(idGen.getAndIncrement())
+                            else -> it
+                        }
+                    }
                 writer.writeClones(newCloneSet)
-                writer.collateAlignments(allAlignmentsPort, newNumberOfAlignments)
+                writer.collateAlignments(allAlignmentsPort.asOutputPort(), newNumberOfAlignments)
                 writer.setFooter(reader.footer)
                 writer.writeAlignmentsAndIndex()
             }
@@ -196,11 +213,15 @@ class CommandSlice : MiXCRCommandWithOutputs() {
 
                 // Creating new cloneset
                 val clones = mutableListOf<Clone>()
-                for ((i, cloneId_) in ids.withIndex()) {
-                    val cloneId = cloneId_.toInt()
-                    val clone = cloneSet[cloneId]
-                    clones.add(clone.withId(i).withTotalCountsReset())
-                }
+                cloneSet
+                    .filter { it.id.toLong() in ids }
+                    .forEachIndexed { i, clone ->
+                        val resultId = when {
+                            reassignIds -> i
+                            else -> clone.id
+                        }
+                        clones.add(clone.withId(resultId).withTotalCountsReset())
+                    }
                 val newCloneSet = CloneSet.Builder(clones, cloneSet.usedGenes, cloneSet.header)
                     .sort(cloneSet.ordering)
                     .recalculateRanks()
@@ -220,7 +241,15 @@ class CommandSlice : MiXCRCommandWithOutputs() {
                 writer.treesWriter().use { treesWriter ->
                     reader.readTrees()
                         .filter { it.treeId.toLong() in ids }
-                        .forEach { treesWriter.put(it) }
+                        .asSequence().withIndex()
+                        .forEach { (i, tree) ->
+                            val treeId = when {
+                                reassignIds -> i
+                                else -> tree.treeId
+                            }
+
+                            treesWriter.put(tree.withId(treeId))
+                        }
                 }
 
                 writer.setFooter(reader.footer)
