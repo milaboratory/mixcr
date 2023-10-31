@@ -15,6 +15,7 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.flatten
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
@@ -112,6 +113,7 @@ object CommandGroupClones {
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
+                logger.progress { "Writing output" }
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(result)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -136,6 +138,7 @@ object CommandGroupClones {
                         allAlignmentsList += reader.readAlignmentsOfClone(clone.id)
                     }
 
+                    logger.progress { "Writing output" }
                     writer.writeClones(result)
                     writer.collateAlignments(allAlignmentsList.flatten(), newNumberOfAlignments)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -167,11 +170,15 @@ object CommandGroupClones {
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
 
-            val grouper = cmdParams.algorithm.mkGrouper<Clone>(input.tagsInfo, input.cloneSetInfo.assemblingFeatures)
+            val grouper = cmdParams.algorithm.mkGrouper<Clone>(
+                input.tagsInfo,
+                input.cloneSetInfo.assemblingFeatures
+            )
             SmartProgressReporter.startProgressReport(grouper)
             val grouppedClones = grouper.groupClones(input.clones)
             reportBuilder.grouperReport = grouper.getReport()
 
+            logger.progress { "Resorting and recalculating ranks" }
             return CloneSet.Builder(
                 grouppedClones,
                 input.usedGenes,

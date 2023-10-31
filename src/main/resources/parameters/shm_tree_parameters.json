@@ -37,8 +37,8 @@
     ],
     "cellCombiner": {
       "minOverlapOfClonesToCombineSecondaryChains": 0.9,
-      "maxCountOfChainsInACell": 3,
-      "maxClusterSizeToRemoveOnOverlap": 1,
+      "maxCountOfChainsInACell": 4,
+      "filterOutGroupsWithInvalidCellsFromSource": true,
       "clusterizationOfSecondChain": {
         "algorithm": {
           "type": "SingleLinkage"
