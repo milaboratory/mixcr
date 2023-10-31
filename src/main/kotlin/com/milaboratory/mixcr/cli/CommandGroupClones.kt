@@ -39,6 +39,7 @@ import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
@@ -46,9 +47,19 @@ object CommandGroupClones {
     const val COMMAND_NAME = MiXCRCommandDescriptor.groupClones.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandGroupClonesParams> {
+        @Option(
+            names = ["-O"],
+            description = ["Overrides for the clone grouping parameters."],
+            paramLabel = CommonDescriptions.Labels.OVERRIDES,
+            order = OptionsOrder.overrides
+        )
+        private var overrides: Map<String, String> = mutableMapOf()
+
         override val paramsResolver =
             object : MiXCRParamsResolver<CommandGroupClonesParams>(MiXCRParamsBundle::groupClones) {
-                override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {}
+                override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {
+                    CommandGroupClonesParams::algorithm jsonOverrideWith overrides
+                }
             }
     }
 
