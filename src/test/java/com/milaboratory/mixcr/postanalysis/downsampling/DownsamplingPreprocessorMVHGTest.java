@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.postanalysis.downsampling;
 
 import cc.redberry.pipe.CUtils;
+import com.milaboratory.math.downsampling.DownsamplingUtil;
 import com.milaboratory.mixcr.postanalysis.*;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
