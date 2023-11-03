@@ -1219,7 +1219,7 @@ object CommandAlign {
                         var alignment =
                             aligner.process(it.sequence, it.read)?.setTagCount(TagCount(it.tags))
                         if (cmdParams.parameters.isSaveOriginalReads)
-                            alignment = alignment?.setOriginalReads(it.read)
+                            alignment = alignment?.setOriginalReads(arrayOf(it.read))
                         alignment = alignment?.shiftIndelsAtHomopolymers(gtRequiringIndelShifts)
                         it.copy(
                             alignment = alignment,
@@ -1253,7 +1253,7 @@ object CommandAlign {
                                     if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.sequence) else null
                                 )
                                 if (alignerParameters.isSaveOriginalReads)
-                                    a = a.setOriginalReads(bundle.read)
+                                    a = a.setOriginalReads(arrayOf(bundle.read))
                                 a
                             }
 
