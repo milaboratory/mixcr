@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -25,7 +25,8 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import io.repseq.core.GeneFeature
-import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Joining
+import io.repseq.core.GeneType.Variable
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
@@ -126,9 +127,9 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
                         ps.print("\t")
                         if (cdr3 != null) ps.print(cdr3.quality)
                         ps.print("\t")
-                        if (al.getBestHit(GeneType.Variable) != null) ps.print(al.getBestHit(GeneType.Variable).gene.name)
+                        if (al.getBestHit(Variable) != null) ps.print(al.getBestHit(Variable)!!.gene.name)
                         ps.print("\t")
-                        if (al.getBestHit(GeneType.Joining) != null) ps.print(al.getBestHit(GeneType.Joining).gene.name)
+                        if (al.getBestHit(Joining) != null) ps.print(al.getBestHit(Joining)!!.gene.name)
                         ps.println()
                     }
                 }
@@ -165,8 +166,8 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
                         ps.print(c.fullTagCount[it.key()].toString() + "\t")
                         ps.println(
                             c.clonalSequence[0].sequence.toString() + "\t" +
-                                    c.getBestGene(GeneType.Variable).name + "\t" +
-                                    c.getBestGene(GeneType.Joining).name
+                                    c.getBestGene(Variable).name + "\t" +
+                                    c.getBestGene(Joining).name
                         )
                     }
                     numberOfClonesCheck++

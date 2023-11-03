@@ -378,7 +378,7 @@ object CommandExportClones {
     }
 
     private class CloneGeneLabelGroupingKey(private val labelName: String) : CloneGroupingKey {
-        override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)
+        override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)!!
     }
 
     private class CloneTagGroupingKey(private val tagIdx: Int) : CloneGroupingKey {

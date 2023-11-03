@@ -1179,9 +1179,9 @@ object CommandAlign {
                 // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
                 // may break the alignment (gaps there are already consolidated as much as possible)
                 val gtRequiringIndelShifts = alignerParameters.geneTypesWithLinearScoring
-                val emptyHits = EnumMap<GeneType, Array<VDJCHit?>>(GeneType::class.java)
+                val emptyHits = EnumMap<GeneType, Array<VDJCHit>>(GeneType::class.java)
                 for (gt in GeneType.values()) if (alignerParameters.getGeneAlignerParameters(gt) != null) emptyHits[gt] =
-                    arrayOfNulls(0)
+                    emptyArray()
                 val readsLayout = alignerParameters.readsLayout
                 SmartProgressReporter.startProgressReport("Alignment", sReads)
                 val mainInputReads = sReads

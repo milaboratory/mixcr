@@ -73,7 +73,7 @@ class CommandExportReads : MiXCRCommandWithOutputs() {
                 reader
                     .reportProgress("Extracting reads")
                     .forEach { alignments ->
-                        val reads = alignments.originalReads
+                        val reads = alignments.getOriginalReads()
                             ?: throw ApplicationException("VDJCA file doesn't contain original reads (perform align action with -g / --save-reads option).")
                         for (read in reads) {
                             when (writer) {
