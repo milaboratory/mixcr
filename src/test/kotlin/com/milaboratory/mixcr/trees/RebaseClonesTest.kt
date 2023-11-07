@@ -116,8 +116,7 @@ class RebaseClonesTest {
             VJPair(Range(10, 15), Range(10, 30)),
             oneLetterSequence(N, 5),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -143,8 +142,7 @@ class RebaseClonesTest {
             VJPair(Range(10, 25), Range(25, 30)),
             oneLetterSequence(N, 10),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -185,8 +183,7 @@ class RebaseClonesTest {
             VJPair(Range(10, 25), Range(25, 30)),
             oneLetterSequence(N, 10),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -212,8 +209,7 @@ class RebaseClonesTest {
             VJPair(Range(10, 15), Range(10, 30)),
             oneLetterSequence(N, 5),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -308,8 +304,7 @@ class RebaseClonesTest {
             VJPair(VRangeAfterCDR3Begin, JRangeBeforeCDR3End),
             random.generateSequence(NDN.size() - 3 + random.nextInt(6)),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -353,8 +348,7 @@ class RebaseClonesTest {
             ),
             random.generateSequence(originalRootInfo.reconstructedNDN.size() - VBorderExpand - JBorderExpand),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -418,8 +412,7 @@ class RebaseClonesTest {
             ),
             oneLetterSequence(N, NDNRangeInCDR3Before.length()),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 CDR3Length
             )
         )
@@ -465,8 +458,7 @@ class RebaseClonesTest {
             ),
             oneLetterSequence(N, NDNRangeInCDR3After.length()),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 CDR3Length
             )
         )
@@ -560,8 +552,7 @@ class RebaseClonesTest {
             VJPair(VRangeInCDR3, JRangeInCDR3),
             mutationsOfNDN.mutate(NDNSubsetBeforeMutation),
             VJBase(
-                GeneVariantName("VSome"),
-                GeneVariantName("JSome"),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -610,33 +601,34 @@ class RebaseClonesTest {
                     )
         )
         val VJBase = VJBase(
-            GeneVariantName("VSome"),
-            GeneVariantName("JSome"),
+            VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
             20
         )
         val rebasedClone = ClonesRebase(
             rootInfo,
             scoringSet
         ).rebaseClone(
-            mutationsFromVJGermline,
-            CloneWrapper(
-                listOf(
-                    CloneWithDatasetId(
-                        Clone(
-                            emptyArray(),
-                            EnumMap(GeneType::class.java),
-                            TagCount.NO_TAGS,
-                            0.0,
-                            0,
-                            0,
-                            CloneRanks.empty,
-                            null
-                        ),
-                        0
-                    )
-                ),
-                VJBase,
-                listOf(VJBase)
+            CloneWithMutationsFromVJGermline(
+                mutationsFromVJGermline,
+                CloneWrapper(
+                    listOf(
+                        CloneWithDatasetId(
+                            Clone(
+                                emptyArray(),
+                                EnumMap(GeneType::class.java),
+                                TagCount.NO_TAGS,
+                                0.0,
+                                0,
+                                0,
+                                CloneRanks.empty,
+                                null
+                            ),
+                            0
+                        )
+                    ),
+                    VJBase,
+                    listOf(VJBase)
+                )
             )
         )
         val resultedNDN = rebasedClone.mutationsSet.NDNMutations.buildSequence(rootInfo)

@@ -354,7 +354,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     reportBuilder.cellCombinationBuilder = shmTreesCombiner.reportBuilder
                     shmTreesCombiner.groupByChains(result)
                 } else {
-                    result.map { shmTreeBuilder.convertToMultiRoot(it) }
+                    result.map { tree -> shmTreeBuilder.convertToMultiRoot(tree.builder, tree.rootInfo) }
                 }
                 shmTreesWriter.writeHeader(
                     datasets,
