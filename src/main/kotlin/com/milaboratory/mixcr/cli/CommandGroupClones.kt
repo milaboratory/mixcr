@@ -30,7 +30,6 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.clonegrouping.CloneGroupingParams.Companion.mkGrouper
-import com.milaboratory.mixcr.clonegrouping.SingleCellGroupingParamsByOverlappingCellIds
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
@@ -174,24 +173,7 @@ object CommandGroupClones {
             }
 
             val paramsSpec = resetPreset.overridePreset(header.paramsSpec)
-            // val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
-            val (_, cmdParams) = 1 to CommandGroupClonesParams(
-                SingleCellGroupingParamsByOverlappingCellIds(
-                    minOverlapForSmaller = SingleCellGroupingParamsByOverlappingCellIds.Threshold(
-                        0.8,
-                        SingleCellGroupingParamsByOverlappingCellIds.Threshold.RoundingMode.UP
-                    ),
-                    minOverlapForBigger = SingleCellGroupingParamsByOverlappingCellIds.Threshold(
-                        0.2,
-                        SingleCellGroupingParamsByOverlappingCellIds.Threshold.RoundingMode.UP
-                    ),
-                    nonFunctional = SingleCellGroupingParamsByOverlappingCellIds.ForNonFunctional.DontProcess,
-                    thresholdForAssigningLeftoverCells = SingleCellGroupingParamsByOverlappingCellIds.Threshold(
-                        0.6,
-                        SingleCellGroupingParamsByOverlappingCellIds.Threshold.RoundingMode.DOWN
-                    )
-                )
-            )
+            val (_, cmdParams) = paramsResolver.resolve(paramsSpec)
 
 
             reportBuilder.setStartMillis(System.currentTimeMillis())
@@ -204,12 +186,12 @@ object CommandGroupClones {
                 input.cloneSetInfo.assemblingFeatures
             )
             SmartProgressReporter.startProgressReport(grouper)
-            val grouppedClones = grouper.groupClones(input.clones)
+            val groupedClones = grouper.groupClones(input.clones)
             reportBuilder.grouperReport = grouper.getReport()
 
             logger.progress { "Resorting and recalculating ranks" }
             return CloneSet.Builder(
-                grouppedClones,
+                groupedClones,
                 input.usedGenes,
                 input.header
                     .copy(calculatedCloneGroups = true)
