@@ -9,6 +9,9 @@ groupClones-base:
       minOverlapForBigger:
         percentage: 0.2
         roundingMode: UP
+      thresholdForAssigningLeftoverCells:
+        percentage: 0.6
+        roundingMode: DOWN
       nonFunctional:
         type: OverlapWithFoundGroups
         minOverlapForClone:
