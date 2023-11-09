@@ -70,8 +70,8 @@ assert "grep 'IGHJ6\*05x' alleles/description.tsv | wc -l" "1"
 keyOfNumberOfCones=`head -n 1 trees/trees.tsv | sed 's/numberOfClonesInTree/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 keyOfCDR3=`head -n 1 trees/trees.tsv | sed 's/nSeqCDR3OfMrca/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
 
-expectedBiggestTreeSize=4
-expectedBiggestTreeCDR3="TGTGCTAGAGTGGGCAATGGCTGGGCCCTTGACTTCTGG"
+expectedBiggestTreeSize=7
+expectedBiggestTreeCDR3="TGTGCTGGAGGGCCTAGTATTGGGAGATACGACTACTGG"
 # biggest tree
 # `tail +2` - skip first line with column names
 # `sort -n -r -k $i` - reverse numeric sort by i column (numberOfClonesInTree in this case)
