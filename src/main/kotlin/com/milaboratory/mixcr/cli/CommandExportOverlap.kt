@@ -43,6 +43,7 @@ import java.io.PrintWriter
 import java.nio.file.Path
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.io.path.createDirectories
 
 @Command(
     description = ["Build cloneset overlap and export into tab delimited file."],
@@ -223,7 +224,9 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         val countsByChain = overlapBrowser.computeCountsByChain(samples)
         val chainsToWrite = chains?.intersect(countsByChain.keys) ?: countsByChain.keys
         val writers = chainsToWrite.associateWith { chain ->
-            val writer = InfoWriter(getOut(chain), samples, extractors)
+            val out = getOut(chain)
+            out.toAbsolutePath().parent.createDirectories()
+            val writer = InfoWriter(out, samples, extractors)
             writer.writeHeader()
             writer
         }

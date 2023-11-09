@@ -142,7 +142,7 @@ val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
 val mitoolVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val repseqioVersion = ""
+val repseqioVersion = "2.3.0-8-fix-geneFeatures-parse"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
