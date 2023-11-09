@@ -18,6 +18,7 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
+import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideAlphabet.C
 import com.milaboratory.core.sequence.NucleotideAlphabet.G
 import com.milaboratory.core.sequence.NucleotideAlphabet.N
@@ -492,10 +493,6 @@ class RebaseClonesTest {
         rebaseToRootInfo.rangeInCDR3.J shouldBe result.mutations.J.partInCDR3.range
     }
 
-    private fun MutationsSet.buildCDR3(rootInfo: RootInfo): NucleotideSequence = mutations.V.buildPartInCDR3(rootInfo)
-        .concatenate(NDNMutations.buildSequence(rootInfo))
-        .concatenate(mutations.J.buildPartInCDR3(rootInfo))
-
     private fun testRebaseClone(random: Random, print: Boolean) {
         val VSequence = random.generateSequence(50 + random.nextInt(50))
         val VRangeBeforeCDR3Begin = Range(0, 10 + random.nextInt(10)).move(10 + random.nextInt(5))
@@ -614,7 +611,7 @@ class RebaseClonesTest {
                     listOf(
                         CloneWithDatasetId(
                             Clone(
-                                emptyArray(),
+                                arrayOf(NSequenceWithQuality(NucleotideSequence.EMPTY)),
                                 EnumMap(GeneType::class.java),
                                 TagCount.NO_TAGS,
                                 0.0,
