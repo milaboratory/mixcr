@@ -11,6 +11,7 @@
  */
 package com.milaboratory.mixcr.util
 
+import com.milaboratory.core.alignment.AffineGapAlignmentScoring
 import com.milaboratory.core.mutations.Mutation
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -126,7 +127,8 @@ class MutationsExtensionsTest {
         val result = MutationsUtils.difference(
             sequence1,
             first,
-            second
+            second,
+            AffineGapAlignmentScoring.getNucleotideBLASTScoring()
         )
         if (print) {
             println("     sequence1: $sequence1")
