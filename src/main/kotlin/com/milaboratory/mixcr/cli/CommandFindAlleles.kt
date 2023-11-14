@@ -456,8 +456,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
         reportBuilder.setFinishMillis(System.currentTimeMillis())
         val report = reportBuilder.buildReport()
-        writerCloseCallbacks.forEach {
-            it(report)
+        writerCloseCallbacks.forEach { callback ->
+            callback(report)
         }
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()

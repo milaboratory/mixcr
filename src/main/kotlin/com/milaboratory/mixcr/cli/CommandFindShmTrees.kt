@@ -425,7 +425,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             .use { cache ->
                 // recalculating ranks for clones that left in trees
                 val recalculatedRanks = cache.createPort()
-                    .reportProgress("Writing results 1/1")
+                    .reportProgress("Writing results 1/2")
                     .flatMap { result ->
                         result.tree.allNodes()
                             .flatMap { it.node.content.clones }
@@ -446,7 +446,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     }
 
                 cache.createPort()
-                    .reportProgress("Writing results 1/2")
+                    .reportProgress("Writing results 2/2")
                     .map { shmTreeResult ->
                         val withReplacedClones = shmTreeResult.tree
                             .map { _, content ->
