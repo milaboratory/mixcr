@@ -14,6 +14,14 @@ properties:
             type: string
         field:
           type: string
+  filterOutCloneGroups:
+    type: array
+    items:
+      type: string
+      enum:
+      - found
+      - undefined
+      - contamination
   filterOutOfFrames:
     type: boolean
   filterStops:

@@ -4,11 +4,12 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [--dont-impute-germline-on-export] [--add-export-clone-table-splitting <
                           (geneLabel|tag):key>] [--reset-export-clone-table-splitting]
                           [--add-export-clone-grouping <(geneLabel|tag):key>]
-                          [--reset-export-clone-grouping] [--export-productive-clones-only]
-                          [--no-header] [--drop-default-fields] [--prepend-columns]
-                          [--not-covered-as-empty] [-targets] [-vHit] [-dHit] [-jHit] [-cHit]
-                          [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily]
-                          [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                          [--reset-export-clone-grouping] [--filter-out-group-types
+                          (found|undefined|contamination)]... [--reset-group-types-filter]
+                          [--export-productive-clones-only] [--no-header] [--drop-default-fields]
+                          [--prepend-columns] [--not-covered-as-empty] [-targets] [-vHit] [-dHit]
+                          [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily]
+                          [-jFamily] [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
                           [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore] [-cHitsWithScore]
                           [-vHits] [-dHits] [-jHits] [-cHits] [-vGenes] [-dGenes] [-jGenes]
                           [-cGenes] [-vFamilies] [-dFamilies] [-jFamilies] [-cFamilies]
@@ -109,6 +110,15 @@ Export assembled clones into tab delimited file.
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --filter-out-group-types (found|undefined|contamination)
+                             Filter out clones from groups of particular type.
+                             `found` - groups that were found on `groupClones`.
+                             `undefined` - there were not enough info on `groupClones` to form a
+                               group.
+                             `contamination` - clones that were marked as contamination on
+                               `groupClones`.
+      --reset-group-types-filter
+                             Reset filter of clones by group type.
       --export-productive-clones-only
                              Export only productive clonotypes.
       --no-header            Don't print first header line, print only data
