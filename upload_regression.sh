@@ -7,7 +7,6 @@ mkdir "$temp_dir"
 revision=$(./mixcr -v | grep MiXCR | cut -d= -f2 | cut -d';' -f1)
 
 ./itests.sh test case-base_single_cell
-#head -n1 V04_baseBuldTrees.shmt | cut -c 12-15
 clnaVersion=$(head -n1 test_target/base_single_cell.vdjcontigs.clna | cut -c 12-15)
 clnsVersion=$(head -n1 test_target/base_single_cell.vdjcontigs.contigs.clns | cut -c 12-15)
 vdjcaVersion=$(head -n1 test_target/base_single_cell.raw.vdjca | cut -c 12-15)
