@@ -406,6 +406,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         description = ["Clones with equal clonal sequence but different gene will not be merged."],
         names = [SetSplitClonesBy.CMD_OPTION_TRUE],
         paramLabel = Labels.GENE_TYPE,
+        hideParamSyntax = true,
         order = OptionsOrder.mixins.assemble + 200
     )
     fun splitClonesBy(geneTypes: List<GeneType>) =
@@ -415,6 +416,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         description = ["Clones with equal clonal sequence but different gene will be merged into single clone."],
         names = [SetSplitClonesBy.CMD_OPTION_FALSE],
         paramLabel = Labels.GENE_TYPE,
+        hideParamSyntax = true,
         order = OptionsOrder.mixins.assemble + 300
     )
     fun dontSplitClonesBy(geneTypes: List<GeneType>) =
@@ -601,6 +603,7 @@ object ExportMiXCRMixins {
             description = ["Export clone groups for given cell type. Possible values: \${COMPLETION-CANDIDATES}"],
             names = [ExportMixins.ExportCloneGroupsForCellTypes.CMD_OPTION],
             order = OptionsOrder.mixins.exports + 5_100,
+            hideParamSyntax = true,
             paramLabel = "<cell_type>",
             arity = "1..*"
         )
@@ -636,7 +639,7 @@ object ExportMiXCRMixins {
 
         @Option(
             description = [
-                "How to sort clones for determination of the second chain.",
+                "How to sort clones for determination of the primary and the secondary chains.",
                 "Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI if it's available, by Read otherwise"
             ],
             names = [ExportMixins.ExportCloneGroupsSortChainsBy.CMD_OPTION],
@@ -696,6 +699,7 @@ object ExportMiXCRMixins {
             ],
             names = [ExportMixins.FilterOutCloneGroupTypes.CMD_OPTION],
             arity = "1..*",
+            hideParamSyntax = true,
             paramLabel = "(found|undefined|contamination)",
             order = OptionsOrder.mixins.exports + 1_300
         )
