@@ -47,6 +47,7 @@ import com.milaboratory.mixcr.export.AirrColumns.RevComp
 import com.milaboratory.mixcr.export.AirrColumns.Rightmost
 import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignment
 import com.milaboratory.mixcr.export.AirrColumns.SequenceAlignmentBoundary
+import com.milaboratory.mixcr.export.AirrColumns.SequenceId
 import com.milaboratory.mixcr.export.AirrColumns.VDJCCalls
 import com.milaboratory.mixcr.export.AirrVDJCObjectWrapper
 import com.milaboratory.mixcr.export.FieldExtractor
@@ -213,6 +214,7 @@ class CommandExportAirr : MiXCRCommandWithOutputs() {
     private fun cloneExtractors(tagsInfo: TagsInfo): List<FieldExtractor<AirrVDJCObjectWrapper>> {
         val ret = mutableListOf<FieldExtractor<AirrVDJCObjectWrapper>>()
         ret += CloneId()
+        ret += SequenceId()
         ret += commonExtractors(tagsInfo)
         ret += AirrColumns.CloneCount()
         if (tagsInfo.hasTagsWithType(TagType.Molecule)) {
