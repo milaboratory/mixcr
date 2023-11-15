@@ -34,6 +34,25 @@ $defs:
     - type
 type: object
 properties:
+  cellCombiner:
+    type: object
+    properties:
+      clusterizationOfSecondChain:
+        type: object
+        properties:
+          algorithm:
+            anyOf:
+            - $ref: '#/$defs/BronKerbosch'
+            - $ref: '#/$defs/BronKerboschWithFallback-2'
+            - $ref: '#/$defs/SingleLinkage'
+          maxNDNDistance:
+            type: number
+      filterOutGroupsWithInvalidCellsFromSource:
+        type: boolean
+      maxCountOfChainsInACell:
+        type: integer
+      minOverlapOfClonesToCombineSecondaryChains:
+        type: number
   productiveOnly:
     type: boolean
   singleCell:
