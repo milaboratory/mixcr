@@ -1,7 +1,7 @@
 Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                [--filter-groups-with-one-chain] [--impute-germline-on-export]
                                [--dont-impute-germline-on-export] [--export-productive-clones-only]
-                               [--export-clone-groups-for-cell-type <cell_type>...]...
+                               [--export-clone-groups-for-cell-type <cell_type>]...
                                [--export-clone-groups-for-all-cell-types]
                                [--show-secondary-chain-on-export-cell-groups]
                                [--dont-show-secondary-chain-on-export-cell-groups]
@@ -95,7 +95,7 @@ Export clone groups into tab delimited file. Data should be processed by `groupC
                              Export nucleotide sequences only from covered region
       --export-productive-clones-only
                              Export only productive clonotypes.
-      --export-clone-groups-for-cell-type <cell_type>...
+      --export-clone-groups-for-cell-type <cell_type>
                              Export clone groups for given cell type. Possible values: IGH-IGK,
                                IGH-IGL, TRB-TRA, TRD-TRG
       --export-clone-groups-for-all-cell-types
@@ -105,7 +105,8 @@ Export clone groups into tab delimited file. Data should be processed by `groupC
       --dont-show-secondary-chain-on-export-cell-groups
                              Don't show columns for secondary chains in export for cell groups.
       --export-clone-groups-sort-chains-by (Read|Molecule|Auto)
-                             How to sort clones for determination of the second chain.
+                             How to sort clones for determination of the primary and the secondary
+                               chains.
                              Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI
                                if it's available, by Read otherwise
       --no-header            Don't print first header line, print only data
