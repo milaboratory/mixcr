@@ -18,25 +18,30 @@ Base commands:
 Postanalysis commands:
   postanalysis  Run postanalysis routines. This command has subcommands, use -h to see more
 Export commands:
-  exportTables             CDR3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap
-  exportPreprocTables      Export preprocessing summary tables.
-  exportPlots              Export postanalysis plots. This command has subcommands, use -h to see
-                             more
-  overlapScatterPlot       Plot overlap scatter-plot.
-  exportAlignments         Export V/D/J/C alignments into tab delimited file.
-  exportAlignmentsPretty   Export verbose information about alignments.
-  exportClones             Export assembled clones into tab delimited file.
-  exportCloneGroups        Export clone groups into tab delimited file. Data should be processed by
-                             `groupClones`
-  exportClonesPretty       Export verbose information about clones.
-  exportShmTreesWithNodes  Export SHMTree as a table with a row for every node
-  exportShmTrees           Export SHMTree as a table with a row for every table
-  exportShmTreesNewick     Export SHMTree as newick
-  exportReports            Export MiXCR reports.
-  exportReportsTable       Export reports from files in tabular format.
-  exportQc                 Export QC plots. This command has subcommands, use -h to see more
-  exportClonesOverlap      Build cloneset overlap and export into tab delimited file.
-  exportAirr               Exports a clns, clna or vdjca file to Airr formatted tsv file.
+  exportTables              CDR3 metrics, Diversity, V/J/VJ-Usage, CDR3/V-Spectratype, Overlap
+  exportPreprocTables       Export preprocessing summary tables.
+  exportPlots               Export postanalysis plots. This command has subcommands, use -h to see
+                              more
+  overlapScatterPlot        Plot overlap scatter-plot.
+  exportAlignments          Export V/D/J/C alignments into tab delimited file.
+  exportAlignmentsPretty    Export verbose information about alignments.
+  exportClones              Export assembled clones into tab delimited file.
+  exportCloneGroups         Export clone groups into tab delimited file. Data should be processed
+                              by `groupClones`
+  exportClonesPretty        Export verbose information about clones.
+  exportShmTreesWithNodes   Export SHMTree as a table with a row for every clone or reconstructed
+                              node for each root (only one root if no single cell data)
+  exportShmTrees            Export SHMTree as a table with a row for every SHM root in a table
+                              (single row if no single cell data)
+  exportShmSingleCellTrees  Export SHM trees with one row per node. Tree may contain several roots,
+                              that will be exported in separate columns. Initial data for building
+                              tree should contain cell data.
+  exportShmTreesNewick      Export SHMTree as newick
+  exportReports             Export MiXCR reports.
+  exportReportsTable        Export reports from files in tabular format.
+  exportQc                  Export QC plots. This command has subcommands, use -h to see more
+  exportClonesOverlap       Build cloneset overlap and export into tab delimited file.
+  exportAirr                Exports a clns, clna or vdjca file to Airr formatted tsv file.
 Util commands:
   exportReadsForClones       Export reads for particular clones from "clones & alignments" (*.clna)
                                file.

@@ -1,15 +1,18 @@
 Usage: mixcr exportShmTrees [--filter-min-nodes <n>] [--filter-min-height <n>] [--ids <id>[,
                             <id>...]]... [--chains <chains>] [--preset <preset>] [--preset-file
                             <presetFile>] [--no-header] [--not-covered-as-empty] [-treeId]
-                            [-numberOfClonesInTree] [-totalReadsCountInTree]
-                            [-totalUniqueTagCountInTree <(Molecule|Cell|Sample)>]... [-vHit]
-                            [-jHit] [-nFeature <gene_feature> (germline|mrca)]... [-allNFeatures
+                            [-subtreeId] [-numberOfClonesInTree [forChain]]...
+                            [-numberOfNodesWithClones] [-totalReadsCountInTree [forChain]]...
+                            [-totalUniqueTagCountInTree (Molecule|Cell|Sample) [forChain]]...
+                            [-chains] [-treeHeight] [-vHit] [-jHit] [-vGene] [-jGene] [-vFamily]
+                            [-jFamily] [-nFeature <gene_feature> (germline|mrca)]... [-allNFeatures
                             (germline|mrca)]... [-aaFeature <gene_feature> (germline|mrca)]...
                             [-allAAFeatures (germline|mrca)]... [--force-overwrite] [--no-warnings]
                             [--verbose] [--help] [[--filter-in-feature <gene_feature>]
                             [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
                             --filter-nt-pattern <pattern>)] trees.shmt [trees.tsv]
-Export SHMTree as a table with a row for every table
+Export SHMTree as a table with a row for every SHM root in a table (single row if no single cell
+data)
       trees.shmt             Input file produced by 'findShmTrees' command.
       [trees.tsv]            Path to output table. Print in stdout if omitted.
       --filter-min-nodes <n> Minimal number of nodes in tree
@@ -18,7 +21,8 @@ Export SHMTree as a table with a row for every table
       --ids <id>[,<id>...]   Filter specific trees by id
       --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
                                or IGH).
-  -p, --preset <preset>      Specify preset of export fields. Possible values: full, min.
+  -p, --preset <preset>      Specify preset of export fields. Possible values: default,
+                               defaultSingleCell, min.
       -pf, --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
@@ -40,12 +44,31 @@ Filter by pattern
                              Filter specific trees by nt pattern.
 Possible fields to export
       -treeId                SHM tree id
-      -numberOfClonesInTree  Number of uniq clones in the SHM tree
-      -totalReadsCountInTree Total sum of read counts of clones in the SHM tree
-      -totalUniqueTagCountInTree <(Molecule|Cell|Sample)>
-                             Total count of unique tags in the SHM tree with specified type
+      -subtreeId             Id for different roots in single cell trees
+      -numberOfClonesInTree [forChain]
+                             Number of uniq clones in the SHM tree. If first parameter is
+                               `forChain`, will calculate for this root, otherwise, for all roots
+                               combined.
+      -numberOfNodesWithClones
+                             Number of nodes with clones, i.e. nodes with different clone
+                               sequences. Other differences are not counting such as: isotypes,
+                               sample, cell.
+      -totalReadsCountInTree [forChain]
+                             Total sum of read counts of clones in the SHM tree. If first parameter
+                               is `forChain`, will calculate for this root, otherwise, for all
+                               roots combined.
+      -totalUniqueTagCountInTree (Molecule|Cell|Sample) [forChain]
+                             Total count of unique tags in the SHM tree with specified type. If
+                               first parameter is `forChain`, will calculate for this root,
+                               otherwise, for all roots combined.
+      -chains                Chain type of the tree
+      -treeHeight            Height of the tree
       -vHit                  Export best V hit
       -jHit                  Export best J hit
+      -vGene                 Export best V hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
+      -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
+      -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00)
+      -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00)
       -nFeature <gene_feature> (germline|mrca)
                              Export nucleotide sequence of specified gene feature of specified node
                                type.

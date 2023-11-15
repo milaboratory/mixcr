@@ -60,9 +60,9 @@ Usage: mixcr exportAlignments [--chains <chains>] [--impute-germline-on-export]
                               [(substitutions|indels|inserts|deletions)]]... [-aaMutationRate
                               <gene_feature> [(substitutions|indels|inserts|deletions)]]...
                               [-chains] [-topChains] [-geneLabel <label>]... [-isotype
-                              [(primary|subclass|auto)]]... [-tagCounts] [-cellId [<
-                              (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
-                              [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-hasStops
+                              [(primary|subclass|auto)]]... [-tagCounts] [-cellId
+                              [(none|space|dash)]]... [-tags (Molecule|Cell|Sample)]...
+                              [-uniqueTagCount (Molecule|Cell|Sample)]... [-hasStops
                               <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
                               <gene_feature>]... [-biochemicalProperty <gene_feature>
                               <property>]... [-baseBiochemicalProperties <gene_feature>]...
@@ -416,14 +416,14 @@ Possible fields to export
                                will try resolve isotypes like 'IgA1' or 'IgA2'. `auto` will resolve
                                the best resolution as possible. By default `auto` will be used
       -tagCounts             All tags with counts
-      -cellId [<(none|space|dash)>]
+      -cellId [(none|space|dash)]
                              Concatenated all cell tags with specified delimiter, default delimiter
                                is `none`.
                              Example output for `-cellId`: GGATTACTCATTGCCC
                              Example output for `-cellId dash`: GGATTACT-CATTGCCC
-      -tags <(Molecule|Cell|Sample)>
+      -tags (Molecule|Cell|Sample)
                              All tags values (i.e. CELL barcode or UMI sequence)
-      -uniqueTagCount <(Molecule|Cell|Sample)>
+      -uniqueTagCount (Molecule|Cell|Sample)
                              Unique tag count
       -hasStops <gene_feature>
                              Whether gene feature has stop codons inside

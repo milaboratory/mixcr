@@ -1040,8 +1040,25 @@ assembleContigs:
     discardAmbiguousNucleotideCalls: false
 groupClones:
   algorithm:
-    type: BaseSingleCellGrouping
-    maxCountOfChainsInACell: 3
+    type: SingleCellGroupingByOverlappingCellIds
+    minOverlapForSmaller:
+      percentage: 0.8
+      roundingMode: UP
+    minOverlapForBigger:
+      percentage: 0.2
+      roundingMode: UP
+    countCellBarcodesWithOneClone: true
+    thresholdForAssigningLeftoverCells:
+      percentage: 0.6
+      roundingMode: DOWN
+    nonFunctional:
+      type: OverlapWithFoundGroups
+      minOverlapForClone:
+        percentage: 0.9
+        roundingMode: UP
+      minOverlapForGroup:
+        percentage: 0.5
+        roundingMode: UP
 exportAlignments:
   chains: ALL
   noHeader: false

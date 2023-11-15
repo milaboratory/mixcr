@@ -57,8 +57,8 @@ Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                [-allPositionsInReference [<from_reference_point>
                                <to_reference_point>]]... [-positionOf <reference_point>]...
                                [-allPositions [<from_reference_point> <to_reference_point>]]...
-                               [-defaultAnchorPoints] [-cellGroup] [-groupUniqueTagCount <
-                               (Molecule|Cell|Sample)>]... [-groupReadCount]
+                               [-defaultAnchorPoints] [-cellGroup] [-groupUniqueTagCount
+                               (Molecule|Cell|Sample)]... [-groupReadCount]
                                [-uniqClonesPerChainCount] [-cloneId] [-readCount] [-rankByReads]
                                [-readFraction] [-targetSequences] [-targetQualities]
                                [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
@@ -68,8 +68,8 @@ Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                [-aaMutationRate <gene_feature>
                                [(substitutions|indels|inserts|deletions)]]... [-geneLabel
                                <label>]... [-isotype [(primary|subclass|auto)]]... [-tagCounts]
-                               [-uniqueTagCount <(Molecule|Cell|Sample)>]... [-uniqueTagFraction <
-                               (Molecule|Cell|Sample)>]... [-rankByTag <(Molecule|Cell|Sample)>]...
+                               [-uniqueTagCount (Molecule|Cell|Sample)]... [-uniqueTagFraction
+                               (Molecule|Cell|Sample)]... [-rankByTag (Molecule|Cell|Sample)]...
                                [-hasStops <gene_feature>]... [-isOOF <gene_feature>]...
                                [-isProductive <gene_feature>]... [-biochemicalProperty
                                <gene_feature> <property>]... [-baseBiochemicalProperties
@@ -434,7 +434,7 @@ Possible fields to export
                                etc. see documentation for the full list and formatting). For clones
                                from all chains.
       -cellGroup             Unique cell group identifier
-      -groupUniqueTagCount <(Molecule|Cell|Sample)>
+      -groupUniqueTagCount (Molecule|Cell|Sample)
                              Unique tag count for a cell group
       -groupReadCount        Total reads count in all cells representing this group
       -uniqClonesPerChainCount
@@ -479,12 +479,12 @@ Possible fields to export
                                the best resolution as possible. By default `auto` will be used. For
                                clones from all chains.
       -tagCounts             All tags with counts. For clones from all chains.
-      -uniqueTagCount <(Molecule|Cell|Sample)>
+      -uniqueTagCount (Molecule|Cell|Sample)
                              Unique tag count. For clones from all chains.
-      -uniqueTagFraction <(Molecule|Cell|Sample)>
+      -uniqueTagFraction (Molecule|Cell|Sample)
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected. For clones from all chains.
-      -rankByTag <(Molecule|Cell|Sample)>
+      -rankByTag (Molecule|Cell|Sample)
                              Rank by count of unique tags, i.e how many clones have equal or more
                                count. For clones from all chains.
       -hasStops <gene_feature>
