@@ -43,6 +43,7 @@ import com.milaboratory.mixcr.presets.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.GenericMixin
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
@@ -652,7 +653,7 @@ object ExportMiXCRMixins {
             description = ["Add key to split output files with clone tables."],
             names = [ExportMixins.ExportClonesAddFileSplitting.CMD_OPTION],
             paramLabel = "<(geneLabel|tag):key>",
-            hideParamSyntax = true,
+            arity = "1",
             order = OptionsOrder.mixins.exports + 900
         )
         fun addExportClonesFileSplitting(by: String) =
@@ -672,7 +673,6 @@ object ExportMiXCRMixins {
             names = [ExportMixins.ExportClonesAddCloneGrouping.CMD_OPTION],
             arity = "1",
             paramLabel = "<(geneLabel|tag):key>",
-            hideParamSyntax = true,
             order = OptionsOrder.mixins.exports + 1_100
         )
         fun addExportClonesCloneGrouping(by: String) =
@@ -686,6 +686,30 @@ object ExportMiXCRMixins {
         )
         fun resetExportClonesCloneGrouping(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetCloneGrouping)
+
+        @Option(
+            description = [
+                "Filter out clones from groups of particular type.",
+                "`found` - groups that were found on `${MiXCRCommandDescriptor.groupClones.name}`.",
+                "`undefined` - there were not enough info on `${MiXCRCommandDescriptor.groupClones.name}` to form a group.",
+                "`contamination` - clones that were marked as contamination on `${MiXCRCommandDescriptor.groupClones.name}`.",
+            ],
+            names = [ExportMixins.FilterOutCloneGroupTypes.CMD_OPTION],
+            arity = "1..*",
+            paramLabel = "(found|undefined|contamination)",
+            order = OptionsOrder.mixins.exports + 1_300
+        )
+        fun filterOutCloneGroupTypes(types: List<CommandExportClonesParams.CloneGroupTypes>) =
+            mixIn(ExportMixins.FilterOutCloneGroupTypes(types))
+
+        @Option(
+            description = ["Reset filter of clones by group type."],
+            names = [ExportMixins.ResetFilterOfCloneGroupTypes.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 1_400
+        )
+        fun resetFilterOfCloneGroupTypes(ignored: Boolean) =
+            mixIn(ExportMixins.ResetFilterOfCloneGroupTypes)
     }
 
     const val DESCRIPTION = "Params for export commands:%n"
