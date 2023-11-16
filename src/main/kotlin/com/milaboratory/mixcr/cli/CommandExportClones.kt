@@ -11,6 +11,9 @@
  */
 package com.milaboratory.mixcr.cli
 
+import cc.redberry.pipe.util.asOutputPort
+import cc.redberry.pipe.util.drainToAndClose
+import cc.redberry.pipe.util.flatMap
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -34,9 +37,8 @@ import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.SubstitutionHelper
-import com.milaboratory.util.CanReportProgressAndStage
 import com.milaboratory.util.ReportHelper
-import com.milaboratory.util.SmartProgressReporter
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -240,85 +242,109 @@ object CommandExportClones {
             val headerForExport = MetaForExport(fileInfo)
             val fieldExtractors = CloneFieldsExtractorsFactory.createExtractors(params.fields, headerForExport)
 
+            val chains = Chains.parse(params.chains)
+
+            val splitByTagType = if (params.splitByTagType != null) {
+                params.splitByTagType
+            } else {
+                val tagTypeWithReason = params.fields
+                    .filter {
+                        it.field.equals("-allTags", ignoreCase = true) || it.field.equals("-tags", ignoreCase = true)
+                    }
+                    .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0])!! to "`${it.field} ${it.args[0]}` field is present in the list" }
+                    .toMutableList()
+                if (params.fields.any { it.field.equals("-cellId", ignoreCase = true) }) {
+                    tagTypeWithReason += TagType.Cell to "`-cellId` field is present in the list"
+                }
+                splitFileKeyExtractors
+                    .filterIsInstance<CloneTagGroupingKey>()
+                    .filter { it.tagType != null }
+                    .forEach { key ->
+                        tagTypeWithReason += key.tagType!! to "split files by tag was added"
+                    }
+                groupByKeyExtractors
+                    .filterIsInstance<CloneTagGroupingKey>()
+                    .filter { it.tagType != null }
+                    .forEach { key ->
+                        tagTypeWithReason += key.tagType!! to "group clones by tag was added"
+                    }
+                val newSpitBy = tagTypeWithReason.maxByOrNull { it.first }
+                if (newSpitBy != null && outputFile != null) {
+                    logger.log("Clone splitting by ${newSpitBy.first} added automatically because ${newSpitBy.second}.")
+                }
+                newSpitBy?.first
+            }
+
+            val tagDivisionDepth = when (splitByTagType) {
+                null -> 0
+                else -> {
+                    if (!fileInfo.header.tagsInfo.hasTagsWithType(splitByTagType))
+                    // best division depth will still be selected for this case
+                        logger.warn("Input has no tags with type $splitByTagType")
+                    fileInfo.header.tagsInfo.getDepthFor(splitByTagType)
+                }
+            }
+
+            val requiredSplit = (splitFileKeyExtractors + groupByKeyExtractors)
+                .filterIsInstance<CloneTagGroupingKey>()
+                .maxOfOrNull { it.tagIdx }
+            ValidationException.require(requiredSplit == null || tagDivisionDepth >= requiredSplit + 1) {
+                "Splitting of clones by ${initialSet.tagsInfo[requiredSplit!!].name} required in order to split files or group clones. Please add it manually"
+            }
+
+            // Dividing clonotypes inside the cloneset into multiple clonotypes each having unique tag prefix
+            // according to the provided depth
+            val dividedSource = initialSet.divideClonesByTags(tagDivisionDepth)
+
             fun runExport(set: CloneSet, outFile: Path?) {
                 val rowMetaForExport = RowMetaForExport(set.tagsInfo, headerForExport, exportDefaults.notCoveredAsEmpty)
                 InfoWriter.create(outFile, fieldExtractors, !params.noHeader) { rowMetaForExport }.use { writer ->
-                    val splitByTagType = if (params.splitByTagType != null) {
-                        params.splitByTagType
-                    } else {
-                        var tagsExportedByGroups = params.fields
-                            .filter {
-                                it.field.equals("-allTags", ignoreCase = true) ||
-                                        it.field.equals("-tags", ignoreCase = true)
-                            }
-                            .map { TagType.valueOfCaseInsensitiveOrNull(it.args[0])!! }
-                        if (params.fields.any { it.field.equals("-cellId", ignoreCase = true) }) {
-                            tagsExportedByGroups = tagsExportedByGroups + TagType.Cell
-                        }
-                        val newSpitBy = tagsExportedByGroups.maxOrNull()
-                        if (newSpitBy != null && outputFile != null) {
-                            logger.log("Clone splitting by ${newSpitBy.name} added automatically because -tags ${newSpitBy.name} field is present in the list.")
-                        }
-                        newSpitBy
-                    }
-
-                    val tagDivisionDepth = when (splitByTagType) {
-                        null -> 0
-                        else -> {
-                            if (!fileInfo.header.tagsInfo.hasTagsWithType(splitByTagType))
-                            // best division depth will still be selected for this case
-                                logger.warn("Input has no tags with type $splitByTagType")
-                            fileInfo.header.tagsInfo.getDepthFor(splitByTagType)
-                        }
-                    }
-
-                    // Dividing clonotypes inside the cloneset into multiple clonotypes each having unique tag prefix
-                    // according to the provided depth
-                    val dividedSet = set.divideClonesByTags(tagDivisionDepth)
                     // Splitting cloneset into multiple clonesets to calculate fraction characteristics
                     // (like read and tag fractions) relative to the defined clone grouping
-                    val setsByGroup = dividedSet
+                    val setsByGroup = set
                         .split { clone -> groupByKeyExtractors.map { it.getLabel(clone) } }
                         .values
-                    val exportClones = ExportClones(setsByGroup, writer, Long.MAX_VALUE)
-                    SmartProgressReporter.startProgressReport(exportClones)
-                    exportClones.run()
-                    if (initialSet.size() > set.size()) {
-                        val initialCount = initialSet.clones.sumOf { obj: Clone -> obj.count }
-                        val count = set.clones.sumOf { obj: Clone -> obj.count }
-                        val di = initialSet.size() - set.size()
-                        val cdi = initialCount - count
-                        val percentageDI = ReportHelper.PERCENT_FORMAT.format(100.0 * di / initialSet.size())
+                    setsByGroup.asOutputPort()
+                        .flatMap { it.asOutputPort() }
+                        .withExpectedSize(setsByGroup.sumOf { it.size() }.toLong())
+                        .reportProgress("Exporting clones")
+                        .drainToAndClose(writer)
+
+                    if (dividedSource.size() > set.size()) {
+                        // clones count
                         logger.log {
-                            "Filtered ${set.size()} of ${initialSet.size()} clones ($percentageDI%)."
+                            val initial = initialSet.map { it.id }.distinct().count()
+                            val result = set.map { it.id }.distinct().count()
+                            val delta = initial - result
+                            val percentage = ReportHelper.PERCENT_FORMAT.format(100.0 * delta / initial)
+                            "Filtered $result of $initial clones ($percentage%)."
                         }
-                        val percentageCDI = ReportHelper.PERCENT_FORMAT.format(100.0 * cdi / initialCount)
+                        // reads count
                         logger.log {
-                            "Filtered $count of $initialCount reads ($percentageCDI%)."
+                            val initial = initialSet.cloneSetInfo.counts.totalCount
+                            val result = set.cloneSetInfo.counts.totalCount
+                            val delta = initial - result
+                            val percentage = ReportHelper.PERCENT_FORMAT.format(100.0 * delta / initial)
+                            "Filtered $result of $initial reads ($percentage%)."
                         }
                     }
                 }
             }
 
-            val chains = Chains.parse(params.chains)
+            val filteredSource = dividedSource.filter { clone ->
+                params.test(clone, assemblingFeatures, chains)
+            }
+
             if (outputFile == null) {
-                runExport(
-                    initialSet.filter { clone ->
-                        params.test(clone, assemblingFeatures, chains)
-                    },
-                    null
-                )
+                runExport(filteredSource, null)
             } else {
                 val sFileName = outputFile!!.let { of ->
                     SubstitutionHelper.parseFileName(of.toString(), splitFileKeyExtractors.size)
                 }
 
-                initialSet
+                filteredSource
                     .split { clone -> splitFileKeyExtractors.map { it.getLabel(clone) } }
                     .forEach { (labels, cloneSet) ->
-                        val set = cloneSet.filter { clone ->
-                            params.test(clone, assemblingFeatures, chains)
-                        }
                         val fileNameSV = SubstitutionHelper.SubstitutionValues()
                         var i = 1
                         for ((keyValue, keyName) in labels.zip(splitFileKeys)) {
@@ -329,7 +355,7 @@ object CommandExportClones {
                             val keyString = labels.joinToString("_")
                             logger.progress { "Exporting $keyString" }
                         }
-                        runExport(set, Path(sFileName.render(fileNameSV)))
+                        runExport(cloneSet, Path(sFileName.render(fileNameSV)))
                     }
 
                 // in case of empty set, can't split, so can't calculate file names.
@@ -342,35 +368,6 @@ object CommandExportClones {
                 }
             }
         }
-
-        class ExportClones(
-            private val cloneSets: Collection<CloneSet>,
-            private val writer: InfoWriter<Clone>,
-            private val limit: Long
-        ) : CanReportProgressAndStage {
-            val size: Long = cloneSets.sumOf { it.size().toLong() }
-
-            @Volatile
-            private var current: Long = 0
-
-            override fun getStage(): String = "Exporting clones"
-
-            override fun getProgress(): Double = 1.0 * current / size
-
-            override fun isFinished(): Boolean = current == size
-
-            fun run() {
-                check(current == 0L)
-                var currentLocal = 0L
-                for (cloneSet in cloneSets)
-                    for (clone in cloneSet) {
-                        if (currentLocal == limit) break
-                        writer.put(clone)
-                        ++currentLocal
-                        current = currentLocal
-                    }
-            }
-        }
     }
 
     private sealed interface CloneGroupingKey {
@@ -381,7 +378,10 @@ object CommandExportClones {
         override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)
     }
 
-    private class CloneTagGroupingKey(private val tagIdx: Int) : CloneGroupingKey {
+    private class CloneTagGroupingKey(
+        val tagIdx: Int,
+        val tagType: TagType?
+    ) : CloneGroupingKey {
         override fun getLabel(clone: Clone): String =
             clone.tagCount.asKeyPrefixOrError(tagIdx + 1).get(tagIdx).toString()
     }
@@ -393,7 +393,28 @@ object CommandExportClones {
 
             key.startsWith("tag:", ignoreCase = true) -> {
                 val tagName = key.substring(4)
-                CloneTagGroupingKey(header.tagsInfo.get(tagName).index)
+                val tag = header.tagsInfo[tagName]
+                ValidationException.requireNotNull(tag) {
+                    "No tag `$tagName` in a file"
+                }
+                val tagType = when (tag.index) {
+                    // If splitting by this tag means the same as splitting by tag type
+                    header.tagsInfo.getDepthFor(tag.type) - 1 -> tag.type
+                    else -> null
+                }
+                CloneTagGroupingKey(tag.index, tagType)
+            }
+
+            key.startsWith("tagType:", ignoreCase = true) -> {
+                val tagType = TagType.valueOfCaseInsensitiveOrNull(key.substring(8))
+                ValidationException.requireNotNull(tagType) {
+                    "Unknown tag type `$tagType`"
+                }
+                ValidationException.require(header.tagsInfo.hasTagsWithType(tagType)) {
+                    "No tag type `$tagType` in a file"
+                }
+                val depth = header.tagsInfo.getDepthFor(tagType)
+                CloneTagGroupingKey(depth - 1, tagType)
             }
 
             else -> throw ApplicationException("Unsupported splitting key: $key")
