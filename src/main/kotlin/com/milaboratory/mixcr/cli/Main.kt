@@ -40,6 +40,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
 import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
+import com.milaboratory.util.NoSpaceOnDiskException
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.VersionInfo
 import com.sun.management.OperatingSystemMXBean
@@ -62,6 +63,7 @@ import picocli.CommandLine.Model.OptionSpec
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_COMMAND_LIST_HEADING
 import picocli.CommandLine.Model.UsageMessageSpec.SECTION_KEY_SYNOPSIS
+import java.io.IOException
 import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -115,7 +117,7 @@ object Main {
 
     private fun assertionsDisabled(): Boolean = System.getProperty("noAssertions") != null
 
-    fun mkCmd(cmdArgs: Array<out String>? = null): CommandLine {
+    fun mkCmd(cmdArgs: Array<out String>): CommandLine {
         System.setProperty("picocli.usage.width", "100")
 
         val groups: MutableList<Pair<String, Set<String>>> = mutableListOf()
@@ -262,11 +264,12 @@ object Main {
             result
         }
 
+        @Suppress("UNCHECKED_CAST")
         return cmd
             .registerLogger()
             .overrideSynopsysHelp()
             .registerConvertors()
-            .registerExceptionHandlers(cmdArgs)
+            .registerExceptionHandlers(cmdArgs as Array<String>)
     }
 
     fun initializeSystem() {
@@ -304,11 +307,11 @@ object Main {
         }
     }
 
-    private fun CommandLine.registerExceptionHandlers(cmdArgs: Array<out String>?): CommandLine {
+    private fun CommandLine.registerExceptionHandlers(cmdArgs: Array<String>): CommandLine {
         val defaultParameterExceptionHandler = parameterExceptionHandler
         setParameterExceptionHandler { ex, args ->
             err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
-            if (cmdArgs != null && "--verbose" in cmdArgs) {
+            if ("--verbose" in cmdArgs) {
                 ex.printStackTrace()
             }
             when (val cause = ex.cause) {
@@ -317,6 +320,33 @@ object Main {
             }
         }
         setExecutionExceptionHandler { ex, commandLine, _ ->
+            fun handleNoSpaceOnDisk(e: NoSpaceOnDiskException): Int {
+                if (logger.verbose) {
+                    e.printStackTrace()
+                }
+                var commandArgsCount = 0
+                var parent = commandLine.parent
+                while (parent != null) {
+                    commandArgsCount++
+                    parent = parent.parent
+                }
+
+                val localTempIsPossible = commandLine.commandSpec.findOption("--use-local-temp") != null
+                val localTempSet = "--use-local-temp" in cmdArgs
+                if (localTempSet) {
+                    System.err.println("No space left in the output folder. OS: ${System.getProperty("os.name")}")
+                } else {
+                    System.err.println("No space left in the output or temp folder. OS: ${System.getProperty("os.name")}")
+                    System.err.println("It's could be possible due to misconfiguration of system temp folder.")
+                    if (localTempIsPossible) {
+                        System.err.println("Also this command support `--use-local-temp` option that will write temporal files in the same directory as output of the command instead of system temp folder.")
+                        val commandArgs = cmdArgs.take(commandArgsCount)
+                        val leftOverArgs = cmdArgs.drop(commandArgsCount).joinToString(" ")
+                        System.err.println("Example: `mixcr $commandArgs --use-local-temp $leftOverArgs`")
+                    }
+                }
+                return commandLine.commandSpec.exitCodeOnExecutionException()
+            }
             when (ex) {
                 is ValidationException -> {
                     err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
@@ -338,15 +368,26 @@ object Main {
                     commandLine.commandSpec.exitCodeOnExecutionException()
                 }
 
+                is NoSpaceOnDiskException -> handleNoSpaceOnDisk(ex)
+
                 else -> {
+                    try {
+                        ex.rethrowNoSpaceLeft()
+                    } catch (e: NoSpaceOnDiskException) {
+                        e.addSuppressed(ex)
+                        return@setExecutionExceptionHandler handleNoSpaceOnDisk(e)
+                    }
                     err.println("Please copy the following information along with the stacktrace:")
                     err.println("   Version: " + MiXCRVersionInfo.get().shortestVersionString)
                     err.println("        OS: " + System.getProperty("os.name"))
                     err.println("      Java: " + System.getProperty("java.version"))
-                    if (cmdArgs != null) {
-                        err.println("  Cmd args: " + cmdArgs.joinToString(" "))
+                    err.println("  Cmd args: " + cmdArgs.joinToString(" "))
+                    try {
+                        ex.rethrowOOM()
+                    } catch (e: Throwable) {
+                        e.addSuppressed(ex)
+                        throw e
                     }
-                    ex.rethrowOOM()
                     throw CommandLine.ExecutionException(
                         commandLine,
                         "Error while running command ${commandLine.commandName} $ex", ex
@@ -361,6 +402,17 @@ object Main {
         if (this is OutOfMemoryError) throw this
         suppressed.forEach { it.rethrowOOM() }
         cause?.rethrowOOM()
+    }
+
+    private fun Throwable.rethrowNoSpaceLeft() {
+        when (this) {
+            is NoSpaceOnDiskException -> throw this
+            is IOException -> when (message) {
+                "No space left on device" -> throw NoSpaceOnDiskException()
+            }
+        }
+        suppressed.forEach { it.rethrowNoSpaceLeft() }
+        cause?.rethrowNoSpaceLeft()
     }
 
     private fun CommandLine.registerConvertors(): CommandLine {
@@ -535,7 +587,7 @@ object Main {
             args.isEmpty() -> arrayOf("help")
             else -> args as Array<String>
         }
-        val cmd = mkCmd()
+        val cmd = mkCmd(args)
         cmd.parseArgs(*resultArgs)
         return cmd
     }

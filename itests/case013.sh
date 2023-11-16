@@ -43,8 +43,8 @@ mixcr exportAirr --imgt-gaps case13_cut.clna case13_cut.clna.imgt.airr.tsv
 [[ $(cat case13_full.clna.imgt.airr.tsv | wc -l) -eq 2 ]] || exit 1
 [[ $(cat case13_cut.clna.imgt.airr.tsv | wc -l) -eq 2 ]] || exit 1
 
-cmp <(cut -f 9,10 case13_full.vdjca.imgt.airr.tsv) <(cut -f 9,10 case13_full.clna.imgt.airr.tsv)
-cmp <(cut -f 9,10 case13_cut.vdjca.imgt.airr.tsv) <(cut -f 9,10 case13_cut.clna.imgt.airr.tsv)
+cmp <(cut -f 9,10 case13_full.vdjca.imgt.airr.tsv) <(cut -f 10,11 case13_full.clna.imgt.airr.tsv)
+cmp <(cut -f 9,10 case13_cut.vdjca.imgt.airr.tsv) <(cut -f 10,11 case13_cut.clna.imgt.airr.tsv)
 
 cmp <(cut -f 10 case13_full.vdjca.imgt.airr.tsv) <(cut -f 10 case13_cut.vdjca.imgt.airr.tsv)
 cmp <(cut -f 9 case13_full.vdjca.imgt.airr.tsv | cut -c 79-) <(cut -f 9 case13_cut.vdjca.imgt.airr.tsv | cut -c 79-)
