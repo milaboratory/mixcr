@@ -13,9 +13,9 @@ Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observ
                                       <gene_feature> [(germline|mrca|parent)]]... [-allNFeatures
                                       [(germline|mrca|parent)]]... [-aaFeature <gene_feature>
                                       [(germline|mrca|parent)]]... [-allAAFeatures
-                                      [(germline|mrca|parent)]]... [-nLength <gene_feature>
+                                      [(germline|mrca|parent)]]... [-nLength <gene_features>
                                       [(germline|mrca|parent)]]... [-allNLength
-                                      [(germline|mrca|parent)]]... [-aaLength <gene_feature>
+                                      [(germline|mrca|parent)]]... [-aaLength <gene_features>
                                       [(germline|mrca|parent)]]... [-allAALength
                                       [(germline|mrca|parent)]]... [-nMutations <gene_feature>
                                       [(germline|mrca|parent)]
@@ -37,18 +37,18 @@ Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observ
                                       [(germline|mrca|parent)]]... [-mutationsDetailedRelative
                                       <gene_feature> <relative_to_gene_feature>
                                       [(germline|mrca|parent)]]... [-nMutationsCount
-                                      [<gene_feature>] [(germline|mrca|parent)]
+                                      [<gene_features>] [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
                                       [-allNMutationsCount [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
-                                      [-aaMutationsCount [<gene_feature>] [(germline|mrca|parent)]
+                                      [-aaMutationsCount [<gene_features>] [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
                                       [-allAAMutationsCount [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]... [-readCount]
                                       [-clonesCount] [-vBestIdentityPercent]
-                                      [-jBestIdentityPercent] [-nMutationRate [<gene_feature>]
+                                      [-jBestIdentityPercent] [-nMutationsRate [<gene_features>]
                                       [(substitutions|indels|inserts|deletions)]]...
-                                      [-aaMutationRate [<gene_feature>]
+                                      [-aaMutationsRate [<gene_features>]
                                       [(substitutions|indels|inserts|deletions)]]... [-isotype
                                       [(primary|subclass|auto)]]... [-cellId
                                       [(none|space|dash)]]... [-uniqueTagCount
@@ -148,7 +148,7 @@ Possible fields to export
                              Export amino acid sequences for all covered gene features.
                              If first arg is omitted, then feature will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
-      -nLength <gene_feature> [(germline|mrca|parent)]
+      -nLength <gene_features> [(germline|mrca|parent)]
                              Export count of nucleotides of specified gene feature.
                              If second arg is omitted, then length will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
@@ -156,7 +156,7 @@ Possible fields to export
                              Export count of nucleotides for all covered gene features.
                              If first arg is omitted, then length will be printed for current node.
                                Otherwise - for corresponding `parent`, `germline` or `mrca`.
-      -aaLength <gene_feature> [(germline|mrca|parent)]
+      -aaLength <gene_features> [(germline|mrca|parent)]
                              Export count of amino acids of specified gene feature.
                              If second arg is omitted, then length will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
@@ -239,7 +239,7 @@ Possible fields to export
                                and <aa_mutation_cumulative> amino acid mutation is the observed
                                amino acid mutation combining effect from all other. WARNING: format
                                may change in following versions.
-      -nMutationsCount [<gene_feature>] [(germline|mrca|parent)]
+      -nMutationsCount [<gene_features>] [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations. By default, will be used all covered
                                features. Resolutions of wildcards in VJJunction are excluded from
@@ -255,7 +255,7 @@ Possible fields to export
                                germline. Otherwise - for corresponding `parent`, `germline` or
                                `mrca`. Second parameter will filter mutations by type, by default
                                no filtering.
-      -aaMutationsCount [<gene_feature>] [(germline|mrca|parent)]
+      -aaMutationsCount [<gene_features>] [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations. By default, will be used all covered
                                features. Resolutions of wildcards in CDR3 are excluded from
@@ -276,13 +276,13 @@ Possible fields to export
       -clonesCount           Count of uniq clones with the chain. Will be exported for all chains.
       -vBestIdentityPercent  V best alignment identity percent
       -jBestIdentityPercent  J best alignment identity percent
-      -nMutationRate [<gene_feature>] [(substitutions|indels|inserts|deletions)]
+      -nMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations from germline divided by target
                                sequence size. By default, will be used all covered features.
                                Resolutions of wildcards in VJJunction are excluded from
                                calculation. Second parameter will filter mutations by type, by
                                default no filtering.
-      -aaMutationRate [<gene_feature>] [(substitutions|indels|inserts|deletions)]
+      -aaMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations from germline divided by target
                                sequence size. By default, will be used all covered features.
                                Resolutions of wildcards in CDR3 are excluded from calculation.
