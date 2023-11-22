@@ -23,6 +23,7 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.filter
+import com.milaboratory.mixcr.basictypes.CloneSet.Companion.mapWithoutStatsChange
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.split
 import com.milaboratory.mixcr.basictypes.CloneSetIO
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -331,18 +332,18 @@ object CommandExportClones {
                 }
             }
 
-            val filteredSource = dividedSource.filter { clone ->
-                params.test(clone, assemblingFeatures, chains)
-            }
+            val forExport = dividedSource
+                .filter { clone -> params.test(clone, assemblingFeatures, chains) }
+                .mapWithoutStatsChange { clone -> clone.withResolvedOverlapOfTopHits() }
 
             if (outputFile == null) {
-                runExport(filteredSource, null)
+                runExport(forExport, null)
             } else {
                 val sFileName = outputFile!!.let { of ->
                     SubstitutionHelper.parseFileName(of.toString(), splitFileKeyExtractors.size)
                 }
 
-                filteredSource
+                forExport
                     .split { clone -> splitFileKeyExtractors.map { it.getLabel(clone) } }
                     .forEach { (labels, cloneSet) ->
                         val fileNameSV = SubstitutionHelper.SubstitutionValues()
