@@ -133,9 +133,9 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.5.0-44-VCDR3Mutations"
+val mixcrAlgoVersion = "4.5.0-46-VCDR3Mutations"
 // may be blank (will be inherited from mixcr-algo)
-val milibVersion = "3.3.0-15-alignment-offset"
+val milibVersion = ""
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
