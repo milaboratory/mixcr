@@ -46,11 +46,6 @@ fun Random.generateMutations(
     ).absoluteMutations
 }
 
-fun Random.generateSequence(size: Int): NucleotideSequence =
-    NucleotideSequence(ByteArray(size) {
-        nextInt(4).toByte()
-    })
-
 fun buildSequence(
     sequence1: NucleotideSequence,
     mutations: Mutations<NucleotideSequence>,

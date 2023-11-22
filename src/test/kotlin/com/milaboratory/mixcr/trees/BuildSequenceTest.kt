@@ -17,8 +17,9 @@ import com.milaboratory.core.alignment.LinearGapAlignmentScoring
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
-import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
+import com.milaboratory.test.RandomizedTest
+import com.milaboratory.test.generateSequence
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.random.Random

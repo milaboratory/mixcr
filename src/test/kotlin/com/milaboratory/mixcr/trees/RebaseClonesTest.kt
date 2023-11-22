@@ -28,10 +28,11 @@ import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneRanks
 import com.milaboratory.mixcr.trees.MutationsUtils.NDNScoring
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
-import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
+import com.milaboratory.test.RandomizedTest
+import com.milaboratory.test.generateSequence
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature.FR3

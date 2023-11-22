@@ -16,7 +16,8 @@ import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mixcr.trees.MutationsUtils
 import com.milaboratory.mixcr.trees.generateMutations
-import com.milaboratory.mixcr.trees.generateSequence
+import com.milaboratory.test.RandomizedTest
+import com.milaboratory.test.generateSequence
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.shouldBe
 import org.junit.Test
