@@ -19,7 +19,7 @@ class MetaInfoTest {
 
     @Test
     fun `almost all commands from analyze should have reset preset option`() {
-        val cmd = Main.mkCmd()
+        val cmd = Main.mkCmd(emptyArray())
         val exclusions = setOf(
             MiXCRCommandDescriptor.findAlleles,
             MiXCRCommandDescriptor.findShmTrees,
@@ -36,7 +36,7 @@ class MetaInfoTest {
 
     @Test
     fun `almost all commands from analyze should have dont save preset option`() {
-        val cmd = Main.mkCmd()
+        val cmd = Main.mkCmd(emptyArray())
         val exclusions = setOf(
             MiXCRCommandDescriptor.findAlleles,
             MiXCRCommandDescriptor.findShmTrees,
@@ -66,7 +66,7 @@ class MetaInfoTest {
 
     @Test
     fun `all options must have specified order`() {
-        val optionsWithoutOrder = Main.mkCmd().allVisibleSubCommands()
+        val optionsWithoutOrder = Main.mkCmd(emptyArray()).allVisibleSubCommands()
             .flatMap { commandLine ->
                 commandLine.commandSpec.options()
                     .filterNot { it.hidden() }
@@ -78,7 +78,7 @@ class MetaInfoTest {
 
     @Test
     fun `all required options must be first in help`() {
-        val optionsWithoutOrder = Main.mkCmd().allVisibleSubCommands()
+        val optionsWithoutOrder = Main.mkCmd(emptyArray()).allVisibleSubCommands()
             .flatMap { commandLine ->
                 val (required, notRequired) = commandLine.commandSpec.options()
                     .filterNot { it.hidden() }
@@ -94,7 +94,7 @@ class MetaInfoTest {
 
     @Test
     fun `all arg groups must have specified order`() {
-        val optionsWithNotUniqOrder = Main.mkCmd().allVisibleSubCommands().flatMap { commandLine ->
+        val optionsWithNotUniqOrder = Main.mkCmd(emptyArray()).allVisibleSubCommands().flatMap { commandLine ->
             commandLine.commandSpec.argGroups()
                 .filter { it.order() == -1 }
                 .map { argGroupSpec ->
@@ -107,7 +107,7 @@ class MetaInfoTest {
 
     @Test
     fun `all options must uniq order`() {
-        Main.mkCmd().allVisibleSubCommands().forEach { commandLine ->
+        Main.mkCmd(emptyArray()).allVisibleSubCommands().forEach { commandLine ->
             val notUniqOrders = commandLine.commandSpec.options()
                 .filterNot { it.hidden() }
                 .groupBy { it.order() }

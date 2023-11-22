@@ -146,7 +146,7 @@ val repseqioVersion = "2.3.0-8-fix-geneFeatures-parse"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.15.2"
-val milmVersion = "4.0.0"
+val milmVersion = "4.1.0"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"

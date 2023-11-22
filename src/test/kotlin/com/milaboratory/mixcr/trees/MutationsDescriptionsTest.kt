@@ -27,10 +27,11 @@ import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithIncomple
 import com.milaboratory.core.sequence.TranslationParameters.FromLeftWithoutIncompleteCodon
 import com.milaboratory.core.sequence.TranslationParameters.FromRightWithIncompleteCodon
 import com.milaboratory.core.sequence.TranslationParameters.withIncompleteCodon
-import com.milaboratory.mixcr.util.RandomizedTest
 import com.milaboratory.mixcr.util.asSequence
 import com.milaboratory.mixcr.util.extractAbsoluteMutations
 import com.milaboratory.mixcr.util.plus
+import com.milaboratory.test.RandomizedTest
+import com.milaboratory.test.generateSequence
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.repseq.core.GeneFeature
