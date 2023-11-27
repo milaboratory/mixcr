@@ -36,7 +36,7 @@ public class MiXCRTestUtils {
                 new MiXCRParamsSpec("generic-amplicon"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                 Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("generic-amplicon").getAlign().getParameters(),
                 Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("generic-amplicon").getAlign().getParameters().getFeaturesToAlignMap(),
-                null, null, null);
+                null, null, null, false);
     }
 
     public static MiXCRFooter emptyFooter() {

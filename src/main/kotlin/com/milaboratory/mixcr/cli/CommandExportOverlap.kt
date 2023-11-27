@@ -187,14 +187,14 @@ class CommandExportOverlap : MiXCRCommandWithOutputs() {
         if (criteria.withV) {
             extractors += ExtractorUnique(
                 FieldExtractor("vGene") {
-                    it.getBestHit(Variable).gene.name.name
+                    it.getBestHit(Variable)!!.gene.name.name
                 }
             )
         }
         if (criteria.withJ) {
             extractors += ExtractorUnique(
                 FieldExtractor("jGene") {
-                    it.getBestHit(Joining).gene.name.name
+                    it.getBestHit(Joining)!!.gene.name.name
                 }
             )
         }

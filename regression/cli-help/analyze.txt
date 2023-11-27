@@ -20,8 +20,10 @@ Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--add-step <step>
                      [--add-export-clone-table-splitting <(geneLabel|tag):key>]
                      [--reset-export-clone-table-splitting] [--add-export-clone-grouping <
                      (geneLabel|tag):key>] [--reset-export-clone-grouping]
-                     [--export-productive-clones-only] [--export-clone-groups-for-cell-type
-                     <cell_type>...]... [--export-clone-groups-for-all-cell-types]
+                     [--filter-out-group-types (found|undefined|contamination)]...
+                     [--reset-group-types-filter] [--export-productive-clones-only]
+                     [--export-clone-groups-for-cell-type <cell_type>]...
+                     [--export-clone-groups-for-all-cell-types]
                      [--show-secondary-chain-on-export-cell-groups]
                      [--dont-show-secondary-chain-on-export-cell-groups]
                      [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)] [--no-reports]
@@ -180,9 +182,18 @@ Params for export commands:
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --filter-out-group-types (found|undefined|contamination)
+                             Filter out clones from groups of particular type.
+                             `found` - groups that were found on `groupClones`.
+                             `undefined` - there were not enough info on `groupClones` to form a
+                               group.
+                             `contamination` - clones that were marked as contamination on
+                               `groupClones`.
+      --reset-group-types-filter
+                             Reset filter of clones by group type.
       --export-productive-clones-only
                              Export only productive clonotypes.
-      --export-clone-groups-for-cell-type <cell_type>...
+      --export-clone-groups-for-cell-type <cell_type>
                              Export clone groups for given cell type. Possible values: IGH-IGK,
                                IGH-IGL, TRB-TRA, TRD-TRG
       --export-clone-groups-for-all-cell-types
@@ -192,6 +203,7 @@ Params for export commands:
       --dont-show-secondary-chain-on-export-cell-groups
                              Don't show columns for secondary chains in export for cell groups.
       --export-clone-groups-sort-chains-by (Read|Molecule|Auto)
-                             How to sort clones for determination of the second chain.
+                             How to sort clones for determination of the primary and the secondary
+                               chains.
                              Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI
                                if it's available, by Read otherwise

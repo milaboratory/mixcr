@@ -11,9 +11,7 @@
  */
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.util.filter
-import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.map
+import cc.redberry.pipe.util.asSequence
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
@@ -25,6 +23,7 @@ import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.SHMTreeFieldsExtractorsFactory
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.mixcr.trees.splitToChains
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -34,7 +33,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
 @Command(
-    description = ["Export SHMTree as a table with a row for every table"]
+    description = ["Export SHMTree as a table with a row for every SHM root in a table (single row if no single cell data)"]
 )
 class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
     @Parameters(
@@ -81,7 +80,9 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
             val headerForExport = MetaForExport(
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
-                reader.footer
+                reader.footer,
+                reader.header.calculatedCloneGroups,
+                reader.library
             )
             val rowMetaForExport = RowMetaForExport(TagsInfo.NO_TAGS, headerForExport, notCoveredAsEmpty)
             InfoWriter.create(
@@ -90,11 +91,13 @@ class CommandExportShmTreesTable : CommandExportShmTreesAbstract() {
                 !noHeader,
             ) { rowMetaForExport }.use { output ->
                 reader.readTrees()
+                    .asSequence()
                     .filter { treeFilter?.match(it.treeId) != false }
                     .map { shmTree ->
-                        shmTree.forPostanalysis(reader.fileNames, reader.libraryRegistry)
+                        shmTree.forPostanalysis(reader.fileNames, reader.library)
                     }
                     .filter { treeFilter?.match(it) != false }
+                    .flatMap { it.splitToChains() }
                     .forEach { output.put(it) }
             }
         }

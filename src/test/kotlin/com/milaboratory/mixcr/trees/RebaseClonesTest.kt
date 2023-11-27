@@ -18,6 +18,7 @@ import com.milaboratory.core.alignment.AffineGapAlignmentScoring
 import com.milaboratory.core.alignment.Aligner
 import com.milaboratory.core.mutations.Mutations
 import com.milaboratory.core.mutations.Mutations.EMPTY_NUCLEOTIDE_MUTATIONS
+import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideAlphabet.C
 import com.milaboratory.core.sequence.NucleotideAlphabet.G
 import com.milaboratory.core.sequence.NucleotideAlphabet.N
@@ -26,6 +27,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.Seq
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.CloneRanks
+import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.trees.MutationsUtils.NDNScoring
 import com.milaboratory.mixcr.trees.MutationsUtils.buildSequence
 import com.milaboratory.mixcr.util.VJPair
@@ -46,8 +48,6 @@ import io.repseq.core.ReferencePoint.FR4End
 import io.repseq.core.ReferencePoint.JBegin
 import io.repseq.core.ReferencePoint.VEnd
 import io.repseq.core.ReferencePointsBuilder
-import io.repseq.core.VDJCGeneId
-import io.repseq.core.VDJCLibraryId
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.lang.Integer.min
@@ -58,10 +58,9 @@ class RebaseClonesTest {
     private val scoringSet = ScoringSet(
         AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
         NDNScoring(),
-        AffineGapAlignmentScoring.getNucleotideBLASTScoring()
+        AffineGapAlignmentScoring.getNucleotideBLASTScoring(),
+        2.5
     )
-
-    private val vdjcLibraryId = VDJCLibraryId("human", 0)
 
     @Test
     fun randomizedTestForRebaseMutations() {
@@ -103,9 +102,25 @@ class RebaseClonesTest {
     fun rebaseMutationsOnRootWithNDNFarInTheRight() {
         val VSequence = oneLetterSequence(T, 50)
         val JSequence = oneLetterSequence(G, 50)
-        val clonesRebase = ClonesRebase(
+        val VPartitioning = ReferencePointsBuilder().apply {
+            setPosition(FR3Begin, 0)
+            setPosition(FR3End, 10)
+            setPosition(VEnd, 50)
+        }.build()
+        val JPartitioning = ReferencePointsBuilder().apply {
+            setPosition(JBegin, 0)
+            setPosition(FR4Begin, 30)
+            setPosition(FR4End, 40)
+        }.build()
+        val originalRoot = RootInfo(
             VJPair(VSequence, JSequence),
-            scoringSet
+            VJPair(VPartitioning, JPartitioning),
+            VJPair(Range(10, 15), Range(10, 30)),
+            oneLetterSequence(N, 5),
+            VJBase(
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
+                20
+            )
         )
         val originalNode = MutationsSet(
             VGeneMutations(
@@ -120,27 +135,6 @@ class RebaseClonesTest {
                 mapOf(FR4 to EMPTY_NUCLEOTIDE_MUTATIONS)
             )
         )
-        val VPartitioning = ReferencePointsBuilder().apply {
-            setPosition(FR3Begin, 0)
-            setPosition(FR3End, 10)
-            setPosition(VEnd, 50)
-        }.build()
-        val JPartitioning = ReferencePointsBuilder().apply {
-            setPosition(JBegin, 0)
-            setPosition(FR4Begin, 30)
-            setPosition(FR4End, 40)
-        }.build()
-        val originalRoot = RootInfo(
-            VJPair(VSequence, JSequence),
-            VJPair(VPartitioning, JPartitioning),
-            VJPair(Range(10, 15), Range(10, 30)),
-            oneLetterSequence(N, 5),
-            VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
-                20
-            )
-        )
         originalNode.mutations.V.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(T, 5)
         originalNode.NDNMutations.buildSequence(originalRoot) shouldBe oneLetterSequence(C, 5)
         originalNode.mutations.J.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(G, 20)
@@ -150,15 +144,17 @@ class RebaseClonesTest {
             VJPair(Range(10, 25), Range(25, 30)),
             oneLetterSequence(N, 10),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
+        val clonesRebase = ClonesRebase(
+            rebaseTo,
+            scoringSet
+        )
         val result = clonesRebase.rebaseMutations(
             originalNode,
-            originalRoot,
-            rebaseTo
+            originalRoot
         )
         result.mutations.V.buildPartInCDR3(rebaseTo) shouldBe oneLetterSequence(T, 5)
             .concatenate(oneLetterSequence(C, 5))
@@ -172,9 +168,26 @@ class RebaseClonesTest {
     fun rebaseMutationsOnRootWithNDNFarInTheLeft() {
         val VSequence = oneLetterSequence(T, 50)
         val JSequence = oneLetterSequence(G, 50)
-        val clonesRebase = ClonesRebase(
+        val VPartitioning = ReferencePointsBuilder().apply {
+            setPosition(FR3Begin, 0)
+            setPosition(FR3End, 10)
+            setPosition(VEnd, 50)
+        }.build()
+        val JPartitioning = ReferencePointsBuilder().apply {
+            setPosition(JBegin, 0)
+            setPosition(FR4Begin, 30)
+            setPosition(FR4End, 40)
+        }.build()
+
+        val originalRoot = RootInfo(
             VJPair(VSequence, JSequence),
-            scoringSet
+            VJPair(VPartitioning, JPartitioning),
+            VJPair(Range(10, 25), Range(25, 30)),
+            oneLetterSequence(N, 10),
+            VJBase(
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
+                20
+            )
         )
         val originalNode = MutationsSet(
             VGeneMutations(
@@ -189,28 +202,6 @@ class RebaseClonesTest {
                 mapOf(FR4 to EMPTY_NUCLEOTIDE_MUTATIONS)
             )
         )
-        val VPartitioning = ReferencePointsBuilder().apply {
-            setPosition(FR3Begin, 0)
-            setPosition(FR3End, 10)
-            setPosition(VEnd, 50)
-        }.build()
-        val JPartitioning = ReferencePointsBuilder().apply {
-            setPosition(JBegin, 0)
-            setPosition(FR4Begin, 30)
-            setPosition(FR4End, 40)
-        }.build()
-
-        val originalRoot = RootInfo(
-            VJPair(VSequence, JSequence),
-            VJPair(VPartitioning, JPartitioning),
-            VJPair(Range(10, 25), Range(25, 30)),
-            oneLetterSequence(N, 10),
-            VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
-                20
-            )
-        )
         originalNode.mutations.V.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(T, 15)
         originalNode.NDNMutations.buildSequence(originalRoot) shouldBe oneLetterSequence(C, 10)
         originalNode.mutations.J.buildPartInCDR3(originalRoot) shouldBe oneLetterSequence(G, 5)
@@ -220,15 +211,17 @@ class RebaseClonesTest {
             VJPair(Range(10, 15), Range(10, 30)),
             oneLetterSequence(N, 5),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
+        val clonesRebase = ClonesRebase(
+            rebaseTo,
+            scoringSet
+        )
         val result = clonesRebase.rebaseMutations(
             originalNode,
-            originalRoot,
-            rebaseTo
+            originalRoot
         )
         result.mutations.V.buildPartInCDR3(rebaseTo) shouldBe oneLetterSequence(T, 5)
         result.NDNMutations.buildSequence(rebaseTo) shouldBe oneLetterSequence(T, 5)
@@ -313,8 +306,7 @@ class RebaseClonesTest {
             VJPair(VRangeAfterCDR3Begin, JRangeBeforeCDR3End),
             random.generateSequence(NDN.size() - 3 + random.nextInt(6)),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -358,16 +350,15 @@ class RebaseClonesTest {
             ),
             random.generateSequence(originalRootInfo.reconstructedNDN.size() - VBorderExpand - JBorderExpand),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
         val clonesRebase = ClonesRebase(
-            VJPair(VSequence, JSequence),
+            rebaseToRootInfo,
             scoringSet
         )
-        val result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo)
+        val result = clonesRebase.rebaseMutations(original, originalRootInfo)
         if (print) {
             println(" original rootInfo: $originalRootInfo")
             println("rebase to rootInfo: $rebaseToRootInfo")
@@ -423,8 +414,7 @@ class RebaseClonesTest {
             ),
             oneLetterSequence(N, NDNRangeInCDR3Before.length()),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 CDR3Length
             )
         )
@@ -470,8 +460,7 @@ class RebaseClonesTest {
             ),
             oneLetterSequence(N, NDNRangeInCDR3After.length()),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 CDR3Length
             )
         )
@@ -486,10 +475,10 @@ class RebaseClonesTest {
             )
         }
         val clonesRebase = ClonesRebase(
-            VJPair(VSequence, JSequence),
+            rebaseToRootInfo,
             scoringSet
         )
-        val result = clonesRebase.rebaseMutations(original, originalRootInfo, rebaseToRootInfo)
+        val result = clonesRebase.rebaseMutations(original, originalRootInfo)
         if (print) {
             println(
                 "  result CDR3: "
@@ -504,10 +493,6 @@ class RebaseClonesTest {
         rebaseToRootInfo.rangeInCDR3.V shouldBe result.mutations.V.partInCDR3.range
         rebaseToRootInfo.rangeInCDR3.J shouldBe result.mutations.J.partInCDR3.range
     }
-
-    private fun MutationsSet.buildCDR3(rootInfo: RootInfo): NucleotideSequence = mutations.V.buildPartInCDR3(rootInfo)
-        .concatenate(NDNMutations.buildSequence(rootInfo))
-        .concatenate(mutations.J.buildPartInCDR3(rootInfo))
 
     private fun testRebaseClone(random: Random, print: Boolean) {
         val VSequence = random.generateSequence(50 + random.nextInt(50))
@@ -565,8 +550,7 @@ class RebaseClonesTest {
             VJPair(VRangeInCDR3, JRangeInCDR3),
             mutationsOfNDN.mutate(NDNSubsetBeforeMutation),
             VJBase(
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-                VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+                VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
                 20
             )
         )
@@ -615,25 +599,34 @@ class RebaseClonesTest {
                     )
         )
         val VJBase = VJBase(
-            VDJCGeneId(vdjcLibraryId, GeneVariantName("VSome")),
-            VDJCGeneId(vdjcLibraryId, GeneVariantName("JSome")),
+            VJPair(GeneVariantName("VSome"), GeneVariantName("JSome")),
             20
         )
         val rebasedClone = ClonesRebase(
-            VJPair(VSequence, JSequence),
+            rootInfo,
             scoringSet
         ).rebaseClone(
-            rootInfo,
-            mutationsFromVJGermline,
-            CloneWrapper(
-                listOf(
-                    CloneWithDatasetId(
-                        Clone(emptyArray(), EnumMap(GeneType::class.java), null, 0.0, 0, 0, CloneRanks.empty, null),
-                        0
-                    )
-                ),
-                VJBase,
-                listOf(VJBase)
+            CloneWithMutationsFromVJGermline(
+                mutationsFromVJGermline,
+                CloneWrapper(
+                    listOf(
+                        CloneWithDatasetId(
+                            Clone(
+                                arrayOf(NSequenceWithQuality(NucleotideSequence.EMPTY)),
+                                EnumMap(GeneType::class.java),
+                                TagCount.NO_TAGS,
+                                0.0,
+                                0,
+                                0,
+                                CloneRanks.empty,
+                                null
+                            ),
+                            0
+                        )
+                    ),
+                    VJBase,
+                    listOf(VJBase)
+                )
             )
         )
         val resultedNDN = rebasedClone.mutationsSet.NDNMutations.buildSequence(rootInfo)

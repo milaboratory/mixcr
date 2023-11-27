@@ -1,17 +1,19 @@
-Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecule|Cell|Sample)>]
+Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [--only-observed]
                                      [--filter-min-nodes <n>] [--filter-min-height <n>] [--ids <id>
                                      [,<id>...]]... [--chains <chains>] [--preset <preset>]
                                      [--preset-file <presetFile>] [--no-header]
-                                     [--not-covered-as-empty] [-treeId] [-numberOfClonesInTree]
-                                     [-totalReadsCountInTree] [-totalUniqueTagCountInTree <
-                                     (Molecule|Cell|Sample)>]... [-nodeId] [-isObserved]
-                                     [-parentId] [-distance (germline|mrca|parent)]... [-targets]
-                                     [-vHit] [-dHit] [-jHit] [-cHit] [-vGene] [-dGene] [-jGene]
-                                     [-cGene] [-vFamily] [-dFamily] [-jFamily] [-cFamily]
-                                     [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
-                                     [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore]
-                                     [-cHitsWithScore] [-vHits] [-dHits] [-jHits] [-cHits]
-                                     [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
+                                     [--not-covered-as-empty] [-treeId] [-subtreeId]
+                                     [-numberOfClonesInTree [forChain]]...
+                                     [-numberOfNodesWithClones] [-totalReadsCountInTree
+                                     [forChain]]... [-totalUniqueTagCountInTree
+                                     (Molecule|Cell|Sample) [forChain]]... [-chains] [-treeHeight]
+                                     [-nodeId] [-isObserved] [-parentId] [-distance
+                                     (germline|mrca|parent)]... [-targets] [-vHit] [-dHit] [-jHit]
+                                     [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily]
+                                     [-dFamily] [-jFamily] [-cFamily] [-vHitScore] [-dHitScore]
+                                     [-jHitScore] [-cHitScore] [-vHitsWithScore] [-dHitsWithScore]
+                                     [-jHitsWithScore] [-cHitsWithScore] [-vHits] [-dHits] [-jHits]
+                                     [-cHits] [-vGenes] [-dGenes] [-jGenes] [-cGenes] [-vFamilies]
                                      [-dFamilies] [-jFamilies] [-cFamilies] [-vAlignment]
                                      [-dAlignment] [-jAlignment] [-cAlignment] [-vAlignments]
                                      [-dAlignments] [-jAlignments] [-cAlignments] [-nFeature
@@ -77,15 +79,15 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [-nMutationsRate [<gene_features>]
                                      [(substitutions|indels|inserts|deletions)]]...
                                      [-aaMutationsRate [<gene_features>]
-                                     [(substitutions|indels|inserts|deletions)]]... [-chains]
-                                     [-topChains] [-geneLabel <label>]... [-isotype
-                                     [(primary|subclass|auto)]]... [-tagCounts] [-cellId [<
-                                     (none|space|dash)>]]... [-tags <(Molecule|Cell|Sample)>]...
-                                     [-uniqueTagCount <(Molecule|Cell|Sample)>]...
-                                     [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup]
-                                     [-rankByTag <(Molecule|Cell|Sample)>]... [-hasStops
+                                     [(substitutions|indels|inserts|deletions)]]... [-topChains]
+                                     [-geneLabel <label>]... [-isotype
+                                     [(primary|subclass|auto)]]... [-tagCounts] [-cellId
+                                     [(none|space|dash)]]... [-tags (Molecule|Cell|Sample)]...
+                                     [-uniqueTagCount (Molecule|Cell|Sample)]...
+                                     [-uniqueTagFraction (Molecule|Cell|Sample)]... [-cellGroup]
+                                     [-rankByTag (Molecule|Cell|Sample)]... [-hasStops
                                      <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
-                                     <gene_feature>]... [-biochemicalProperty <gene_feature>
+                                     [<gene_feature>]]... [-biochemicalProperty <gene_feature>
                                      <property> [(germline|mrca|parent)]]...
                                      [-baseBiochemicalProperties <gene_feature>
                                      [(germline|mrca|parent)]]... [--use-local-temp]
@@ -93,20 +95,21 @@ Usage: mixcr exportShmTreesWithNodes [--only-observed] [--split-by-tags <(Molecu
                                      [[--filter-in-feature <gene_feature>] [--pattern-max-errors
                                      <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
                                      <pattern>)] trees.shmt [trees.tsv]
-Export SHMTree as a table with a row for every node
+Export SHMTree as a table with a row for every clone or reconstructed node for each root (only one
+root if no single cell data)
       trees.shmt             Input file produced by 'findShmTrees' command.
       [trees.tsv]            Path where to write output export table. Print in stdout if omitted.
-      --only-observed        Exclude nodes that was reconstructed by algorithm
-      --split-by-tags <(Molecule|Cell|Sample)>
+      --split-by-tags (Molecule|Cell|Sample)
                              Split clones by tag type. Will be calculated from export columns if
                                not specified.
+      --only-observed        Exclude nodes that was reconstructed by algorithm
       --filter-min-nodes <n> Minimal number of nodes in tree
       --filter-min-height <n>
                              Minimal height of the tree
       --ids <id>[,<id>...]   Filter specific trees by id
       --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
                                or IGH).
-  -p, --preset <preset>      Specify preset of export fields. Possible values: min, full.
+  -p, --preset <preset>      Specify preset of export fields. Possible values: min, default.
       -pf, --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
@@ -129,10 +132,25 @@ Filter by pattern
                              Filter specific trees by nt pattern.
 Possible fields to export
       -treeId                SHM tree id
-      -numberOfClonesInTree  Number of uniq clones in the SHM tree
-      -totalReadsCountInTree Total sum of read counts of clones in the SHM tree
-      -totalUniqueTagCountInTree <(Molecule|Cell|Sample)>
-                             Total count of unique tags in the SHM tree with specified type
+      -subtreeId             Id for different roots in single cell trees
+      -numberOfClonesInTree [forChain]
+                             Number of uniq clones in the SHM tree. If first parameter is
+                               `forChain`, will calculate for this root, otherwise, for all roots
+                               combined.
+      -numberOfNodesWithClones
+                             Number of nodes with clones, i.e. nodes with different clone
+                               sequences. Other differences are not counting such as: isotypes,
+                               sample, cell.
+      -totalReadsCountInTree [forChain]
+                             Total sum of read counts of clones in the SHM tree. If first parameter
+                               is `forChain`, will calculate for this root, otherwise, for all
+                               roots combined.
+      -totalUniqueTagCountInTree (Molecule|Cell|Sample) [forChain]
+                             Total count of unique tags in the SHM tree with specified type. If
+                               first parameter is `forChain`, will calculate for this root,
+                               otherwise, for all roots combined.
+      -chains                Chain type of the tree
+      -treeHeight            Height of the tree
       -nodeId                Node id in SHM tree
       -isObserved            Is node have clones. All other nodes are reconstructed by algorithm
       -parentId              Parent node id in SHM tree
@@ -143,20 +161,16 @@ Possible fields to export
       -dHit                  Export best D hit (only for nodes with clones)
       -jHit                  Export best J hit
       -cHit                  Export best C hit (only for nodes with clones)
-      -vGene                 Export best V hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
-                               nodes with clones)
+      -vGene                 Export best V hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
       -dGene                 Export best D hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
                                nodes with clones)
-      -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
-                               nodes with clones)
+      -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
       -cGene                 Export best C hit gene name (e.g. TRBV12-3 for TRBV12-3*00) (only for
                                nodes with clones)
-      -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
-                               nodes with clones)
+      -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00)
       -dFamily               Export best D hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
                                nodes with clones)
-      -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
-                               nodes with clones)
+      -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00)
       -cFamily               Export best C hit family name (e.g. TRBV12 for TRBV12-3*00) (only for
                                nodes with clones)
       -vHitScore             Export score for best V hit (only for nodes with clones)
@@ -453,9 +467,9 @@ Possible fields to export
       -dIdentityPercents     D alignment identity percents (only for nodes with clones)
       -jIdentityPercents     J alignment identity percents (only for nodes with clones)
       -cIdentityPercents     C alignment identity percents (only for nodes with clones)
-      -vBestIdentityPercent  V best alignment identity percent (only for nodes with clones)
+      -vBestIdentityPercent  V best alignment identity percent
       -dBestIdentityPercent  D best alignment identity percent (only for nodes with clones)
-      -jBestIdentityPercent  J best alignment identity percent (only for nodes with clones)
+      -jBestIdentityPercent  J best alignment identity percent
       -cBestIdentityPercent  C best alignment identity percent (only for nodes with clones)
       -nMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations from germline divided by target
@@ -469,7 +483,6 @@ Possible fields to export
                                Resolutions of wildcards in CDR3 are excluded from calculation.
                                Second parameter will filter mutations by type, by default no
                                filtering.
-      -chains                Chains (only for nodes with clones)
       -topChains             Top chains (only for nodes with clones)
       -geneLabel <label>     Export gene label (i.e. ReliableChain) (only for nodes with clones)
       -isotype [(primary|subclass|auto)]
@@ -479,31 +492,30 @@ Possible fields to export
                                the best resolution as possible. By default `auto` will be used
                                (only for nodes with clones)
       -tagCounts             All tags with counts (only for nodes with clones)
-      -cellId [<(none|space|dash)>]
+      -cellId [(none|space|dash)]
                              Concatenated all cell tags with specified delimiter, default delimiter
                                is `none`.
                              Example output for `-cellId`: GGATTACTCATTGCCC
                              Example output for `-cellId dash`: GGATTACT-CATTGCCC (only for nodes
                                with clones)
-      -tags <(Molecule|Cell|Sample)>
+      -tags (Molecule|Cell|Sample)
                              All tags values (i.e. CELL barcode or UMI sequence) (only for nodes
                                with clones)
-      -uniqueTagCount <(Molecule|Cell|Sample)>
+      -uniqueTagCount (Molecule|Cell|Sample)
                              Unique tag count (only for nodes with clones)
-      -uniqueTagFraction <(Molecule|Cell|Sample)>
+      -uniqueTagFraction (Molecule|Cell|Sample)
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected. (only for nodes with clones)
       -cellGroup             Unique cell group identifier (only for nodes with clones)
-      -rankByTag <(Molecule|Cell|Sample)>
+      -rankByTag (Molecule|Cell|Sample)
                              Rank by count of unique tags, i.e how many clones have equal or more
                                count (only for nodes with clones)
       -hasStops <gene_feature>
-                             Whether gene feature has stop codons inside (only for nodes with
-                               clones)
-      -isOOF <gene_feature>  Whether gene feature is OOF (only for nodes with clones)
-      -isProductive <gene_feature>
-                             Whether specified gene feature is productive (no stops and not OOF)
-                               (only for nodes with clones)
+                             Whether gene feature has stop codons inside
+      -isOOF <gene_feature>  Whether gene feature is OOF
+      -isProductive [<gene_feature>]
+                             Whether specified gene feature is productive (no stops and not OOF).
+                               If first arg is omitted, will calculate for all covered features
       -biochemicalProperty <gene_feature> <property> [(germline|mrca|parent)]
                              Biochemical property of specified gene feature normalized by AA
                                sequence size. CDR3 can be exported only for nodes with clones.

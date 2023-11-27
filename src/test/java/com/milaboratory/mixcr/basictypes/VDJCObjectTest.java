@@ -195,10 +195,8 @@ public class VDJCObjectTest {
 
             VDJCObject cl = assemble.cloneSet.get(i);
             VDJCObject.CaseSensitiveNucleotideSequence f = cl.getIncompleteFeature(L2);
-            if (f == null)
-                continue;
 
-            NucleotideSequence lSeq = f.seq[0];
+            NucleotideSequence lSeq = f.getSeq()[0];
             NucleotideSequence germ = cl.getBestHit(GeneType.Variable).getGene().getFeature(L2);
             assertEquals(germ, lSeq);
         }

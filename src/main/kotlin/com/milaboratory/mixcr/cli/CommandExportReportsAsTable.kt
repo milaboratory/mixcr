@@ -125,7 +125,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
                 upstreamRecords.flatMap { it.reports }
             )
         }
-        val metaForExport = MetaForExport(emptyList(), null, forExport.flatMap { it.reports })
+        val metaForExport = MetaForExport(emptyList(), null, forExport.flatMap { it.reports }, false)
         val fieldExtractors = ReportFieldsExtractors.createExtractors(addedFields, metaForExport)
         InfoWriter.create(out, fieldExtractors, !noHeader) {
             RowMetaForExport(TagsInfo.NO_TAGS, metaForExport, false)

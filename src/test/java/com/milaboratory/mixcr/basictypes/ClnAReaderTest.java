@@ -88,7 +88,7 @@ public class ClnAReaderTest {
                         align.parameters.alignerParameters,
                         align.parameters.alignerParameters.getFeaturesToAlignMap(),
                         CloneAssemblerParametersPresets.getByName("default"),
-                        null, null)
+                        null, null, false)
         )
                 .sort(VDJCSProperties.CO_BY_COUNT)
                 .calculateTotalCounts()
@@ -146,7 +146,8 @@ public class ClnAReaderTest {
                                 align.parameters.alignerParameters.getFeaturesToAlignMap(),
                                 CloneAssemblerParametersPresets.getByName("default"),
                                 null,
-                                null
+                                null,
+                                false
                         )
                 )
                         .sort(VDJCSProperties.CO_BY_COUNT)

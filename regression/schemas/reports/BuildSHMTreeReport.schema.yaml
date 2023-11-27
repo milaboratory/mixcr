@@ -1,5 +1,7 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 $defs:
+  Map(Integer,Integer):
+    type: object
   StatsWithQuantiles:
     type: object
     properties:
@@ -32,6 +34,51 @@ $defs:
     - AttachClonesByNDN
 type: object
 properties:
+  cellCombination:
+    type: object
+    properties:
+      cellsWithInvalidChains:
+        type: integer
+      clonesInTreesWithOneChain:
+        type: integer
+      countOfSecondaryChainsSplitByCDR3:
+        type: integer
+      groupsWithContradictionsInSecondaryChains:
+        type: integer
+      initialSecondaryChainsCount:
+        $ref: "#/$defs/Map(Integer,Integer)"
+      inputClonesCount:
+        type: integer
+      inputTreesCount:
+        type: integer
+      secondaryChainsOverlappedByClones:
+        $ref: "#/$defs/Map(Integer,Integer)"
+      severalClonesFromTheSameGroupInTheSameTree:
+        type: integer
+      subTreesCombined:
+        type: integer
+      subTreesWithOnlyOneNode:
+        type: integer
+      treesStats:
+        type: array
+        items:
+          type: object
+          properties:
+            chains:
+              type: array
+              items:
+                type: object
+                properties:
+                  chains:
+                    type: array
+                    items:
+                      type: string
+            clonesCount:
+              type: integer
+            treesCount:
+              type: integer
+      treesWithOneChain:
+        type: integer
   commandLine:
     type: string
   inputFiles:
@@ -72,7 +119,11 @@ properties:
           $ref: '#/$defs/StatsWithQuantiles'
         wildcardsScoreForRoots:
           $ref: '#/$defs/StatsWithQuantiles'
+  totalClonesCountInTrees:
+    type: integer
   totalClonesProcessed:
+    type: integer
+  totalTreesCount:
     type: integer
   version:
     type: string

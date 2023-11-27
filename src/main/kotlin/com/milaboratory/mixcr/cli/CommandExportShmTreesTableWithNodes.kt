@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.export.SplittedTreeNodeFieldsExtractorsFactory.Wra
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.constructStateBuilder
 import com.milaboratory.mixcr.trees.forPostanalysis
+import com.milaboratory.mixcr.trees.splitToChains
 import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
@@ -49,7 +50,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 
 @Command(
-    description = ["Export SHMTree as a table with a row for every node"]
+    description = ["Export SHMTree as a table with a row for every clone or reconstructed node for each root (only one root if no single cell data)"]
 )
 class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
     @set:Parameters(
@@ -73,13 +74,6 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     val addedFields: MutableList<ExportFieldDescription> = mutableListOf()
 
-    @Option(
-        description = ["Exclude nodes that was reconstructed by algorithm"],
-        names = ["--only-observed"],
-        order = OptionsOrder.main + 10_100
-    )
-    var onlyObserved: Boolean = false
-
     @Suppress("unused")
     @Option(
         names = ["--onlyObserved"],
@@ -97,6 +91,13 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
         order = OptionsOrder.main + 10_200
     )
     private var splitByTagType: TagType? = null
+
+    @Option(
+        description = ["Exclude nodes that was reconstructed by algorithm"],
+        names = ["--only-observed"],
+        order = OptionsOrder.main + 10_300
+    )
+    var onlyObserved: Boolean = false
 
     @Option(
         description = ["Export not covered regions as empty text."],
@@ -131,7 +132,9 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
             val headerForExport = MetaForExport(
                 reader.cloneSetInfos.map { it.tagsInfo },
                 reader.header.allFullyCoveredBy,
-                reader.footer
+                reader.footer,
+                reader.header.calculatedCloneGroups,
+                reader.library
             )
 
             val splitByTagType = if (splitByTagType != null) {
@@ -208,15 +211,17 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
                     .asSequence()
                     .filter { treeFilter?.match(it.treeId) != false }
                     .map {
-                        it.forPostanalysis(reader.fileNames, reader.libraryRegistry)
+                        it.forPostanalysis(reader.fileNames, reader.library)
                     }
                     .filter { treeFilter?.match(it) != false }
                     .flatMap { shmTreeForPostanalysis ->
+                        val chainInfos = shmTreeForPostanalysis.splitToChains()
+                            .associateBy { it.meta.rootInfo }
                         shmTreeForPostanalysis.tree.allNodes()
                             .asSequence()
-                            .filter { !onlyObserved || it.node.content.clones.isNotEmpty() }
+                            .filter { !onlyObserved || it.node.content.hasClones() }
                             .flatMap { it.node.content.split(splitClones) }
-                            .map { node -> Wrapper(shmTreeForPostanalysis, node) }
+                            .map { node -> Wrapper(chainInfos[node.root.rootInfo]!!, node) }
                     }
                     .forEach {
                         output.put(it)

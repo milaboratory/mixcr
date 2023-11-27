@@ -27,7 +27,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandExportCloneGroupsParams.SortChainsBy
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.clonegrouping.CellType
-import com.milaboratory.mixcr.clonegrouping.CloneGrouper
 import com.milaboratory.mixcr.export.CloneGroup
 import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
@@ -159,8 +158,8 @@ object CommandExportCloneGroups {
             val fileInfo = IOUtil.extractFileInfo(inputFile)
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val tagsInfo = initialSet.cloneSetInfo.tagsInfo
-            ValidationException.require(initialSet.clones.all { it.group != null }) {
-                "Not all clones have a group. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones."
+            ValidationException.require(initialSet.header.calculatedCloneGroups) {
+                "Groups are not calculated. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones."
             }
             val (_, params) = paramsResolver.resolve(
                 resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins)
@@ -197,7 +196,7 @@ object CommandExportCloneGroups {
             sortChainsBy: SortChainsBy,
             tagsInfo: TagsInfo
         ): List<CloneGroup> = recalculatedClones
-            .filter { it.group != CloneGrouper.undefinedGroup }
+            .filter { it.groupIsDefined }
             .groupBy { it.group!! }
             .map { (groupId, clones) ->
                 val clonesGroupedByChains = clones.groupBy { it.chains }
