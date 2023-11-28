@@ -19,9 +19,9 @@ properties:
     items:
       type: string
       enum:
-      - found
-      - undefined
-      - contamination
+        - found
+        - undefined
+        - contamination
   filterOutOfFrames:
     type: boolean
   filterStops:
@@ -35,10 +35,10 @@ properties:
   splitByTagType:
     type: string
     enum:
-    - Sample
-    - Cell
-    - Molecule
-    - Technical
+      - Sample
+      - Cell
+      - Molecule
+      - Technical
   splitFilesBy:
     type: array
     items:

@@ -1,52 +1,52 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: object
-  properties:
-    assemblingFeatureSequencesInZeroPreClones:
-      type: integer
-    coreAlignments:
-      type: integer
-    coreAlignmentsDroppedByTagSuffix:
-      type: integer
-    corePreClonesDroppedByTagSuffix:
-      type: integer
-    discardedCoreAlignments:
-      type: integer
-    empiricalAssignmentConflicts:
-      type: integer
-    empiricallyAssignedAlignments:
-      type: integer
-    geneAndTagConflicts:
-      type: integer
-    geneAndTagEmpiricallyAssignedAlignments:
-      type: integer
-    geneConflicts:
-      type: object
-    groupsWithNoAssemblingFeature:
-      type: integer
-    ignoredAlignments:
-      type: integer
-    inputAlignments:
-      type: integer
-    inputAlignmentsWithAssemblingFeature:
-      type: integer
-    inputGroups:
-      type: integer
-    preClones:
-      type: integer
-    preClonesPerGroup:
-      type: object
-    tagConflicts:
-      type: integer
-    tagEmpiricallyAssignedAlignments:
-      type: integer
-    unassignedAlignments:
-      type: integer
-    vjEmpiricallyAssignedAlignments:
-      type: integer
-- type: object
-  properties:
-    type:
-      const: preCloneAssemblerReport
-  required:
-  - type
+  - type: object
+    properties:
+      assemblingFeatureSequencesInZeroPreClones:
+        type: integer
+      coreAlignments:
+        type: integer
+      coreAlignmentsDroppedByTagSuffix:
+        type: integer
+      corePreClonesDroppedByTagSuffix:
+        type: integer
+      discardedCoreAlignments:
+        type: integer
+      empiricalAssignmentConflicts:
+        type: integer
+      empiricallyAssignedAlignments:
+        type: integer
+      geneAndTagConflicts:
+        type: integer
+      geneAndTagEmpiricallyAssignedAlignments:
+        type: integer
+      geneConflicts:
+        type: object
+      groupsWithNoAssemblingFeature:
+        type: integer
+      ignoredAlignments:
+        type: integer
+      inputAlignments:
+        type: integer
+      inputAlignmentsWithAssemblingFeature:
+        type: integer
+      inputGroups:
+        type: integer
+      preClones:
+        type: integer
+      preClonesPerGroup:
+        type: object
+      tagConflicts:
+        type: integer
+      tagEmpiricallyAssignedAlignments:
+        type: integer
+      unassignedAlignments:
+        type: integer
+      vjEmpiricallyAssignedAlignments:
+        type: integer
+  - type: object
+    properties:
+      type:
+        const: preCloneAssemblerReport
+    required:
+      - type

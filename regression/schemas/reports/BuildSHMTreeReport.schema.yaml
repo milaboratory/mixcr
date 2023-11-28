@@ -28,10 +28,10 @@ $defs:
   StepType:
     type: string
     enum:
-    - BuildingInitialTrees
-    - AttachClonesByDistanceChange
-    - CombineTrees
-    - AttachClonesByNDN
+      - BuildingInitialTrees
+      - AttachClonesByDistanceChange
+      - CombineTrees
+      - AttachClonesByNDN
 type: object
 properties:
   cellCombination:

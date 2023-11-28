@@ -9,72 +9,72 @@ $defs:
         type: boolean
       algorithm:
         anyOf:
-        - allOf:
-          - type: object
-            properties:
-              kappa:
-                type: number
-              nu:
-                type: number
-              omega:
-                type: number
-              tau:
-                type: number
-          - type: object
-            properties:
-              type:
-                const: ght
-            required:
-            - type
-        - type: object
-          properties:
-            type:
-              const: met
-          required:
-          - type
-        - type: object
-          properties:
-            type:
-              const: otsu
-          required:
-          - type
-        - type: object
-          properties:
-            type:
-              const: otsue
-          required:
-          - type
-        - allOf:
-          - type: object
-            properties:
-              omega:
-                type: number
+          - allOf:
+              - type: object
+                properties:
+                  kappa:
+                    type: number
+                  nu:
+                    type: number
+                  omega:
+                    type: number
+                  tau:
+                    type: number
+              - type: object
+                properties:
+                  type:
+                    const: ght
+                required:
+                  - type
           - type: object
             properties:
               type:
-                const: wprctile
+                const: met
             required:
-            - type
+              - type
+          - type: object
+            properties:
+              type:
+                const: otsu
+            required:
+              - type
+          - type: object
+            properties:
+              type:
+                const: otsue
+            required:
+              - type
+          - allOf:
+              - type: object
+                properties:
+                  omega:
+                    type: number
+              - type: object
+                properties:
+                  type:
+                    const: wprctile
+                required:
+                  - type
       fallbackThreshold:
         type: number
       histTransformers:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/HistGroupFilterOperator-2'
-          - allOf:
-            - type: object
-              properties:
-                fraction:
-                  type: number
-                value:
-                  type: number
-            - type: object
-              properties:
-                type:
-                  const: inflate
-              required:
-              - type
+            - $ref: '#/$defs/HistGroupFilterOperator-2'
+            - allOf:
+                - type: object
+                  properties:
+                    fraction:
+                      type: number
+                    value:
+                      type: number
+                - type: object
+                  properties:
+                    type:
+                      const: inflate
+                  required:
+                    - type
       logX:
         type: boolean
       minimalSample:
@@ -90,7 +90,7 @@ $defs:
       type:
         const: group_operator_advanced_thresholding
     required:
-    - type
+      - type
   Alphabet(NucleotideSequence):
     type: string
   AndKeyedFilter-1:
@@ -104,9 +104,9 @@ $defs:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/AndKeyedFilter-2'
-          - $ref: '#/$defs/GroupFilter'
-          - $ref: '#/$defs/InGroupsFilter-2'
+            - $ref: '#/$defs/AndKeyedFilter-2'
+            - $ref: '#/$defs/GroupFilter'
+            - $ref: '#/$defs/InGroupsFilter-2'
       requiredSequences:
         type: array
         items:
@@ -118,7 +118,7 @@ $defs:
       type:
         const: filter_and
     required:
-    - type
+      - type
   CumtopMetric-1:
     type: object
     properties:
@@ -130,10 +130,10 @@ $defs:
           type: string
       rankingMetric:
         anyOf:
-        - $ref: '#/$defs/CumtopMetric-2'
-        - $ref: '#/$defs/KMerDiversity'
-        - $ref: '#/$defs/NUnique'
-        - $ref: '#/$defs/SumWeight'
+          - $ref: '#/$defs/CumtopMetric-2'
+          - $ref: '#/$defs/KMerDiversity'
+          - $ref: '#/$defs/NUnique'
+          - $ref: '#/$defs/SumWeight'
       reportHist:
         $ref: '#/$defs/HistCollectionSpec'
       share:
@@ -145,134 +145,134 @@ $defs:
       type:
         const: group_metric_cumtop
     required:
-    - type
+      - type
   CumtopOp:
     allOf:
-    - type: object
-      properties:
-        accept:
-          $ref: '#/$defs/HistHalf'
-        acceptNaN:
-          type: boolean
-        round:
-          $ref: '#/$defs/HistThresholdRoundingMode'
-        share:
-          type: number
-    - type: object
-      properties:
-        type:
-          const: group_operator_cumtop
-      required:
-      - type
+      - type: object
+        properties:
+          accept:
+            $ref: '#/$defs/HistHalf'
+          acceptNaN:
+            type: boolean
+          round:
+            $ref: '#/$defs/HistThresholdRoundingMode'
+          share:
+            type: number
+      - type: object
+        properties:
+          type:
+            const: group_operator_cumtop
+        required:
+          - type
   GroupFilter:
     allOf:
-    - type: object
-      properties:
-        expectedSorting:
-          type: array
-          items:
-            type: string
-        groupingKeys:
-          type: array
-          items:
-            type: string
-        predicates:
-          type: array
-          items:
-            type: object
-            properties:
-              expectedSorting:
-                type: array
-                items:
-                  type: string
-              metrics:
-                type: array
-                items:
+      - type: object
+        properties:
+          expectedSorting:
+            type: array
+            items:
+              type: string
+          groupingKeys:
+            type: array
+            items:
+              type: string
+          predicates:
+            type: array
+            items:
+              type: object
+              properties:
+                expectedSorting:
+                  type: array
+                  items:
+                    type: string
+                metrics:
+                  type: array
+                  items:
+                    anyOf:
+                      - $ref: '#/$defs/CumtopMetric-2'
+                      - $ref: '#/$defs/KMerDiversity'
+                      - $ref: '#/$defs/NUnique'
+                      - $ref: '#/$defs/SumWeight'
+                operator:
                   anyOf:
-                  - $ref: '#/$defs/CumtopMetric-2'
-                  - $ref: '#/$defs/KMerDiversity'
-                  - $ref: '#/$defs/NUnique'
-                  - $ref: '#/$defs/SumWeight'
-              operator:
-                anyOf:
-                - type: object
-                  properties:
-                    type:
-                      const: dummy_group_operator
-                  required:
-                  - type
-                - anyOf:
-                  - $ref: '#/$defs/AdvancedThresholdingOp-2'
-                  - $ref: '#/$defs/Otsu1Op'
-                  type: object
-                  properties:
-                    type:
-                      const: AbstractAdvancedThresholdingOp
-                  required:
-                  - type
-                - $ref: '#/$defs/CumtopOp'
-                - anyOf:
-                  - $ref: '#/$defs/HighestThreshold'
-                  - $ref: '#/$defs/LowestThreshold'
-                  type: object
-                  properties:
-                    type:
-                      const: GroupPartitionerOperator
-                  required:
-                  - type
-                - $ref: '#/$defs/MinimalRecursiveShareOp'
-                - $ref: '#/$defs/TopNOp'
-                - allOf:
-                  - type: object
-                    properties:
-                      acceptNaN:
-                        type: boolean
-                      lower:
-                        type: number
-                      lowerExclusive:
-                        type: boolean
-                      upper:
-                        type: number
-                      upperExclusive:
-                        type: boolean
-                  - type: object
-                    properties:
-                      type:
-                        const: group_operator_range
-                    required:
-                    - type
-              requiredSequences:
-                type: array
-                items:
-                  type: string
-        requiredSequences:
-          type: array
-          items:
-            type: string
-    - type: object
-      properties:
-        type:
-          const: filter_groups
-      required:
-      - type
+                    - type: object
+                      properties:
+                        type:
+                          const: dummy_group_operator
+                      required:
+                        - type
+                    - anyOf:
+                        - $ref: '#/$defs/AdvancedThresholdingOp-2'
+                        - $ref: '#/$defs/Otsu1Op'
+                      type: object
+                      properties:
+                        type:
+                          const: AbstractAdvancedThresholdingOp
+                      required:
+                        - type
+                    - $ref: '#/$defs/CumtopOp'
+                    - anyOf:
+                        - $ref: '#/$defs/HighestThreshold'
+                        - $ref: '#/$defs/LowestThreshold'
+                      type: object
+                      properties:
+                        type:
+                          const: GroupPartitionerOperator
+                      required:
+                        - type
+                    - $ref: '#/$defs/MinimalRecursiveShareOp'
+                    - $ref: '#/$defs/TopNOp'
+                    - allOf:
+                        - type: object
+                          properties:
+                            acceptNaN:
+                              type: boolean
+                            lower:
+                              type: number
+                            lowerExclusive:
+                              type: boolean
+                            upper:
+                              type: number
+                            upperExclusive:
+                              type: boolean
+                        - type: object
+                          properties:
+                            type:
+                              const: group_operator_range
+                          required:
+                            - type
+                requiredSequences:
+                  type: array
+                  items:
+                    type: string
+          requiredSequences:
+            type: array
+            items:
+              type: string
+      - type: object
+        properties:
+          type:
+            const: filter_groups
+        required:
+          - type
   HighestThreshold:
     allOf:
-    - type: object
-      properties:
-        accept:
-          $ref: '#/$defs/HistHalf'
-        acceptNaN:
-          type: boolean
-        operators:
-          type: array
-          items:
-            $ref: '#/$defs/HistGroupFilterOperator-2'
-    - type: object
-      properties:
-        type:
-          const: group_operator_highest_threshold
-      required:
-      - type
+      - type: object
+        properties:
+          accept:
+            $ref: '#/$defs/HistHalf'
+          acceptNaN:
+            type: boolean
+          operators:
+            type: array
+            items:
+              $ref: '#/$defs/HistGroupFilterOperator-2'
+      - type: object
+        properties:
+          type:
+            const: group_operator_highest_threshold
+        required:
+          - type
   HistCollectionSpec:
     type: object
     properties:
@@ -286,13 +286,13 @@ $defs:
         type: boolean
   HistGroupFilterOperator-1:
     anyOf:
-    - $ref: '#/$defs/AdvancedThresholdingOp-2'
-    - $ref: '#/$defs/Otsu1Op'
-    - $ref: '#/$defs/CumtopOp'
-    - $ref: '#/$defs/HighestThreshold'
-    - $ref: '#/$defs/LowestThreshold'
-    - $ref: '#/$defs/MinimalRecursiveShareOp'
-    - $ref: '#/$defs/TopNOp'
+      - $ref: '#/$defs/AdvancedThresholdingOp-2'
+      - $ref: '#/$defs/Otsu1Op'
+      - $ref: '#/$defs/CumtopOp'
+      - $ref: '#/$defs/HighestThreshold'
+      - $ref: '#/$defs/LowestThreshold'
+      - $ref: '#/$defs/MinimalRecursiveShareOp'
+      - $ref: '#/$defs/TopNOp'
   HistGroupFilterOperator-2:
     $ref: '#/$defs/HistGroupFilterOperator-1'
     type: object
@@ -300,17 +300,17 @@ $defs:
       type:
         const: HistGroupFilterOperator
     required:
-    - type
+      - type
   HistHalf:
     type: string
     enum:
-    - Low
-    - High
+      - Low
+      - High
   HistThresholdRoundingMode:
     type: string
     enum:
-    - Up
-    - Down
+      - Up
+      - Down
   InGroupsFilter-1:
     type: object
     properties:
@@ -326,9 +326,9 @@ $defs:
           type: string
       nestedFilter:
         anyOf:
-        - $ref: '#/$defs/AndKeyedFilter-2'
-        - $ref: '#/$defs/GroupFilter'
-        - $ref: '#/$defs/InGroupsFilter-2'
+          - $ref: '#/$defs/AndKeyedFilter-2'
+          - $ref: '#/$defs/GroupFilter'
+          - $ref: '#/$defs/InGroupsFilter-2'
   InGroupsFilter-2:
     $ref: '#/$defs/InGroupsFilter-1'
     type: object
@@ -336,121 +336,121 @@ $defs:
       type:
         const: filter_in_groups
     required:
-    - type
+      - type
   KMerDiversity:
     allOf:
-    - type: object
-      properties:
-        k:
-          type: integer
-        minSequenceCount:
-          type: integer
-        minimalQuality:
-          type: integer
-        reportHist:
-          $ref: '#/$defs/HistCollectionSpec'
-        sequences:
-          type: array
-          items:
-            type: string
-        topShare:
-          type: number
-    - type: object
-      properties:
-        type:
-          const: group_metric_kmer_diversity
-      required:
-      - type
+      - type: object
+        properties:
+          k:
+            type: integer
+          minSequenceCount:
+            type: integer
+          minimalQuality:
+            type: integer
+          reportHist:
+            $ref: '#/$defs/HistCollectionSpec'
+          sequences:
+            type: array
+            items:
+              type: string
+          topShare:
+            type: number
+      - type: object
+        properties:
+          type:
+            const: group_metric_kmer_diversity
+        required:
+          - type
   LinearGapAlignmentScoring(NucleotideSequence):
     allOf:
-    - type: object
-      properties:
-        alphabet:
-          $ref: '#/$defs/Alphabet(NucleotideSequence)'
-        gapPenalty:
-          type: integer
-        subsMatrix:
-          $ref: '#/$defs/SubstitutionMatrix'
-    - type: object
-      properties:
-        type:
-          const: linear
-      required:
-      - type
+      - type: object
+        properties:
+          alphabet:
+            $ref: '#/$defs/Alphabet(NucleotideSequence)'
+          gapPenalty:
+            type: integer
+          subsMatrix:
+            $ref: '#/$defs/SubstitutionMatrix'
+      - type: object
+        properties:
+          type:
+            const: linear
+        required:
+          - type
   LowestThreshold:
     allOf:
-    - type: object
-      properties:
-        accept:
-          $ref: '#/$defs/HistHalf'
-        acceptNaN:
-          type: boolean
-        operators:
-          type: array
-          items:
-            $ref: '#/$defs/HistGroupFilterOperator-2'
-    - type: object
-      properties:
-        type:
-          const: group_operator_lowest_threshold
-      required:
-      - type
+      - type: object
+        properties:
+          accept:
+            $ref: '#/$defs/HistHalf'
+          acceptNaN:
+            type: boolean
+          operators:
+            type: array
+            items:
+              $ref: '#/$defs/HistGroupFilterOperator-2'
+      - type: object
+        properties:
+          type:
+            const: group_operator_lowest_threshold
+        required:
+          - type
   MinimalRecursiveShareOp:
     allOf:
-    - type: object
-      properties:
-        accept:
-          $ref: '#/$defs/HistHalf'
-        acceptNaN:
-          type: boolean
-        minimalShare:
-          type: number
-    - type: object
-      properties:
-        type:
-          const: group_operator_minimal_recursive_share
-      required:
-      - type
+      - type: object
+        properties:
+          accept:
+            $ref: '#/$defs/HistHalf'
+          acceptNaN:
+            type: boolean
+          minimalShare:
+            type: number
+      - type: object
+        properties:
+          type:
+            const: group_operator_minimal_recursive_share
+        required:
+          - type
   NUnique:
     allOf:
-    - type: object
-      properties:
-        keys:
-          type: array
-          items:
-            type: string
-        reportHist:
-          $ref: '#/$defs/HistCollectionSpec'
-    - type: object
-      properties:
-        type:
-          const: group_metric_nunique
-      required:
-      - type
+      - type: object
+        properties:
+          keys:
+            type: array
+            items:
+              type: string
+          reportHist:
+            $ref: '#/$defs/HistCollectionSpec'
+      - type: object
+        properties:
+          type:
+            const: group_metric_nunique
+        required:
+          - type
   Otsu1Op:
     allOf:
-    - type: object
-      properties:
-        accept:
-          $ref: '#/$defs/HistHalf'
-        acceptNaN:
-          type: boolean
-        fallbackThreshold:
-          type: number
-        logX:
-          type: boolean
-        minimalSample:
-          type: integer
-        multiplyWeightByKey:
-          type: boolean
-        triClassAdjustmentIterations:
-          type: integer
-    - type: object
-      properties:
-        type:
-          const: group_operator_otsu1
-      required:
-      - type
+      - type: object
+        properties:
+          accept:
+            $ref: '#/$defs/HistHalf'
+          acceptNaN:
+            type: boolean
+          fallbackThreshold:
+            type: number
+          logX:
+            type: boolean
+          minimalSample:
+            type: integer
+          multiplyWeightByKey:
+            type: boolean
+          triClassAdjustmentIterations:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: group_operator_otsu1
+        required:
+          - type
   SubstitutionMatrix:
     type: object
     properties:
@@ -460,34 +460,34 @@ $defs:
           type: integer
   SumWeight:
     allOf:
-    - type: object
-      properties:
-        reportHist:
-          $ref: '#/$defs/HistCollectionSpec'
-    - type: object
-      properties:
-        type:
-          const: group_metric_sum_weight
-      required:
-      - type
+      - type: object
+        properties:
+          reportHist:
+            $ref: '#/$defs/HistCollectionSpec'
+      - type: object
+        properties:
+          type:
+            const: group_metric_sum_weight
+        required:
+          - type
   TopNOp:
     allOf:
-    - type: object
-      properties:
-        accept:
-          $ref: '#/$defs/HistHalf'
-        acceptNaN:
-          type: boolean
-        "n":
-          type: integer
-        round:
-          $ref: '#/$defs/HistThresholdRoundingMode'
-    - type: object
-      properties:
-        type:
-          const: group_operator_top
-      required:
-      - type
+      - type: object
+        properties:
+          accept:
+            $ref: '#/$defs/HistHalf'
+          acceptNaN:
+            type: boolean
+          "n":
+            type: integer
+          round:
+            $ref: '#/$defs/HistThresholdRoundingMode'
+      - type: object
+        properties:
+          type:
+            const: group_operator_top
+        required:
+          - type
 type: object
 properties:
   cellLevel:
@@ -512,32 +512,32 @@ properties:
             type: integer
           clusteringFilter:
             anyOf:
-            - allOf:
-              - type: object
-                properties:
-                  specificMutationProbability:
-                    type: number
-              - type: object
-                properties:
-                  type:
-                    const: relativeConcentration
-                required:
-                - type
-            - allOf:
-              - type: object
-                properties:
-                  backgroundIndelRate:
-                    type: number
-                  backgroundSubstitutionRate:
-                    type: number
-                  correctionPower:
-                    type: number
-              - type: object
-                properties:
-                  type:
-                    const: advanced
-                required:
-                - type
+              - allOf:
+                  - type: object
+                    properties:
+                      specificMutationProbability:
+                        type: number
+                  - type: object
+                    properties:
+                      type:
+                        const: relativeConcentration
+                    required:
+                      - type
+              - allOf:
+                  - type: object
+                    properties:
+                      backgroundIndelRate:
+                        type: number
+                      backgroundSubstitutionRate:
+                        type: number
+                      correctionPower:
+                        type: number
+                  - type: object
+                    properties:
+                      type:
+                        const: advanced
+                    required:
+                      - type
           searchDepth:
             type: integer
           searchParameters:
@@ -575,24 +575,24 @@ properties:
                 type: number
               scoring:
                 anyOf:
-                - $ref: '#/$defs/LinearGapAlignmentScoring(NucleotideSequence)'
-                - allOf:
-                  - type: object
-                    properties:
-                      alphabet:
-                        $ref: '#/$defs/Alphabet(NucleotideSequence)'
-                      gapExtensionPenalty:
-                        type: integer
-                      gapOpenPenalty:
-                        type: integer
-                      subsMatrix:
-                        $ref: '#/$defs/SubstitutionMatrix'
-                  - type: object
-                    properties:
-                      type:
-                        const: affine
-                    required:
-                    - type
+                  - $ref: '#/$defs/LinearGapAlignmentScoring(NucleotideSequence)'
+                  - allOf:
+                      - type: object
+                        properties:
+                          alphabet:
+                            $ref: '#/$defs/Alphabet(NucleotideSequence)'
+                          gapExtensionPenalty:
+                            type: integer
+                          gapOpenPenalty:
+                            type: integer
+                          subsMatrix:
+                            $ref: '#/$defs/SubstitutionMatrix'
+                      - type: object
+                        properties:
+                          type:
+                            const: affine
+                        required:
+                          - type
       mappingThreshold:
         type: string
       maxBadPointsPercent:
@@ -607,9 +607,9 @@ properties:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/AndKeyedFilter-2'
-          - $ref: '#/$defs/GroupFilter'
-          - $ref: '#/$defs/InGroupsFilter-2'
+            - $ref: '#/$defs/AndKeyedFilter-2'
+            - $ref: '#/$defs/GroupFilter'
+            - $ref: '#/$defs/InGroupsFilter-2'
       preClusteringCountFilteringRatio:
         type: number
       preClusteringScoreFilteringRatio:
@@ -617,12 +617,12 @@ properties:
       qualityAggregationType:
         type: string
         enum:
-        - Min
-        - Max
-        - Sum
-        - Average
-        - MiniMax
-        - BetaScore
+          - Min
+          - Max
+          - Sum
+          - Average
+          - MiniMax
+          - BetaScore
       separateByC:
         type: boolean
       separateByJ:

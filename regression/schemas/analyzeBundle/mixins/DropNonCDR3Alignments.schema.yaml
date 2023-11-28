@@ -4,4 +4,4 @@ properties:
   type:
     const: DropNonCDR3Alignments
 required:
-- type
+  - type

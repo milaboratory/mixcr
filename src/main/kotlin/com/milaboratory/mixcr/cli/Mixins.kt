@@ -596,11 +596,25 @@ object ExportMiXCRMixins {
         )
         fun exportProductiveClonesOnly(ignored: Boolean) =
             mixIn(ExportMixins.ExportProductiveClonesOnly)
+
+        @Option(
+            description = ["Reset all file splitting for output clone and/or clone group tables."],
+            names = [ExportMixins.ExportClonesResetFileSplitting.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 1_000
+        )
+        fun resetExportClonesFileSplitting(ignored: Boolean) =
+            mixIn(ExportMixins.ExportClonesResetFileSplitting)
     }
 
     private interface ExportCloneGroupsMixins : GeneralExportClonesMixins {
         @Option(
-            description = ["Export clone groups for given cell type. Possible values: \${COMPLETION-CANDIDATES}"],
+            description = [
+                "Export clone groups for given cell type.",
+                "If selected only one cell type, export will be written in one file without prefixes. If several, there will be a file for each type.",
+                "All cell groups that don't much specified groups will be filtered out.",
+                "Possible values: \${COMPLETION-CANDIDATES}."
+            ],
             names = [ExportMixins.ExportCloneGroupsForCellTypes.CMD_OPTION],
             order = OptionsOrder.mixins.exports + 5_100,
             hideParamSyntax = true,
@@ -661,15 +675,6 @@ object ExportMiXCRMixins {
         )
         fun addExportClonesFileSplitting(by: String) =
             mixIn(ExportMixins.ExportClonesAddFileSplitting(by))
-
-        @Option(
-            description = ["Reset all file splitting for output clone tables."],
-            names = [ExportMixins.ExportClonesResetFileSplitting.CMD_OPTION],
-            arity = "0",
-            order = OptionsOrder.mixins.exports + 1_000
-        )
-        fun resetExportClonesFileSplitting(ignored: Boolean) =
-            mixIn(ExportMixins.ExportClonesResetFileSplitting)
 
         @Option(
             description = ["Add key to group clones in the output clone tables."],

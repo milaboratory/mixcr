@@ -7,20 +7,20 @@ properties:
     type: integer
   chainUsage:
     allOf:
-    - type: object
-      properties:
-        chains:
-          type: object
-        chimeras:
-          type: integer
-        total:
-          type: integer
-    - type: object
-      properties:
-        type:
-          const: chainUsage
-      required:
-      - type
+      - type: object
+        properties:
+          chains:
+            type: object
+          chimeras:
+            type: integer
+          total:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: chainUsage
+        required:
+          - type
   chimeras:
     type: integer
   commandLine:
@@ -89,48 +89,48 @@ properties:
     type: array
     items:
       allOf:
-      - type: object
-        properties:
-          fuzzyMatches:
-            type: integer
-          matcherStatistics:
-            type: array
-            items:
-              type: object
-              properties:
-                fuzzyMatchCount:
-                  type: integer
-                matchCount:
-                  type: integer
-                matcherName:
-                  type: string
-                missCount:
-                  type: integer
-          tableMisses:
-            type: integer
-          targetStatistics:
-            type: array
-            items:
-              type: object
-              properties:
-                matchCount:
-                  type: integer
-                target:
-                  type: array
-                  items:
+        - type: object
+          properties:
+            fuzzyMatches:
+              type: integer
+            matcherStatistics:
+              type: array
+              items:
+                type: object
+                properties:
+                  fuzzyMatchCount:
+                    type: integer
+                  matchCount:
+                    type: integer
+                  matcherName:
                     type: string
-          totalMatches:
-            type: integer
-          totalTransformations:
-            type: integer
-          transformerName:
-            type: string
-      - type: object
-        properties:
-          type:
-            const: mapTags
-        required:
-        - type
+                  missCount:
+                    type: integer
+            tableMisses:
+              type: integer
+            targetStatistics:
+              type: array
+              items:
+                type: object
+                properties:
+                  matchCount:
+                    type: integer
+                  target:
+                    type: array
+                    items:
+                      type: string
+            totalMatches:
+              type: integer
+            totalTransformations:
+              type: integer
+            transformerName:
+              type: string
+        - type: object
+          properties:
+            type:
+              const: mapTags
+          required:
+            - type
   trimmingReport:
     type: object
     properties:

@@ -4,4 +4,4 @@ properties:
   type:
     const: ExportClonesResetCloneGrouping
 required:
-- type
+  - type

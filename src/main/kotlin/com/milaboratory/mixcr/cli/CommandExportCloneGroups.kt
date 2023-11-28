@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.presets.ExportMixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.asOutputPortWithProgress
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -45,6 +46,7 @@ import picocli.CommandLine.Model
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
+import java.nio.file.Paths
 
 object CommandExportCloneGroups {
     const val COMMAND_NAME = MiXCRCommandDescriptor.exportCloneGroups.name
@@ -166,28 +168,84 @@ object CommandExportCloneGroups {
             )
 
             val recalculatedClones = filterClones(initialSet, params, fileInfo)
-            val groups = cloneGroups(recalculatedClones, params.sortChainsBy, tagsInfo)
+
+            var groups = cloneGroups(recalculatedClones, params.sortChainsBy, tagsInfo)
+            val cellTypesToExport: List<CellType>
+            val splitBy: List<Pair<String, List<CellType>>>
+
+            if (params.types.isEmpty()) {
+                cellTypesToExport = CellType.values().toList()
+                splitBy = listOf(
+                    "IG" to listOf(CellType.IGHL, CellType.IGHK),
+                    "TRAB" to listOf(CellType.TRAB),
+                    "TRGD" to listOf(CellType.TRGD)
+                )
+            } else {
+                cellTypesToExport = params.types.distinct()
+                groups = groups.filter { group ->
+                    cellTypesToExport.any { cellType -> group.clonePairs.keys.all { chain -> cellType.hasChain(chain) } }
+                }
+                splitBy = cellTypesToExport.map { it.name to listOf(it) }
+            }
 
             val headerForExport = MetaForExport(fileInfo)
-            val fieldExtractors = CloneGroupFieldsExtractorsFactory(
-                params.types.ifEmpty { CellType.values().toList() },
-                params.showSecondaryChains
-            )
-                .createExtractors(params.fields, headerForExport)
 
-            val rowMetaForExport = RowMetaForExport(
-                tagsInfo,
-                headerForExport,
-                exportDefaults.notCoveredAsEmpty
-            )
-            InfoWriter.create(
-                outputFile,
-                fieldExtractors,
-                !params.noHeader
-            ) { rowMetaForExport }.use { writer ->
-                groups.asOutputPortWithProgress()
-                    .reportProgress("Exporting clone groups")
-                    .forEach { writer.put(it) }
+            if (outputFile != null && params.splitFilesByCellType && splitBy.size > 1 && groups.isNotEmpty()) {
+                val sFileName = outputFile!!.let { of ->
+                    SubstitutionHelper.parseFileName(of.toString(), 1)
+                }
+
+                val keyForMixed = "mixed"
+                val resultFiles = splitBy.toMap() + (keyForMixed to CellType.values().toList())
+                val splitGroups = groups.groupBy { group ->
+                    val chainsForGroup = group.clonePairs.keys
+                    splitBy.firstOrNull { (_, cellTypes) ->
+                        chainsForGroup.all { chain -> cellTypes.any { cellType -> cellType.hasChain(chain) } }
+                    }?.first ?: keyForMixed
+                }
+                splitGroups.forEach { (fileName, forExport) ->
+                    val fieldExtractors = CloneGroupFieldsExtractorsFactory(
+                        resultFiles[fileName]!!,
+                        params.showSecondaryChains
+                    ).createExtractors(params.fields, headerForExport)
+
+                    val rowMetaForExport = RowMetaForExport(
+                        tagsInfo,
+                        headerForExport,
+                        exportDefaults.notCoveredAsEmpty
+                    )
+                    val substitutionValues = SubstitutionHelper.SubstitutionValues()
+                    substitutionValues.add(fileName, "1", "cellType")
+                    InfoWriter.create(
+                        Paths.get(sFileName.render(substitutionValues)),
+                        fieldExtractors,
+                        !params.noHeader
+                    ) { rowMetaForExport }.use { writer ->
+                        forExport.asOutputPortWithProgress()
+                            .reportProgress("Exporting $fileName clone groups")
+                            .forEach { writer.put(it) }
+                    }
+                }
+            } else {
+                val fieldExtractors = CloneGroupFieldsExtractorsFactory(
+                    cellTypesToExport,
+                    params.showSecondaryChains
+                ).createExtractors(params.fields, headerForExport)
+
+                val rowMetaForExport = RowMetaForExport(
+                    tagsInfo,
+                    headerForExport,
+                    exportDefaults.notCoveredAsEmpty
+                )
+                InfoWriter.create(
+                    outputFile,
+                    fieldExtractors,
+                    !params.noHeader
+                ) { rowMetaForExport }.use { writer ->
+                    groups.asOutputPortWithProgress()
+                        .reportProgress("Exporting clone groups")
+                        .forEach { writer.put(it) }
+                }
             }
         }
 

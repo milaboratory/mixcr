@@ -29,9 +29,10 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-allNFeaturesImputedWithMinQuality [<from_reference_point>
                           <to_reference_point>]]... [-avrgFeatureQuality <gene_feature>]...
                           [-allAvrgFeaturesQuality [<from_reference_point>
-                          <to_reference_point>]]... [-nLength <gene_features> [germline]]...
-                          [-allNLength [<from_reference_point> <to_reference_point>]]... [-aaLength
-                          <gene_features> [germline]]... [-allAALength [<from_reference_point>
+                          <to_reference_point>]]... [-nLength <gene_feature[,gene_feature]...>
+                          [germline]]... [-allNLength [<from_reference_point>
+                          <to_reference_point>]]... [-aaLength <gene_feature[,gene_feature]...>
+                          [germline]]... [-allAALength [<from_reference_point>
                           <to_reference_point>]]... [-nMutations <gene_feature>
                           [(substitutions|indels|inserts|deletions)]]... [-allNMutations
                           [<from_reference_point> <to_reference_point>]
@@ -45,12 +46,13 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [(substitutions|indels|inserts|deletions)]]... [-mutationsDetailed
                           <gene_feature>]... [-allMutationsDetailed [<from_reference_point>
                           <to_reference_point>]]... [-mutationsDetailedRelative <gene_feature>
-                          <relative_to_gene_feature>]... [-nMutationsCount <gene_features>
-                          [(substitutions|indels|inserts|deletions)]]... [-allNMutationsCount
-                          [<from_reference_point> <to_reference_point>]
+                          <relative_to_gene_feature>]... [-nMutationsCount <gene_feature[,
+                          gene_feature]...> [(substitutions|indels|inserts|deletions)]]...
+                          [-allNMutationsCount [<from_reference_point> <to_reference_point>]
                           [(substitutions|indels|inserts|deletions)]]... [-aaMutationsCount
-                          <gene_features> [(substitutions|indels|inserts|deletions)]]...
-                          [-allAAMutationsCount [<from_reference_point> <to_reference_point>]
+                          <gene_feature[,gene_feature]...>
+                          [(substitutions|indels|inserts|deletions)]]... [-allAAMutationsCount
+                          [<from_reference_point> <to_reference_point>]
                           [(substitutions|indels|inserts|deletions)]]... [-positionInReferenceOf
                           <reference_point>]... [-allPositionsInReference [<from_reference_point>
                           <to_reference_point>]]... [-positionOf <reference_point>]...
@@ -60,8 +62,9 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
                           [-cIdentityPercents] [-vBestIdentityPercent] [-dBestIdentityPercent]
                           [-jBestIdentityPercent] [-cBestIdentityPercent] [-nMutationsRate
-                          <gene_features> [(substitutions|indels|inserts|deletions)]]...
-                          [-aaMutationsRate <gene_features>
+                          <gene_feature[,gene_feature]...>
+                          [(substitutions|indels|inserts|deletions)]]... [-aaMutationsRate
+                          <gene_feature[,gene_feature]...>
                           [(substitutions|indels|inserts|deletions)]]... [-chains] [-topChains]
                           [-geneLabel <label>]... [-isotype [(primary|subclass|auto)]]...
                           [-tagCounts] [-cellId [(none|space|dash)]]... [-tags
@@ -105,7 +108,7 @@ Export assembled clones into tab delimited file.
       --add-export-clone-table-splitting <(geneLabel|tag):key>
                              Add key to split output files with clone tables.
       --reset-export-clone-table-splitting
-                             Reset all file splitting for output clone tables.
+                             Reset all file splitting for output clone and/or clone group tables.
       --add-export-clone-grouping <(geneLabel|tag):key>
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
@@ -269,7 +272,7 @@ Possible fields to export
                                `-avrgFeatureQuality FR4`.
                              By default, boundaries will be got from analysis parameters if
                                possible or `FR1Begin FR4End` otherwise.
-      -nLength <gene_features> [germline]
+      -nLength <gene_feature[,gene_feature]...> [germline]
                              Export count of nucleotides for specified gene feature. If second
                                option is `germline` than will be count corresponding top genes,
                                VJJunction will be excluded from calculation (germline is unknown).
@@ -283,7 +286,7 @@ Possible fields to export
                                `-nLength CDR3`, `-nLength FR4`.
                              By default, boundaries will be got from analysis parameters if
                                possible or `FR1Begin FR4End` otherwise.
-      -aaLength <gene_features> [germline]
+      -aaLength <gene_feature[,gene_feature]...> [germline]
                              Export count of amino acids for specified gene feature. If second
                                option is `germline` than will be count corresponding top genes,
                                CDR3 will be excluded from calculation (VJJunction germline is
@@ -360,7 +363,7 @@ Possible fields to export
                                amino acid mutation is the observed amino acid mutation combining
                                effect from all other. WARNING: format may change in following
                                versions.
-      -nMutationsCount <gene_features> [(substitutions|indels|inserts|deletions)]
+      -nMutationsCount <gene_feature[,gene_feature]...> [(substitutions|indels|inserts|deletions)]
                              Count nucleotide mutations for specific gene feature. Second parameter
                                will filter mutations by type, by default no filtering.
       -allNMutationsCount [<from_reference_point> <to_reference_point>]
@@ -373,7 +376,7 @@ Possible fields to export
                              By default, boundaries will be got from analysis parameters if
                                possible or `FR1Begin FR4End` otherwise. Third parameter will filter
                                mutations by type, by default no filtering.
-      -aaMutationsCount <gene_features> [(substitutions|indels|inserts|deletions)]
+      -aaMutationsCount <gene_feature[,gene_feature]...> [(substitutions|indels|inserts|deletions)]
                              Count amino acid mutations for specific gene feature. Second parameter
                                will filter mutations by type, by default no filtering.
       -allAAMutationsCount [<from_reference_point> <to_reference_point>]
@@ -428,14 +431,14 @@ Possible fields to export
       -dBestIdentityPercent  D best alignment identity percent
       -jBestIdentityPercent  J best alignment identity percent
       -cBestIdentityPercent  C best alignment identity percent
-      -nMutationsRate <gene_features> [(substitutions|indels|inserts|deletions)]
+      -nMutationsRate <gene_feature[,gene_feature]...> [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations from germline divided by target
                                sequence size. VJJunction is excluded from calculation (germline is
                                unknown). It's recommended to run `findAlleles` before exporting
                                `-nMutationsRate` because otherwise mutations count will include
                                allelic mutations. Second parameter will filter mutations by type,
                                by default no filtering.
-      -aaMutationsRate <gene_features> [(substitutions|indels|inserts|deletions)]
+      -aaMutationsRate <gene_feature[,gene_feature]...> [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations from germline divided by amino acid
                                sequence size. CDR3 is excluded from calculation (VJJunction
                                germline is unknown). It's recommended to run `findAlleles` before

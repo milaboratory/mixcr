@@ -294,7 +294,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 .filter { it.value.header.allFullyCoveredBy == null }
                 .map { inputFiles[it.index] }
                 .joinToString(", ")
-            "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${SetContigAssemblingFeatures.CMD_OPTION} option: $withoutFullyCovered"
+            "Some of the inputs were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${SetContigAssemblingFeatures.CMD_OPTION}` option: $withoutFullyCovered"
         }
         val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"

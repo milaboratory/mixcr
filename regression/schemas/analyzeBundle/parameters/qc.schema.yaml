@@ -5,185 +5,193 @@ properties:
     type: array
     items:
       anyOf:
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          tag:
-            type: string
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          tag:
-            type: string
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
-      - type: object
-        properties:
-          label:
-            type: string
-          middle:
-            type: number
-          upper:
-            type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            tag:
+              type: string
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            tag:
+              type: string
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
+        - type: object
+          properties:
+            label:
+              type: string
+            middle:
+              type: number
+            upper:
+              type: number
   errorOnFailedCheck:
     type: boolean

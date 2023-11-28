@@ -1,18 +1,18 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: object
-  properties:
-    cloneGroupTypes:
-      type: array
-      items:
-        type: string
-        enum:
-        - found
-        - undefined
-        - contamination
-- type: object
-  properties:
-    type:
-      const: FilterOutCloneGroupTypes
-  required:
-  - type
+  - type: object
+    properties:
+      cloneGroupTypes:
+        type: array
+        items:
+          type: string
+          enum:
+            - found
+            - undefined
+            - contamination
+  - type: object
+    properties:
+      type:
+        const: FilterOutCloneGroupTypes
+    required:
+      - type
