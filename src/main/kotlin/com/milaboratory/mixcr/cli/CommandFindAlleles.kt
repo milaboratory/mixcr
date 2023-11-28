@@ -290,7 +290,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
-            "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
+            "Some of the inputs were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION}` option"
         }
         val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
