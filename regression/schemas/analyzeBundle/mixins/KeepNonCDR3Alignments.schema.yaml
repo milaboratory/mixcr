@@ -4,4 +4,4 @@ properties:
   type:
     const: KeepNonCDR3Alignments
 required:
-- type
+  - type

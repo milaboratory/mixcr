@@ -6,15 +6,15 @@ $defs:
       type:
         const: BronKerbosch
     required:
-    - type
+      - type
   BronKerboschWithFallback-1:
     type: object
     properties:
       fallback:
         anyOf:
-        - $ref: '#/$defs/BronKerbosch'
-        - $ref: '#/$defs/BronKerboschWithFallback-2'
-        - $ref: '#/$defs/SingleLinkage'
+          - $ref: '#/$defs/BronKerbosch'
+          - $ref: '#/$defs/BronKerboschWithFallback-2'
+          - $ref: '#/$defs/SingleLinkage'
       limit:
         type: integer
   BronKerboschWithFallback-2:
@@ -24,14 +24,14 @@ $defs:
       type:
         const: BronKerboschWithFallback
     required:
-    - type
+      - type
   SingleLinkage:
     type: object
     properties:
       type:
         const: SingleLinkage
     required:
-    - type
+      - type
 type: object
 properties:
   cellCombiner:
@@ -42,9 +42,9 @@ properties:
         properties:
           algorithm:
             anyOf:
-            - $ref: '#/$defs/BronKerbosch'
-            - $ref: '#/$defs/BronKerboschWithFallback-2'
-            - $ref: '#/$defs/SingleLinkage'
+              - $ref: '#/$defs/BronKerbosch'
+              - $ref: '#/$defs/BronKerboschWithFallback-2'
+              - $ref: '#/$defs/SingleLinkage'
           maxNDNDistance:
             type: number
       filterOutGroupsWithInvalidCellsFromSource:
@@ -57,88 +57,88 @@ properties:
     type: boolean
   singleCell:
     anyOf:
-    - type: object
-      properties:
-        type:
-          const: noop
-      required:
-      - type
-    - allOf:
-      - type: object
-        properties:
-          algorithm:
-            anyOf:
-            - $ref: '#/$defs/BronKerbosch'
-            - $ref: '#/$defs/BronKerboschWithFallback-2'
-            - $ref: '#/$defs/SingleLinkage'
-          predictor:
-            type: object
       - type: object
         properties:
           type:
-            const: simpleClustering
+            const: noop
         required:
-        - type
+          - type
+      - allOf:
+          - type: object
+            properties:
+              algorithm:
+                anyOf:
+                  - $ref: '#/$defs/BronKerbosch'
+                  - $ref: '#/$defs/BronKerboschWithFallback-2'
+                  - $ref: '#/$defs/SingleLinkage'
+              predictor:
+                type: object
+          - type: object
+            properties:
+              type:
+                const: simpleClustering
+            required:
+              - type
   steps:
     type: array
     items:
       anyOf:
-      - allOf:
-        - type: object
-          properties:
-            maxNDNDistance:
-              type: number
-            threshold:
-              type: number
-        - type: object
-          properties:
-            name:
-              const: AttachClonesByDistanceChange
-          required:
-          - name
-      - allOf:
-        - type: object
-          properties:
-            maxNDNDistance:
-              type: number
-        - type: object
-          properties:
-            name:
-              const: AttachClonesByNDN
-          required:
-          - name
-      - allOf:
-        - type: object
-          properties:
-            algorithm:
-              anyOf:
-              - $ref: '#/$defs/BronKerbosch'
-              - $ref: '#/$defs/BronKerboschWithFallback-2'
-              - $ref: '#/$defs/SingleLinkage'
-            predictor:
-              type: object
+        - allOf:
+            - type: object
               properties:
-                commonMutationsCountForClustering:
-                  type: integer
-                maxNDNDistanceForClustering:
+                maxNDNDistance:
                   type: number
-        - type: object
-          properties:
-            name:
-              const: BuildingInitialTrees
-          required:
-          - name
-      - allOf:
-        - type: object
-          properties:
-            maxNDNDistanceBetweenRoots:
-              type: number
-        - type: object
-          properties:
-            name:
-              const: CombineTrees
-          required:
-          - name
+                threshold:
+                  type: number
+            - type: object
+              properties:
+                name:
+                  const: AttachClonesByDistanceChange
+              required:
+                - name
+        - allOf:
+            - type: object
+              properties:
+                maxNDNDistance:
+                  type: number
+            - type: object
+              properties:
+                name:
+                  const: AttachClonesByNDN
+              required:
+                - name
+        - allOf:
+            - type: object
+              properties:
+                algorithm:
+                  anyOf:
+                    - $ref: '#/$defs/BronKerbosch'
+                    - $ref: '#/$defs/BronKerboschWithFallback-2'
+                    - $ref: '#/$defs/SingleLinkage'
+                predictor:
+                  type: object
+                  properties:
+                    commonMutationsCountForClustering:
+                      type: integer
+                    maxNDNDistanceForClustering:
+                      type: number
+            - type: object
+              properties:
+                name:
+                  const: BuildingInitialTrees
+              required:
+                - name
+        - allOf:
+            - type: object
+              properties:
+                maxNDNDistanceBetweenRoots:
+                  type: number
+            - type: object
+              properties:
+                name:
+                  const: CombineTrees
+              required:
+                - name
   topologyBuilder:
     type: object
     properties:

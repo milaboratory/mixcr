@@ -4,4 +4,4 @@ properties:
   type:
     const: ExportClonesResetFileSplitting
 required:
-- type
+  - type

@@ -1,19 +1,19 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: object
-  properties:
-    geneType:
-      type: string
-      enum:
-      - Variable
-      - Diversity
-      - Joining
-      - Constant
-    value:
-      type: boolean
-- type: object
-  properties:
-    type:
-      const: SetSplitClonesBy
-  required:
-  - type
+  - type: object
+    properties:
+      geneType:
+        type: string
+        enum:
+          - Variable
+          - Diversity
+          - Joining
+          - Constant
+      value:
+        type: boolean
+  - type: object
+    properties:
+      type:
+        const: SetSplitClonesBy
+    required:
+      - type

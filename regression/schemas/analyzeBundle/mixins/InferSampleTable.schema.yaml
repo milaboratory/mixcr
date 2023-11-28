@@ -4,4 +4,4 @@ properties:
   type:
     const: InferSampleTable
 required:
-- type
+  - type

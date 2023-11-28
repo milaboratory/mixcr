@@ -4,4 +4,4 @@ properties:
   type:
     const: ExportProductiveClonesOnly
 required:
-- type
+  - type

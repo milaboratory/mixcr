@@ -13,11 +13,11 @@ $defs:
             items:
               type: string
               enum:
-              - A
-              - D
-              - G
-              - E
-              - M
+                - A
+                - D
+                - G
+                - E
+                - M
           seedForShuffle:
             type: integer
       coefficientForNaiveClonesInScore:

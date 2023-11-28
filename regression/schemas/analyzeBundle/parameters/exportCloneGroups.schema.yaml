@@ -25,15 +25,17 @@ properties:
   sortChainsBy:
     type: string
     enum:
-    - Read
-    - Molecule
-    - Auto
+      - Read
+      - Molecule
+      - Auto
+  splitFilesByCellType:
+    type: boolean
   types:
     type: array
     items:
       type: string
       enum:
-      - IGHK
-      - IGHL
-      - TRAB
-      - TRGD
+        - IGHK
+        - IGHL
+        - TRAB
+        - TRGD

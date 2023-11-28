@@ -1,15 +1,15 @@
 flags:
-- species
+  - species
 pipeline:
-- align
-- refineTagsAndSort
-- assemblePartial
-- extend
-- assemble
-- assembleContigs
-- groupClones
-- exportClones
-- exportCloneGroups
+  - align
+  - refineTagsAndSort
+  - assemblePartial
+  - extend
+  - assemble
+  - assembleContigs
+  - groupClones
+  - exportClones
+  - exportCloneGroups
 align:
   species: ""
   libraryName: default
@@ -27,12 +27,12 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
-  - type: MustContainTagType
-    tagType: Cell
-  - type: MustContainTagType
-    tagType: Molecule
-  - type: MustContainTagType
-    tagType: Cell
+    - type: MustContainTagType
+      tagType: Cell
+    - type: MustContainTagType
+      tagType: Molecule
+    - type: MustContainTagType
+      tagType: Cell
   splitBySample: true
   limit: null
   parameters:
@@ -181,110 +181,110 @@ refineTagsAndSort:
     postFilter:
       type: filter_and
       operands:
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        - allTags:Molecule
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_lowest_threshold
-            operators:
-            - type: group_operator_advanced_thresholding
-              algo:
-                type: otsu
-              histTransformers:
-              - type: inflate
-                fraction: 0.15
-                value: 1.0
-              logX: true
-              minimalSample: 20
-              fallbackThreshold: 1.0
-              accept: High
-            - type: group_operator_cumtop
-              share: 0.85
-              round: Down
-              accept: High
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        - allTags:Molecule
-        requiredSequences: []
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-            keys:
+        - type: filter_groups
+          groupingKeys:
+            - allTags:Cell
             - allTags:Molecule
-          operator:
-            type: group_operator_advanced_thresholding
-            algo:
-              type: otsu
-            histTransformers:
-            - type: inflate
-              fraction: 0.15
-              value: 1.0
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
-            accept: High
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+              operator:
+                type: group_operator_lowest_threshold
+                operators:
+                  - type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      - type: inflate
+                        fraction: 0.15
+                        value: 1.0
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+                    accept: High
+                  - type: group_operator_cumtop
+                    share: 0.85
+                    round: Down
+                    accept: High
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
           expectedSorting:
-          - allTags:Molecule
+            - allTags:Cell
+            - allTags:Molecule
           requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        - allTags:Molecule
-        requiredSequences: []
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        - allTags:Molecule
-        predicates:
-        - metrics:
-          - type: group_metric_kmer_diversity
-            sequences:
-            - targets
-            k: 12
-            minimalQuality: 20
-            topShare: 0.7
-            minSequenceCount: 4
-            reportHist:
-              log: false
-              binNumber: 40
-              minBinWidth: 0.0
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_range
-            lower: 150.0
-            acceptNaN: true
-          expectedSorting: []
+        - type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+                  keys:
+                    - allTags:Molecule
+              operator:
+                type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  - type: inflate
+                    fraction: 0.15
+                    value: 1.0
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+                accept: High
+              expectedSorting:
+                - allTags:Molecule
+              requiredSequences: []
+          expectedSorting:
+            - allTags:Cell
+            - allTags:Molecule
+          requiredSequences: []
+        - type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+            - allTags:Molecule
+          predicates:
+            - metrics:
+                - type: group_metric_kmer_diversity
+                  sequences:
+                    - targets
+                  k: 12
+                  minimalQuality: 20
+                  topShare: 0.7
+                  minSequenceCount: 4
+                  reportHist:
+                    log: false
+                    binNumber: 40
+                    minBinWidth: 0.0
+                    multiplyWeightByKey: false
+              operator:
+                type: group_operator_range
+                lower: 150.0
+                acceptNaN: true
+              expectedSorting: []
+              requiredSequences:
+                - targets
+          expectedSorting:
+            - allTags:Cell
+            - allTags:Molecule
           requiredSequences:
-          - targets
-        expectedSorting:
+            - targets
+      expectedSorting:
         - allTags:Cell
         - allTags:Molecule
-        requiredSequences:
-        - targets
-      expectedSorting:
-      - allTags:Cell
-      - allTags:Molecule
       requiredSequences:
-      - targets
+        - targets
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -341,7 +341,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -386,91 +386,91 @@ assemble:
     mappingThreshold: 2of5
     minimalQuality: 20
     postFilters:
-    - type: filter_in_groups
-      isolationKeys:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist: null
-            keys:
-            - allTags:Molecule
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
+      - type: filter_in_groups
+        isolationKeys:
+          - geneLabel:ReliableChain
+          - allTags:Cell
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist: null
+                  keys:
+                    - allTags:Molecule
+              operator:
+                type: group_operator_cumtop
+                share: 0.95
+                accept: High
+              expectedSorting:
+                - allTags:Molecule
+              requiredSequences: []
           expectedSorting:
+            - clone
+            - allTags:Molecule
+          requiredSequences: []
+        aggregateReport: true
+        expectedSorting:
+          - geneLabel:ReliableChain
+          - allTags:Cell
+          - clone
           - allTags:Molecule
+      - type: filter_in_groups
+        isolationKeys:
+          - geneLabel:ReliableChain
+          - allTags:Cell
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist: null
+              operator:
+                type: group_operator_cumtop
+                share: 0.95
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
+          expectedSorting:
+            - clone
           requiredSequences: []
+        aggregateReport: true
         expectedSorting:
-        - clone
-        - allTags:Molecule
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      - clone
-      - allTags:Molecule
-    - type: filter_in_groups
-      isolationKeys:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist: null
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
-          expectedSorting: []
+          - geneLabel:ReliableChain
+          - allTags:Cell
+          - clone
+      - type: filter_in_groups
+        isolationKeys:
+          - clone
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.1
+                    multiplyWeightByKey: false
+              operator:
+                type: group_operator_cumtop
+                share: 0.99
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
+          expectedSorting:
+            - allTags:Cell
           requiredSequences: []
+        aggregateReport: true
         expectedSorting:
-        - clone
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      - clone
-    - type: filter_in_groups
-      isolationKeys:
-      - clone
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.1
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_cumtop
-            share: 0.99
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - clone
-      - allTags:Cell
+          - clone
+          - allTags:Cell
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -519,27 +519,27 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -tags
-    args:
-    - Cell
-  - field: -tags
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -tags
+      args:
+        - Cell
+    - field: -tags
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -547,29 +547,29 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -cellGroup
-  - field: -tags
-    args:
-    - Cell
-  - field: -readCount
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -cloneId
+    - field: -cellGroup
+    - field: -tags
+      args:
+        - Cell
+    - field: -readCount
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
 exportCloneGroups:
@@ -580,36 +580,36 @@ exportCloneGroups:
   types: []
   noHeader: false
   fields:
-  - field: -cellGroup
-  - field: -groupReadCount
-  - field: -groupUniqueTagCount
-    args:
-    - Cell
-  - field: -groupUniqueTagCount
-    args:
-    - Molecule
-  - field: -uniqClonesPerChainCount
-  - field: -readCount
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cellGroup
+    - field: -groupReadCount
+    - field: -groupUniqueTagCount
+      args:
+        - Cell
+    - field: -groupUniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqClonesPerChainCount
+    - field: -readCount
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   sortChainsBy: Auto
 qc:
   checks:
-  - type: OffTargetReads
-    upper: 0.99
-    middle: 0.95
-    label: Off target (non TCR/IG) reads
+    - type: OffTargetReads
+      upper: 0.99
+      middle: 0.95
+      label: Off target (non TCR/IG) reads

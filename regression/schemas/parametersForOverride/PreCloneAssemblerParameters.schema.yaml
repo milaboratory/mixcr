@@ -17,25 +17,25 @@ properties:
             type: integer
           scoring:
             allOf:
-            - type: object
-              properties:
-                alphabet:
-                  type: string
-                gapPenalty:
-                  type: integer
-                subsMatrix:
-                  type: object
-                  properties:
-                    data:
-                      type: array
-                      items:
-                        type: integer
-            - type: object
-              properties:
-                type:
-                  const: linear
-              required:
-              - type
+              - type: object
+                properties:
+                  alphabet:
+                    type: string
+                  gapPenalty:
+                    type: integer
+                  subsMatrix:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: integer
+              - type: object
+                properties:
+                  type:
+                    const: linear
+                required:
+                  - type
           trimMinimalSumQuality:
             type: integer
           trimReferenceRegion:
