@@ -197,7 +197,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         if (cloneIds != null) {
             resultFilter = resultFilter.and { vdjcAlignments -> cloneIds.contains(vdjcAlignments.cloneIndex) }
         }
-        if (feature != null) {
+        feature?.let { feature ->
             resultFilter = resultFilter.and { vdjcAlignments ->
                 (vdjcAlignments.getFeature(feature)?.size() ?: 0) > 0
             }
@@ -267,7 +267,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
             output.print(">>> Clone mapping: ")
             output.print(alignments.cloneIndex)
             output.print(" ")
-            output.println(alignments.mappingType)
+            output.println(alignments.getMappingType())
         }
         output.printTags(tagsInfo, alignments)
         output.println()
@@ -282,7 +282,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
                 )
             }
             val targetAsMultiAlignment = MultiAlignmentHelper.Builder
-                .formatMultiAlignments(alignments, i, addReads = alignments.originalSequences != null)
+                .formatMultiAlignments(alignments, i, addReads = alignments.getOriginalSequences() != null)
             val split = targetAsMultiAlignment.split(80)
             for (spl in split) {
                 output.println(spl.format())

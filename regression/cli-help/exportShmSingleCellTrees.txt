@@ -1,0 +1,327 @@
+Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observed]
+                                      [--filter-min-nodes <n>] [--filter-min-height <n>] [--ids <id>
+                                      [,<id>...]]... [--chains <chains>] [--preset <preset>]
+                                      [--preset-file <presetFile>] [--cell-type <cell_type>...]...
+                                      [--dont-show-secondary-chain] [--sort-chains-by
+                                      (Clones|Read|Molecule)] [--no-header]
+                                      [--not-covered-as-empty] [-treeId] [-numberOfClonesInTree]
+                                      [-numberOfNodesWithClones] [-totalReadsCountInTree]
+                                      [-totalUniqueTagCountInTree (Molecule|Cell|Sample)]...
+                                      [-rootsCountPerChain] [-treeHeight] [-nodeId] [-isObserved]
+                                      [-parentId] [-distance (germline|mrca|parent)]... [-vHit]
+                                      [-jHit] [-vGene] [-jGene] [-vFamily] [-jFamily] [-nFeature
+                                      <gene_feature> [(germline|mrca|parent)]]... [-allNFeatures
+                                      [(germline|mrca|parent)]]... [-aaFeature <gene_feature>
+                                      [(germline|mrca|parent)]]... [-allAAFeatures
+                                      [(germline|mrca|parent)]]... [-nLength <gene_features>
+                                      [(germline|mrca|parent)]]... [-allNLength
+                                      [(germline|mrca|parent)]]... [-aaLength <gene_features>
+                                      [(germline|mrca|parent)]]... [-allAALength
+                                      [(germline|mrca|parent)]]... [-nMutations <gene_feature>
+                                      [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-allNMutations [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-nMutationsRelative <gene_feature>
+                                      <relative_to_gene_feature> [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]... [-aaMutations
+                                      <gene_feature> [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-allAAMutations [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-aaMutationsRelative <gene_feature>
+                                      <relative_to_gene_feature> [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-mutationsDetailed <gene_feature>
+                                      [(germline|mrca|parent)]]... [-allMutationsDetailed
+                                      [(germline|mrca|parent)]]... [-mutationsDetailedRelative
+                                      <gene_feature> <relative_to_gene_feature>
+                                      [(germline|mrca|parent)]]... [-nMutationsCount
+                                      [<gene_features>] [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-allNMutationsCount [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-aaMutationsCount [<gene_features>] [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-allAAMutationsCount [(germline|mrca|parent)]
+                                      [(substitutions|indels|inserts|deletions)]]... [-readCount]
+                                      [-clonesCount] [-vBestIdentityPercent]
+                                      [-jBestIdentityPercent] [-nMutationsRate [<gene_features>]
+                                      [(substitutions|indels|inserts|deletions)]]...
+                                      [-aaMutationsRate [<gene_features>]
+                                      [(substitutions|indels|inserts|deletions)]]... [-isotype
+                                      [(primary|subclass|auto)]]... [-cellId
+                                      [(none|space|dash)]]... [-uniqueTagCount
+                                      (Molecule|Cell|Sample)]... [-cellGroup] [-hasStops
+                                      <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
+                                      [<gene_feature>]]... [-biochemicalProperty <gene_feature>
+                                      <property> [(germline|mrca|parent)]]...
+                                      [-baseBiochemicalProperties <gene_feature>
+                                      [(germline|mrca|parent)]]... [--force-overwrite]
+                                      [--no-warnings] [--verbose] [--help] [[--filter-in-feature
+                                      <gene_feature>] [--pattern-max-errors <n>]
+                                      (--filter-aa-pattern <pattern> | --filter-nt-pattern
+                                      <pattern>)] trees.shmt [trees.tsv]
+Export SHM trees with one row per node. Tree may contain several roots, that will be exported in
+separate columns. Initial data for building tree should contain cell data.
+      trees.shmt             Input file produced by 'findShmTrees' command.
+      [trees.tsv]            Path where to write output export table. Print in stdout if omitted.
+      --include-one-chain-trees
+                             Export trees with only one chain, i.e. without single cell data. By
+                               default exporting only trees that have several roots
+      --only-observed        Export nodes that have at least one clone.
+      --filter-min-nodes <n> Minimal number of nodes in tree
+      --filter-min-height <n>
+                             Minimal height of the tree
+      --ids <id>[,<id>...]   Filter specific trees by id
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
+                               or IGH).
+  -p, --preset <preset>      Specify preset of export fields. Possible values: min, default.
+      -pf, --preset-file <presetFile>
+                             Specify preset file of export fields
+      --cell-type <cell_type>...
+                             Export SHM trees for given cell type. By default all will be exported.
+                               Possible values: IGHK, IGHL
+      --dont-show-secondary-chain
+                             Don't show columns for secondary chains in export for cell groups.
+      --sort-chains-by (Clones|Read|Molecule)
+                             How to sort subtrees for determination of the second chain.
+                             Clones - by count of clones, Read - by sum of reads count, Molecule -
+                               by sum of count of UMI tags.
+                               Default: Clones
+      --no-header            Don't print first header line, print only data
+      --not-covered-as-empty Export not covered regions as empty text.
+  -f, --force-overwrite      Force overwrite of output file(s).
+      -nw, --no-warnings     Suppress all warning messages.
+      --verbose              Verbose messages.
+  -h, --help                 Show this help message and exit.
+Filter by pattern
+      --filter-in-feature <gene_feature>
+                             Match pattern inside specified gene feature.
+                               Default: CDR3
+      --pattern-max-errors <n>
+                             Max allowed subs & indels.
+                               Default: 0
+      --filter-aa-pattern <pattern>
+                             Filter specific trees by aa pattern.
+      --filter-nt-pattern <pattern>
+                             Filter specific trees by nt pattern.
+Possible fields to export
+      -treeId                SHM tree id
+      -numberOfClonesInTree  Number of uniq clones in the SHM tree. Will calculate for all clones
+                               and per each chain in separate columns.
+      -numberOfNodesWithClones
+                             Number of nodes with clones, i.e. nodes with different clone
+                               sequences. Other differences are not counting such as: isotypes,
+                               sample, cell.
+      -totalReadsCountInTree Total sum of read counts of clones in the SHM tree. Will calculate for
+                               all clones and per each chain in separate columns.
+      -totalUniqueTagCountInTree (Molecule|Cell|Sample)
+                             Total count of unique tags in the SHM tree with specified type. Will
+                               calculate for all clones and per each chain in separate columns.
+      -rootsCountPerChain    Count of different roots per each chain type
+      -treeHeight            Height of the tree
+      -nodeId                Node id in SHM tree
+      -isObserved            Is node have clones. All other nodes are reconstructed by algorithm
+      -parentId              Parent node id in SHM tree
+      -distance (germline|mrca|parent)
+                             Distance from another node in number of mutations.
+      -vHit                  Export best V hit
+      -jHit                  Export best J hit
+      -vGene                 Export best V hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
+      -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
+      -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00)
+      -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00)
+      -nFeature <gene_feature> [(germline|mrca|parent)]
+                             Export nucleotide sequence of specified gene feature.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -allNFeatures [(germline|mrca|parent)]
+                             Export nucleotide sequences for all covered gene features.
+                             If first arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -aaFeature <gene_feature> [(germline|mrca|parent)]
+                             Export amino acid sequence of specified gene feature.
+                             If second arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -allAAFeatures [(germline|mrca|parent)]
+                             Export amino acid sequences for all covered gene features.
+                             If first arg is omitted, then feature will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -nLength <gene_features> [(germline|mrca|parent)]
+                             Export count of nucleotides of specified gene feature.
+                             If second arg is omitted, then length will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -allNLength [(germline|mrca|parent)]
+                             Export count of nucleotides for all covered gene features.
+                             If first arg is omitted, then length will be printed for current node.
+                               Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -aaLength <gene_features> [(germline|mrca|parent)]
+                             Export count of amino acids of specified gene feature.
+                             If second arg is omitted, then length will be printed for current
+                               node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -allAALength [(germline|mrca|parent)]
+                             Export count of amino acids for all covered gene features.
+                             If first arg is omitted, then length will be printed for current node.
+                               Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -nMutations <gene_feature> [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
+                             Extract nucleotide mutations from specific node for specific gene
+                               feature.
+                             If second arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
+      -allNMutations [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
+                             Extract nucleotide mutations from specific node for all covered gene
+                               features.
+                             If first arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
+      -nMutationsRelative <gene_feature> <relative_to_gene_feature> [(germline|mrca|parent)]
+        [(substitutions|indels|inserts|deletions)]
+                             Extract nucleotide mutations from specific node for specific gene
+                               feature relative to another feature.
+                             If third arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Forth parameter will filter mutations by type, by default no
+                               filtering.
+      -aaMutations <gene_feature> [(germline|mrca|parent)]
+        [(substitutions|indels|inserts|deletions)]
+                             Extract amino acid mutations from specific node for specific gene
+                               feature.
+                             If second arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
+      -allAAMutations [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
+                             Extract amino acid mutations from specific node for all covered gene
+                               features.
+                             If first arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
+      -aaMutationsRelative <gene_feature> <relative_to_gene_feature> [(germline|mrca|parent)]
+        [(substitutions|indels|inserts|deletions)]
+                             Extract amino acid mutations from specific node for specific gene
+                               feature relative to another feature.
+                             If third arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Forth parameter will filter mutations by type, by default no
+                               filtering.
+      -mutationsDetailed <gene_feature> [(germline|mrca|parent)]
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               from specific node.
+                             If second arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`.
+                             Format <nt_mutation>:<aa_mutation_individual>:
+                               <aa_mutation_cumulative>, where <aa_mutation_individual> is an
+                               expected amino acid mutation given no other mutations have occurred,
+                               and <aa_mutation_cumulative> amino acid mutation is the observed
+                               amino acid mutation combining effect from all other. WARNING: format
+                               may change in following versions.
+      -allMutationsDetailed [(germline|mrca|parent)]
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               from specific node for all covered gene features.
+                             If first arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`.
+      -mutationsDetailedRelative <gene_feature> <relative_to_gene_feature> [(germline|mrca|parent)]
+                             Detailed list of nucleotide and corresponding amino acid mutations
+                               written, positions relative to specified gene feature.
+                             If third arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`.
+                             Format <nt_mutation>:<aa_mutation_individual>:
+                               <aa_mutation_cumulative>, where <aa_mutation_individual> is an
+                               expected amino acid mutation given no other mutations have occurred,
+                               and <aa_mutation_cumulative> amino acid mutation is the observed
+                               amino acid mutation combining effect from all other. WARNING: format
+                               may change in following versions.
+      -nMutationsCount [<gene_features>] [(germline|mrca|parent)]
+        [(substitutions|indels|inserts|deletions)]
+                             Number of nucleotide mutations. By default, will be used all covered
+                               features. Resolutions of wildcards in VJJunction are excluded from
+                               calculation.
+                             If second arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
+      -allNMutationsCount [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
+                             Number of nucleotide mutations for all covered gene features.
+                               Resolutions of wildcards in VJJunction are excluded from calculation.
+                             If first arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
+      -aaMutationsCount [<gene_features>] [(germline|mrca|parent)]
+        [(substitutions|indels|inserts|deletions)]
+                             Number of amino acid mutations. By default, will be used all covered
+                               features. Resolutions of wildcards in CDR3 are excluded from
+                               calculation.
+                             If second arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Third parameter will filter mutations by type, by default no
+                               filtering.
+      -allAAMutationsCount [(germline|mrca|parent)] [(substitutions|indels|inserts|deletions)]
+                             Number of amino acid mutations for all covered gene features.
+                               Resolutions of wildcards in CDR3 are excluded from calculation.
+                             If first arg is omitted, then mutations will be calculated from
+                               germline. Otherwise - for corresponding `parent`, `germline` or
+                               `mrca`. Second parameter will filter mutations by type, by default
+                               no filtering.
+      -readCount             Sum of number of reads in all clones with the chain. Will be exported
+                               for all chains. Empty if no clones with this chain in the node.
+      -clonesCount           Count of uniq clones with the chain. Will be exported for all chains.
+      -vBestIdentityPercent  V best alignment identity percent
+      -jBestIdentityPercent  J best alignment identity percent
+      -nMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
+                             Number of nucleotide mutations from germline divided by target
+                               sequence size. By default, will be used all covered features.
+                               Resolutions of wildcards in VJJunction are excluded from
+                               calculation. Second parameter will filter mutations by type, by
+                               default no filtering.
+      -aaMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
+                             Number of amino acid mutations from germline divided by target
+                               sequence size. By default, will be used all covered features.
+                               Resolutions of wildcards in CDR3 are excluded from calculation.
+                               Second parameter will filter mutations by type, by default no
+                               filtering.
+      -isotype [(primary|subclass|auto)]
+                             Export isotype for IGH chains if it's can be distinguishable.
+                               `primary` will resolve 'IgA', 'IgD', 'IgG', 'IgE', 'IgM'. `subtype`
+                               will try resolve isotypes like 'IgA1' or 'IgA2'. `auto` will resolve
+                               the best resolution as possible. By default `auto` will be used.
+                             Will export all isotypes found in clones with the chain. Empty if no
+                               clones for this chain in the node.
+      -cellId [(none|space|dash)]
+                             Cell id - concatenated all cell tags with specified delimiter, default
+                               delimiter is `none`.Cell ids will be grouped by sources files and
+                               will be exported for all chains.Only cell ids that were used to
+                               connect chains will be exported.
+                             Example output for `-cellId`: SourceFile1:GGATTACTCATTGCCC
+                             Example output for `-cellId dash`: SourceFile1:GGATTACT-CATTGCCC
+      -uniqueTagCount (Molecule|Cell|Sample)
+                             Sum of unique tag counts for all clones with the chain. Will be
+                               exported for all chains. Empty if no clones with this chain in the
+                               node.
+      -cellGroup             List of cell group identifiers that were used to connect chains. Will
+                               be grouped by source files in output.
+      -hasStops <gene_feature>
+                             Whether gene feature has stop codons inside
+      -isOOF <gene_feature>  Whether gene feature is OOF
+      -isProductive [<gene_feature>]
+                             Whether specified gene feature is productive (no stops and not OOF).
+                               If first arg is omitted, will calculate for all covered features
+      -biochemicalProperty <gene_feature> <property> [(germline|mrca|parent)]
+                             Biochemical property of specified gene feature normalized by AA
+                               sequence size. CDR3 can be exported only for nodes with clones.
+                               Possible values: Hydropathy, Charge, Polarity, Volume, Strength,
+                               MjEnergy, Kf1, Kf2, Kf3, Kf4, Kf5, Kf6, Kf7, Kf8, Kf9, Kf10, Rim,
+                               Surface, Turn, Alpha, Beta, Core, Disorder, N2Strength,
+                               N2Hydrophobicity, N2Volume, N2Surface
+      -baseBiochemicalProperties <gene_feature> [(germline|mrca|parent)]
+                             Base biochemical properties of specified gene feature normalized by AA
+                               sequence size: N2Strength, N2Hydrophobicity, N2Surface, N2Volume,
+                               Charge

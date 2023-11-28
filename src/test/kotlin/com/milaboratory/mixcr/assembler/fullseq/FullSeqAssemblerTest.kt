@@ -229,8 +229,8 @@ class FullSeqAssemblerTest {
                 println(clone.numberOfTargets())
                 println(clone.count)
                 println(clone.fraction)
-                println(clone.getBestHit(Variable).getAlignment(0).absoluteMutations)
-                println(clone.getBestHit(GeneType.Joining).getAlignment(0).absoluteMutations)
+                println(clone.getBestHit(Variable)!!.getAlignment(0)!!.absoluteMutations)
+                println(clone.getBestHit(GeneType.Joining)!!.getAlignment(0)!!.absoluteMutations)
                 println()
                 //            ActionExportClonesPretty.outputCompact(System.out, clone);
             }
@@ -381,7 +381,7 @@ class FullSeqAssemblerTest {
         val assemble = RunMiXCR.assemble(align)
         for (al in align.alignments) {
             if (al.getFeature(CDR3) == null) continue
-            if (NucleotideSequence("TACGGGTTTGACTACTGG") != al.getFeature(CDR3).sequence) continue
+            if (NucleotideSequence("TACGGGTTTGACTACTGG") != al.getFeature(CDR3)!!.sequence) continue
             for (i in 0 until al.numberOfTargets()) {
                 println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format())
                 println()
@@ -401,11 +401,11 @@ class FullSeqAssemblerTest {
             .filter { al -> cdr3 == al.getFeature(CDR3) }
         alignments
             .filter { al ->
-                al.getBestHit(Variable).alignments
-                    .filter { obj -> Objects.nonNull(obj) }
+                al.getBestHit(Variable)!!.getAlignments()
+                    .filterNotNull()
                     .any { a -> !a.absoluteMutations.isEmpty }
             }
-            .filter { al -> al.getBestHit(Variable).gene.name.name.contains("3-74") }
+            .filter { al -> al.getBestHit(Variable)!!.gene.name.name.contains("3-74") }
             .forEach { al ->
                 for (i in 0 until al.numberOfTargets()) {
                     println(MultiAlignmentHelper.Builder.formatMultiAlignments(al, i).format())

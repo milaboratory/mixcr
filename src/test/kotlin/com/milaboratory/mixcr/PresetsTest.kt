@@ -117,7 +117,8 @@ class PresetsTest {
                     val metaForExport = MetaForExport(
                         listOf(tagsInfo),
                         null,
-                        emptyList()
+                        emptyList(),
+                        false
                     )
                     bundle.exportAlignments?.let { al ->
                         VDJCAlignmentsFieldsExtractorsFactory.createExtractors(

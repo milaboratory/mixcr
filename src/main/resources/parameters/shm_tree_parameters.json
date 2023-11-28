@@ -34,6 +34,17 @@
         "name": "CombineTrees",
         "maxNDNDistanceBetweenRoots": 0.5
       }
-    ]
+    ],
+    "cellCombiner": {
+      "minOverlapOfClonesToCombineSecondaryChains": 0.9,
+      "maxCountOfChainsInACell": 4,
+      "filterOutGroupsWithInvalidCellsFromSource": true,
+      "clusterizationOfSecondChain": {
+        "algorithm": {
+          "type": "SingleLinkage"
+        },
+        "maxNDNDistance": 3.0
+      }
+    }
   }
 }

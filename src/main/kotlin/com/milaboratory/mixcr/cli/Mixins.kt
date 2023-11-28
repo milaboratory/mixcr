@@ -43,6 +43,7 @@ import com.milaboratory.mixcr.presets.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.GenericMixin
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
@@ -405,6 +406,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         description = ["Clones with equal clonal sequence but different gene will not be merged."],
         names = [SetSplitClonesBy.CMD_OPTION_TRUE],
         paramLabel = Labels.GENE_TYPE,
+        hideParamSyntax = true,
         order = OptionsOrder.mixins.assemble + 200
     )
     fun splitClonesBy(geneTypes: List<GeneType>) =
@@ -414,6 +416,7 @@ class AssembleMiXCRMixins : MiXCRMixinCollector() {
         description = ["Clones with equal clonal sequence but different gene will be merged into single clone."],
         names = [SetSplitClonesBy.CMD_OPTION_FALSE],
         paramLabel = Labels.GENE_TYPE,
+        hideParamSyntax = true,
         order = OptionsOrder.mixins.assemble + 300
     )
     fun dontSplitClonesBy(geneTypes: List<GeneType>) =
@@ -600,6 +603,7 @@ object ExportMiXCRMixins {
             description = ["Export clone groups for given cell type. Possible values: \${COMPLETION-CANDIDATES}"],
             names = [ExportMixins.ExportCloneGroupsForCellTypes.CMD_OPTION],
             order = OptionsOrder.mixins.exports + 5_100,
+            hideParamSyntax = true,
             paramLabel = "<cell_type>",
             arity = "1..*"
         )
@@ -635,7 +639,7 @@ object ExportMiXCRMixins {
 
         @Option(
             description = [
-                "How to sort clones for determination of the second chain.",
+                "How to sort clones for determination of the primary and the secondary chains.",
                 "Read - by reads count, Molecule - by count of UMI tags, Auto - by UMI if it's available, by Read otherwise"
             ],
             names = [ExportMixins.ExportCloneGroupsSortChainsBy.CMD_OPTION],
@@ -643,7 +647,7 @@ object ExportMiXCRMixins {
             paramLabel = "(Read|Molecule|Auto)",
             arity = "1"
         )
-        fun exportCloneGroupsForCellTypes(type: CommandExportCloneGroupsParams.SortChainsBy) =
+        fun sortChainsBy(type: CommandExportCloneGroupsParams.SortChainsBy) =
             mixIn(ExportMixins.ExportCloneGroupsSortChainsBy(type))
     }
 
@@ -652,7 +656,7 @@ object ExportMiXCRMixins {
             description = ["Add key to split output files with clone tables."],
             names = [ExportMixins.ExportClonesAddFileSplitting.CMD_OPTION],
             paramLabel = "<(geneLabel|tag):key>",
-            hideParamSyntax = true,
+            arity = "1",
             order = OptionsOrder.mixins.exports + 900
         )
         fun addExportClonesFileSplitting(by: String) =
@@ -672,7 +676,6 @@ object ExportMiXCRMixins {
             names = [ExportMixins.ExportClonesAddCloneGrouping.CMD_OPTION],
             arity = "1",
             paramLabel = "<(geneLabel|tag):key>",
-            hideParamSyntax = true,
             order = OptionsOrder.mixins.exports + 1_100
         )
         fun addExportClonesCloneGrouping(by: String) =
@@ -686,6 +689,31 @@ object ExportMiXCRMixins {
         )
         fun resetExportClonesCloneGrouping(ignored: Boolean) =
             mixIn(ExportMixins.ExportClonesResetCloneGrouping)
+
+        @Option(
+            description = [
+                "Filter out clones from groups of particular type.",
+                "`found` - groups that were found on `${MiXCRCommandDescriptor.groupClones.name}`.",
+                "`undefined` - there were not enough info on `${MiXCRCommandDescriptor.groupClones.name}` to form a group.",
+                "`contamination` - clones that were marked as contamination on `${MiXCRCommandDescriptor.groupClones.name}`.",
+            ],
+            names = [ExportMixins.FilterOutCloneGroupTypes.CMD_OPTION],
+            arity = "1..*",
+            hideParamSyntax = true,
+            paramLabel = "(found|undefined|contamination)",
+            order = OptionsOrder.mixins.exports + 1_300
+        )
+        fun filterOutCloneGroupTypes(types: List<CommandExportClonesParams.CloneGroupTypes>) =
+            mixIn(ExportMixins.FilterOutCloneGroupTypes(types))
+
+        @Option(
+            description = ["Reset filter of clones by group type."],
+            names = [ExportMixins.ResetFilterOfCloneGroupTypes.CMD_OPTION],
+            arity = "0",
+            order = OptionsOrder.mixins.exports + 1_400
+        )
+        fun resetFilterOfCloneGroupTypes(ignored: Boolean) =
+            mixIn(ExportMixins.ResetFilterOfCloneGroupTypes)
     }
 
     const val DESCRIPTION = "Params for export commands:%n"

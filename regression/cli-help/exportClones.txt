@@ -1,14 +1,15 @@
 Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter-stops]
-                          [--split-by-tags <(Molecule|Cell|Sample)>] [--split-files-by
+                          [--split-by-tags (Molecule|Cell|Sample)] [--split-files-by
                           <splitFilesBy>]... [--dont-split-files] [--impute-germline-on-export]
                           [--dont-impute-germline-on-export] [--add-export-clone-table-splitting <
                           (geneLabel|tag):key>] [--reset-export-clone-table-splitting]
                           [--add-export-clone-grouping <(geneLabel|tag):key>]
-                          [--reset-export-clone-grouping] [--export-productive-clones-only]
-                          [--no-header] [--drop-default-fields] [--prepend-columns]
-                          [--not-covered-as-empty] [-targets] [-vHit] [-dHit] [-jHit] [-cHit]
-                          [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily] [-jFamily]
-                          [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
+                          [--reset-export-clone-grouping] [--filter-out-group-types
+                          (found|undefined|contamination)]... [--reset-group-types-filter]
+                          [--export-productive-clones-only] [--no-header] [--drop-default-fields]
+                          [--prepend-columns] [--not-covered-as-empty] [-targets] [-vHit] [-dHit]
+                          [-jHit] [-cHit] [-vGene] [-dGene] [-jGene] [-cGene] [-vFamily] [-dFamily]
+                          [-jFamily] [-cFamily] [-vHitScore] [-dHitScore] [-jHitScore] [-cHitScore]
                           [-vHitsWithScore] [-dHitsWithScore] [-jHitsWithScore] [-cHitsWithScore]
                           [-vHits] [-dHits] [-jHits] [-cHits] [-vGenes] [-dGenes] [-jGenes]
                           [-cGenes] [-vFamilies] [-dFamilies] [-jFamilies] [-cFamilies]
@@ -63,10 +64,10 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           [-aaMutationsRate <gene_features>
                           [(substitutions|indels|inserts|deletions)]]... [-chains] [-topChains]
                           [-geneLabel <label>]... [-isotype [(primary|subclass|auto)]]...
-                          [-tagCounts] [-cellId [<(none|space|dash)>]]... [-tags <
-                          (Molecule|Cell|Sample)>]... [-uniqueTagCount <(Molecule|Cell|Sample)>]...
-                          [-uniqueTagFraction <(Molecule|Cell|Sample)>]... [-cellGroup] [-rankByTag
-                          <(Molecule|Cell|Sample)>]... [-hasStops <gene_feature>]... [-isOOF
+                          [-tagCounts] [-cellId [(none|space|dash)]]... [-tags
+                          (Molecule|Cell|Sample)]... [-uniqueTagCount (Molecule|Cell|Sample)]...
+                          [-uniqueTagFraction (Molecule|Cell|Sample)]... [-cellGroup] [-rankByTag
+                          (Molecule|Cell|Sample)]... [-hasStops <gene_feature>]... [-isOOF
                           <gene_feature>]... [-isProductive <gene_feature>]...
                           [-biochemicalProperty <gene_feature> <property>]...
                           [-baseBiochemicalProperties <gene_feature>]... [--force-overwrite]
@@ -87,7 +88,7 @@ Export assembled clones into tab delimited file.
   -t, --filter-stops         Exclude sequences containing stop codons (fractions will be
                                recalculated).
                                Default value determined by the preset.
-      --split-by-tags <(Molecule|Cell|Sample)>
+      --split-by-tags (Molecule|Cell|Sample)
                              Split clones by tag type. Will be calculated from export columns if
                                not specified.
                                Default value determined by the preset.
@@ -109,6 +110,15 @@ Export assembled clones into tab delimited file.
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
                              Reset all clone grouping in the output clone tables.
+      --filter-out-group-types (found|undefined|contamination)
+                             Filter out clones from groups of particular type.
+                             `found` - groups that were found on `groupClones`.
+                             `undefined` - there were not enough info on `groupClones` to form a
+                               group.
+                             `contamination` - clones that were marked as contamination on
+                               `groupClones`.
+      --reset-group-types-filter
+                             Reset filter of clones by group type.
       --export-productive-clones-only
                              Export only productive clonotypes.
       --no-header            Don't print first header line, print only data
@@ -441,20 +451,20 @@ Possible fields to export
                                will try resolve isotypes like 'IgA1' or 'IgA2'. `auto` will resolve
                                the best resolution as possible. By default `auto` will be used
       -tagCounts             All tags with counts
-      -cellId [<(none|space|dash)>]
+      -cellId [(none|space|dash)]
                              Concatenated all cell tags with specified delimiter, default delimiter
                                is `none`.
                              Example output for `-cellId`: GGATTACTCATTGCCC
                              Example output for `-cellId dash`: GGATTACT-CATTGCCC
-      -tags <(Molecule|Cell|Sample)>
+      -tags (Molecule|Cell|Sample)
                              All tags values (i.e. CELL barcode or UMI sequence)
-      -uniqueTagCount <(Molecule|Cell|Sample)>
+      -uniqueTagCount (Molecule|Cell|Sample)
                              Unique tag count
-      -uniqueTagFraction <(Molecule|Cell|Sample)>
+      -uniqueTagFraction (Molecule|Cell|Sample)
                              Fraction of unique tags (UMI, CELL, etc.) the clone or alignment
                                collected.
       -cellGroup             Unique cell group identifier
-      -rankByTag <(Molecule|Cell|Sample)>
+      -rankByTag (Molecule|Cell|Sample)
                              Rank by count of unique tags, i.e how many clones have equal or more
                                count
       -hasStops <gene_feature>

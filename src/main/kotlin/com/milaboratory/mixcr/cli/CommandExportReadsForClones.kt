@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -91,7 +91,7 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { clna ->
             val firstAlignment: VDJCAlignments = clna.readAllAlignments()
                 .use { dummyP -> dummyP.take() } ?: return
-            ValidationException.requireNotNull(firstAlignment.originalReads) {
+            ValidationException.requireNotNull(firstAlignment.getOriginalReads()) {
                 "Error: original reads were not saved in original .vdjca file: " +
                         "re-run 'align' with '-OsaveOriginalReads=true' option."
             }
@@ -115,7 +115,7 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
                     return finished.get()
                 }
             })
-            val paired = firstAlignment.originalReads[0].numberOfReads() == 2
+            val paired = firstAlignment.getOriginalReads()!!.first().numberOfReads() == 2
             when {
                 separate -> null
                 else -> createWriter(paired, out.toString())
@@ -127,7 +127,7 @@ class CommandExportReadsForClones : MiXCRCommandWithOutputs() {
                     }.use { individualWriter ->
                         val actualWriter = globalWriter ?: individualWriter!!
                         for (alignments in CUtils.it(clna.readAlignmentsOfClone(cloneId))) {
-                            for (read in alignments.originalReads) {
+                            for (read in alignments.getOriginalReads()!!) {
                                 when (actualWriter) {
                                     is PairedFastqWriter -> actualWriter.write(read as PairedRead)
                                     is SingleFastqWriter -> actualWriter.write(read as SingleRead)

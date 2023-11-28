@@ -467,7 +467,7 @@ object CommandRefineTagsAndSort {
         override fun getSequenceExtractor(seqKey: String) = run {
             if (!"targets".equals(seqKey, ignoreCase = true))
                 throw IllegalArgumentException("Unknown sequence key: $seqKey")
-            SequenceExtractor<VDJCAlignments> { it.targets }
+            SequenceExtractor<VDJCAlignments> { it.getTargets() }
         }
     }
 }

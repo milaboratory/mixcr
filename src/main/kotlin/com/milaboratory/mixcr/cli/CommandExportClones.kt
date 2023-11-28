@@ -31,6 +31,7 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.clonegrouping.CloneGrouper
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
@@ -67,6 +68,15 @@ object CommandExportClones {
         if (filterStops)
             for (assemblingFeature in assemblingFeatures)
                 if (clone.containsStopsOrAbsent(assemblingFeature)) return false
+
+        for (filterOutCloneGroup in filterOutCloneGroups) {
+            val match = when (filterOutCloneGroup) {
+                CommandExportClonesParams.CloneGroupTypes.found -> clone.groupIsDefined
+                CommandExportClonesParams.CloneGroupTypes.undefined -> clone.group == CloneGrouper.undefinedGroup
+                CommandExportClonesParams.CloneGroupTypes.contamination -> clone.group == CloneGrouper.contamination
+            }
+            if (match) return false
+        }
 
         if (chains == Chains.ALL)
             return true
@@ -376,7 +386,7 @@ object CommandExportClones {
     }
 
     private class CloneGeneLabelGroupingKey(private val labelName: String) : CloneGroupingKey {
-        override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)
+        override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)!!
     }
 
     private class CloneTagGroupingKey(

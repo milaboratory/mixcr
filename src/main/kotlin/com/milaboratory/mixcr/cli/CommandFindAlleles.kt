@@ -39,7 +39,7 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.presets.AssembleContigsMixins
+import com.milaboratory.mixcr.presets.AssembleContigsMixins.SetContigAssemblingFeatures
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.util.GlobalObjectMappers
@@ -290,7 +290,11 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val libraryRegistry = VDJCLibraryRegistry.getDefault()
         val datasets = inputFiles.map { CloneSetIO.mkReader(it, libraryRegistry) }
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
-            "Some of the inputs were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION}` option"
+            val withoutFullyCovered = datasets.withIndex()
+                .filter { it.value.header.allFullyCoveredBy == null }
+                .map { inputFiles[it.index] }
+                .joinToString(", ")
+            "Some of the inputs were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${SetContigAssemblingFeatures.CMD_OPTION}` option: $withoutFullyCovered"
         }
         val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
             "Input files must be cut by the same geneFeature"
@@ -452,8 +456,8 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
         reportBuilder.setFinishMillis(System.currentTimeMillis())
         val report = reportBuilder.buildReport()
-        writerCloseCallbacks.forEach {
-            it(report)
+        writerCloseCallbacks.forEach { callback ->
+            callback(report)
         }
         allelesMutationsOutput?.let { allelesMutationsOutput ->
             allelesMutationsOutput.toAbsolutePath().parent.createDirectories()

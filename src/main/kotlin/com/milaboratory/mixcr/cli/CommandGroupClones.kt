@@ -15,6 +15,7 @@ import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.flatten
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnAWriter
@@ -38,6 +39,7 @@ import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
+import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
@@ -45,9 +47,19 @@ object CommandGroupClones {
     const val COMMAND_NAME = MiXCRCommandDescriptor.groupClones.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandGroupClonesParams> {
+        @Option(
+            names = ["-O"],
+            description = ["Overrides for the clone grouping parameters."],
+            paramLabel = CommonDescriptions.Labels.OVERRIDES,
+            order = OptionsOrder.overrides
+        )
+        private var overrides: Map<String, String> = mutableMapOf()
+
         override val paramsResolver =
             object : MiXCRParamsResolver<CommandGroupClonesParams>(MiXCRParamsBundle::groupClones) {
-                override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {}
+                override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {
+                    CommandGroupClonesParams::algorithm jsonOverrideWith overrides
+                }
             }
     }
 
@@ -112,6 +124,7 @@ object CommandGroupClones {
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
+                logger.progress { "Writing output" }
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(result)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -136,6 +149,7 @@ object CommandGroupClones {
                         allAlignmentsList += reader.readAlignmentsOfClone(clone.id)
                     }
 
+                    logger.progress { "Writing output" }
                     writer.writeClones(result)
                     writer.collateAlignments(allAlignmentsList.flatten(), newNumberOfAlignments)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
@@ -167,15 +181,20 @@ object CommandGroupClones {
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
 
-            val grouper = cmdParams.algorithm.mkGrouper<Clone>(input.tagsInfo, input.cloneSetInfo.assemblingFeatures)
+            val grouper = cmdParams.algorithm.mkGrouper<Clone>(
+                input.tagsInfo,
+                input.cloneSetInfo.assemblingFeatures
+            )
             SmartProgressReporter.startProgressReport(grouper)
-            val grouppedClones = grouper.groupClones(input.clones)
+            val groupedClones = grouper.groupClones(input.clones)
             reportBuilder.grouperReport = grouper.getReport()
 
+            logger.progress { "Resorting and recalculating ranks" }
             return CloneSet.Builder(
-                grouppedClones,
+                groupedClones,
                 input.usedGenes,
                 input.header
+                    .copy(calculatedCloneGroups = true)
                     .addStepParams(MiXCRCommandDescriptor.groupClones, cmdParams)
                     .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
             )
