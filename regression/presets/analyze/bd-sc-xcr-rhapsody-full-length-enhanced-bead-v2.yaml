@@ -1,15 +1,15 @@
 flags:
-- species
+  - species
 pipeline:
-- align
-- refineTagsAndSort
-- assemblePartial
-- extend
-- assemble
-- assembleContigs
-- groupClones
-- exportClones
-- exportCloneGroups
+  - align
+  - refineTagsAndSort
+  - assemblePartial
+  - extend
+  - assemble
+  - assembleContigs
+  - groupClones
+  - exportClones
+  - exportCloneGroups
 align:
   species: ""
   libraryName: default
@@ -27,2371 +27,2371 @@ align:
   headerExtractors: []
   readIdAsCellTag: false
   tagTransformationSteps:
-  - type: mapTags
-    name: CELL1 to BD CLS1 inde
-    matchTags:
-    - CELL1
-    newTags:
-    - CELL1ID
-    allowOneMismatch: true
-    rules:
-    - from: ACACTAATT
-      to: 384
-    - from: ACATGAGGT
-      to: 383
-    - from: ACATTCGGC
-      to: 382
-    - from: ACCAGTCTG
-      to: 381
-    - from: ACGGATGGT
-      to: 380
-    - from: ACGTACACC
-      to: 379
-    - from: ACTCGACCT
-      to: 378
-    - from: ACTCGCTTG
-      to: 377
-    - from: AGAGAATTC
-      to: 376
-    - from: AGAGATGTT
-      to: 375
-    - from: AGCAATCCG
-      to: 374
-    - from: AGCCTGACT
-      to: 373
-    - from: AGCCTGGTC
-      to: 372
-    - from: AGCGGCCAG
-      to: 371
-    - from: AGGAATATG
-      to: 370
-    - from: AGGCACCTT
-      to: 369
-    - from: AGGCCTTCC
-      to: 368
-    - from: AGGCTTGCG
-      to: 367
-    - from: AGGTGCTAC
-      to: 366
-    - from: AGTGCGACC
-      to: 365
-    - from: AGTTGAGCC
-      to: 364
-    - from: AGTTGGTAT
-      to: 363
-    - from: ATAGGCGCC
-      to: 362
-    - from: ATATCTTAT
-      to: 361
-    - from: ATCATCACT
-      to: 360
-    - from: ATCATGCTC
-      to: 359
-    - from: ATCGGTTCC
-      to: 358
-    - from: ATCTGTGCG
-      to: 357
-    - from: ATCTTGGCT
-      to: 356
-    - from: ATGAGAGTG
-      to: 355
-    - from: ATGAGGTTC
-      to: 354
-    - from: ATGCTCGGC
-      to: 353
-    - from: ATGCTGTCC
-      to: 352
-    - from: ATGCTTACT
-      to: 351
-    - from: ATGGTGCAT
-      to: 350
-    - from: ATGTCTGTG
-      to: 349
-    - from: ATGTGGCAG
-      to: 348
-    - from: ATGTGTATC
-      to: 347
-    - from: ATGTTACGC
-      to: 346
-    - from: ATGTTCTAT
-      to: 345
-    - from: ATTACACTC
-      to: 344
-    - from: ATTACTGTT
-      to: 343
-    - from: ATTATCTTC
-      to: 342
-    - from: ATTCCAAGT
-      to: 341
-    - from: ATTCGCGAG
-      to: 340
-    - from: ATTCGGCTG
-      to: 339
-    - from: ATTGACTTG
-      to: 338
-    - from: ATTGCGCCG
-      to: 337
-    - from: ATTGCGGAC
-      to: 336
-    - from: ATTGCGTGT
-      to: 335
-    - from: CATGTTGAG
-      to: 334
-    - from: CATTATACC
-      to: 333
-    - from: CATTCCGAT
-      to: 332
-    - from: CCAGCGTTG
-      to: 331
-    - from: CCAGGATCC
-      to: 330
-    - from: CCAGGCATT
-      to: 329
-    - from: CCAGTGGTT
-      to: 328
-    - from: CCATGTGCG
-      to: 327
-    - from: CCGTTAATT
-      to: 326
-    - from: CCTCGGCCG
-      to: 325
-    - from: CCTGTATGC
-      to: 324
-    - from: CCTGTTCGT
-      to: 323
-    - from: CCTTACTTG
-      to: 322
-    - from: CCTTCGACC
-      to: 321
-    - from: CCTTCTCCT
-      to: 320
-    - from: CCTTCTGAG
-      to: 319
-    - from: CCTTGGCGT
-      to: 318
-    - from: CCTTGTCTC
-      to: 317
-    - from: CGCACTGCC
-      to: 316
-    - from: CGCGCAGAG
-      to: 315
-    - from: CGCGTTGGC
-      to: 314
-    - from: CGCTAATAG
-      to: 313
-    - from: CGGAGAGAT
-      to: 312
-    - from: CGGATAGCC
-      to: 311
-    - from: CGGCACGGT
-      to: 310
-    - from: CGGCGACTC
-      to: 309
-    - from: CGGTCCTGC
-      to: 308
-    - from: CGGTGTCAG
-      to: 307
-    - from: CGGTGTTCC
-      to: 306
-    - from: CGTATAGTT
-      to: 305
-    - from: CGTTCACCG
-      to: 304
-    - from: CGTTCGCTC
-      to: 303
-    - from: CTATACGGC
-      to: 302
-    - from: CTCACTAGC
-      to: 301
-    - from: CTCCTGACG
-      to: 300
-    - from: CTCGACTAT
-      to: 299
-    - from: CTCGTATTG
-      to: 298
-    - from: CTCTCGTCC
-      to: 297
-    - from: CTCTGCACC
-      to: 296
-    - from: CTCTTACCG
-      to: 295
-    - from: CTCTTAGTT
-      to: 294
-    - from: CTCTTGTAG
-      to: 293
-    - from: CTGAACGAG
-      to: 292
-    - from: CTGACGCCG
-      to: 291
-    - from: CTGAGTCAT
-      to: 290
-    - from: CTGATGGAT
-      to: 289
-    - from: CTGCACACC
-      to: 288
-    - from: CTGCGTAGT
-      to: 287
-    - from: CTGCTTGCC
-      to: 286
-    - from: CTGTACGTT
-      to: 285
-    - from: CTGTAGCTG
-      to: 284
-    - from: CTGTCGAGC
-      to: 283
-    - from: CTGTCGCAT
-      to: 282
-    - from: CTGTGCCTC
-      to: 281
-    - from: CTGTTCTCG
-      to: 280
-    - from: CTTACTTAT
-      to: 279
-    - from: CTTAGGAGC
-      to: 278
-    - from: CTTAGGTTG
-      to: 277
-    - from: CTTATATAG
-      to: 276
-    - from: CTTATGCTT
-      to: 275
-    - from: CTTATGTCC
-      to: 274
-    - from: CTTCGTTAG
-      to: 273
-    - from: CTTCTAGGC
-      to: 272
-    - from: CTTCTCGTT
-      to: 271
-    - from: CTTCTGATC
-      to: 270
-    - from: CTTGACGGT
-      to: 269
-    - from: CTTGAGGCC
-      to: 268
-    - from: CTTGCAATC
-      to: 267
-    - from: CTTGCTCAC
-      to: 266
-    - from: CTTGGATGT
-      to: 265
-    - from: CTTGGTACC
-      to: 264
-    - from: CTTGGTCTT
-      to: 263
-    - from: CTTGTCATG
-      to: 262
-    - from: CTTGTGCGC
-      to: 261
-    - from: CTTGTGTAT
-      to: 260
-    - from: GAACGCGTG
-      to: 259
-    - from: GAACTGCCG
-      to: 258
-    - from: GAAGAGACT
-      to: 257
-    - from: GAAGGCTCT
-      to: 256
-    - from: GAATATTGC
-      to: 255
-    - from: GAATTGAGC
-      to: 254
-    - from: GACCGCATT
-      to: 253
-    - from: GACTCTTAG
-      to: 252
-    - from: GACTGTTCT
-      to: 251
-    - from: GACTTCGTG
-      to: 250
-    - from: GAGACGGCT
-      to: 249
-    - from: GAGATAATT
-      to: 248
-    - from: GAGATCTGT
-      to: 247
-    - from: GAGCCTGAG
-      to: 246
-    - from: GAGCGGACG
-      to: 245
-    - from: GAGGCATTG
-      to: 244
-    - from: GAGGTGTAG
-      to: 243
-    - from: GAGTCGCCG
-      to: 242
-    - from: GAGTCGTAT
-      to: 241
-    - from: GAGTTACCT
-      to: 240
-    - from: GATACACGC
-      to: 239
-    - from: GATCCAGCG
-      to: 238
-    - from: GATCCTCTG
-      to: 237
-    - from: GATCGCCTC
-      to: 236
-    - from: GATCGGAGC
-      to: 235
-    - from: GATCGTTCG
-      to: 234
-    - from: GATGGCCAG
-      to: 233
-    - from: GATGTTATG
-      to: 232
-    - from: GATGTTGGC
-      to: 231
-    - from: GATTACGGT
-      to: 230
-    - from: GATTAGGCC
-      to: 229
-    - from: GATTCGCTT
-      to: 228
-    - from: GATTCTACT
-      to: 227
-    - from: GATTGCACC
-      to: 226
-    - from: GATTGGTAG
-      to: 225
-    - from: GATTGTCAT
-      to: 224
-    - from: GCACACGAG
-      to: 223
-    - from: GCACTATGT
-      to: 222
-    - from: GCAGACGTT
-      to: 221
-    - from: GCAGATACC
-      to: 220
-    - from: GCAGCCATC
-      to: 219
-    - from: GCAGGACGC
-      to: 218
-    - from: GCAGGCTAG
-      to: 217
-    - from: GCATCGACG
-      to: 216
-    - from: GCATGGTTG
-      to: 215
-    - from: GCCAACCAG
-      to: 214
-    - from: GCCAGCTAT
-      to: 213
-    - from: GCCATGCCG
-      to: 212
-    - from: GCCGCTGTC
-      to: 211
-    - from: GCCGTCCGT
-      to: 210
-    - from: GCCTAACTG
-      to: 209
-    - from: GCCTGCGCT
-      to: 208
-    - from: GCCTTGCAT
-      to: 207
-    - from: GCGAATTAC
-      to: 206
-    - from: GCGAGAGGT
-      to: 205
-    - from: GCGAGCGAG
-      to: 204
-    - from: GCGCCGACC
-      to: 203
-    - from: GCGCGATAC
-      to: 202
-    - from: GCGCGGCAG
-      to: 201
-    - from: GCGCTCTCC
-      to: 200
-    - from: GCGCTGGAC
-      to: 199
-    - from: GCGGCACCT
-      to: 198
-    - from: GCGGCGTCG
-      to: 197
-    - from: GCGGTCTTG
-      to: 196
-    - from: GCGGTTCAC
-      to: 195
-    - from: GCGTATACT
-      to: 194
-    - from: GCGTATGTG
-      to: 193
-    - from: GCGTCGGTT
-      to: 192
-    - from: GCGTGCATT
-      to: 191
-    - from: GCGTGTGCC
-      to: 190
-    - from: GCGTTCCGC
-      to: 189
-    - from: GCTAACCTT
-      to: 188
-    - from: GCTACGTAT
-      to: 187
-    - from: GCTAGCACT
-      to: 186
-    - from: GCTAGGATC
-      to: 185
-    - from: GCTAGTGTT
-      to: 184
-    - from: GCTATGAGT
-      to: 183
-    - from: GCTATTCGC
-      to: 182
-    - from: GCTCCAATT
-      to: 181
-    - from: GCTCGGTCC
-      to: 180
-    - from: GCTCTCCTG
-      to: 179
-    - from: GCTCTTGTC
-      to: 178
-    - from: GCTGAGCGT
-      to: 177
-    - from: GCTGATCAG
-      to: 176
-    - from: GCTGCGATG
-      to: 175
-    - from: GCTGGAACC
-      to: 174
-    - from: GCTGGATAT
-      to: 173
-    - from: GCTTAGTCT
-      to: 172
-    - from: GCTTCACAT
-      to: 171
-    - from: GCTTCGGAC
-      to: 170
-    - from: GCTTGACCG
-      to: 169
-    - from: GCTTGTAGC
-      to: 168
-    - from: GGAAGCCTC
-      to: 167
-    - from: GGAATCGAC
-      to: 166
-    - from: GGAATCTCT
-      to: 165
-    - from: GGAATTAGT
-      to: 164
-    - from: GGACCGTTG
-      to: 163
-    - from: GGACTAGTC
-      to: 162
-    - from: GGACTCCTT
-      to: 161
-    - from: GGAGAAGGC
-      to: 160
-    - from: GGAGTCGTG
-      to: 159
-    - from: GGATAGGTT
-      to: 158
-    - from: GGATCCATG
-      to: 157
-    - from: GGATCTGGC
-      to: 156
-    - from: GGATGAGAG
-      to: 155
-    - from: GGATGTCCG
-      to: 154
-    - from: GGCAACGAT
-      to: 153
-    - from: GGCATAACC
-      to: 152
-    - from: GGCATCCGC
-      to: 151
-    - from: GGCATTCCT
-      to: 150
-    - from: GGCCAACTT
-      to: 149
-    - from: GGCCAGCGC
-      to: 148
-    - from: GGCCTACAG
-      to: 147
-    - from: GGCCTCTTC
-      to: 146
-    - from: GGCGACTTG
-      to: 145
-    - from: GGCGAGATC
-      to: 144
-    - from: GGCGAGCCT
-      to: 143
-    - from: GGCGCTACC
-      to: 142
-    - from: GGCGCTCGT
-      to: 141
-    - from: GGCGTATCG
-      to: 140
-    - from: GGCGTGCTG
-      to: 139
-    - from: GGCGTGTAC
-      to: 138
-    - from: GGCGTTGAG
-      to: 137
-    - from: GGCTCACCT
-      to: 136
-    - from: GGCTCCGGT
-      to: 135
-    - from: GGCTCTGTG
-      to: 134
-    - from: GGCTGTCTT
-      to: 133
-    - from: GGCTTACTC
-      to: 132
-    - from: GGCTTATGT
-      to: 131
-    - from: GGCTTCACG
-      to: 130
-    - from: GGCTTGGCC
-      to: 129
-    - from: GGTAATCTG
-      to: 128
-    - from: GGTACATAG
-      to: 127
-    - from: GGTAGCTTG
-      to: 126
-    - from: GGTAGGCAC
-      to: 125
-    - from: GGTCGAGGT
-      to: 124
-    - from: GGTCGTTGC
-      to: 123
-    - from: GGTGCATGC
-      to: 122
-    - from: GGTGCCGCT
-      to: 121
-    - from: GGTGTACGT
-      to: 120
-    - from: GGTTAATAC
-      to: 119
-    - from: GGTTATATT
-      to: 118
-    - from: GGTTCAGTT
-      to: 117
-    - from: GGTTCGTCG
-      to: 116
-    - from: GGTTGACGC
-      to: 115
-    - from: GGTTGGCTG
-      to: 114
-    - from: GGTTGTGTC
-      to: 113
-    - from: GTAACAGAG
-      to: 112
-    - from: GTAAGTGCC
-      to: 111
-    - from: GTACACCTC
-      to: 110
-    - from: GTACCGTCC
-      to: 109
-    - from: GTAGCATCG
-      to: 108
-    - from: GTATAAGGT
-      to: 107
-    - from: GTATACTTG
-      to: 106
-    - from: GTATAGCCT
-      to: 105
-    - from: GTATCAGTC
-      to: 104
-    - from: GTATTAACT
-      to: 103
-    - from: GTCAGATAG
-      to: 102
-    - from: GTCAGTGGT
-      to: 101
-    - from: GTCATGTAT
-      to: 100
-    - from: GTCCAATAC
-      to: 99
-    - from: GTCCATTCT
-      to: 98
-    - from: GTCCGCTTG
-      to: 97
-    - from: GTCCTACCT
-      to: 96
-    - from: GTCCTCGCC
-      to: 95
-    - from: GTCGCTCCG
-      to: 94
-    - from: GTCGGAATC
-      to: 93
-    - from: GTCGGTGTG
-      to: 92
-    - from: GTCTATCGT
-      to: 91
-    - from: GTCTCAACC
-      to: 90
-    - from: GTCTCAGAT
-      to: 89
-    - from: GTCTGAGGC
-      to: 88
-    - from: GTCTGGCCG
-      to: 87
-    - from: GTCTTGCGC
-      to: 86
-    - from: GTGCAAGGC
-      to: 85
-    - from: GTGCAATTG
-      to: 84
-    - from: GTGCAGCCG
-      to: 83
-    - from: GTGCGAACT
-      to: 82
-    - from: GTGCGCCTT
-      to: 81
-    - from: GTGCGGTAT
-      to: 80
-    - from: GTGCGTTCC
-      to: 79
-    - from: GTGCTTCTG
-      to: 78
-    - from: GTGGCGATC
-      to: 77
-    - from: GTGGTACCG
-      to: 76
-    - from: GTGGTTAGT
-      to: 75
-    - from: GTGTACTGC
-      to: 74
-    - from: GTGTCAAGT
-      to: 73
-    - from: GTGTCACAC
-      to: 72
-    - from: GTGTTCATC
-      to: 71
-    - from: GTGTTCCAG
-      to: 70
-    - from: GTGTTCGGT
-      to: 69
-    - from: GTGTTGCTT
-      to: 68
-    - from: GTTAAGCGC
-      to: 67
-    - from: GTTAATTCC
-      to: 66
-    - from: GTTACCTCT
-      to: 65
-    - from: GTTAGACTT
-      to: 64
-    - from: GTTAGAGAC
-      to: 63
-    - from: GTTAGGTGT
-      to: 62
-    - from: GTTAGTCCG
-      to: 61
-    - from: GTTATCACC
-      to: 60
-    - from: GTTCACGCT
-      to: 59
-    - from: GTTCCGACG
-      to: 58
-    - from: GTTCCGGTT
-      to: 57
-    - from: GTTCGATTC
-      to: 56
-    - from: GTTCGCGGC
-      to: 55
-    - from: GTTCGGCCT
-      to: 54
-    - from: GTTCGTATG
-      to: 53
-    - from: GTTCTATAT
-      to: 52
-    - from: GTTCTCTCG
-      to: 51
-    - from: GTTCTGTGC
-      to: 50
-    - from: GTTGAAGTC
-      to: 49
-    - from: GTTGATACG
-      to: 48
-    - from: GTTGATGAT
-      to: 47
-    - from: GTTGCACTG
-      to: 46
-    - from: GTTGCAGGT
-      to: 45
-    - from: GTTGCGCAT
-      to: 44
-    - from: GTTGCTGCC
-      to: 43
-    - from: GTTGGAGCG
-      to: 42
-    - from: GTTGGCGTT
-      to: 41
-    - from: GTTGGTTCT
-      to: 40
-    - from: GTTGTATCC
-      to: 39
-    - from: GTTGTCCTC
-      to: 38
-    - from: GTTGTCGAG
-      to: 37
-    - from: GTTGTCTGT
-      to: 36
-    - from: GTTGTGGCT
-      to: 35
-    - from: GTTGTGTTG
-      to: 34
-    - from: TAATCACAT
-      to: 33
-    - from: TACGTGTCC
-      to: 32
-    - from: TACTGCGTT
-      to: 31
-    - from: TAGGCTGTG
-      to: 30
-    - from: TATATGACC
-      to: 29
-    - from: TATCTCGTG
-      to: 28
-    - from: TATGACGAG
-      to: 27
-    - from: TATGCGGCC
-      to: 26
-    - from: TATGTGCAC
-      to: 25
-    - from: TCACGCCTT
-      to: 24
-    - from: TCAGCATTC
-      to: 23
-    - from: TCCTGGATT
-      to: 22
-    - from: TCTCATCCG
-      to: 21
-    - from: TCTCGTTCT
-      to: 20
-    - from: TCTGAGGTT
-      to: 19
-    - from: TCTGATTAT
-      to: 18
-    - from: TCTGTCTCC
-      to: 17
-    - from: TGAAGGACC
-      to: 16
-    - from: TGATGCTTG
-      to: 15
-    - from: TGATGGCCT
-      to: 14
-    - from: TGATGTCTC
-      to: 13
-    - from: TGCCATTAT
-      to: 12
-    - from: TGCCTCACC
-      to: 11
-    - from: TGCTCTTCC
-      to: 10
-    - from: TGCTGGCAC
-      to: 9
-    - from: TGCTGTGGC
-      to: 8
-    - from: TGGCGACCG
-      to: 7
-    - from: TGGTGTGCT
-      to: 6
-    - from: TGGTTCCTC
-      to: 5
-    - from: TGGTTGTCC
-      to: 4
-    - from: TGTCTAGCG
-      to: 3
-    - from: TGTGGCGCC
-      to: 2
-    - from: TGTGTTCGC
-      to: 1
-    reportingLevel: VerboseReport
-  - type: mapTags
-    name: CELL2 to BD CLS2 index
-    matchTags:
-    - CELL2
-    newTags:
-    - CELL2ID
-    allowOneMismatch: true
-    rules:
-    - from: ACACATTCT
-      to: 384
-    - from: ACACCTGAG
-      to: 383
-    - from: ACAGGCACA
-      to: 382
-    - from: ACATATATT
-      to: 381
-    - from: ACCATCATA
-      to: 380
-    - from: ACCTCGCAT
-      to: 379
-    - from: ACGACGTGT
-      to: 378
-    - from: ACGCCGTTA
-      to: 377
-    - from: ACGCCTAAT
-      to: 376
-    - from: ACGGACTCT
-      to: 375
-    - from: ACGTGGAAT
-      to: 374
-    - from: ACGTTACTG
-      to: 373
-    - from: ACTAACGTT
-      to: 372
-    - from: ACTAGATCT
-      to: 371
-    - from: ACTCGCGAA
-      to: 370
-    - from: ACTCTGTAA
-      to: 369
-    - from: ACTGTATGT
-      to: 368
-    - from: ACTGTCGAG
-      to: 367
-    - from: ACTTCTATA
-      to: 366
-    - from: AGACCTCTG
-      to: 365
-    - from: AGAGTTAAT
-      to: 364
-    - from: AGATGTACG
-      to: 363
-    - from: AGCACTGAA
-      to: 362
-    - from: AGCCTCGAG
-      to: 361
-    - from: AGCCTGTCG
-      to: 360
-    - from: AGCCTTCAT
-      to: 359
-    - from: AGCGTCACA
-      to: 358
-    - from: AGCGTGTAT
-      to: 357
-    - from: AGCTCTAGA
-      to: 356
-    - from: AGCTTATAG
-      to: 355
-    - from: AGGAGCGAT
-      to: 354
-    - from: AGGCCAGGT
-      to: 353
-    - from: AGGCTACTT
-      to: 352
-    - from: AGGTATAGT
-      to: 351
-    - from: AGGTATGCG
-      to: 350
-    - from: AGTACACAA
-      to: 349
-    - from: AGTATCATT
-      to: 348
-    - from: AGTGCTTCT
-      to: 347
-    - from: AGTGGCTTG
-      to: 346
-    - from: AGTGTCCGT
-      to: 345
-    - from: AGTTATGAT
-      to: 344
-    - from: AGTTGAATT
-      to: 343
-    - from: AGTTGCGCG
-      to: 342
-    - from: ATACCTCAT
-      to: 341
-    - from: ATACTCTCG
-      to: 340
-    - from: ATAGCTGTG
-      to: 339
-    - from: ATAGTAATT
-      to: 338
-    - from: ATCACCATT
-      to: 337
-    - from: ATCAGCGAG
-      to: 336
-    - from: ATCATAGTT
-      to: 335
-    - from: ATCATGAGA
-      to: 334
-    - from: ATCCATGGT
-      to: 333
-    - from: ATCGCGTCG
-      to: 332
-    - from: ATCGCTCAA
-      to: 331
-    - from: ATCTCAGAA
-      to: 330
-    - from: ATCTGATAT
-      to: 329
-    - from: ATCTTGAAG
-      to: 328
-    - from: ATGGATTAT
-      to: 327
-    - from: ATGGTGTAG
-      to: 326
-    - from: ATGTAGTCG
-      to: 325
-    - from: ATGTTAACT
-      to: 324
-    - from: ATGTTAGAG
-      to: 323
-    - from: ATTAATATT
-      to: 322
-    - from: ATTAGCCTT
-      to: 321
-    - from: ATTCAAGAG
-      to: 320
-    - from: ATTCATCAA
-      to: 319
-    - from: ATTCCGTTG
-      to: 318
-    - from: ATTCGGATT
-      to: 317
-    - from: ATTCTACGT
-      to: 316
-    - from: ATTCTGCAG
-      to: 315
-    - from: ATTGCAGTT
-      to: 314
-    - from: ATTGCATAG
-      to: 313
-    - from: ATTGCTAAT
-      to: 312
-    - from: ATTGGTATG
-      to: 311
-    - from: ATTGTACAA
-      to: 310
-    - from: CACAGGCGT
-      to: 309
-    - from: CACCATCTG
-      to: 308
-    - from: CACGATGTT
-      to: 307
-    - from: CACGCGTTG
-      to: 306
-    - from: CACTGCATG
-      to: 305
-    - from: CACTGGTCG
-      to: 304
-    - from: CACTTATAT
-      to: 303
-    - from: CAGCCTCTT
-      to: 302
-    - from: CAGGCACTG
-      to: 301
-    - from: CAGTGCCAG
-      to: 300
-    - from: CAGTTCTGT
-      to: 299
-    - from: CATCCTTCT
-      to: 298
-    - from: CATCGATAA
-      to: 297
-    - from: CATCGGACG
-      to: 296
-    - from: CCGGCTGGT
-      to: 295
-    - from: CCGTAGATT
-      to: 294
-    - from: CCTACCTTG
-      to: 293
-    - from: CCTGACTAT
-      to: 292
-    - from: CCTGTCTCA
-      to: 291
-    - from: CCTTGTGTG
-      to: 290
-    - from: CGACGGCTT
-      to: 289
-    - from: CGAGCTGTT
-      to: 288
-    - from: CGAGGATGT
-      to: 287
-    - from: CGCAGGTTG
-      to: 286
-    - from: CGCGTTCGT
-      to: 285
-    - from: CGCTCCAAT
-      to: 284
-    - from: CGGAATATT
-      to: 283
-    - from: CGGATATAG
-      to: 282
-    - from: CGGCCTGAT
-      to: 281
-    - from: CGGTAATTG
-      to: 280
-    - from: CGGTGCTCT
-      to: 279
-    - from: CGGTTCATT
-      to: 278
-    - from: CGGTTCGAG
-      to: 277
-    - from: CGTAGGTCT
-      to: 276
-    - from: CGTCACTGT
-      to: 275
-    - from: CGTCTGGTT
-      to: 274
-    - from: CGTCTTAAT
-      to: 273
-    - from: CGTGGCATT
-      to: 272
-    - from: CTACATATT
-      to: 271
-    - from: CTATGAATT
-      to: 270
-    - from: CTATTAGTG
-      to: 269
-    - from: CTATTCTAT
-      to: 268
-    - from: CTCACAGGT
-      to: 267
-    - from: CTCCGAGCG
-      to: 266
-    - from: CTCCGGATG
-      to: 265
-    - from: CTCCTAAGT
-      to: 264
-    - from: CTCCTGCTT
-      to: 263
-    - from: CTCGCAATT
-      to: 262
-    - from: CTCGGCAAG
-      to: 261
-    - from: CTCGTATCT
-      to: 260
-    - from: CTGACCTGT
-      to: 259
-    - from: CTGAGATAT
-      to: 258
-    - from: CTGATTAAG
-      to: 257
-    - from: CTGCATTGT
-      to: 256
-    - from: CTGCCGATT
-      to: 255
-    - from: CTGCGCGGT
-      to: 254
-    - from: CTGCGTGTG
-      to: 253
-    - from: CTGGATGCG
-      to: 252
-    - from: CTGGCTCAT
-      to: 251
-    - from: CTGTATAAT
-      to: 250
-    - from: CTGTCGTCT
-      to: 249
-    - from: CTGTTAGGT
-      to: 248
-    - from: CTTACCGAT
-      to: 247
-    - from: CTTATGAGT
-      to: 246
-    - from: CTTCGGCGT
-      to: 245
-    - from: CTTCTGTCG
-      to: 244
-    - from: CTTGATTCT
-      to: 243
-    - from: CTTGCCGTG
-      to: 242
-    - from: CTTGCTGAA
-      to: 241
-    - from: CTTGGATTG
-      to: 240
-    - from: CTTGTCCAG
-      to: 239
-    - from: GAACGCTGT
-      to: 238
-    - from: GAAGGCATT
-      to: 237
-    - from: GAAGTATTG
-      to: 236
-    - from: GAAGTGGTT
-      to: 235
-    - from: GAAGTTCAT
-      to: 234
-    - from: GAATCAGCT
-      to: 233
-    - from: GAATTAGGA
-      to: 232
-    - from: GACCTATCT
-      to: 231
-    - from: GACGATATG
-      to: 230
-    - from: GACGCAGGT
-      to: 229
-    - from: GACGGTCGT
-      to: 228
-    - from: GAGACCTAT
-      to: 227
-    - from: GAGATAGAT
-      to: 226
-    - from: GAGCCGAAT
-      to: 225
-    - from: GAGCGACTT
-      to: 224
-    - from: GAGCGGTTG
-      to: 223
-    - from: GAGCGTCGA
-      to: 222
-    - from: GAGCGTGCT
-      to: 221
-    - from: GAGCTCAGT
-      to: 220
-    - from: GAGTGTTAT
-      to: 219
-    - from: GATATTACT
-      to: 218
-    - from: GATATTGAA
-      to: 217
-    - from: GATCGCTTA
-      to: 216
-    - from: GATCTCCTT
-      to: 215
-    - from: GATGCCTTG
-      to: 214
-    - from: GATGCTGAT
-      to: 213
-    - from: GATGGATCT
-      to: 212
-    - from: GATGTTGCG
-      to: 211
-    - from: GATTAGGTT
-      to: 210
-    - from: GATTATCAG
-      to: 209
-    - from: GATTCATAT
-      to: 208
-    - from: GATTCCAGT
-      to: 207
-    - from: GATTGCGAG
-      to: 206
-    - from: GATTGTATT
-      to: 205
-    - from: GCAACACTT
-      to: 204
-    - from: GCAATCTGT
-      to: 203
-    - from: GCACTTGTG
-      to: 202
-    - from: GCAGTGTCT
-      to: 201
-    - from: GCAGTTGGA
-      to: 200
-    - from: GCATGATGT
-      to: 199
-    - from: GCATTCGTT
-      to: 198
-    - from: GCCAATTCG
-      to: 197
-    - from: GCCATATAT
-      to: 196
-    - from: GCCATGCTT
-      to: 195
-    - from: GCCGCACAA
-      to: 194
-    - from: GCCGGCGAA
-      to: 193
-    - from: GCCTCACGT
-      to: 192
-    - from: GCCTGAGTG
-      to: 191
-    - from: GCCTTCACA
-      to: 190
-    - from: GCCTTCTAG
-      to: 189
-    - from: GCCTTGGTA
-      to: 188
-    - from: GCGAGAACA
-      to: 187
-    - from: GCGAGATTG
-      to: 186
-    - from: GCGAGCCTT
-      to: 185
-    - from: GCGATCAAT
-      to: 184
-    - from: GCGCATGAA
-      to: 183
-    - from: GCGCCATAT
-      to: 182
-    - from: GCGCGGATT
-      to: 181
-    - from: GCGCTTACG
-      to: 180
-    - from: GCGTAAGAG
-      to: 179
-    - from: GCGTCCGAT
-      to: 178
-    - from: GCGTCTTGA
-      to: 177
-    - from: GCGTGCGTA
-      to: 176
-    - from: GCGTTCTCT
-      to: 175
-    - from: GCGTTGTAA
-      to: 174
-    - from: GCTAACTCT
-      to: 173
-    - from: GCTACATGT
-      to: 172
-    - from: GCTACTAAG
-      to: 171
-    - from: GCTATACGA
-      to: 170
-    - from: GCTATTCTG
-      to: 169
-    - from: GCTCCGCTG
-      to: 168
-    - from: GCTCGCCGT
-      to: 167
-    - from: GCTCTATTG
-      to: 166
-    - from: GCTCTTAGT
-      to: 165
-    - from: GCTGATATT
-      to: 164
-    - from: GCTGCCTAA
-      to: 163
-    - from: GCTGGACTG
-      to: 162
-    - from: GCTGGTTGT
-      to: 161
-    - from: GCTGTCATG
-      to: 160
-    - from: GCTGTGTAG
-      to: 159
-    - from: GCTTATGCG
-      to: 158
-    - from: GCTTCATTA
-      to: 157
-    - from: GCTTGAGGA
-      to: 156
-    - from: GCTTGCTTG
-      to: 155
-    - from: GCTTGGCAG
-      to: 154
-    - from: GTAATTCGT
-      to: 153
-    - from: GTACAGTCT
-      to: 152
-    - from: GTACGATTA
-      to: 151
-    - from: GTAGATACT
-      to: 150
-    - from: GTAGCCTTA
-      to: 149
-    - from: GTAGTCGAT
-      to: 148
-    - from: GTAGTTAAG
-      to: 147
-    - from: GTATACAAT
-      to: 146
-    - from: GTATATGTA
-      to: 145
-    - from: GTATCGGTT
-      to: 144
-    - from: GTATGTACA
-      to: 143
-    - from: GTATGTCTT
-      to: 142
-    - from: GTCAAGGAA
-      to: 141
-    - from: GTCACTCTT
-      to: 140
-    - from: GTCAGAATT
-      to: 139
-    - from: GTCAGACGA
-      to: 138
-    - from: GTCCAACAT
-      to: 137
-    - from: GTCCGGACT
-      to: 136
-    - from: GTCGAGCTG
-      to: 135
-    - from: GTCGGATGT
-      to: 134
-    - from: GTCGGTAAT
-      to: 133
-    - from: GTCGTGTTA
-      to: 132
-    - from: GTCGTTGCT
-      to: 131
-    - from: GTCTACGAG
-      to: 130
-    - from: GTCTCATCT
-      to: 129
-    - from: GTCTTAAGA
-      to: 128
-    - from: GTCTTCCGT
-      to: 127
-    - from: GTCTTGATT
-      to: 126
-    - from: GTCTTGTCG
-      to: 125
-    - from: GTGCCTGGA
-      to: 124
-    - from: GTGCTCACA
-      to: 123
-    - from: GTGCTCGTT
-      to: 122
-    - from: GTGCTTGAG
-      to: 121
-    - from: GTGTCCATT
-      to: 120
-    - from: GTGTCGGCA
-      to: 119
-    - from: GTTAACTTA
-      to: 118
-    - from: GTTAAGAGA
-      to: 117
-    - from: GTTACTCAA
-      to: 116
-    - from: GTTACTGTG
-      to: 115
-    - from: GTTAGCAGT
-      to: 114
-    - from: GTTCCTTAT
-      to: 113
-    - from: GTTCGCGTG
-      to: 112
-    - from: GTTCTATCA
-      to: 111
-    - from: GTTCTGAAT
-      to: 110
-    - from: GTTCTGCTA
-      to: 109
-    - from: GTTGACCTT
-      to: 108
-    - from: GTTGCCAAG
-      to: 107
-    - from: GTTGGCTAT
-      to: 106
-    - from: GTTGTGCGT
-      to: 105
-    - from: TACACCTGT
-      to: 104
-    - from: TACCTGTTA
-      to: 103
-    - from: TAGAGGAAG
-      to: 102
-    - from: TAGCTGCTT
-      to: 101
-    - from: TAGTTCAAT
-      to: 100
-    - from: TATCAAGGA
-      to: 99
-    - from: TATGCTATT
-      to: 98
-    - from: TATTATGGT
-      to: 97
-    - from: TATTCCGAA
-      to: 96
-    - from: TCACACTTA
-      to: 95
-    - from: TCATGGCTT
-      to: 94
-    - from: TCGACGAGA
-      to: 93
-    - from: TCGTCAGTG
-      to: 92
-    - from: TCGTTCGAA
-      to: 91
-    - from: TCTACCGCG
-      to: 90
-    - from: TCTGGAATT
-      to: 89
-    - from: TCTGTCCTT
-      to: 88
-    - from: TCTTCATAG
-      to: 87
-    - from: TCTTGGTAA
-      to: 86
-    - from: TGAGAATCT
-      to: 85
-    - from: TGAGGTATT
-      to: 84
-    - from: TGATAGAGA
-      to: 83
-    - from: TGCGTATTG
-      to: 82
-    - from: TGGAGTCTT
-      to: 81
-    - from: TGGCGCCAA
-      to: 80
-    - from: TGGCGTTAT
-      to: 79
-    - from: TGGTTACAA
-      to: 78
-    - from: TGGTTAGTT
-      to: 77
-    - from: TGTCAGAAG
-      to: 76
-    - from: TGTCAGTTA
-      to: 75
-    - from: TGTGGAGCG
-      to: 74
-    - from: TGTGTCCAA
-      to: 73
-    - from: TGTGTTATG
-      to: 72
-    - from: TGTTAAGTG
-      to: 71
-    - from: TGTTCAAGA
-      to: 70
-    - from: TGTTCACTT
-      to: 69
-    - from: TTAACACAA
-      to: 68
-    - from: TTAACCTTG
-      to: 67
-    - from: TTAAGTGTG
-      to: 66
-    - from: TTAATAGGA
-      to: 65
-    - from: TTAATCAGT
-      to: 64
-    - from: TTACACACT
-      to: 63
-    - from: TTACACGGA
-      to: 62
-    - from: TTACAGCGT
-      to: 61
-    - from: TTACATGAG
-      to: 60
-    - from: TTACCTAGA
-      to: 59
-    - from: TTACGATAT
-      to: 58
-    - from: TTACGTGGT
-      to: 57
-    - from: TTACTAGTT
-      to: 56
-    - from: TTACTGGAA
-      to: 55
-    - from: TTAGGCGCG
-      to: 54
-    - from: TTATATTAT
-      to: 53
-    - from: TTATCCGAG
-      to: 52
-    - from: TTATCCTGT
-      to: 51
-    - from: TTATGATTG
-      to: 50
-    - from: TTATGCGTT
-      to: 49
-    - from: TTCAACGTG
-      to: 48
-    - from: TTCAACTCT
-      to: 47
-    - from: TTCACTATA
-      to: 46
-    - from: TTCAGGAGT
-      to: 45
-    - from: TTCATGCTG
-      to: 44
-    - from: TTCATTGAA
-      to: 43
-    - from: TTCCAATTA
-      to: 42
-    - from: TTCCGCATT
-      to: 41
-    - from: TTCCGGCAG
-      to: 40
-    - from: TTCCTCGGT
-      to: 39
-    - from: TTCGATCAG
-      to: 38
-    - from: TTCGATTGT
-      to: 37
-    - from: TTCGCCAGA
-      to: 36
-    - from: TTCGGAATA
-      to: 35
-    - from: TTCGGCTTG
-      to: 34
-    - from: TTCGTAGAT
-      to: 33
-    - from: TTCGTCGTA
-      to: 32
-    - from: TTCTAATCG
-      to: 31
-    - from: TTCTAGGTA
-      to: 30
-    - from: TTCTCCGCT
-      to: 29
-    - from: TTCTCCTTA
-      to: 28
-    - from: TTCTGCACA
-      to: 27
-    - from: TTCTGGTCT
-      to: 26
-    - from: TTGACCGAA
-      to: 25
-    - from: TTGACTACT
-      to: 24
-    - from: TTGAGACGT
-      to: 23
-    - from: TTGATAATT
-      to: 22
-    - from: TTGATGTAT
-      to: 21
-    - from: TTGCAAGGT
-      to: 20
-    - from: TTGCACGCG
-      to: 19
-    - from: TTGCCATTG
-      to: 18
-    - from: TTGCGGTTA
-      to: 17
-    - from: TTGGAAGTG
-      to: 16
-    - from: TTGGATACA
-      to: 15
-    - from: TTGGCACAG
-      to: 14
-    - from: TTGGTATTA
-      to: 13
-    - from: TTGGTCGAG
-      to: 12
-    - from: TTGGTGCAA
-      to: 11
-    - from: TTGGTTAAT
-      to: 10
-    - from: TTGTACAGT
-      to: 9
-    - from: TTGTATGAA
-      to: 8
-    - from: TTGTCACGA
-      to: 7
-    - from: TTGTCATAT
-      to: 6
-    - from: TTGTCTAAG
-      to: 5
-    - from: TTGTCTGTT
-      to: 4
-    - from: TTGTGCGGA
-      to: 3
-    - from: TTGTGGTAG
-      to: 2
-    - from: TTGTGTTGT
-      to: 1
-    reportingLevel: VerboseReport
-  - type: mapTags
-    name: CELL3 to BD CLS3 index
-    matchTags:
-    - CELL3
-    newTags:
-    - CELL3ID
-    allowOneMismatch: true
-    rules:
-    - from: ACACACCTA
-      to: 384
-    - from: ACACATAGT
-      to: 383
-    - from: ACACCAACT
-      to: 382
-    - from: ACACCAGTA
-      to: 381
-    - from: ACACGCATG
-      to: 380
-    - from: ACACTATCA
-      to: 379
-    - from: ACACTTGCT
-      to: 378
-    - from: ACAGCGTAC
-      to: 377
-    - from: ACATATACG
-      to: 376
-    - from: ACATATGAT
-      to: 375
-    - from: ACATGACGA
-      to: 374
-    - from: ACATGGCTG
-      to: 373
-    - from: ACATTCTCG
-      to: 372
-    - from: ACATTGTGC
-      to: 371
-    - from: ACCGCTTCA
-      to: 370
-    - from: ACCGGCTAC
-      to: 369
-    - from: ACCGGTAGT
-      to: 368
-    - from: ACCGTAGCA
-      to: 367
-    - from: ACCTAATCG
-      to: 366
-    - from: ACCTACTGA
-      to: 365
-    - from: ACCTAGGTA
-      to: 364
-    - from: ACCTCGATC
-      to: 363
-    - from: ACCTGTCAT
-      to: 362
-    - from: ACCTGTTGC
-      to: 361
-    - from: ACCTTGTAG
-      to: 360
-    - from: ACGAACGCA
-      to: 359
-    - from: ACGAATCGT
-      to: 358
-    - from: ACGAGCATC
-      to: 357
-    - from: ACGAGCTGA
-      to: 356
-    - from: ACGATCTAC
-      to: 355
-    - from: ACGATGGAT
-      to: 354
-    - from: ACGATGTCG
-      to: 353
-    - from: ACGCGCCAG
-      to: 352
-    - from: ACGCGTGTA
-      to: 351
-    - from: ACGCTGCGA
-      to: 350
-    - from: ACGGCGCTG
-      to: 349
-    - from: ACGGTACAG
-      to: 348
-    - from: ACGGTCCGT
-      to: 347
-    - from: ACGGTCTCA
-      to: 346
-    - from: ACGTCAGTC
-      to: 345
-    - from: ACGTCTTCG
-      to: 344
-    - from: ACGTGGAGC
-      to: 343
-    - from: ACGTGTATG
-      to: 342
-    - from: ACGTGTGCT
-      to: 341
-    - from: ACGTTCGTA
-      to: 340
-    - from: ACTAATACT
-      to: 339
-    - from: ACTACGCGT
-      to: 338
-    - from: ACTAGGCAG
-      to: 337
-    - from: ACTATTGCA
-      to: 336
-    - from: ACTCAACTG
-      to: 335
-    - from: ACTCCGCTA
-      to: 334
-    - from: ACTCCTGAC
-      to: 333
-    - from: ACTCTGATG
-      to: 332
-    - from: ACTGAAGCT
-      to: 331
-    - from: ACTGACGTC
-      to: 330
-    - from: ACTGGTATC
-      to: 329
-    - from: ACTGTAACG
-      to: 328
-    - from: ACTGTTGAT
-      to: 327
-    - from: ACTTAGTAC
-      to: 326
-    - from: ACTTCGACT
-      to: 325
-    - from: ACTTCTAGC
-      to: 324
-    - from: ACTTGAGCA
-      to: 323
-    - from: ACTTGCCTA
-      to: 322
-    - from: AGACTCACT
-      to: 321
-    - from: AGAGCCGAT
-      to: 320
-    - from: AGAGTGCGT
-      to: 319
-    - from: AGATACCGT
-      to: 318
-    - from: AGATATGTA
-      to: 317
-    - from: AGATGATAG
-      to: 316
-    - from: AGATTAGAT
-      to: 315
-    - from: AGATTCTGA
-      to: 314
-    - from: AGCACGGCA
-      to: 313
-    - from: AGCACTTCG
-      to: 312
-    - from: AGCATGATC
-      to: 311
-    - from: AGCCGTCGT
-      to: 310
-    - from: AGCCTCTAC
-      to: 309
-    - from: AGCGACTCA
-      to: 308
-    - from: AGCGATAGC
-      to: 307
-    - from: AGCGCGCTA
-      to: 306
-    - from: AGCGGACGA
-      to: 305
-    - from: AGCGGAGTC
-      to: 304
-    - from: AGCGGTGCA
-      to: 303
-    - from: AGCGTTACG
-      to: 302
-    - from: AGCTACACG
-      to: 301
-    - from: AGCTTAAGT
-      to: 300
-    - from: AGCTTGGAC
-      to: 299
-    - from: AGGAATTAC
-      to: 298
-    - from: AGGACCGCT
-      to: 297
-    - from: AGGAGCAGT
-      to: 296
-    - from: AGGCAAGAT
-      to: 295
-    - from: AGGCAGGTC
-      to: 294
-    - from: AGGCCAAGC
-      to: 293
-    - from: AGGCCGACG
-      to: 292
-    - from: AGGCTATGA
-      to: 291
-    - from: AGGCTTATC
-      to: 290
-    - from: AGGTCAGCA
-      to: 289
-    - from: AGGTCGTAC
-      to: 288
-    - from: AGGTCTGAT
-      to: 287
-    - from: AGGTGCCAT
-      to: 286
-    - from: AGGTGTTCA
-      to: 285
-    - from: AGGTTCTAG
-      to: 284
-    - from: AGGTTGGCT
-      to: 283
-    - from: AGTAAGTGC
-      to: 282
-    - from: AGTAATCGA
-      to: 281
-    - from: AGTAGACTG
-      to: 280
-    - from: AGTATCCAG
-      to: 279
-    - from: AGTCATTCA
-      to: 278
-    - from: AGTCCATCG
-      to: 277
-    - from: AGTCGAACT
-      to: 276
-    - from: AGTCTACAT
-      to: 275
-    - from: AGTCTGAGC
-      to: 274
-    - from: AGTCTGGTA
-      to: 273
-    - from: AGTGCAATC
-      to: 272
-    - from: AGTTAACTA
-      to: 271
-    - from: AGTTACAGC
-      to: 270
-    - from: AGTTCGCTG
-      to: 269
-    - from: ATAGCGGTA
-      to: 268
-    - from: ATAGCTGAC
-      to: 267
-    - from: ATAGGTCTA
-      to: 266
-    - from: ATAGTCCTG
-      to: 265
-    - from: ATATCAATC
-      to: 264
-    - from: ATATCGCAT
-      to: 263
-    - from: ATATCTTGA
-      to: 262
-    - from: ATATTACAG
-      to: 261
-    - from: ATATTCGTC
-      to: 260
-    - from: ATATTGAGT
-      to: 259
-    - from: ATCAACCGA
-      to: 258
-    - from: ATCAACGTC
-      to: 257
-    - from: ATCACACAT
-      to: 256
-    - from: ATCAGATCA
-      to: 255
-    - from: ATCCAAGCA
-      to: 254
-    - from: ATCCATTAC
-      to: 253
-    - from: ATCCGCACT
-      to: 252
-    - from: ATCCTGCGT
-      to: 251
-    - from: ATCCTTCTG
-      to: 250
-    - from: ATCGAATAG
-      to: 249
-    - from: ATCGATGCT
-      to: 248
-    - from: ATCGCAACG
-      to: 247
-    - from: ATCGCGAGC
-      to: 246
-    - from: ATCGGCATG
-      to: 245
-    - from: ATCGTCTGA
-      to: 244
-    - from: ATCGTGTAC
-      to: 243
-    - from: ATCTATCAG
-      to: 242
-    - from: ATCTTACTA
-      to: 241
-    - from: ATCTTATGC
-      to: 240
-    - from: ATGACCGAC
-      to: 239
-    - from: ATGACTATC
-      to: 238
-    - from: ATGAGTTCG
-      to: 237
-    - from: ATGCCGTAG
-      to: 236
-    - from: ATGCGACGT
-      to: 235
-    - from: ATGCTCGCT
-      to: 234
-    - from: ATGCTTCAT
-      to: 233
-    - from: ATGGAACGA
-      to: 232
-    - from: ATGGACTCG
-      to: 231
-    - from: ATGGAGATC
-      to: 230
-    - from: ATGGCATAC
-      to: 229
-    - from: ATGTAGCGT
-      to: 228
-    - from: ATGTCTCTA
-      to: 227
-    - from: ATTAAGCAT
-      to: 226
-    - from: ATTAATTAG
-      to: 225
-    - from: ATTACTTCA
-      to: 224
-    - from: ATTCAGGAC
-      to: 223
-    - from: ATTCATACG
-      to: 222
-    - from: ATTCGTAGT
-      to: 221
-    - from: ATTGATCGT
-      to: 220
-    - from: ATTGGCGAT
-      to: 219
-    - from: ATTGGTCAG
-      to: 218
-    - from: ATTGTATCA
-      to: 217
-    - from: ATTGTCACT
-      to: 216
-    - from: GAATAGGCT
-      to: 215
-    - from: GAGCGCACT
-      to: 214
-    - from: GAGGCAACG
-      to: 213
-    - from: GAGGCGAGT
-      to: 212
-    - from: GAGTATGAT
-      to: 211
-    - from: GAGTCGGAC
-      to: 210
-    - from: GAGTGGCAT
-      to: 209
-    - from: GATCTGCAT
-      to: 208
-    - from: GATCTTCGA
-      to: 207
-    - from: GATGAACAT
-      to: 206
-    - from: GATTGCCGT
-      to: 205
-    - from: GCAATTCGA
-      to: 204
-    - from: GCACCTCAT
-      to: 203
-    - from: GCAGCGCGT
-      to: 202
-    - from: GCAGGTACT
-      to: 201
-    - from: GCAGTATAC
-      to: 200
-    - from: GCATGCTAC
-      to: 199
-    - from: GCATGTTGA
-      to: 198
-    - from: GCCATACTG
-      to: 197
-    - from: GCCTTCATG
-      to: 196
-    - from: GCGCCGGCT
-      to: 195
-    - from: GCGCCTAGT
-      to: 194
-    - from: GCGCGGTGC
-      to: 193
-    - from: GCGGAGCAT
-      to: 192
-    - from: GCGGTATCG
-      to: 191
-    - from: GCGTGTTAG
-      to: 190
-    - from: GCGTTCTGA
-      to: 189
-    - from: GCTACCATG
-      to: 188
-    - from: GCTAGTCGT
-      to: 187
-    - from: GCTATAGAT
-      to: 186
-    - from: GCTCGTTAC
-      to: 185
-    - from: GCTGCAACT
-      to: 184
-    - from: GCTGGTTCA
-      to: 183
-    - from: GCTGTCCAT
-      to: 182
-    - from: GGAACGTGC
-      to: 181
-    - from: GGACGTTCA
-      to: 180
-    - from: GGACTGGCT
-      to: 179
-    - from: GGAGAACGA
-      to: 178
-    - from: GGAGTAACT
-      to: 177
-    - from: GGATGTCAT
-      to: 176
-    - from: GGCACTCTG
-      to: 175
-    - from: GGCCATTGC
-      to: 174
-    - from: GGCCTGTCA
-      to: 173
-    - from: GGCGACCGT
-      to: 172
-    - from: GGCGAGTAG
-      to: 171
-    - from: GGCGCAAGT
-      to: 170
-    - from: GGCGTAATC
-      to: 169
-    - from: GGCGTGGAT
-      to: 168
-    - from: GGCTCCATC
-      to: 167
-    - from: GGCTGGCAG
-      to: 166
-    - from: GGCTGTAGT
-      to: 165
-    - from: GGCTTACGA
-      to: 164
-    - from: GGCTTGACT
-      to: 163
-    - from: GGCTTGTGC
-      to: 162
-    - from: GGTAAGGAT
-      to: 161
-    - from: GGTACCAGT
-      to: 160
-    - from: GGTAGCGTC
-      to: 159
-    - from: GGTAGTGCT
-      to: 158
-    - from: GGTCACATG
-      to: 157
-    - from: GGTCATGTC
-      to: 156
-    - from: GGTCCGACT
-      to: 155
-    - from: GGTCGGCGT
-      to: 154
-    - from: GGTCGTCTA
-      to: 153
-    - from: GGTCTTCAG
-      to: 152
-    - from: GGTGTGGCA
-      to: 151
-    - from: GGTTAACGT
-      to: 150
-    - from: GGTTGAGTA
-      to: 149
-    - from: GGTTGCTCA
-      to: 148
-    - from: GTAGCTCGA
-      to: 147
-    - from: GTAGTACAT
-      to: 146
-    - from: GTAGTTGTC
-      to: 145
-    - from: GTATGACGT
-      to: 144
-    - from: GTATTAAGC
-      to: 143
-    - from: GTATTCCGA
-      to: 142
-    - from: GTATTGCTG
-      to: 141
-    - from: GTGCCGCGT
-      to: 140
-    - from: GTGCTTGCA
-      to: 139
-    - from: GTTATGATG
-      to: 138
-    - from: GTTCCTGCT
-      to: 137
-    - from: GTTCTCGAC
-      to: 136
-    - from: GTTGACCGA
-      to: 135
-    - from: TAAGCTACT
-      to: 134
-    - from: TAAGTGCAT
-      to: 133
-    - from: TACAGAAGT
-      to: 132
-    - from: TACCAGGAC
-      to: 131
-    - from: TACCGCGAT
-      to: 130
-    - from: TACCGTACT
-      to: 129
-    - from: TACGTCCGA
-      to: 128
-    - from: TACTTGTCG
-      to: 127
-    - from: TAGACTGAT
-      to: 126
-    - from: TAGAGTTAC
-      to: 125
-    - from: TAGCATTGC
-      to: 124
-    - from: TAGGATCGT
-      to: 123
-    - from: TAGGCACAT
-      to: 122
-    - from: TAGGCGCGA
-      to: 121
-    - from: TATCACGCT
-      to: 120
-    - from: TATCAGTCG
-      to: 119
-    - from: TATCCAGAT
-      to: 118
-    - from: TATCTGACT
-      to: 117
-    - from: TATCTGGTC
-      to: 116
-    - from: TATGCAAGT
-      to: 115
-    - from: TATGGTATG
-      to: 114
-    - from: TATGTTCAG
-      to: 113
-    - from: TATTCATCA
-      to: 112
-    - from: TATTCCAGC
-      to: 111
-    - from: TATTCGGCT
-      to: 110
-    - from: TATTGCGCA
-      to: 109
-    - from: TCAAGCTCA
-      to: 108
-    - from: TCACTCAGT
-      to: 107
-    - from: TCAGACCGT
-      to: 106
-    - from: TCAGGTTGC
-      to: 105
-    - from: TCATGCACT
-      to: 104
-    - from: TCATTACGT
-      to: 103
-    - from: TCCAAGTCG
-      to: 102
-    - from: TCCATGGTC
-      to: 101
-    - from: TCCATTCAT
-      to: 100
-    - from: TCCGAGTAC
-      to: 99
-    - from: TCCGCTCGT
-      to: 98
-    - from: TCCGGAGCT
-      to: 97
-    - from: TCCGGCGTC
-      to: 96
-    - from: TCGAGGCAT
-      to: 95
-    - from: TCGATCACG
-      to: 94
-    - from: TCGCTACTG
-      to: 93
-    - from: TCGGCTGCT
-      to: 92
-    - from: TCGGTGTAG
-      to: 91
-    - from: TCGTACTAC
-      to: 90
-    - from: TCTAGTACG
-      to: 89
-    - from: TCTAGTTGA
-      to: 88
-    - from: TCTCAGATC
-      to: 87
-    - from: TCTGGCTAG
-      to: 86
-    - from: TCTGTTACT
-      to: 85
-    - from: TCTGTTGTC
-      to: 84
-    - from: TCTTACCAT
-      to: 83
-    - from: TCTTATAGT
-      to: 82
-    - from: TCTTCCGTC
-      to: 81
-    - from: TGAGGCTCG
-      to: 80
-    - from: TGAGTGTGC
-      to: 79
-    - from: TGCACGAGT
-      to: 78
-    - from: TGCCTAGAC
-      to: 77
-    - from: TGCCTGCAT
-      to: 76
-    - from: TGCGCGACG
-      to: 75
-    - from: TGCGCTTAG
-      to: 74
-    - from: TGCGGTCTG
-      to: 73
-    - from: TGCGTTGCT
-      to: 72
-    - from: TGCTAGCGA
-      to: 71
-    - from: TGGAATACT
-      to: 70
-    - from: TGGACTTGC
-      to: 69
-    - from: TGGATGTAC
-      to: 68
-    - from: TGGCGCGCT
-      to: 67
-    - from: TGGCGTATG
-      to: 66
-    - from: TGGCTGTCG
-      to: 65
-    - from: TGGCTTGTA
-      to: 64
-    - from: TGGTCAAGT
-      to: 63
-    - from: TGGTTCACT
-      to: 62
-    - from: TGGTTCCGA
-      to: 61
-    - from: TGTACAACG
-      to: 60
-    - from: TGTCGAGCA
-      to: 59
-    - from: TGTCGCAGT
-      to: 58
-    - from: TGTGCGTCA
-      to: 57
-    - from: TGTGCTAGC
-      to: 56
-    - from: TGTGGCCGA
-      to: 55
-    - from: TGTTAAGCT
-      to: 54
-    - from: TGTTGATGA
-      to: 53
-    - from: TGTTGGCTA
-      to: 52
-    - from: TTAACAGAT
-      to: 51
-    - from: TTAATTGCA
-      to: 50
-    - from: TTACAGAGC
-      to: 49
-    - from: TTACCGTCA
-      to: 48
-    - from: TTACTACGA
-      to: 47
-    - from: TTAGATATG
-      to: 46
-    - from: TTAGCACTA
-      to: 45
-    - from: TTAGCTCAT
-      to: 44
-    - from: TTAGTTAGC
-      to: 43
-    - from: TTATAAGTC
-      to: 42
-    - from: TTATAATAG
-      to: 41
-    - from: TTATACCTA
-      to: 40
-    - from: TTATCGTAC
-      to: 39
-    - from: TTATGCATC
-      to: 38
-    - from: TTATGCCAG
-      to: 37
-    - from: TTCAACTAC
-      to: 36
-    - from: TTCAAGCAG
-      to: 35
-    - from: TTCACCTCG
-      to: 34
-    - from: TTCAGCGCA
-      to: 33
-    - from: TTCATGGAT
-      to: 32
-    - from: TTCATTATG
-      to: 31
-    - from: TTCCGACTG
-      to: 30
-    - from: TTCCGGTGC
-      to: 29
-    - from: TTCGCAATC
-      to: 28
-    - from: TTCGGACGT
-      to: 27
-    - from: TTCGGATAC
-      to: 26
-    - from: TTCGTCCAT
-      to: 25
-    - from: TTCTACTCA
-      to: 24
-    - from: TTCTCAACT
-      to: 23
-    - from: TTCTCGCGT
-      to: 22
-    - from: TTGAACCTG
-      to: 21
-    - from: TTGCACCAT
-      to: 20
-    - from: TTGCACGTC
-      to: 19
-    - from: TTGCATGCT
-      to: 18
-    - from: TTGCCGGAT
-      to: 17
-    - from: TTGCCTTAC
-      to: 16
-    - from: TTGCGCTCG
-      to: 15
-    - from: TTGCGGCGA
-      to: 14
-    - from: TTGGAATCA
-      to: 13
-    - from: TTGGAGACG
-      to: 12
-    - from: TTGGATTAG
-      to: 11
-    - from: TTGGCGTGC
-      to: 10
-    - from: TTGGTAACT
-      to: 9
-    - from: TTGGTCTAC
-      to: 8
-    - from: TTGGTGCGT
-      to: 7
-    - from: TTGGTTCTG
-      to: 6
-    - from: TTGTAAGAT
-      to: 5
-    - from: TTGTCTTCA
-      to: 4
-    - from: TTGTGCGAC
-      to: 3
-    - from: TTGTGGAGT
-      to: 2
-    - from: TTGTGGCTG
-      to: 1
-    reportingLevel: VerboseReport
-  - type: generic
-    name: BD CLS1-CLS2-CLS3 indices to BD cell index
-    transformation:
-      type: plus
-      sources:
-      - type: multiply
+    - type: mapTags
+      name: CELL1 to BD CLS1 inde
+      matchTags:
+        - CELL1
+      newTags:
+        - CELL1ID
+      allowOneMismatch: true
+      rules:
+        - from: ACACTAATT
+          to: 384
+        - from: ACATGAGGT
+          to: 383
+        - from: ACATTCGGC
+          to: 382
+        - from: ACCAGTCTG
+          to: 381
+        - from: ACGGATGGT
+          to: 380
+        - from: ACGTACACC
+          to: 379
+        - from: ACTCGACCT
+          to: 378
+        - from: ACTCGCTTG
+          to: 377
+        - from: AGAGAATTC
+          to: 376
+        - from: AGAGATGTT
+          to: 375
+        - from: AGCAATCCG
+          to: 374
+        - from: AGCCTGACT
+          to: 373
+        - from: AGCCTGGTC
+          to: 372
+        - from: AGCGGCCAG
+          to: 371
+        - from: AGGAATATG
+          to: 370
+        - from: AGGCACCTT
+          to: 369
+        - from: AGGCCTTCC
+          to: 368
+        - from: AGGCTTGCG
+          to: 367
+        - from: AGGTGCTAC
+          to: 366
+        - from: AGTGCGACC
+          to: 365
+        - from: AGTTGAGCC
+          to: 364
+        - from: AGTTGGTAT
+          to: 363
+        - from: ATAGGCGCC
+          to: 362
+        - from: ATATCTTAT
+          to: 361
+        - from: ATCATCACT
+          to: 360
+        - from: ATCATGCTC
+          to: 359
+        - from: ATCGGTTCC
+          to: 358
+        - from: ATCTGTGCG
+          to: 357
+        - from: ATCTTGGCT
+          to: 356
+        - from: ATGAGAGTG
+          to: 355
+        - from: ATGAGGTTC
+          to: 354
+        - from: ATGCTCGGC
+          to: 353
+        - from: ATGCTGTCC
+          to: 352
+        - from: ATGCTTACT
+          to: 351
+        - from: ATGGTGCAT
+          to: 350
+        - from: ATGTCTGTG
+          to: 349
+        - from: ATGTGGCAG
+          to: 348
+        - from: ATGTGTATC
+          to: 347
+        - from: ATGTTACGC
+          to: 346
+        - from: ATGTTCTAT
+          to: 345
+        - from: ATTACACTC
+          to: 344
+        - from: ATTACTGTT
+          to: 343
+        - from: ATTATCTTC
+          to: 342
+        - from: ATTCCAAGT
+          to: 341
+        - from: ATTCGCGAG
+          to: 340
+        - from: ATTCGGCTG
+          to: 339
+        - from: ATTGACTTG
+          to: 338
+        - from: ATTGCGCCG
+          to: 337
+        - from: ATTGCGGAC
+          to: 336
+        - from: ATTGCGTGT
+          to: 335
+        - from: CATGTTGAG
+          to: 334
+        - from: CATTATACC
+          to: 333
+        - from: CATTCCGAT
+          to: 332
+        - from: CCAGCGTTG
+          to: 331
+        - from: CCAGGATCC
+          to: 330
+        - from: CCAGGCATT
+          to: 329
+        - from: CCAGTGGTT
+          to: 328
+        - from: CCATGTGCG
+          to: 327
+        - from: CCGTTAATT
+          to: 326
+        - from: CCTCGGCCG
+          to: 325
+        - from: CCTGTATGC
+          to: 324
+        - from: CCTGTTCGT
+          to: 323
+        - from: CCTTACTTG
+          to: 322
+        - from: CCTTCGACC
+          to: 321
+        - from: CCTTCTCCT
+          to: 320
+        - from: CCTTCTGAG
+          to: 319
+        - from: CCTTGGCGT
+          to: 318
+        - from: CCTTGTCTC
+          to: 317
+        - from: CGCACTGCC
+          to: 316
+        - from: CGCGCAGAG
+          to: 315
+        - from: CGCGTTGGC
+          to: 314
+        - from: CGCTAATAG
+          to: 313
+        - from: CGGAGAGAT
+          to: 312
+        - from: CGGATAGCC
+          to: 311
+        - from: CGGCACGGT
+          to: 310
+        - from: CGGCGACTC
+          to: 309
+        - from: CGGTCCTGC
+          to: 308
+        - from: CGGTGTCAG
+          to: 307
+        - from: CGGTGTTCC
+          to: 306
+        - from: CGTATAGTT
+          to: 305
+        - from: CGTTCACCG
+          to: 304
+        - from: CGTTCGCTC
+          to: 303
+        - from: CTATACGGC
+          to: 302
+        - from: CTCACTAGC
+          to: 301
+        - from: CTCCTGACG
+          to: 300
+        - from: CTCGACTAT
+          to: 299
+        - from: CTCGTATTG
+          to: 298
+        - from: CTCTCGTCC
+          to: 297
+        - from: CTCTGCACC
+          to: 296
+        - from: CTCTTACCG
+          to: 295
+        - from: CTCTTAGTT
+          to: 294
+        - from: CTCTTGTAG
+          to: 293
+        - from: CTGAACGAG
+          to: 292
+        - from: CTGACGCCG
+          to: 291
+        - from: CTGAGTCAT
+          to: 290
+        - from: CTGATGGAT
+          to: 289
+        - from: CTGCACACC
+          to: 288
+        - from: CTGCGTAGT
+          to: 287
+        - from: CTGCTTGCC
+          to: 286
+        - from: CTGTACGTT
+          to: 285
+        - from: CTGTAGCTG
+          to: 284
+        - from: CTGTCGAGC
+          to: 283
+        - from: CTGTCGCAT
+          to: 282
+        - from: CTGTGCCTC
+          to: 281
+        - from: CTGTTCTCG
+          to: 280
+        - from: CTTACTTAT
+          to: 279
+        - from: CTTAGGAGC
+          to: 278
+        - from: CTTAGGTTG
+          to: 277
+        - from: CTTATATAG
+          to: 276
+        - from: CTTATGCTT
+          to: 275
+        - from: CTTATGTCC
+          to: 274
+        - from: CTTCGTTAG
+          to: 273
+        - from: CTTCTAGGC
+          to: 272
+        - from: CTTCTCGTT
+          to: 271
+        - from: CTTCTGATC
+          to: 270
+        - from: CTTGACGGT
+          to: 269
+        - from: CTTGAGGCC
+          to: 268
+        - from: CTTGCAATC
+          to: 267
+        - from: CTTGCTCAC
+          to: 266
+        - from: CTTGGATGT
+          to: 265
+        - from: CTTGGTACC
+          to: 264
+        - from: CTTGGTCTT
+          to: 263
+        - from: CTTGTCATG
+          to: 262
+        - from: CTTGTGCGC
+          to: 261
+        - from: CTTGTGTAT
+          to: 260
+        - from: GAACGCGTG
+          to: 259
+        - from: GAACTGCCG
+          to: 258
+        - from: GAAGAGACT
+          to: 257
+        - from: GAAGGCTCT
+          to: 256
+        - from: GAATATTGC
+          to: 255
+        - from: GAATTGAGC
+          to: 254
+        - from: GACCGCATT
+          to: 253
+        - from: GACTCTTAG
+          to: 252
+        - from: GACTGTTCT
+          to: 251
+        - from: GACTTCGTG
+          to: 250
+        - from: GAGACGGCT
+          to: 249
+        - from: GAGATAATT
+          to: 248
+        - from: GAGATCTGT
+          to: 247
+        - from: GAGCCTGAG
+          to: 246
+        - from: GAGCGGACG
+          to: 245
+        - from: GAGGCATTG
+          to: 244
+        - from: GAGGTGTAG
+          to: 243
+        - from: GAGTCGCCG
+          to: 242
+        - from: GAGTCGTAT
+          to: 241
+        - from: GAGTTACCT
+          to: 240
+        - from: GATACACGC
+          to: 239
+        - from: GATCCAGCG
+          to: 238
+        - from: GATCCTCTG
+          to: 237
+        - from: GATCGCCTC
+          to: 236
+        - from: GATCGGAGC
+          to: 235
+        - from: GATCGTTCG
+          to: 234
+        - from: GATGGCCAG
+          to: 233
+        - from: GATGTTATG
+          to: 232
+        - from: GATGTTGGC
+          to: 231
+        - from: GATTACGGT
+          to: 230
+        - from: GATTAGGCC
+          to: 229
+        - from: GATTCGCTT
+          to: 228
+        - from: GATTCTACT
+          to: 227
+        - from: GATTGCACC
+          to: 226
+        - from: GATTGGTAG
+          to: 225
+        - from: GATTGTCAT
+          to: 224
+        - from: GCACACGAG
+          to: 223
+        - from: GCACTATGT
+          to: 222
+        - from: GCAGACGTT
+          to: 221
+        - from: GCAGATACC
+          to: 220
+        - from: GCAGCCATC
+          to: 219
+        - from: GCAGGACGC
+          to: 218
+        - from: GCAGGCTAG
+          to: 217
+        - from: GCATCGACG
+          to: 216
+        - from: GCATGGTTG
+          to: 215
+        - from: GCCAACCAG
+          to: 214
+        - from: GCCAGCTAT
+          to: 213
+        - from: GCCATGCCG
+          to: 212
+        - from: GCCGCTGTC
+          to: 211
+        - from: GCCGTCCGT
+          to: 210
+        - from: GCCTAACTG
+          to: 209
+        - from: GCCTGCGCT
+          to: 208
+        - from: GCCTTGCAT
+          to: 207
+        - from: GCGAATTAC
+          to: 206
+        - from: GCGAGAGGT
+          to: 205
+        - from: GCGAGCGAG
+          to: 204
+        - from: GCGCCGACC
+          to: 203
+        - from: GCGCGATAC
+          to: 202
+        - from: GCGCGGCAG
+          to: 201
+        - from: GCGCTCTCC
+          to: 200
+        - from: GCGCTGGAC
+          to: 199
+        - from: GCGGCACCT
+          to: 198
+        - from: GCGGCGTCG
+          to: 197
+        - from: GCGGTCTTG
+          to: 196
+        - from: GCGGTTCAC
+          to: 195
+        - from: GCGTATACT
+          to: 194
+        - from: GCGTATGTG
+          to: 193
+        - from: GCGTCGGTT
+          to: 192
+        - from: GCGTGCATT
+          to: 191
+        - from: GCGTGTGCC
+          to: 190
+        - from: GCGTTCCGC
+          to: 189
+        - from: GCTAACCTT
+          to: 188
+        - from: GCTACGTAT
+          to: 187
+        - from: GCTAGCACT
+          to: 186
+        - from: GCTAGGATC
+          to: 185
+        - from: GCTAGTGTT
+          to: 184
+        - from: GCTATGAGT
+          to: 183
+        - from: GCTATTCGC
+          to: 182
+        - from: GCTCCAATT
+          to: 181
+        - from: GCTCGGTCC
+          to: 180
+        - from: GCTCTCCTG
+          to: 179
+        - from: GCTCTTGTC
+          to: 178
+        - from: GCTGAGCGT
+          to: 177
+        - from: GCTGATCAG
+          to: 176
+        - from: GCTGCGATG
+          to: 175
+        - from: GCTGGAACC
+          to: 174
+        - from: GCTGGATAT
+          to: 173
+        - from: GCTTAGTCT
+          to: 172
+        - from: GCTTCACAT
+          to: 171
+        - from: GCTTCGGAC
+          to: 170
+        - from: GCTTGACCG
+          to: 169
+        - from: GCTTGTAGC
+          to: 168
+        - from: GGAAGCCTC
+          to: 167
+        - from: GGAATCGAC
+          to: 166
+        - from: GGAATCTCT
+          to: 165
+        - from: GGAATTAGT
+          to: 164
+        - from: GGACCGTTG
+          to: 163
+        - from: GGACTAGTC
+          to: 162
+        - from: GGACTCCTT
+          to: 161
+        - from: GGAGAAGGC
+          to: 160
+        - from: GGAGTCGTG
+          to: 159
+        - from: GGATAGGTT
+          to: 158
+        - from: GGATCCATG
+          to: 157
+        - from: GGATCTGGC
+          to: 156
+        - from: GGATGAGAG
+          to: 155
+        - from: GGATGTCCG
+          to: 154
+        - from: GGCAACGAT
+          to: 153
+        - from: GGCATAACC
+          to: 152
+        - from: GGCATCCGC
+          to: 151
+        - from: GGCATTCCT
+          to: 150
+        - from: GGCCAACTT
+          to: 149
+        - from: GGCCAGCGC
+          to: 148
+        - from: GGCCTACAG
+          to: 147
+        - from: GGCCTCTTC
+          to: 146
+        - from: GGCGACTTG
+          to: 145
+        - from: GGCGAGATC
+          to: 144
+        - from: GGCGAGCCT
+          to: 143
+        - from: GGCGCTACC
+          to: 142
+        - from: GGCGCTCGT
+          to: 141
+        - from: GGCGTATCG
+          to: 140
+        - from: GGCGTGCTG
+          to: 139
+        - from: GGCGTGTAC
+          to: 138
+        - from: GGCGTTGAG
+          to: 137
+        - from: GGCTCACCT
+          to: 136
+        - from: GGCTCCGGT
+          to: 135
+        - from: GGCTCTGTG
+          to: 134
+        - from: GGCTGTCTT
+          to: 133
+        - from: GGCTTACTC
+          to: 132
+        - from: GGCTTATGT
+          to: 131
+        - from: GGCTTCACG
+          to: 130
+        - from: GGCTTGGCC
+          to: 129
+        - from: GGTAATCTG
+          to: 128
+        - from: GGTACATAG
+          to: 127
+        - from: GGTAGCTTG
+          to: 126
+        - from: GGTAGGCAC
+          to: 125
+        - from: GGTCGAGGT
+          to: 124
+        - from: GGTCGTTGC
+          to: 123
+        - from: GGTGCATGC
+          to: 122
+        - from: GGTGCCGCT
+          to: 121
+        - from: GGTGTACGT
+          to: 120
+        - from: GGTTAATAC
+          to: 119
+        - from: GGTTATATT
+          to: 118
+        - from: GGTTCAGTT
+          to: 117
+        - from: GGTTCGTCG
+          to: 116
+        - from: GGTTGACGC
+          to: 115
+        - from: GGTTGGCTG
+          to: 114
+        - from: GGTTGTGTC
+          to: 113
+        - from: GTAACAGAG
+          to: 112
+        - from: GTAAGTGCC
+          to: 111
+        - from: GTACACCTC
+          to: 110
+        - from: GTACCGTCC
+          to: 109
+        - from: GTAGCATCG
+          to: 108
+        - from: GTATAAGGT
+          to: 107
+        - from: GTATACTTG
+          to: 106
+        - from: GTATAGCCT
+          to: 105
+        - from: GTATCAGTC
+          to: 104
+        - from: GTATTAACT
+          to: 103
+        - from: GTCAGATAG
+          to: 102
+        - from: GTCAGTGGT
+          to: 101
+        - from: GTCATGTAT
+          to: 100
+        - from: GTCCAATAC
+          to: 99
+        - from: GTCCATTCT
+          to: 98
+        - from: GTCCGCTTG
+          to: 97
+        - from: GTCCTACCT
+          to: 96
+        - from: GTCCTCGCC
+          to: 95
+        - from: GTCGCTCCG
+          to: 94
+        - from: GTCGGAATC
+          to: 93
+        - from: GTCGGTGTG
+          to: 92
+        - from: GTCTATCGT
+          to: 91
+        - from: GTCTCAACC
+          to: 90
+        - from: GTCTCAGAT
+          to: 89
+        - from: GTCTGAGGC
+          to: 88
+        - from: GTCTGGCCG
+          to: 87
+        - from: GTCTTGCGC
+          to: 86
+        - from: GTGCAAGGC
+          to: 85
+        - from: GTGCAATTG
+          to: 84
+        - from: GTGCAGCCG
+          to: 83
+        - from: GTGCGAACT
+          to: 82
+        - from: GTGCGCCTT
+          to: 81
+        - from: GTGCGGTAT
+          to: 80
+        - from: GTGCGTTCC
+          to: 79
+        - from: GTGCTTCTG
+          to: 78
+        - from: GTGGCGATC
+          to: 77
+        - from: GTGGTACCG
+          to: 76
+        - from: GTGGTTAGT
+          to: 75
+        - from: GTGTACTGC
+          to: 74
+        - from: GTGTCAAGT
+          to: 73
+        - from: GTGTCACAC
+          to: 72
+        - from: GTGTTCATC
+          to: 71
+        - from: GTGTTCCAG
+          to: 70
+        - from: GTGTTCGGT
+          to: 69
+        - from: GTGTTGCTT
+          to: 68
+        - from: GTTAAGCGC
+          to: 67
+        - from: GTTAATTCC
+          to: 66
+        - from: GTTACCTCT
+          to: 65
+        - from: GTTAGACTT
+          to: 64
+        - from: GTTAGAGAC
+          to: 63
+        - from: GTTAGGTGT
+          to: 62
+        - from: GTTAGTCCG
+          to: 61
+        - from: GTTATCACC
+          to: 60
+        - from: GTTCACGCT
+          to: 59
+        - from: GTTCCGACG
+          to: 58
+        - from: GTTCCGGTT
+          to: 57
+        - from: GTTCGATTC
+          to: 56
+        - from: GTTCGCGGC
+          to: 55
+        - from: GTTCGGCCT
+          to: 54
+        - from: GTTCGTATG
+          to: 53
+        - from: GTTCTATAT
+          to: 52
+        - from: GTTCTCTCG
+          to: 51
+        - from: GTTCTGTGC
+          to: 50
+        - from: GTTGAAGTC
+          to: 49
+        - from: GTTGATACG
+          to: 48
+        - from: GTTGATGAT
+          to: 47
+        - from: GTTGCACTG
+          to: 46
+        - from: GTTGCAGGT
+          to: 45
+        - from: GTTGCGCAT
+          to: 44
+        - from: GTTGCTGCC
+          to: 43
+        - from: GTTGGAGCG
+          to: 42
+        - from: GTTGGCGTT
+          to: 41
+        - from: GTTGGTTCT
+          to: 40
+        - from: GTTGTATCC
+          to: 39
+        - from: GTTGTCCTC
+          to: 38
+        - from: GTTGTCGAG
+          to: 37
+        - from: GTTGTCTGT
+          to: 36
+        - from: GTTGTGGCT
+          to: 35
+        - from: GTTGTGTTG
+          to: 34
+        - from: TAATCACAT
+          to: 33
+        - from: TACGTGTCC
+          to: 32
+        - from: TACTGCGTT
+          to: 31
+        - from: TAGGCTGTG
+          to: 30
+        - from: TATATGACC
+          to: 29
+        - from: TATCTCGTG
+          to: 28
+        - from: TATGACGAG
+          to: 27
+        - from: TATGCGGCC
+          to: 26
+        - from: TATGTGCAC
+          to: 25
+        - from: TCACGCCTT
+          to: 24
+        - from: TCAGCATTC
+          to: 23
+        - from: TCCTGGATT
+          to: 22
+        - from: TCTCATCCG
+          to: 21
+        - from: TCTCGTTCT
+          to: 20
+        - from: TCTGAGGTT
+          to: 19
+        - from: TCTGATTAT
+          to: 18
+        - from: TCTGTCTCC
+          to: 17
+        - from: TGAAGGACC
+          to: 16
+        - from: TGATGCTTG
+          to: 15
+        - from: TGATGGCCT
+          to: 14
+        - from: TGATGTCTC
+          to: 13
+        - from: TGCCATTAT
+          to: 12
+        - from: TGCCTCACC
+          to: 11
+        - from: TGCTCTTCC
+          to: 10
+        - from: TGCTGGCAC
+          to: 9
+        - from: TGCTGTGGC
+          to: 8
+        - from: TGGCGACCG
+          to: 7
+        - from: TGGTGTGCT
+          to: 6
+        - from: TGGTTCCTC
+          to: 5
+        - from: TGGTTGTCC
+          to: 4
+        - from: TGTCTAGCG
+          to: 3
+        - from: TGTGGCGCC
+          to: 2
+        - from: TGTGTTCGC
+          to: 1
+      reportingLevel: VerboseReport
+    - type: mapTags
+      name: CELL2 to BD CLS2 index
+      matchTags:
+        - CELL2
+      newTags:
+        - CELL2ID
+      allowOneMismatch: true
+      rules:
+        - from: ACACATTCT
+          to: 384
+        - from: ACACCTGAG
+          to: 383
+        - from: ACAGGCACA
+          to: 382
+        - from: ACATATATT
+          to: 381
+        - from: ACCATCATA
+          to: 380
+        - from: ACCTCGCAT
+          to: 379
+        - from: ACGACGTGT
+          to: 378
+        - from: ACGCCGTTA
+          to: 377
+        - from: ACGCCTAAT
+          to: 376
+        - from: ACGGACTCT
+          to: 375
+        - from: ACGTGGAAT
+          to: 374
+        - from: ACGTTACTG
+          to: 373
+        - from: ACTAACGTT
+          to: 372
+        - from: ACTAGATCT
+          to: 371
+        - from: ACTCGCGAA
+          to: 370
+        - from: ACTCTGTAA
+          to: 369
+        - from: ACTGTATGT
+          to: 368
+        - from: ACTGTCGAG
+          to: 367
+        - from: ACTTCTATA
+          to: 366
+        - from: AGACCTCTG
+          to: 365
+        - from: AGAGTTAAT
+          to: 364
+        - from: AGATGTACG
+          to: 363
+        - from: AGCACTGAA
+          to: 362
+        - from: AGCCTCGAG
+          to: 361
+        - from: AGCCTGTCG
+          to: 360
+        - from: AGCCTTCAT
+          to: 359
+        - from: AGCGTCACA
+          to: 358
+        - from: AGCGTGTAT
+          to: 357
+        - from: AGCTCTAGA
+          to: 356
+        - from: AGCTTATAG
+          to: 355
+        - from: AGGAGCGAT
+          to: 354
+        - from: AGGCCAGGT
+          to: 353
+        - from: AGGCTACTT
+          to: 352
+        - from: AGGTATAGT
+          to: 351
+        - from: AGGTATGCG
+          to: 350
+        - from: AGTACACAA
+          to: 349
+        - from: AGTATCATT
+          to: 348
+        - from: AGTGCTTCT
+          to: 347
+        - from: AGTGGCTTG
+          to: 346
+        - from: AGTGTCCGT
+          to: 345
+        - from: AGTTATGAT
+          to: 344
+        - from: AGTTGAATT
+          to: 343
+        - from: AGTTGCGCG
+          to: 342
+        - from: ATACCTCAT
+          to: 341
+        - from: ATACTCTCG
+          to: 340
+        - from: ATAGCTGTG
+          to: 339
+        - from: ATAGTAATT
+          to: 338
+        - from: ATCACCATT
+          to: 337
+        - from: ATCAGCGAG
+          to: 336
+        - from: ATCATAGTT
+          to: 335
+        - from: ATCATGAGA
+          to: 334
+        - from: ATCCATGGT
+          to: 333
+        - from: ATCGCGTCG
+          to: 332
+        - from: ATCGCTCAA
+          to: 331
+        - from: ATCTCAGAA
+          to: 330
+        - from: ATCTGATAT
+          to: 329
+        - from: ATCTTGAAG
+          to: 328
+        - from: ATGGATTAT
+          to: 327
+        - from: ATGGTGTAG
+          to: 326
+        - from: ATGTAGTCG
+          to: 325
+        - from: ATGTTAACT
+          to: 324
+        - from: ATGTTAGAG
+          to: 323
+        - from: ATTAATATT
+          to: 322
+        - from: ATTAGCCTT
+          to: 321
+        - from: ATTCAAGAG
+          to: 320
+        - from: ATTCATCAA
+          to: 319
+        - from: ATTCCGTTG
+          to: 318
+        - from: ATTCGGATT
+          to: 317
+        - from: ATTCTACGT
+          to: 316
+        - from: ATTCTGCAG
+          to: 315
+        - from: ATTGCAGTT
+          to: 314
+        - from: ATTGCATAG
+          to: 313
+        - from: ATTGCTAAT
+          to: 312
+        - from: ATTGGTATG
+          to: 311
+        - from: ATTGTACAA
+          to: 310
+        - from: CACAGGCGT
+          to: 309
+        - from: CACCATCTG
+          to: 308
+        - from: CACGATGTT
+          to: 307
+        - from: CACGCGTTG
+          to: 306
+        - from: CACTGCATG
+          to: 305
+        - from: CACTGGTCG
+          to: 304
+        - from: CACTTATAT
+          to: 303
+        - from: CAGCCTCTT
+          to: 302
+        - from: CAGGCACTG
+          to: 301
+        - from: CAGTGCCAG
+          to: 300
+        - from: CAGTTCTGT
+          to: 299
+        - from: CATCCTTCT
+          to: 298
+        - from: CATCGATAA
+          to: 297
+        - from: CATCGGACG
+          to: 296
+        - from: CCGGCTGGT
+          to: 295
+        - from: CCGTAGATT
+          to: 294
+        - from: CCTACCTTG
+          to: 293
+        - from: CCTGACTAT
+          to: 292
+        - from: CCTGTCTCA
+          to: 291
+        - from: CCTTGTGTG
+          to: 290
+        - from: CGACGGCTT
+          to: 289
+        - from: CGAGCTGTT
+          to: 288
+        - from: CGAGGATGT
+          to: 287
+        - from: CGCAGGTTG
+          to: 286
+        - from: CGCGTTCGT
+          to: 285
+        - from: CGCTCCAAT
+          to: 284
+        - from: CGGAATATT
+          to: 283
+        - from: CGGATATAG
+          to: 282
+        - from: CGGCCTGAT
+          to: 281
+        - from: CGGTAATTG
+          to: 280
+        - from: CGGTGCTCT
+          to: 279
+        - from: CGGTTCATT
+          to: 278
+        - from: CGGTTCGAG
+          to: 277
+        - from: CGTAGGTCT
+          to: 276
+        - from: CGTCACTGT
+          to: 275
+        - from: CGTCTGGTT
+          to: 274
+        - from: CGTCTTAAT
+          to: 273
+        - from: CGTGGCATT
+          to: 272
+        - from: CTACATATT
+          to: 271
+        - from: CTATGAATT
+          to: 270
+        - from: CTATTAGTG
+          to: 269
+        - from: CTATTCTAT
+          to: 268
+        - from: CTCACAGGT
+          to: 267
+        - from: CTCCGAGCG
+          to: 266
+        - from: CTCCGGATG
+          to: 265
+        - from: CTCCTAAGT
+          to: 264
+        - from: CTCCTGCTT
+          to: 263
+        - from: CTCGCAATT
+          to: 262
+        - from: CTCGGCAAG
+          to: 261
+        - from: CTCGTATCT
+          to: 260
+        - from: CTGACCTGT
+          to: 259
+        - from: CTGAGATAT
+          to: 258
+        - from: CTGATTAAG
+          to: 257
+        - from: CTGCATTGT
+          to: 256
+        - from: CTGCCGATT
+          to: 255
+        - from: CTGCGCGGT
+          to: 254
+        - from: CTGCGTGTG
+          to: 253
+        - from: CTGGATGCG
+          to: 252
+        - from: CTGGCTCAT
+          to: 251
+        - from: CTGTATAAT
+          to: 250
+        - from: CTGTCGTCT
+          to: 249
+        - from: CTGTTAGGT
+          to: 248
+        - from: CTTACCGAT
+          to: 247
+        - from: CTTATGAGT
+          to: 246
+        - from: CTTCGGCGT
+          to: 245
+        - from: CTTCTGTCG
+          to: 244
+        - from: CTTGATTCT
+          to: 243
+        - from: CTTGCCGTG
+          to: 242
+        - from: CTTGCTGAA
+          to: 241
+        - from: CTTGGATTG
+          to: 240
+        - from: CTTGTCCAG
+          to: 239
+        - from: GAACGCTGT
+          to: 238
+        - from: GAAGGCATT
+          to: 237
+        - from: GAAGTATTG
+          to: 236
+        - from: GAAGTGGTT
+          to: 235
+        - from: GAAGTTCAT
+          to: 234
+        - from: GAATCAGCT
+          to: 233
+        - from: GAATTAGGA
+          to: 232
+        - from: GACCTATCT
+          to: 231
+        - from: GACGATATG
+          to: 230
+        - from: GACGCAGGT
+          to: 229
+        - from: GACGGTCGT
+          to: 228
+        - from: GAGACCTAT
+          to: 227
+        - from: GAGATAGAT
+          to: 226
+        - from: GAGCCGAAT
+          to: 225
+        - from: GAGCGACTT
+          to: 224
+        - from: GAGCGGTTG
+          to: 223
+        - from: GAGCGTCGA
+          to: 222
+        - from: GAGCGTGCT
+          to: 221
+        - from: GAGCTCAGT
+          to: 220
+        - from: GAGTGTTAT
+          to: 219
+        - from: GATATTACT
+          to: 218
+        - from: GATATTGAA
+          to: 217
+        - from: GATCGCTTA
+          to: 216
+        - from: GATCTCCTT
+          to: 215
+        - from: GATGCCTTG
+          to: 214
+        - from: GATGCTGAT
+          to: 213
+        - from: GATGGATCT
+          to: 212
+        - from: GATGTTGCG
+          to: 211
+        - from: GATTAGGTT
+          to: 210
+        - from: GATTATCAG
+          to: 209
+        - from: GATTCATAT
+          to: 208
+        - from: GATTCCAGT
+          to: 207
+        - from: GATTGCGAG
+          to: 206
+        - from: GATTGTATT
+          to: 205
+        - from: GCAACACTT
+          to: 204
+        - from: GCAATCTGT
+          to: 203
+        - from: GCACTTGTG
+          to: 202
+        - from: GCAGTGTCT
+          to: 201
+        - from: GCAGTTGGA
+          to: 200
+        - from: GCATGATGT
+          to: 199
+        - from: GCATTCGTT
+          to: 198
+        - from: GCCAATTCG
+          to: 197
+        - from: GCCATATAT
+          to: 196
+        - from: GCCATGCTT
+          to: 195
+        - from: GCCGCACAA
+          to: 194
+        - from: GCCGGCGAA
+          to: 193
+        - from: GCCTCACGT
+          to: 192
+        - from: GCCTGAGTG
+          to: 191
+        - from: GCCTTCACA
+          to: 190
+        - from: GCCTTCTAG
+          to: 189
+        - from: GCCTTGGTA
+          to: 188
+        - from: GCGAGAACA
+          to: 187
+        - from: GCGAGATTG
+          to: 186
+        - from: GCGAGCCTT
+          to: 185
+        - from: GCGATCAAT
+          to: 184
+        - from: GCGCATGAA
+          to: 183
+        - from: GCGCCATAT
+          to: 182
+        - from: GCGCGGATT
+          to: 181
+        - from: GCGCTTACG
+          to: 180
+        - from: GCGTAAGAG
+          to: 179
+        - from: GCGTCCGAT
+          to: 178
+        - from: GCGTCTTGA
+          to: 177
+        - from: GCGTGCGTA
+          to: 176
+        - from: GCGTTCTCT
+          to: 175
+        - from: GCGTTGTAA
+          to: 174
+        - from: GCTAACTCT
+          to: 173
+        - from: GCTACATGT
+          to: 172
+        - from: GCTACTAAG
+          to: 171
+        - from: GCTATACGA
+          to: 170
+        - from: GCTATTCTG
+          to: 169
+        - from: GCTCCGCTG
+          to: 168
+        - from: GCTCGCCGT
+          to: 167
+        - from: GCTCTATTG
+          to: 166
+        - from: GCTCTTAGT
+          to: 165
+        - from: GCTGATATT
+          to: 164
+        - from: GCTGCCTAA
+          to: 163
+        - from: GCTGGACTG
+          to: 162
+        - from: GCTGGTTGT
+          to: 161
+        - from: GCTGTCATG
+          to: 160
+        - from: GCTGTGTAG
+          to: 159
+        - from: GCTTATGCG
+          to: 158
+        - from: GCTTCATTA
+          to: 157
+        - from: GCTTGAGGA
+          to: 156
+        - from: GCTTGCTTG
+          to: 155
+        - from: GCTTGGCAG
+          to: 154
+        - from: GTAATTCGT
+          to: 153
+        - from: GTACAGTCT
+          to: 152
+        - from: GTACGATTA
+          to: 151
+        - from: GTAGATACT
+          to: 150
+        - from: GTAGCCTTA
+          to: 149
+        - from: GTAGTCGAT
+          to: 148
+        - from: GTAGTTAAG
+          to: 147
+        - from: GTATACAAT
+          to: 146
+        - from: GTATATGTA
+          to: 145
+        - from: GTATCGGTT
+          to: 144
+        - from: GTATGTACA
+          to: 143
+        - from: GTATGTCTT
+          to: 142
+        - from: GTCAAGGAA
+          to: 141
+        - from: GTCACTCTT
+          to: 140
+        - from: GTCAGAATT
+          to: 139
+        - from: GTCAGACGA
+          to: 138
+        - from: GTCCAACAT
+          to: 137
+        - from: GTCCGGACT
+          to: 136
+        - from: GTCGAGCTG
+          to: 135
+        - from: GTCGGATGT
+          to: 134
+        - from: GTCGGTAAT
+          to: 133
+        - from: GTCGTGTTA
+          to: 132
+        - from: GTCGTTGCT
+          to: 131
+        - from: GTCTACGAG
+          to: 130
+        - from: GTCTCATCT
+          to: 129
+        - from: GTCTTAAGA
+          to: 128
+        - from: GTCTTCCGT
+          to: 127
+        - from: GTCTTGATT
+          to: 126
+        - from: GTCTTGTCG
+          to: 125
+        - from: GTGCCTGGA
+          to: 124
+        - from: GTGCTCACA
+          to: 123
+        - from: GTGCTCGTT
+          to: 122
+        - from: GTGCTTGAG
+          to: 121
+        - from: GTGTCCATT
+          to: 120
+        - from: GTGTCGGCA
+          to: 119
+        - from: GTTAACTTA
+          to: 118
+        - from: GTTAAGAGA
+          to: 117
+        - from: GTTACTCAA
+          to: 116
+        - from: GTTACTGTG
+          to: 115
+        - from: GTTAGCAGT
+          to: 114
+        - from: GTTCCTTAT
+          to: 113
+        - from: GTTCGCGTG
+          to: 112
+        - from: GTTCTATCA
+          to: 111
+        - from: GTTCTGAAT
+          to: 110
+        - from: GTTCTGCTA
+          to: 109
+        - from: GTTGACCTT
+          to: 108
+        - from: GTTGCCAAG
+          to: 107
+        - from: GTTGGCTAT
+          to: 106
+        - from: GTTGTGCGT
+          to: 105
+        - from: TACACCTGT
+          to: 104
+        - from: TACCTGTTA
+          to: 103
+        - from: TAGAGGAAG
+          to: 102
+        - from: TAGCTGCTT
+          to: 101
+        - from: TAGTTCAAT
+          to: 100
+        - from: TATCAAGGA
+          to: 99
+        - from: TATGCTATT
+          to: 98
+        - from: TATTATGGT
+          to: 97
+        - from: TATTCCGAA
+          to: 96
+        - from: TCACACTTA
+          to: 95
+        - from: TCATGGCTT
+          to: 94
+        - from: TCGACGAGA
+          to: 93
+        - from: TCGTCAGTG
+          to: 92
+        - from: TCGTTCGAA
+          to: 91
+        - from: TCTACCGCG
+          to: 90
+        - from: TCTGGAATT
+          to: 89
+        - from: TCTGTCCTT
+          to: 88
+        - from: TCTTCATAG
+          to: 87
+        - from: TCTTGGTAA
+          to: 86
+        - from: TGAGAATCT
+          to: 85
+        - from: TGAGGTATT
+          to: 84
+        - from: TGATAGAGA
+          to: 83
+        - from: TGCGTATTG
+          to: 82
+        - from: TGGAGTCTT
+          to: 81
+        - from: TGGCGCCAA
+          to: 80
+        - from: TGGCGTTAT
+          to: 79
+        - from: TGGTTACAA
+          to: 78
+        - from: TGGTTAGTT
+          to: 77
+        - from: TGTCAGAAG
+          to: 76
+        - from: TGTCAGTTA
+          to: 75
+        - from: TGTGGAGCG
+          to: 74
+        - from: TGTGTCCAA
+          to: 73
+        - from: TGTGTTATG
+          to: 72
+        - from: TGTTAAGTG
+          to: 71
+        - from: TGTTCAAGA
+          to: 70
+        - from: TGTTCACTT
+          to: 69
+        - from: TTAACACAA
+          to: 68
+        - from: TTAACCTTG
+          to: 67
+        - from: TTAAGTGTG
+          to: 66
+        - from: TTAATAGGA
+          to: 65
+        - from: TTAATCAGT
+          to: 64
+        - from: TTACACACT
+          to: 63
+        - from: TTACACGGA
+          to: 62
+        - from: TTACAGCGT
+          to: 61
+        - from: TTACATGAG
+          to: 60
+        - from: TTACCTAGA
+          to: 59
+        - from: TTACGATAT
+          to: 58
+        - from: TTACGTGGT
+          to: 57
+        - from: TTACTAGTT
+          to: 56
+        - from: TTACTGGAA
+          to: 55
+        - from: TTAGGCGCG
+          to: 54
+        - from: TTATATTAT
+          to: 53
+        - from: TTATCCGAG
+          to: 52
+        - from: TTATCCTGT
+          to: 51
+        - from: TTATGATTG
+          to: 50
+        - from: TTATGCGTT
+          to: 49
+        - from: TTCAACGTG
+          to: 48
+        - from: TTCAACTCT
+          to: 47
+        - from: TTCACTATA
+          to: 46
+        - from: TTCAGGAGT
+          to: 45
+        - from: TTCATGCTG
+          to: 44
+        - from: TTCATTGAA
+          to: 43
+        - from: TTCCAATTA
+          to: 42
+        - from: TTCCGCATT
+          to: 41
+        - from: TTCCGGCAG
+          to: 40
+        - from: TTCCTCGGT
+          to: 39
+        - from: TTCGATCAG
+          to: 38
+        - from: TTCGATTGT
+          to: 37
+        - from: TTCGCCAGA
+          to: 36
+        - from: TTCGGAATA
+          to: 35
+        - from: TTCGGCTTG
+          to: 34
+        - from: TTCGTAGAT
+          to: 33
+        - from: TTCGTCGTA
+          to: 32
+        - from: TTCTAATCG
+          to: 31
+        - from: TTCTAGGTA
+          to: 30
+        - from: TTCTCCGCT
+          to: 29
+        - from: TTCTCCTTA
+          to: 28
+        - from: TTCTGCACA
+          to: 27
+        - from: TTCTGGTCT
+          to: 26
+        - from: TTGACCGAA
+          to: 25
+        - from: TTGACTACT
+          to: 24
+        - from: TTGAGACGT
+          to: 23
+        - from: TTGATAATT
+          to: 22
+        - from: TTGATGTAT
+          to: 21
+        - from: TTGCAAGGT
+          to: 20
+        - from: TTGCACGCG
+          to: 19
+        - from: TTGCCATTG
+          to: 18
+        - from: TTGCGGTTA
+          to: 17
+        - from: TTGGAAGTG
+          to: 16
+        - from: TTGGATACA
+          to: 15
+        - from: TTGGCACAG
+          to: 14
+        - from: TTGGTATTA
+          to: 13
+        - from: TTGGTCGAG
+          to: 12
+        - from: TTGGTGCAA
+          to: 11
+        - from: TTGGTTAAT
+          to: 10
+        - from: TTGTACAGT
+          to: 9
+        - from: TTGTATGAA
+          to: 8
+        - from: TTGTCACGA
+          to: 7
+        - from: TTGTCATAT
+          to: 6
+        - from: TTGTCTAAG
+          to: 5
+        - from: TTGTCTGTT
+          to: 4
+        - from: TTGTGCGGA
+          to: 3
+        - from: TTGTGGTAG
+          to: 2
+        - from: TTGTGTTGT
+          to: 1
+      reportingLevel: VerboseReport
+    - type: mapTags
+      name: CELL3 to BD CLS3 index
+      matchTags:
+        - CELL3
+      newTags:
+        - CELL3ID
+      allowOneMismatch: true
+      rules:
+        - from: ACACACCTA
+          to: 384
+        - from: ACACATAGT
+          to: 383
+        - from: ACACCAACT
+          to: 382
+        - from: ACACCAGTA
+          to: 381
+        - from: ACACGCATG
+          to: 380
+        - from: ACACTATCA
+          to: 379
+        - from: ACACTTGCT
+          to: 378
+        - from: ACAGCGTAC
+          to: 377
+        - from: ACATATACG
+          to: 376
+        - from: ACATATGAT
+          to: 375
+        - from: ACATGACGA
+          to: 374
+        - from: ACATGGCTG
+          to: 373
+        - from: ACATTCTCG
+          to: 372
+        - from: ACATTGTGC
+          to: 371
+        - from: ACCGCTTCA
+          to: 370
+        - from: ACCGGCTAC
+          to: 369
+        - from: ACCGGTAGT
+          to: 368
+        - from: ACCGTAGCA
+          to: 367
+        - from: ACCTAATCG
+          to: 366
+        - from: ACCTACTGA
+          to: 365
+        - from: ACCTAGGTA
+          to: 364
+        - from: ACCTCGATC
+          to: 363
+        - from: ACCTGTCAT
+          to: 362
+        - from: ACCTGTTGC
+          to: 361
+        - from: ACCTTGTAG
+          to: 360
+        - from: ACGAACGCA
+          to: 359
+        - from: ACGAATCGT
+          to: 358
+        - from: ACGAGCATC
+          to: 357
+        - from: ACGAGCTGA
+          to: 356
+        - from: ACGATCTAC
+          to: 355
+        - from: ACGATGGAT
+          to: 354
+        - from: ACGATGTCG
+          to: 353
+        - from: ACGCGCCAG
+          to: 352
+        - from: ACGCGTGTA
+          to: 351
+        - from: ACGCTGCGA
+          to: 350
+        - from: ACGGCGCTG
+          to: 349
+        - from: ACGGTACAG
+          to: 348
+        - from: ACGGTCCGT
+          to: 347
+        - from: ACGGTCTCA
+          to: 346
+        - from: ACGTCAGTC
+          to: 345
+        - from: ACGTCTTCG
+          to: 344
+        - from: ACGTGGAGC
+          to: 343
+        - from: ACGTGTATG
+          to: 342
+        - from: ACGTGTGCT
+          to: 341
+        - from: ACGTTCGTA
+          to: 340
+        - from: ACTAATACT
+          to: 339
+        - from: ACTACGCGT
+          to: 338
+        - from: ACTAGGCAG
+          to: 337
+        - from: ACTATTGCA
+          to: 336
+        - from: ACTCAACTG
+          to: 335
+        - from: ACTCCGCTA
+          to: 334
+        - from: ACTCCTGAC
+          to: 333
+        - from: ACTCTGATG
+          to: 332
+        - from: ACTGAAGCT
+          to: 331
+        - from: ACTGACGTC
+          to: 330
+        - from: ACTGGTATC
+          to: 329
+        - from: ACTGTAACG
+          to: 328
+        - from: ACTGTTGAT
+          to: 327
+        - from: ACTTAGTAC
+          to: 326
+        - from: ACTTCGACT
+          to: 325
+        - from: ACTTCTAGC
+          to: 324
+        - from: ACTTGAGCA
+          to: 323
+        - from: ACTTGCCTA
+          to: 322
+        - from: AGACTCACT
+          to: 321
+        - from: AGAGCCGAT
+          to: 320
+        - from: AGAGTGCGT
+          to: 319
+        - from: AGATACCGT
+          to: 318
+        - from: AGATATGTA
+          to: 317
+        - from: AGATGATAG
+          to: 316
+        - from: AGATTAGAT
+          to: 315
+        - from: AGATTCTGA
+          to: 314
+        - from: AGCACGGCA
+          to: 313
+        - from: AGCACTTCG
+          to: 312
+        - from: AGCATGATC
+          to: 311
+        - from: AGCCGTCGT
+          to: 310
+        - from: AGCCTCTAC
+          to: 309
+        - from: AGCGACTCA
+          to: 308
+        - from: AGCGATAGC
+          to: 307
+        - from: AGCGCGCTA
+          to: 306
+        - from: AGCGGACGA
+          to: 305
+        - from: AGCGGAGTC
+          to: 304
+        - from: AGCGGTGCA
+          to: 303
+        - from: AGCGTTACG
+          to: 302
+        - from: AGCTACACG
+          to: 301
+        - from: AGCTTAAGT
+          to: 300
+        - from: AGCTTGGAC
+          to: 299
+        - from: AGGAATTAC
+          to: 298
+        - from: AGGACCGCT
+          to: 297
+        - from: AGGAGCAGT
+          to: 296
+        - from: AGGCAAGAT
+          to: 295
+        - from: AGGCAGGTC
+          to: 294
+        - from: AGGCCAAGC
+          to: 293
+        - from: AGGCCGACG
+          to: 292
+        - from: AGGCTATGA
+          to: 291
+        - from: AGGCTTATC
+          to: 290
+        - from: AGGTCAGCA
+          to: 289
+        - from: AGGTCGTAC
+          to: 288
+        - from: AGGTCTGAT
+          to: 287
+        - from: AGGTGCCAT
+          to: 286
+        - from: AGGTGTTCA
+          to: 285
+        - from: AGGTTCTAG
+          to: 284
+        - from: AGGTTGGCT
+          to: 283
+        - from: AGTAAGTGC
+          to: 282
+        - from: AGTAATCGA
+          to: 281
+        - from: AGTAGACTG
+          to: 280
+        - from: AGTATCCAG
+          to: 279
+        - from: AGTCATTCA
+          to: 278
+        - from: AGTCCATCG
+          to: 277
+        - from: AGTCGAACT
+          to: 276
+        - from: AGTCTACAT
+          to: 275
+        - from: AGTCTGAGC
+          to: 274
+        - from: AGTCTGGTA
+          to: 273
+        - from: AGTGCAATC
+          to: 272
+        - from: AGTTAACTA
+          to: 271
+        - from: AGTTACAGC
+          to: 270
+        - from: AGTTCGCTG
+          to: 269
+        - from: ATAGCGGTA
+          to: 268
+        - from: ATAGCTGAC
+          to: 267
+        - from: ATAGGTCTA
+          to: 266
+        - from: ATAGTCCTG
+          to: 265
+        - from: ATATCAATC
+          to: 264
+        - from: ATATCGCAT
+          to: 263
+        - from: ATATCTTGA
+          to: 262
+        - from: ATATTACAG
+          to: 261
+        - from: ATATTCGTC
+          to: 260
+        - from: ATATTGAGT
+          to: 259
+        - from: ATCAACCGA
+          to: 258
+        - from: ATCAACGTC
+          to: 257
+        - from: ATCACACAT
+          to: 256
+        - from: ATCAGATCA
+          to: 255
+        - from: ATCCAAGCA
+          to: 254
+        - from: ATCCATTAC
+          to: 253
+        - from: ATCCGCACT
+          to: 252
+        - from: ATCCTGCGT
+          to: 251
+        - from: ATCCTTCTG
+          to: 250
+        - from: ATCGAATAG
+          to: 249
+        - from: ATCGATGCT
+          to: 248
+        - from: ATCGCAACG
+          to: 247
+        - from: ATCGCGAGC
+          to: 246
+        - from: ATCGGCATG
+          to: 245
+        - from: ATCGTCTGA
+          to: 244
+        - from: ATCGTGTAC
+          to: 243
+        - from: ATCTATCAG
+          to: 242
+        - from: ATCTTACTA
+          to: 241
+        - from: ATCTTATGC
+          to: 240
+        - from: ATGACCGAC
+          to: 239
+        - from: ATGACTATC
+          to: 238
+        - from: ATGAGTTCG
+          to: 237
+        - from: ATGCCGTAG
+          to: 236
+        - from: ATGCGACGT
+          to: 235
+        - from: ATGCTCGCT
+          to: 234
+        - from: ATGCTTCAT
+          to: 233
+        - from: ATGGAACGA
+          to: 232
+        - from: ATGGACTCG
+          to: 231
+        - from: ATGGAGATC
+          to: 230
+        - from: ATGGCATAC
+          to: 229
+        - from: ATGTAGCGT
+          to: 228
+        - from: ATGTCTCTA
+          to: 227
+        - from: ATTAAGCAT
+          to: 226
+        - from: ATTAATTAG
+          to: 225
+        - from: ATTACTTCA
+          to: 224
+        - from: ATTCAGGAC
+          to: 223
+        - from: ATTCATACG
+          to: 222
+        - from: ATTCGTAGT
+          to: 221
+        - from: ATTGATCGT
+          to: 220
+        - from: ATTGGCGAT
+          to: 219
+        - from: ATTGGTCAG
+          to: 218
+        - from: ATTGTATCA
+          to: 217
+        - from: ATTGTCACT
+          to: 216
+        - from: GAATAGGCT
+          to: 215
+        - from: GAGCGCACT
+          to: 214
+        - from: GAGGCAACG
+          to: 213
+        - from: GAGGCGAGT
+          to: 212
+        - from: GAGTATGAT
+          to: 211
+        - from: GAGTCGGAC
+          to: 210
+        - from: GAGTGGCAT
+          to: 209
+        - from: GATCTGCAT
+          to: 208
+        - from: GATCTTCGA
+          to: 207
+        - from: GATGAACAT
+          to: 206
+        - from: GATTGCCGT
+          to: 205
+        - from: GCAATTCGA
+          to: 204
+        - from: GCACCTCAT
+          to: 203
+        - from: GCAGCGCGT
+          to: 202
+        - from: GCAGGTACT
+          to: 201
+        - from: GCAGTATAC
+          to: 200
+        - from: GCATGCTAC
+          to: 199
+        - from: GCATGTTGA
+          to: 198
+        - from: GCCATACTG
+          to: 197
+        - from: GCCTTCATG
+          to: 196
+        - from: GCGCCGGCT
+          to: 195
+        - from: GCGCCTAGT
+          to: 194
+        - from: GCGCGGTGC
+          to: 193
+        - from: GCGGAGCAT
+          to: 192
+        - from: GCGGTATCG
+          to: 191
+        - from: GCGTGTTAG
+          to: 190
+        - from: GCGTTCTGA
+          to: 189
+        - from: GCTACCATG
+          to: 188
+        - from: GCTAGTCGT
+          to: 187
+        - from: GCTATAGAT
+          to: 186
+        - from: GCTCGTTAC
+          to: 185
+        - from: GCTGCAACT
+          to: 184
+        - from: GCTGGTTCA
+          to: 183
+        - from: GCTGTCCAT
+          to: 182
+        - from: GGAACGTGC
+          to: 181
+        - from: GGACGTTCA
+          to: 180
+        - from: GGACTGGCT
+          to: 179
+        - from: GGAGAACGA
+          to: 178
+        - from: GGAGTAACT
+          to: 177
+        - from: GGATGTCAT
+          to: 176
+        - from: GGCACTCTG
+          to: 175
+        - from: GGCCATTGC
+          to: 174
+        - from: GGCCTGTCA
+          to: 173
+        - from: GGCGACCGT
+          to: 172
+        - from: GGCGAGTAG
+          to: 171
+        - from: GGCGCAAGT
+          to: 170
+        - from: GGCGTAATC
+          to: 169
+        - from: GGCGTGGAT
+          to: 168
+        - from: GGCTCCATC
+          to: 167
+        - from: GGCTGGCAG
+          to: 166
+        - from: GGCTGTAGT
+          to: 165
+        - from: GGCTTACGA
+          to: 164
+        - from: GGCTTGACT
+          to: 163
+        - from: GGCTTGTGC
+          to: 162
+        - from: GGTAAGGAT
+          to: 161
+        - from: GGTACCAGT
+          to: 160
+        - from: GGTAGCGTC
+          to: 159
+        - from: GGTAGTGCT
+          to: 158
+        - from: GGTCACATG
+          to: 157
+        - from: GGTCATGTC
+          to: 156
+        - from: GGTCCGACT
+          to: 155
+        - from: GGTCGGCGT
+          to: 154
+        - from: GGTCGTCTA
+          to: 153
+        - from: GGTCTTCAG
+          to: 152
+        - from: GGTGTGGCA
+          to: 151
+        - from: GGTTAACGT
+          to: 150
+        - from: GGTTGAGTA
+          to: 149
+        - from: GGTTGCTCA
+          to: 148
+        - from: GTAGCTCGA
+          to: 147
+        - from: GTAGTACAT
+          to: 146
+        - from: GTAGTTGTC
+          to: 145
+        - from: GTATGACGT
+          to: 144
+        - from: GTATTAAGC
+          to: 143
+        - from: GTATTCCGA
+          to: 142
+        - from: GTATTGCTG
+          to: 141
+        - from: GTGCCGCGT
+          to: 140
+        - from: GTGCTTGCA
+          to: 139
+        - from: GTTATGATG
+          to: 138
+        - from: GTTCCTGCT
+          to: 137
+        - from: GTTCTCGAC
+          to: 136
+        - from: GTTGACCGA
+          to: 135
+        - from: TAAGCTACT
+          to: 134
+        - from: TAAGTGCAT
+          to: 133
+        - from: TACAGAAGT
+          to: 132
+        - from: TACCAGGAC
+          to: 131
+        - from: TACCGCGAT
+          to: 130
+        - from: TACCGTACT
+          to: 129
+        - from: TACGTCCGA
+          to: 128
+        - from: TACTTGTCG
+          to: 127
+        - from: TAGACTGAT
+          to: 126
+        - from: TAGAGTTAC
+          to: 125
+        - from: TAGCATTGC
+          to: 124
+        - from: TAGGATCGT
+          to: 123
+        - from: TAGGCACAT
+          to: 122
+        - from: TAGGCGCGA
+          to: 121
+        - from: TATCACGCT
+          to: 120
+        - from: TATCAGTCG
+          to: 119
+        - from: TATCCAGAT
+          to: 118
+        - from: TATCTGACT
+          to: 117
+        - from: TATCTGGTC
+          to: 116
+        - from: TATGCAAGT
+          to: 115
+        - from: TATGGTATG
+          to: 114
+        - from: TATGTTCAG
+          to: 113
+        - from: TATTCATCA
+          to: 112
+        - from: TATTCCAGC
+          to: 111
+        - from: TATTCGGCT
+          to: 110
+        - from: TATTGCGCA
+          to: 109
+        - from: TCAAGCTCA
+          to: 108
+        - from: TCACTCAGT
+          to: 107
+        - from: TCAGACCGT
+          to: 106
+        - from: TCAGGTTGC
+          to: 105
+        - from: TCATGCACT
+          to: 104
+        - from: TCATTACGT
+          to: 103
+        - from: TCCAAGTCG
+          to: 102
+        - from: TCCATGGTC
+          to: 101
+        - from: TCCATTCAT
+          to: 100
+        - from: TCCGAGTAC
+          to: 99
+        - from: TCCGCTCGT
+          to: 98
+        - from: TCCGGAGCT
+          to: 97
+        - from: TCCGGCGTC
+          to: 96
+        - from: TCGAGGCAT
+          to: 95
+        - from: TCGATCACG
+          to: 94
+        - from: TCGCTACTG
+          to: 93
+        - from: TCGGCTGCT
+          to: 92
+        - from: TCGGTGTAG
+          to: 91
+        - from: TCGTACTAC
+          to: 90
+        - from: TCTAGTACG
+          to: 89
+        - from: TCTAGTTGA
+          to: 88
+        - from: TCTCAGATC
+          to: 87
+        - from: TCTGGCTAG
+          to: 86
+        - from: TCTGTTACT
+          to: 85
+        - from: TCTGTTGTC
+          to: 84
+        - from: TCTTACCAT
+          to: 83
+        - from: TCTTATAGT
+          to: 82
+        - from: TCTTCCGTC
+          to: 81
+        - from: TGAGGCTCG
+          to: 80
+        - from: TGAGTGTGC
+          to: 79
+        - from: TGCACGAGT
+          to: 78
+        - from: TGCCTAGAC
+          to: 77
+        - from: TGCCTGCAT
+          to: 76
+        - from: TGCGCGACG
+          to: 75
+        - from: TGCGCTTAG
+          to: 74
+        - from: TGCGGTCTG
+          to: 73
+        - from: TGCGTTGCT
+          to: 72
+        - from: TGCTAGCGA
+          to: 71
+        - from: TGGAATACT
+          to: 70
+        - from: TGGACTTGC
+          to: 69
+        - from: TGGATGTAC
+          to: 68
+        - from: TGGCGCGCT
+          to: 67
+        - from: TGGCGTATG
+          to: 66
+        - from: TGGCTGTCG
+          to: 65
+        - from: TGGCTTGTA
+          to: 64
+        - from: TGGTCAAGT
+          to: 63
+        - from: TGGTTCACT
+          to: 62
+        - from: TGGTTCCGA
+          to: 61
+        - from: TGTACAACG
+          to: 60
+        - from: TGTCGAGCA
+          to: 59
+        - from: TGTCGCAGT
+          to: 58
+        - from: TGTGCGTCA
+          to: 57
+        - from: TGTGCTAGC
+          to: 56
+        - from: TGTGGCCGA
+          to: 55
+        - from: TGTTAAGCT
+          to: 54
+        - from: TGTTGATGA
+          to: 53
+        - from: TGTTGGCTA
+          to: 52
+        - from: TTAACAGAT
+          to: 51
+        - from: TTAATTGCA
+          to: 50
+        - from: TTACAGAGC
+          to: 49
+        - from: TTACCGTCA
+          to: 48
+        - from: TTACTACGA
+          to: 47
+        - from: TTAGATATG
+          to: 46
+        - from: TTAGCACTA
+          to: 45
+        - from: TTAGCTCAT
+          to: 44
+        - from: TTAGTTAGC
+          to: 43
+        - from: TTATAAGTC
+          to: 42
+        - from: TTATAATAG
+          to: 41
+        - from: TTATACCTA
+          to: 40
+        - from: TTATCGTAC
+          to: 39
+        - from: TTATGCATC
+          to: 38
+        - from: TTATGCCAG
+          to: 37
+        - from: TTCAACTAC
+          to: 36
+        - from: TTCAAGCAG
+          to: 35
+        - from: TTCACCTCG
+          to: 34
+        - from: TTCAGCGCA
+          to: 33
+        - from: TTCATGGAT
+          to: 32
+        - from: TTCATTATG
+          to: 31
+        - from: TTCCGACTG
+          to: 30
+        - from: TTCCGGTGC
+          to: 29
+        - from: TTCGCAATC
+          to: 28
+        - from: TTCGGACGT
+          to: 27
+        - from: TTCGGATAC
+          to: 26
+        - from: TTCGTCCAT
+          to: 25
+        - from: TTCTACTCA
+          to: 24
+        - from: TTCTCAACT
+          to: 23
+        - from: TTCTCGCGT
+          to: 22
+        - from: TTGAACCTG
+          to: 21
+        - from: TTGCACCAT
+          to: 20
+        - from: TTGCACGTC
+          to: 19
+        - from: TTGCATGCT
+          to: 18
+        - from: TTGCCGGAT
+          to: 17
+        - from: TTGCCTTAC
+          to: 16
+        - from: TTGCGCTCG
+          to: 15
+        - from: TTGCGGCGA
+          to: 14
+        - from: TTGGAATCA
+          to: 13
+        - from: TTGGAGACG
+          to: 12
+        - from: TTGGATTAG
+          to: 11
+        - from: TTGGCGTGC
+          to: 10
+        - from: TTGGTAACT
+          to: 9
+        - from: TTGGTCTAC
+          to: 8
+        - from: TTGGTGCGT
+          to: 7
+        - from: TTGGTTCTG
+          to: 6
+        - from: TTGTAAGAT
+          to: 5
+        - from: TTGTCTTCA
+          to: 4
+        - from: TTGTGCGAC
+          to: 3
+        - from: TTGTGGAGT
+          to: 2
+        - from: TTGTGGCTG
+          to: 1
+      reportingLevel: VerboseReport
+    - type: generic
+      name: BD CLS1-CLS2-CLS3 indices to BD cell index
+      transformation:
+        type: plus
         sources:
-        - type: plus
-          sources:
+          - type: multiply
+            sources:
+              - type: plus
+                sources:
+                  - type: tag
+                    name: CELL1ID
+                  - type: constantNumber
+                    value: -1
+              - type: constantNumber
+                value: 147456
+          - type: multiply
+            sources:
+              - type: plus
+                sources:
+                  - type: tag
+                    name: CELL2ID
+                  - type: constantNumber
+                    value: -1
+              - type: constantNumber
+                value: 384
           - type: tag
-            name: CELL1ID
-          - type: constantNumber
-            value: -1
-        - type: constantNumber
-          value: 147456
-      - type: multiply
-        sources:
-        - type: plus
-          sources:
-          - type: tag
-            name: CELL2ID
-          - type: constantNumber
-            value: -1
-        - type: constantNumber
-          value: 384
-      - type: tag
-        name: CELL3ID
-    destinationTag: CELLID
+            name: CELL3ID
+      destinationTag: CELLID
   sampleTable: null
   tagsValidations:
-  - type: MustContainTagType
-    tagType: Cell
-  - type: MustContainTagType
-    tagType: Molecule
+    - type: MustContainTagType
+      tagType: Cell
+    - type: MustContainTagType
+      tagType: Molecule
   splitBySample: true
   limit: null
   parameters:
@@ -2539,77 +2539,77 @@ refineTagsAndSort:
     postFilter:
       type: filter_and
       operands:
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        - allTags:Molecule
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_lowest_threshold
-            operators:
-            - type: group_operator_advanced_thresholding
-              algo:
-                type: otsu
-              logX: true
-              minimalSample: 20
-              fallbackThreshold: 1.0
-              accept: High
-            - type: group_operator_cumtop
-              share: 0.85
-              round: Down
-              accept: High
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
-        expectedSorting:
-        - allTags:Cell
-        - allTags:Molecule
-        requiredSequences: []
-      - type: filter_groups
-        groupingKeys:
-        - allTags:Cell
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-            keys:
+        - type: filter_groups
+          groupingKeys:
+            - allTags:Cell
             - allTags:Molecule
-          operator:
-            type: group_operator_lowest_threshold
-            operators:
-            - type: group_operator_advanced_thresholding
-              algo:
-                type: otsu
-              logX: true
-              minimalSample: 20
-              fallbackThreshold: 1.0
-              accept: High
-            - type: group_operator_cumtop
-              share: 0.85
-              round: Down
-              accept: High
-            accept: High
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+              operator:
+                type: group_operator_lowest_threshold
+                operators:
+                  - type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+                    accept: High
+                  - type: group_operator_cumtop
+                    share: 0.85
+                    round: Down
+                    accept: High
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
           expectedSorting:
-          - allTags:Molecule
+            - allTags:Cell
+            - allTags:Molecule
           requiredSequences: []
-        expectedSorting:
+        - type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+                  keys:
+                    - allTags:Molecule
+              operator:
+                type: group_operator_lowest_threshold
+                operators:
+                  - type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+                    accept: High
+                  - type: group_operator_cumtop
+                    share: 0.85
+                    round: Down
+                    accept: High
+                accept: High
+              expectedSorting:
+                - allTags:Molecule
+              requiredSequences: []
+          expectedSorting:
+            - allTags:Cell
+            - allTags:Molecule
+          requiredSequences: []
+      expectedSorting:
         - allTags:Cell
         - allTags:Molecule
-        requiredSequences: []
-      expectedSorting:
-      - allTags:Cell
-      - allTags:Molecule
       requiredSequences: []
 assemblePartial:
   overlappedOnly: false
@@ -2667,7 +2667,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -2712,37 +2712,37 @@ assemble:
     mappingThreshold: 2of5
     minimalQuality: 20
     postFilters:
-    - type: filter_in_groups
-      isolationKeys:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist: null
-            keys:
-            - allTags:Molecule
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
+      - type: filter_in_groups
+        isolationKeys:
+          - geneLabel:ReliableChain
+          - allTags:Cell
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist: null
+                  keys:
+                    - allTags:Molecule
+              operator:
+                type: group_operator_cumtop
+                share: 0.95
+                accept: High
+              expectedSorting:
+                - allTags:Molecule
+              requiredSequences: []
           expectedSorting:
-          - allTags:Molecule
+            - clone
+            - allTags:Molecule
           requiredSequences: []
+        aggregateReport: true
         expectedSorting:
-        - clone
-        - allTags:Molecule
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      - clone
-      - allTags:Molecule
+          - geneLabel:ReliableChain
+          - allTags:Cell
+          - clone
+          - allTags:Molecule
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -2791,27 +2791,27 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -tags
-    args:
-    - Cell
-  - field: -tags
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -tags
+      args:
+        - Cell
+    - field: -tags
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -2819,29 +2819,29 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -cellGroup
-  - field: -tags
-    args:
-    - Cell
-  - field: -readCount
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -cloneId
+    - field: -cellGroup
+    - field: -tags
+      args:
+        - Cell
+    - field: -readCount
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
 exportCloneGroups:
@@ -2852,57 +2852,57 @@ exportCloneGroups:
   types: []
   noHeader: false
   fields:
-  - field: -cellGroup
-  - field: -groupReadCount
-  - field: -groupUniqueTagCount
-    args:
-    - Cell
-  - field: -groupUniqueTagCount
-    args:
-    - Molecule
-  - field: -uniqClonesPerChainCount
-  - field: -readCount
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cellGroup
+    - field: -groupReadCount
+    - field: -groupUniqueTagCount
+      args:
+        - Cell
+    - field: -groupUniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqClonesPerChainCount
+    - field: -readCount
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   sortChainsBy: Auto
 qc:
   checks:
-  - type: SuccessfullyAlignedReads
-    upper: 0.8
-    middle: 0.6
-    label: Successfully aligned reads
-  - type: UnassignedAlignments
-    upper: 0.2
-    middle: 0.1
-    label: Unassigned alignments in clonotype assembly
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.2
-    middle: 0.1
-    label: Alignments dropped due to low sequence quality
-  - type: ReadsDroppedInTagRefinement
-    upper: 0.3
-    middle: 0.15
-    label: Reads dropped in tags error correction and filtering
-  - type: TagArtificialDiversityEliminated
-    tag: CELL
-    upper: 0.8
-    middle: 0.7
-    label: CELLs artificial diversity eliminated
-  - type: ReadsDroppedInTagFiltering
-    upper: 0.2
-    middle: 0.1
-    label: Reads dropped in tags filtering
+    - type: SuccessfullyAlignedReads
+      upper: 0.8
+      middle: 0.6
+      label: Successfully aligned reads
+    - type: UnassignedAlignments
+      upper: 0.2
+      middle: 0.1
+      label: Unassigned alignments in clonotype assembly
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.2
+      middle: 0.1
+      label: Alignments dropped due to low sequence quality
+    - type: ReadsDroppedInTagRefinement
+      upper: 0.3
+      middle: 0.15
+      label: Reads dropped in tags error correction and filtering
+    - type: TagArtificialDiversityEliminated
+      tag: CELL
+      upper: 0.8
+      middle: 0.7
+      label: CELLs artificial diversity eliminated
+    - type: ReadsDroppedInTagFiltering
+      upper: 0.2
+      middle: 0.1
+      label: Reads dropped in tags filtering

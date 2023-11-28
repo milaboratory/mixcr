@@ -9,14 +9,14 @@ $defs:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/GTNMultiply-2'
-          - $ref: '#/$defs/GTNPlus-2'
-          - $ref: '#/$defs/GTNConcatenate-2'
-          - $ref: '#/$defs/GTNConstantNumber'
-          - $ref: '#/$defs/GTNConstantSequence'
-          - $ref: '#/$defs/GTNConstantSequenceAndQuality'
-          - $ref: '#/$defs/GTNConstantString'
-          - $ref: '#/$defs/GTNTag'
+            - $ref: '#/$defs/GTNMultiply-2'
+            - $ref: '#/$defs/GTNPlus-2'
+            - $ref: '#/$defs/GTNConcatenate-2'
+            - $ref: '#/$defs/GTNConstantNumber'
+            - $ref: '#/$defs/GTNConstantSequence'
+            - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+            - $ref: '#/$defs/GTNConstantString'
+            - $ref: '#/$defs/GTNTag'
   GTNConcatenate-2:
     $ref: '#/$defs/GTNConcatenate-1'
     type: object
@@ -24,62 +24,62 @@ $defs:
       type:
         const: concatenate
     required:
-    - type
+      - type
   GTNConstantNumber:
     allOf:
-    - type: object
-      properties:
-        value:
-          type: integer
-    - type: object
-      properties:
-        type:
-          const: constantNumber
-      required:
-      - type
+      - type: object
+        properties:
+          value:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: constantNumber
+        required:
+          - type
   GTNConstantSequence:
     allOf:
-    - type: object
-      properties:
-        sequence:
-          $ref: '#/$defs/NucleotideSequence'
-    - type: object
-      properties:
-        type:
-          const: constantSequence
-      required:
-      - type
+      - type: object
+        properties:
+          sequence:
+            $ref: '#/$defs/NucleotideSequence'
+      - type: object
+        properties:
+          type:
+            const: constantSequence
+        required:
+          - type
   GTNConstantSequenceAndQuality:
     allOf:
-    - type: object
-      properties:
-        quality:
-          type: object
-          properties:
-            data:
-              type: array
-              items:
-                type: string
-        sequence:
-          $ref: '#/$defs/NucleotideSequence'
-    - type: object
-      properties:
-        type:
-          const: constantSequenceAndQuality
-      required:
-      - type
+      - type: object
+        properties:
+          quality:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: string
+          sequence:
+            $ref: '#/$defs/NucleotideSequence'
+      - type: object
+        properties:
+          type:
+            const: constantSequenceAndQuality
+        required:
+          - type
   GTNConstantString:
     allOf:
-    - type: object
-      properties:
-        value:
-          type: string
-    - type: object
-      properties:
-        type:
-          const: constantString
-      required:
-      - type
+      - type: object
+        properties:
+          value:
+            type: string
+      - type: object
+        properties:
+          type:
+            const: constantString
+        required:
+          - type
   GTNMultiply-1:
     type: object
     properties:
@@ -87,14 +87,14 @@ $defs:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/GTNMultiply-2'
-          - $ref: '#/$defs/GTNPlus-2'
-          - $ref: '#/$defs/GTNConcatenate-2'
-          - $ref: '#/$defs/GTNConstantNumber'
-          - $ref: '#/$defs/GTNConstantSequence'
-          - $ref: '#/$defs/GTNConstantSequenceAndQuality'
-          - $ref: '#/$defs/GTNConstantString'
-          - $ref: '#/$defs/GTNTag'
+            - $ref: '#/$defs/GTNMultiply-2'
+            - $ref: '#/$defs/GTNPlus-2'
+            - $ref: '#/$defs/GTNConcatenate-2'
+            - $ref: '#/$defs/GTNConstantNumber'
+            - $ref: '#/$defs/GTNConstantSequence'
+            - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+            - $ref: '#/$defs/GTNConstantString'
+            - $ref: '#/$defs/GTNTag'
   GTNMultiply-2:
     $ref: '#/$defs/GTNMultiply-1'
     type: object
@@ -102,7 +102,7 @@ $defs:
       type:
         const: multiply
     required:
-    - type
+      - type
   GTNPlus-1:
     type: object
     properties:
@@ -110,14 +110,14 @@ $defs:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/GTNMultiply-2'
-          - $ref: '#/$defs/GTNPlus-2'
-          - $ref: '#/$defs/GTNConcatenate-2'
-          - $ref: '#/$defs/GTNConstantNumber'
-          - $ref: '#/$defs/GTNConstantSequence'
-          - $ref: '#/$defs/GTNConstantSequenceAndQuality'
-          - $ref: '#/$defs/GTNConstantString'
-          - $ref: '#/$defs/GTNTag'
+            - $ref: '#/$defs/GTNMultiply-2'
+            - $ref: '#/$defs/GTNPlus-2'
+            - $ref: '#/$defs/GTNConcatenate-2'
+            - $ref: '#/$defs/GTNConstantNumber'
+            - $ref: '#/$defs/GTNConstantSequence'
+            - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+            - $ref: '#/$defs/GTNConstantString'
+            - $ref: '#/$defs/GTNTag'
   GTNPlus-2:
     $ref: '#/$defs/GTNPlus-1'
     type: object
@@ -125,19 +125,19 @@ $defs:
       type:
         const: plus
     required:
-    - type
+      - type
   GTNTag:
     allOf:
-    - type: object
-      properties:
-        name:
-          type: string
-    - type: object
-      properties:
-        type:
-          const: tag
-      required:
-      - type
+      - type: object
+        properties:
+          name:
+            type: string
+      - type: object
+        properties:
+          type:
+            const: tag
+        required:
+          - type
   NucleotideSequence:
     type: object
     properties:
@@ -148,19 +148,19 @@ $defs:
   PairedEndReadsLayout:
     type: string
     enum:
-    - DirectOnly
-    - ReverseOnly
-    - Opposite
-    - Collinear
-    - CollinearDirect
-    - Unknown
+      - DirectOnly
+      - ReverseOnly
+      - Opposite
+      - Collinear
+      - CollinearDirect
+      - Unknown
   TagType:
     type: string
     enum:
-    - Sample
-    - Cell
-    - Molecule
-    - Technical
+      - Sample
+      - Cell
+      - Molecule
+      - Technical
 type: object
 properties:
   bamDropNonVDJ:
@@ -215,8 +215,8 @@ properties:
       libraryStructure:
         type: string
         enum:
-        - Unknown
-        - R1V
+          - Unknown
+          - R1V
       maxHits:
         type: integer
       mergerParameters:
@@ -225,8 +225,8 @@ properties:
           identityType:
             type: string
             enum:
-            - Unweighted
-            - MinimalQualityWeighted
+              - Unweighted
+              - MinimalQualityWeighted
           maxQuality:
             type: integer
           minimalIdentity:
@@ -240,10 +240,10 @@ properties:
           qualityMergingAlgorithm:
             type: string
             enum:
-            - SumMax
-            - SumSubtraction
-            - MaxSubtraction
-            - MaxMax
+              - SumMax
+              - SumSubtraction
+              - MaxSubtraction
+              - MaxMax
       minChimeraDetectionScore:
         type: integer
       minSumScore:
@@ -261,8 +261,8 @@ properties:
       vjAlignmentOrder:
         type: string
         enum:
-        - VThenJ
-        - JThenV
+          - VThenJ
+          - JThenV
       vjOverlapWindow:
         type: integer
   readIdAsCellTag:
@@ -301,129 +301,129 @@ properties:
     type: array
     items:
       anyOf:
-      - type: object
-        properties:
-          type:
-            const: cutTechnicalTags
-        required:
-        - type
-      - allOf:
-        - type: object
-          properties:
-            destinationTag:
-              type: string
-            name:
-              type: string
-            transformation:
-              anyOf:
-              - $ref: '#/$defs/GTNMultiply-2'
-              - $ref: '#/$defs/GTNPlus-2'
-              - $ref: '#/$defs/GTNConcatenate-2'
-              - $ref: '#/$defs/GTNConstantNumber'
-              - $ref: '#/$defs/GTNConstantSequence'
-              - $ref: '#/$defs/GTNConstantSequenceAndQuality'
-              - $ref: '#/$defs/GTNConstantString'
-              - $ref: '#/$defs/GTNTag'
         - type: object
           properties:
             type:
-              const: generic
+              const: cutTechnicalTags
           required:
-          - type
-      - allOf:
-        - type: object
-          properties:
-            allowOneMismatch:
-              type: boolean
-            matchTags:
-              type: array
-              items:
-                type: string
-            name:
-              type: string
-            newTags:
-              type: array
-              items:
-                type: string
-            preserveMatchedTags:
-              type: array
-              items:
-                type: string
-            reportingLevel:
-              type: string
-              enum:
-              - NoReport
-              - SimpleReport
-              - VerboseReport
-            rules:
-              type: array
-              items:
-                type: object
-                properties:
-                  from:
-                    type: array
-                    items:
-                      type: string
-                  to:
-                    type: array
-                    items:
-                      type: string
-        - type: object
-          properties:
-            type:
-              const: mapTags
-          required:
-          - type
+            - type
+        - allOf:
+            - type: object
+              properties:
+                destinationTag:
+                  type: string
+                name:
+                  type: string
+                transformation:
+                  anyOf:
+                    - $ref: '#/$defs/GTNMultiply-2'
+                    - $ref: '#/$defs/GTNPlus-2'
+                    - $ref: '#/$defs/GTNConcatenate-2'
+                    - $ref: '#/$defs/GTNConstantNumber'
+                    - $ref: '#/$defs/GTNConstantSequence'
+                    - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+                    - $ref: '#/$defs/GTNConstantString'
+                    - $ref: '#/$defs/GTNTag'
+            - type: object
+              properties:
+                type:
+                  const: generic
+              required:
+                - type
+        - allOf:
+            - type: object
+              properties:
+                allowOneMismatch:
+                  type: boolean
+                matchTags:
+                  type: array
+                  items:
+                    type: string
+                name:
+                  type: string
+                newTags:
+                  type: array
+                  items:
+                    type: string
+                preserveMatchedTags:
+                  type: array
+                  items:
+                    type: string
+                reportingLevel:
+                  type: string
+                  enum:
+                    - NoReport
+                    - SimpleReport
+                    - VerboseReport
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      from:
+                        type: array
+                        items:
+                          type: string
+                      to:
+                        type: array
+                        items:
+                          type: string
+            - type: object
+              properties:
+                type:
+                  const: mapTags
+              required:
+                - type
   tagUnstranded:
     type: boolean
   tagsValidations:
     type: array
     items:
       anyOf:
-      - allOf:
-        - type: object
-          properties:
-            tagName:
-              type: string
-        - type: object
-          properties:
-            type:
-              const: MustContainTagName
-          required:
-          - type
-      - allOf:
-        - type: object
-          properties:
-            tagType:
-              $ref: '#/$defs/TagType'
-        - type: object
-          properties:
-            type:
-              const: MustContainTagType
-          required:
-          - type
-      - allOf:
-        - type: object
-          properties:
-            tagName:
-              type: string
-        - type: object
-          properties:
-            type:
-              const: MustNotContainTagName
-          required:
-          - type
-      - allOf:
-        - type: object
-          properties:
-            tagType:
-              $ref: '#/$defs/TagType'
-        - type: object
-          properties:
-            type:
-              const: MustNotContainTagType
-          required:
-          - type
+        - allOf:
+            - type: object
+              properties:
+                tagName:
+                  type: string
+            - type: object
+              properties:
+                type:
+                  const: MustContainTagName
+              required:
+                - type
+        - allOf:
+            - type: object
+              properties:
+                tagType:
+                  $ref: '#/$defs/TagType'
+            - type: object
+              properties:
+                type:
+                  const: MustContainTagType
+              required:
+                - type
+        - allOf:
+            - type: object
+              properties:
+                tagName:
+                  type: string
+            - type: object
+              properties:
+                type:
+                  const: MustNotContainTagName
+              required:
+                - type
+        - allOf:
+            - type: object
+              properties:
+                tagType:
+                  $ref: '#/$defs/TagType'
+            - type: object
+              properties:
+                type:
+                  const: MustNotContainTagType
+              required:
+                - type
   trimmingQualityThreshold:
     type: string
   trimmingWindowSize:

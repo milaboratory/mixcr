@@ -4,4 +4,4 @@ properties:
   type:
     const: ResetFilterOutCloneGroupTypes
 required:
-- type
+  - type

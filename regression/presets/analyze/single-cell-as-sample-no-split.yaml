@@ -1,11 +1,11 @@
 flags:
-- species
-- materialType
+  - species
+  - materialType
 pipeline:
-- align
-- refineTagsAndSort
-- assemble
-- exportClones
+  - align
+  - refineTagsAndSort
+  - assemble
+  - exportClones
 align:
   species: ""
   libraryName: default
@@ -23,23 +23,23 @@ align:
   readIdAsCellTag: false
   sampleTable:
     sampleTagNames:
-    - SAMPLE
+      - SAMPLE
     samples:
-    - matchTags:
-        SMPL: GGATTACTCATTGCCC
-      matchVariantId: null
-      sample:
-      - sample0
-    - matchTags:
-        SMPL: CTGAAGTTCAAGGTAA
-      matchVariantId: null
-      sample:
-      - sample1
-    - matchTags:
-        SMPL: AACTCCCAGATCCTGT
-      matchVariantId: null
-      sample:
-      - sample2
+      - matchTags:
+          SMPL: GGATTACTCATTGCCC
+        matchVariantId: null
+        sample:
+          - sample0
+      - matchTags:
+          SMPL: CTGAAGTTCAAGGTAA
+        matchVariantId: null
+        sample:
+          - sample1
+      - matchTags:
+          SMPL: AACTCCCAGATCCTGT
+        matchVariantId: null
+        sample:
+          - sample2
   tagsValidations: []
   splitBySample: false
   limit: null
@@ -188,34 +188,34 @@ refineTagsAndSort:
     postFilter:
       type: filter_in_groups
       isolationKeys:
-      - allTags:Sample
+        - allTags:Sample
       nestedFilter:
         type: filter_groups
         groupingKeys:
-        - allTags:Molecule
+          - allTags:Molecule
         predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_otsu1
-            logX: true
-            minimalSample: 30
-            fallbackThreshold: 1.0
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
+          - metrics:
+              - type: group_metric_sum_weight
+                reportHist:
+                  log: true
+                  binNumber: 0
+                  minBinWidth: 0.2
+                  multiplyWeightByKey: false
+            operator:
+              type: group_operator_otsu1
+              logX: true
+              minimalSample: 30
+              fallbackThreshold: 1.0
+              accept: High
+            expectedSorting: []
+            requiredSequences: []
         expectedSorting:
-        - allTags:Molecule
+          - allTags:Molecule
         requiredSequences: []
       aggregateReport: true
       expectedSorting:
-      - allTags:Sample
-      - allTags:Molecule
+        - allTags:Sample
+        - allTags:Molecule
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
@@ -272,7 +272,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -344,21 +344,21 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -366,32 +366,32 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -readCount
-  - field: -readFraction
-  - field: -tags
-    args:
-    - Sample
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -uniqueTagFraction
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cloneId
+    - field: -readCount
+    - field: -readFraction
+    - field: -tags
+      args:
+        - Sample
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqueTagFraction
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   splitFilesBy:
-  - tag:SAMPLE
-  - geneLabel:ReliableChain
+    - tag:SAMPLE
+    - geneLabel:ReliableChain
   groupClonesBy: []

@@ -222,7 +222,7 @@ Params for export commands:
       --add-export-clone-table-splitting <(geneLabel|tag):key>
                              Add key to split output files with clone tables.
       --reset-export-clone-table-splitting
-                             Reset all file splitting for output clone tables.
+                             Reset all file splitting for output clone and/or clone group tables.
       --add-export-clone-grouping <(geneLabel|tag):key>
                              Add key to group clones in the output clone tables.
       --reset-export-clone-grouping
@@ -239,8 +239,11 @@ Params for export commands:
       --export-productive-clones-only
                              Export only productive clonotypes.
       --export-clone-groups-for-cell-type <cell_type>
-                             Export clone groups for given cell type. Possible values: IGH-IGK,
-                               IGH-IGL, TRB-TRA, TRD-TRG
+                             Export clone groups for given cell type.
+                             If selected only one cell type, export will be written in one file
+                               without prefixes. If several, there will be a file for each type.
+                             All cell groups that don't much specified groups will be filtered out.
+                             Possible values: IGH-IGK, IGH-IGL, TRB-TRA, TRD-TRG.
       --export-clone-groups-for-all-cell-types
                              Export clone groups for all cell types.
       --show-secondary-chain-on-export-cell-groups

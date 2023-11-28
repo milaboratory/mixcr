@@ -4,4 +4,4 @@ properties:
   type:
     const: MaterialTypeRNA
 required:
-- type
+  - type

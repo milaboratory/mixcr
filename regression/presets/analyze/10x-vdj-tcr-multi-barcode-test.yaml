@@ -1,11 +1,11 @@
 flags: []
 pipeline:
-- align
-- refineTagsAndSort
-- assemblePartial
-- assemble
-- assembleContigs
-- exportClones
+  - align
+  - refineTagsAndSort
+  - assemblePartial
+  - assemble
+  - assembleContigs
+  - exportClones
 align:
   species: ""
   libraryName: default
@@ -23,8 +23,8 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
-  - type: MustContainTagType
-    tagType: Cell
+    - type: MustContainTagType
+      tagType: Cell
   splitBySample: true
   limit: null
   parameters:
@@ -172,67 +172,67 @@ refineTagsAndSort:
     postFilter:
       type: filter_and
       operands:
-      - type: filter_groups
-        groupingKeys:
-        - CELL1
-        - CELL2
-        - UMI1
-        - UMI2
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-          operator:
-            type: group_operator_otsu1
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
-            accept: High
-          expectedSorting: []
-          requiredSequences: []
-        expectedSorting:
-        - CELL1
-        - CELL2
-        - UMI1
-        - UMI2
-        requiredSequences: []
-      - type: filter_groups
-        groupingKeys:
-        - CELL1
-        - CELL2
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-            keys:
+        - type: filter_groups
+          groupingKeys:
+            - CELL1
+            - CELL2
             - UMI1
             - UMI2
-          operator:
-            type: group_operator_range
-            lower: 3.0
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+              operator:
+                type: group_operator_otsu1
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
           expectedSorting:
-          - UMI1
-          - UMI2
+            - CELL1
+            - CELL2
+            - UMI1
+            - UMI2
           requiredSequences: []
-        expectedSorting:
+        - type: filter_groups
+          groupingKeys:
+            - CELL1
+            - CELL2
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+                  keys:
+                    - UMI1
+                    - UMI2
+              operator:
+                type: group_operator_range
+                lower: 3.0
+              expectedSorting:
+                - UMI1
+                - UMI2
+              requiredSequences: []
+          expectedSorting:
+            - CELL1
+            - CELL2
+            - UMI1
+            - UMI2
+          requiredSequences: []
+      expectedSorting:
         - CELL1
         - CELL2
         - UMI1
         - UMI2
-        requiredSequences: []
-      expectedSorting:
-      - CELL1
-      - CELL2
-      - UMI1
-      - UMI2
       requiredSequences: []
 assemblePartial:
   overlappedOnly: false
@@ -286,7 +286,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -331,78 +331,78 @@ assemble:
     mappingThreshold: 2of5
     minimalQuality: 20
     postFilters:
-    - type: filter_in_groups
-      isolationKeys:
-      - geneLabel:ReliableChain
-      - tag:CELL1
-      - tag:CELL2
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist: null
-            keys:
+      - type: filter_in_groups
+        isolationKeys:
+          - geneLabel:ReliableChain
+          - tag:CELL1
+          - tag:CELL2
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist: null
+                  keys:
+                    - tag:UMI1
+                    - tag:UMI2
+              operator:
+                type: group_operator_cumtop
+                share: 0.95
+                accept: High
+              expectedSorting:
+                - tag:UMI1
+                - tag:UMI2
+              requiredSequences: []
+          expectedSorting:
+            - clone
             - tag:UMI1
             - tag:UMI2
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
-          expectedSorting:
+          requiredSequences: []
+        aggregateReport: true
+        expectedSorting:
+          - geneLabel:ReliableChain
+          - tag:CELL1
+          - tag:CELL2
+          - clone
           - tag:UMI1
           - tag:UMI2
-          requiredSequences: []
-        expectedSorting:
-        - clone
-        - tag:UMI1
-        - tag:UMI2
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - geneLabel:ReliableChain
-      - tag:CELL1
-      - tag:CELL2
-      - clone
-      - tag:UMI1
-      - tag:UMI2
-    - type: filter_in_groups
-      isolationKeys:
-      - tag:CELL1
-      - tag:CELL2
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_nunique
-            reportHist: null
-            keys:
+      - type: filter_in_groups
+        isolationKeys:
+          - tag:CELL1
+          - tag:CELL2
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist: null
+                  keys:
+                    - tag:UMI1
+                    - tag:UMI2
+              operator:
+                type: group_operator_cumtop
+                share: 0.99
+                accept: High
+              expectedSorting:
+                - tag:UMI1
+                - tag:UMI2
+              requiredSequences: []
+          expectedSorting:
+            - clone
             - tag:UMI1
             - tag:UMI2
-          operator:
-            type: group_operator_cumtop
-            share: 0.99
-            accept: High
-          expectedSorting:
+          requiredSequences: []
+        aggregateReport: true
+        expectedSorting:
+          - tag:CELL1
+          - tag:CELL2
+          - clone
           - tag:UMI1
           - tag:UMI2
-          requiredSequences: []
-        expectedSorting:
-        - clone
-        - tag:UMI1
-        - tag:UMI2
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - tag:CELL1
-      - tag:CELL2
-      - clone
-      - tag:UMI1
-      - tag:UMI2
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -430,21 +430,21 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -452,26 +452,26 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -tags
-    args:
-    - Cell
-  - field: -readCount
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cloneId
+    - field: -tags
+      args:
+        - Cell
+    - field: -readCount
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   splitFilesBy: []
   groupClonesBy: []

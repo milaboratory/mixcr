@@ -4,4 +4,4 @@ properties:
   type:
     const: ExportCloneGroupsForAllCellTypes
 required:
-- type
+  - type

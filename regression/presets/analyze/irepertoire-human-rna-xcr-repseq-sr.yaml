@@ -1,8 +1,8 @@
 flags: []
 pipeline:
-- align
-- assemble
-- exportClones
+  - align
+  - assemble
+  - exportClones
 align:
   species: hs
   libraryName: default
@@ -197,7 +197,7 @@ assemble:
   consensusAssemblerParameters: null
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -269,21 +269,21 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -291,60 +291,60 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -readCount
-  - field: -readFraction
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cloneId
+    - field: -readCount
+    - field: -readFraction
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   splitFilesBy:
-  - geneLabel:ReliableChain
+    - geneLabel:ReliableChain
   groupClonesBy: []
 qc:
   checks:
-  - type: SuccessfullyAlignedReads
-    upper: 0.85
-    middle: 0.7
-    label: Successfully aligned reads
-  - type: OffTargetReads
-    upper: 0.2
-    middle: 0.1
-    label: Off target (non TCR/IG) reads
-  - type: ReadsWithNoVOrJHits
-    upper: 0.2
-    middle: 0.1
-    label: Reads with no V or J hits
-  - type: ReadsUsedInClonotypes
-    upper: 0.9
-    middle: 0.7
-    label: Reads used in clonotypes
-  - type: AlignmentsWithNoAssemblingFeature
-    upper: 0.15
-    middle: 0.05
-    label: Alignments without assembling feature
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.05
-    middle: 0.01
-    label: Alignments dropped due to low sequence quality
-  - type: ClonesDroppedInPostFiltering
-    upper: 0.05
-    middle: 0.01
-    label: Clones dropped in post-filtering
-  - type: AlignmentsDroppedInPostFiltering
-    upper: 0.05
-    middle: 0.01
-    label: Alignments dropped in clones post-filtering
-  - type: OverlappedReadsMoreBetter
-    upper: 0.9
-    middle: 0.8
-    label: Overlapped paired-end reads
+    - type: SuccessfullyAlignedReads
+      upper: 0.85
+      middle: 0.7
+      label: Successfully aligned reads
+    - type: OffTargetReads
+      upper: 0.2
+      middle: 0.1
+      label: Off target (non TCR/IG) reads
+    - type: ReadsWithNoVOrJHits
+      upper: 0.2
+      middle: 0.1
+      label: Reads with no V or J hits
+    - type: ReadsUsedInClonotypes
+      upper: 0.9
+      middle: 0.7
+      label: Reads used in clonotypes
+    - type: AlignmentsWithNoAssemblingFeature
+      upper: 0.15
+      middle: 0.05
+      label: Alignments without assembling feature
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.05
+      middle: 0.01
+      label: Alignments dropped due to low sequence quality
+    - type: ClonesDroppedInPostFiltering
+      upper: 0.05
+      middle: 0.01
+      label: Clones dropped in post-filtering
+    - type: AlignmentsDroppedInPostFiltering
+      upper: 0.05
+      middle: 0.01
+      label: Alignments dropped in clones post-filtering
+    - type: OverlappedReadsMoreBetter
+      upper: 0.9
+      middle: 0.8
+      label: Overlapped paired-end reads

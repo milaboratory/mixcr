@@ -4,4 +4,4 @@ properties:
   type:
     const: MaterialTypeDNA
 required:
-- type
+  - type

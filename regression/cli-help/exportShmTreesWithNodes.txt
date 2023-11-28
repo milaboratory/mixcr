@@ -34,10 +34,10 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [<from_reference_point> <to_reference_point>]]...
                                      [-avrgFeatureQuality <gene_feature>]...
                                      [-allAvrgFeaturesQuality [<from_reference_point>
-                                     <to_reference_point>]]... [-nLength <gene_features>
-                                     [(germline|mrca|parent)]]... [-allNLength
-                                     [(germline|mrca|parent)]]... [-aaLength <gene_features>
-                                     [(germline|mrca|parent)]]... [-allAALength
+                                     <to_reference_point>]]... [-nLength <gene_feature[,
+                                     gene_feature]...> [(germline|mrca|parent)]]... [-allNLength
+                                     [(germline|mrca|parent)]]... [-aaLength <gene_feature[,
+                                     gene_feature]...> [(germline|mrca|parent)]]... [-allAALength
                                      [(germline|mrca|parent)]]... [-nMutations <gene_feature>
                                      [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]... [-allNMutations
@@ -57,12 +57,13 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [(germline|mrca|parent)]]... [-allMutationsDetailed
                                      [(germline|mrca|parent)]]... [-mutationsDetailedRelative
                                      <gene_feature> <relative_to_gene_feature>
-                                     [(germline|mrca|parent)]]... [-nMutationsCount
-                                     [<gene_features>] [(germline|mrca|parent)]
+                                     [(germline|mrca|parent)]]... [-nMutationsCount [<gene_feature[,
+                                     gene_feature]...>] [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]...
                                      [-allNMutationsCount [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]...
-                                     [-aaMutationsCount [<gene_features>] [(germline|mrca|parent)]
+                                     [-aaMutationsCount [<gene_feature[,gene_feature]...>]
+                                     [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]...
                                      [-allAAMutationsCount [(germline|mrca|parent)]
                                      [(substitutions|indels|inserts|deletions)]]...
@@ -76,9 +77,9 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
                                      [-vBestIdentityPercent] [-dBestIdentityPercent]
                                      [-jBestIdentityPercent] [-cBestIdentityPercent]
-                                     [-nMutationsRate [<gene_features>]
+                                     [-nMutationsRate [<gene_feature[,gene_feature]...>]
                                      [(substitutions|indels|inserts|deletions)]]...
-                                     [-aaMutationsRate [<gene_features>]
+                                     [-aaMutationsRate [<gene_feature[,gene_feature]...>]
                                      [(substitutions|indels|inserts|deletions)]]... [-topChains]
                                      [-geneLabel <label>]... [-isotype
                                      [(primary|subclass|auto)]]... [-tagCounts] [-cellId
@@ -300,7 +301,7 @@ Possible fields to export
                                `-avrgFeatureQuality FR4`.
                              By default, boundaries will be got from analysis parameters if
                                possible or `FR1Begin FR4End` otherwise. (only for nodes with clones)
-      -nLength <gene_features> [(germline|mrca|parent)]
+      -nLength <gene_feature[,gene_feature]...> [(germline|mrca|parent)]
                              Export count of nucleotides of specified gene feature.
                              If second arg is omitted, then length will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
@@ -308,7 +309,7 @@ Possible fields to export
                              Export count of nucleotides for all covered gene features.
                              If first arg is omitted, then length will be printed for current node.
                                Otherwise - for corresponding `parent`, `germline` or `mrca`.
-      -aaLength <gene_features> [(germline|mrca|parent)]
+      -aaLength <gene_feature[,gene_feature]...> [(germline|mrca|parent)]
                              Export count of amino acids of specified gene feature.
                              If second arg is omitted, then length will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
@@ -391,7 +392,7 @@ Possible fields to export
                                and <aa_mutation_cumulative> amino acid mutation is the observed
                                amino acid mutation combining effect from all other. WARNING: format
                                may change in following versions.
-      -nMutationsCount [<gene_features>] [(germline|mrca|parent)]
+      -nMutationsCount [<gene_feature[,gene_feature]...>] [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations. By default, will be used all covered
                                features. Resolutions of wildcards in VJJunction are excluded from
@@ -407,7 +408,7 @@ Possible fields to export
                                germline. Otherwise - for corresponding `parent`, `germline` or
                                `mrca`. Second parameter will filter mutations by type, by default
                                no filtering.
-      -aaMutationsCount [<gene_features>] [(germline|mrca|parent)]
+      -aaMutationsCount [<gene_feature[,gene_feature]...>] [(germline|mrca|parent)]
         [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations. By default, will be used all covered
                                features. Resolutions of wildcards in CDR3 are excluded from
@@ -471,13 +472,13 @@ Possible fields to export
       -dBestIdentityPercent  D best alignment identity percent (only for nodes with clones)
       -jBestIdentityPercent  J best alignment identity percent
       -cBestIdentityPercent  C best alignment identity percent (only for nodes with clones)
-      -nMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
+      -nMutationsRate [<gene_feature[,gene_feature]...>] [(substitutions|indels|inserts|deletions)]
                              Number of nucleotide mutations from germline divided by target
                                sequence size. By default, will be used all covered features.
                                Resolutions of wildcards in VJJunction are excluded from
                                calculation. Second parameter will filter mutations by type, by
                                default no filtering.
-      -aaMutationsRate [<gene_features>] [(substitutions|indels|inserts|deletions)]
+      -aaMutationsRate [<gene_feature[,gene_feature]...>] [(substitutions|indels|inserts|deletions)]
                              Number of amino acid mutations from germline divided by target
                                sequence size. By default, will be used all covered features.
                                Resolutions of wildcards in CDR3 are excluded from calculation.

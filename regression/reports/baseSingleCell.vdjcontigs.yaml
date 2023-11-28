@@ -5,10 +5,10 @@ align:
     baseSingleCell.vdjcontigs.align.list --species hs --assemble-contigs-by VDJRegion
     single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.vdjca
   inputFiles:
-  - single_cell_vdj_t_subset_R1.fastq.gz
-  - single_cell_vdj_t_subset_R2.fastq.gz
+    - single_cell_vdj_t_subset_R1.fastq.gz
+    - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
-  - baseSingleCell.vdjcontigs.vdjca
+    - baseSingleCell.vdjcontigs.vdjca
   totalReadsProcessed: 46879
   aligned: 40525
   notAligned: 6354
@@ -91,42 +91,42 @@ align:
     projections:
       "1,2": 46879
     detailedReport:
-    - nested:
-        "1,2":
-          variantId: 0
-          nested:
-          - - positionDistributions:
-                CELL:Left:
-                  "0": 46879
-                CELL:Right:
-                  "16": 46879
-                UMI:Left:
-                  "16": 46879
-                UMI:Right:
-                  "26": 46879
-              lengthDistributions:
-                CELL:
-                  "16": 46879
-                UMI:
-                  "10": 46879
-              costDistributions:
-                "0": 46879
-              variantDistribution:
-                "0": 46879
-          - - positionDistributions:
-                R2:Left:
-                  "0": 46879
-                R2:Right:
-                  "90": 46879
-              lengthDistributions:
-                R2:
-                  "90": 46879
-              costDistributions:
-                "0": 46879
-              variantDistribution:
-                "0": 46879
-          costDistributions:
-            "0": 46879
+      - nested:
+          "1,2":
+            variantId: 0
+            nested:
+              -   - positionDistributions:
+                      CELL:Left:
+                        "0": 46879
+                      CELL:Right:
+                        "16": 46879
+                      UMI:Left:
+                        "16": 46879
+                      UMI:Right:
+                        "26": 46879
+                    lengthDistributions:
+                      CELL:
+                        "16": 46879
+                      UMI:
+                        "10": 46879
+                    costDistributions:
+                      "0": 46879
+                    variantDistribution:
+                      "0": 46879
+              -   - positionDistributions:
+                      R2:Left:
+                        "0": 46879
+                      R2:Right:
+                        "90": 46879
+                    lengthDistributions:
+                      R2:
+                        "90": 46879
+                    costDistributions:
+                      "0": 46879
+                    variantDistribution:
+                      "0": 46879
+            costDistributions:
+              "0": 46879
   notMatchedByHeader: 0
   transformerReports: []
   coverage:
@@ -142,9 +142,9 @@ assemble:
     --json-report baseSingleCell.vdjcontigs.assemble.report.json baseSingleCell.vdjcontigs.extended.vdjca
     baseSingleCell.vdjcontigs.clna
   inputFiles:
-  - baseSingleCell.vdjcontigs.extended.vdjca
+    - baseSingleCell.vdjcontigs.extended.vdjca
   outputFiles:
-  - baseSingleCell.vdjcontigs.clna
+    - baseSingleCell.vdjcontigs.clna
   preCloneAssemblerReport:
     type: preCloneAssemblerReport
     inputGroups: 3
@@ -207,57 +207,57 @@ assemble:
   clonesFilteredInPostFiltering: 0
   readsFilteredInPostFiltering: 0.0
   postFilteringReports:
-  - type: filter_in_groups_report
-    numberOfGroups: 6
-    nestedAggregatedReport:
-      type: filter_groups_report
-      groupingKeys:
-      - clone
+    - type: filter_in_groups_report
+      numberOfGroups: 6
+      nestedAggregatedReport:
+        type: filter_groups_report
+        groupingKeys:
+          - clone
+        numberOfGroups: 7
+        numberOfGroupsAccepted: 7
+        totalWeight: 14107.0
+        totalWeightAccepted: 14107.0
+        operatorReports:
+          - operatorReport:
+              type: generic_hist_report
+              threshold: NaN
+            metricHists:
+              - null
+      nestedPerGroupReports: {}
+    - type: filter_in_groups_report
+      numberOfGroups: 6
+      nestedAggregatedReport:
+        type: filter_groups_report
+        groupingKeys:
+          - clone
+        numberOfGroups: 7
+        numberOfGroupsAccepted: 7
+        totalWeight: 14107.0
+        totalWeightAccepted: 14107.0
+        operatorReports:
+          - operatorReport:
+              type: generic_hist_report
+              threshold: NaN
+            metricHists:
+              - null
+      nestedPerGroupReports: {}
+    - type: filter_in_groups_report
       numberOfGroups: 7
-      numberOfGroupsAccepted: 7
-      totalWeight: 14107.0
-      totalWeightAccepted: 14107.0
-      operatorReports:
-      - operatorReport:
-          type: generic_hist_report
-          threshold: NaN
-        metricHists:
-        - null
-    nestedPerGroupReports: {}
-  - type: filter_in_groups_report
-    numberOfGroups: 6
-    nestedAggregatedReport:
-      type: filter_groups_report
-      groupingKeys:
-      - clone
-      numberOfGroups: 7
-      numberOfGroupsAccepted: 7
-      totalWeight: 14107.0
-      totalWeightAccepted: 14107.0
-      operatorReports:
-      - operatorReport:
-          type: generic_hist_report
-          threshold: NaN
-        metricHists:
-        - null
-    nestedPerGroupReports: {}
-  - type: filter_in_groups_report
-    numberOfGroups: 7
-    nestedAggregatedReport:
-      type: filter_groups_report
-      groupingKeys:
-      - allTags:Cell
-      numberOfGroups: 7
-      numberOfGroupsAccepted: 7
-      totalWeight: 14107.0
-      totalWeightAccepted: 14107.0
-      operatorReports:
-      - operatorReport:
-          type: generic_hist_report
-          threshold: NaN
-        metricHists:
-        - null
-    nestedPerGroupReports: {}
+      nestedAggregatedReport:
+        type: filter_groups_report
+        groupingKeys:
+          - allTags:Cell
+        numberOfGroups: 7
+        numberOfGroupsAccepted: 7
+        totalWeight: 14107.0
+        totalWeightAccepted: 14107.0
+        operatorReports:
+          - operatorReport:
+              type: generic_hist_report
+              threshold: NaN
+            metricHists:
+              - null
+      nestedPerGroupReports: {}
   alignmentsFilteredByTagPrefix: 0
 assembleContigs:
   type: fullSeqAssemblerReport
@@ -265,9 +265,9 @@ assembleContigs:
     --json-report baseSingleCell.vdjcontigs.assembleContigs.report.json baseSingleCell.vdjcontigs.clna
     baseSingleCell.vdjcontigs.contigs.clns
   inputFiles:
-  - baseSingleCell.vdjcontigs.clna
+    - baseSingleCell.vdjcontigs.clna
   outputFiles:
-  - baseSingleCell.vdjcontigs.contigs.clns
+    - baseSingleCell.vdjcontigs.contigs.clns
   clonesWithAmbiguousLetters: 0
   clonesWithAmbiguousLettersInSplittingRegion: 0
   readsWithAmbiguousLetters: 0.0
@@ -289,9 +289,9 @@ assemblePartial:
     --json-report baseSingleCell.vdjcontigs.assemblePartial.report.json baseSingleCell.vdjcontigs.refined.vdjca
     baseSingleCell.vdjcontigs.passembled.1.vdjca
   inputFiles:
-  - baseSingleCell.vdjcontigs.refined.vdjca
+    - baseSingleCell.vdjcontigs.refined.vdjca
   outputFiles:
-  - baseSingleCell.vdjcontigs.passembled.1.vdjca
+    - baseSingleCell.vdjcontigs.passembled.1.vdjca
   independentRuns: 62
   totalProcessed: 28166
   outputAlignments: 28024
@@ -313,9 +313,9 @@ extend:
     baseSingleCell.vdjcontigs.extend.report.json baseSingleCell.vdjcontigs.passembled.1.vdjca
     baseSingleCell.vdjcontigs.extended.vdjca
   inputFiles:
-  - baseSingleCell.vdjcontigs.passembled.1.vdjca
+    - baseSingleCell.vdjcontigs.passembled.1.vdjca
   outputFiles:
-  - baseSingleCell.vdjcontigs.extended.vdjca
+    - baseSingleCell.vdjcontigs.extended.vdjca
   totalProcessed: 28024
   totalExtended: 26
   vExtended: 8
@@ -331,279 +331,279 @@ refineTagsAndSort:
     --json-report baseSingleCell.vdjcontigs.refine.report.json baseSingleCell.vdjcontigs.vdjca
     baseSingleCell.vdjcontigs.refined.vdjca
   inputFiles:
-  - baseSingleCell.vdjcontigs.vdjca
+    - baseSingleCell.vdjcontigs.vdjca
   outputFiles:
-  - baseSingleCell.vdjcontigs.refined.vdjca
+    - baseSingleCell.vdjcontigs.refined.vdjca
   correctionReport:
     inputRecords: 40525
     outputRecords: 28166
     steps:
-    - tagName: CELL
-      inputGroups: 1
-      inputDiversity: 164
-      inputCount: 40525
-      coreDiversity: 84
-      coreCount: 40443
-      directlyCorrectedDiversity: 161
-      directlyCorrectedCount: 795
-      filteredDiversity: 0
-      filteredCount: 0
-      recursivelyCorrected: 98
-      diversityFilteredByWhitelist: 0
-      outputDiversity: 3
-      outputCount: 40525
-    - tagName: UMI
-      inputGroups: 3
-      inputDiversity: 424
-      inputCount: 40525
-      coreDiversity: 202
-      coreCount: 40303
-      directlyCorrectedDiversity: 315
-      directlyCorrectedCount: 371
-      filteredDiversity: 1
-      filteredCount: 1
-      recursivelyCorrected: 15
-      diversityFilteredByWhitelist: 0
-      outputDiversity: 108
-      outputCount: 40524
+      - tagName: CELL
+        inputGroups: 1
+        inputDiversity: 164
+        inputCount: 40525
+        coreDiversity: 84
+        coreCount: 40443
+        directlyCorrectedDiversity: 161
+        directlyCorrectedCount: 795
+        filteredDiversity: 0
+        filteredCount: 0
+        recursivelyCorrected: 98
+        diversityFilteredByWhitelist: 0
+        outputDiversity: 3
+        outputCount: 40525
+      - tagName: UMI
+        inputGroups: 3
+        inputDiversity: 424
+        inputCount: 40525
+        coreDiversity: 202
+        coreCount: 40303
+        directlyCorrectedDiversity: 315
+        directlyCorrectedCount: 371
+        filteredDiversity: 1
+        filteredCount: 1
+        recursivelyCorrected: 15
+        diversityFilteredByWhitelist: 0
+        outputDiversity: 108
+        outputCount: 40524
     filterReport:
       type: and_report
       nestedReports:
-      - type: filter_groups_report
-        groupingKeys:
-        - allTags:Cell
-        - allTags:Molecule
-        numberOfGroups: 108
-        numberOfGroupsAccepted: 89
-        totalWeight: 40524.0
-        totalWeightAccepted: 40465.0
-        operatorReports:
-        - operatorReport:
-            type: multi_operator_hist_report
-            threshold: 25.0
-            nestedThresholds:
-            - 25.0
-            - 413.0
-          metricHists:
-          - bins:
-            - from: 1.0
-              to: 1.5848931924611136
-              weight: 12.0
-            - from: 1.5848931924611136
-              to: 2.51188643150958
-              weight: 1.0
-            - from: 2.51188643150958
-              to: 3.981071705534973
-              weight: 1.0
-            - from: 3.981071705534973
-              to: 6.309573444801933
-              weight: 2.0
-            - from: 6.309573444801933
-              to: 10.0
-              weight: 1.0
-            - from: 10.0
-              to: 15.848931924611142
-              weight: 2.0
-            - from: 15.848931924611142
-              to: 25.11886431509581
-              weight: 1.0
-            - from: 25.11886431509581
-              to: 39.810717055349734
-              weight: 3.0
-            - from: 39.810717055349734
-              to: 63.09573444801933
-              weight: 3.0
-            - from: 63.09573444801933
-              to: 100.0
-              weight: 2.0
-            - from: 100.0
-              to: 158.48931924611142
-              weight: 1.0
-            - from: 158.48931924611142
-              to: 251.18864315095823
-              weight: 4.0
-            - from: 251.18864315095823
-              to: 398.1071705534973
-              weight: 12.0
-            - from: 398.1071705534973
-              to: 630.9573444801937
-              weight: 49.0
-            - from: 630.9573444801937
-              to: 1000.0
-              weight: 14.0
-            collectionSpec:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-      - type: filter_groups_report
-        groupingKeys:
-        - allTags:Cell
-        numberOfGroups: 3
-        numberOfGroupsAccepted: 3
-        totalWeight: 40465.0
-        totalWeightAccepted: 40465.0
-        operatorReports:
-        - operatorReport:
-            type: generic_hist_report
-            threshold: 1.0
-          metricHists:
-          - bins:
-            - from: 10.0
-              to: 15.848931924611133
-              weight: 2.0
-            - from: 15.848931924611133
-              to: 25.118864315095795
-              weight: 0.0
-            - from: 25.118864315095795
-              to: 39.810717055349734
-              weight: 0.0
-            - from: 39.810717055349734
-              to: 63.09573444801933
-              weight: 0.0
-            - from: 63.09573444801933
-              to: 100.0
-              weight: 1.0
-            collectionSpec:
-              log: true
-              binNumber: 0
-              minBinWidth: 0.2
-              multiplyWeightByKey: false
-      - type: filter_groups_report
-        groupingKeys:
-        - allTags:Cell
-        - allTags:Molecule
-        numberOfGroups: 89
-        numberOfGroupsAccepted: 62
-        totalWeight: 40465.0
-        totalWeightAccepted: 28166.0
-        operatorReports:
-        - operatorReport:
-            type: dummy_report
-          metricHists:
-          - bins:
-            - from: 56.0
-              to: 61.925
-              weight: 25.0
-            - from: 61.925
-              to: 67.85
-              weight: 1.0
-            - from: 67.85
-              to: 73.775
-              weight: 1.0
-            - from: 73.775
-              to: 79.7
-              weight: 0.0
-            - from: 79.7
-              to: 85.625
-              weight: 0.0
-            - from: 85.625
-              to: 91.55
-              weight: 0.0
-            - from: 91.55
-              to: 97.475
-              weight: 0.0
-            - from: 97.475
-              to: 103.4
-              weight: 0.0
-            - from: 103.4
-              to: 109.32499999999999
-              weight: 0.0
-            - from: 109.32499999999999
-              to: 115.25
-              weight: 0.0
-            - from: 115.25
-              to: 121.175
-              weight: 0.0
-            - from: 121.175
-              to: 127.1
-              weight: 0.0
-            - from: 127.1
-              to: 133.02499999999998
-              weight: 0.0
-            - from: 133.02499999999998
-              to: 138.95
-              weight: 0.0
-            - from: 138.95
-              to: 144.875
-              weight: 0.0
-            - from: 144.875
-              to: 150.8
-              weight: 0.0
-            - from: 150.8
-              to: 156.725
-              weight: 1.0
-            - from: 156.725
-              to: 162.64999999999998
-              weight: 0.0
-            - from: 162.64999999999998
-              to: 168.575
-              weight: 0.0
-            - from: 168.575
-              to: 174.5
-              weight: 0.0
-            - from: 174.5
-              to: 180.425
-              weight: 1.0
-            - from: 180.425
-              to: 186.35
-              weight: 0.0
-            - from: 186.35
-              to: 192.275
-              weight: 0.0
-            - from: 192.275
-              to: 198.2
-              weight: 0.0
-            - from: 198.2
-              to: 204.125
-              weight: 0.0
-            - from: 204.125
-              to: 210.04999999999998
-              weight: 0.0
-            - from: 210.04999999999998
-              to: 215.975
-              weight: 3.0
-            - from: 215.975
-              to: 221.9
-              weight: 1.0
-            - from: 221.9
-              to: 227.825
-              weight: 2.0
-            - from: 227.825
-              to: 233.75
-              weight: 6.0
-            - from: 233.75
-              to: 239.67499999999998
-              weight: 10.0
-            - from: 239.67499999999998
-              to: 245.6
-              weight: 7.0
-            - from: 245.6
-              to: 251.525
-              weight: 10.0
-            - from: 251.525
-              to: 257.45
-              weight: 13.0
-            - from: 257.45
-              to: 263.375
-              weight: 6.0
-            - from: 263.375
-              to: 269.29999999999995
-              weight: 1.0
-            - from: 269.29999999999995
-              to: 275.225
-              weight: 0.0
-            - from: 275.225
-              to: 281.15
-              weight: 0.0
-            - from: 281.15
-              to: 287.075
-              weight: 0.0
-            - from: 287.075
-              to: 293.0
-              weight: 1.0
-            collectionSpec:
-              log: false
-              binNumber: 40
-              minBinWidth: 0.0
-              multiplyWeightByKey: false
+        - type: filter_groups_report
+          groupingKeys:
+            - allTags:Cell
+            - allTags:Molecule
+          numberOfGroups: 108
+          numberOfGroupsAccepted: 89
+          totalWeight: 40524.0
+          totalWeightAccepted: 40465.0
+          operatorReports:
+            - operatorReport:
+                type: multi_operator_hist_report
+                threshold: 25.0
+                nestedThresholds:
+                  - 25.0
+                  - 413.0
+              metricHists:
+                - bins:
+                    - from: 1.0
+                      to: 1.5848931924611136
+                      weight: 12.0
+                    - from: 1.5848931924611136
+                      to: 2.51188643150958
+                      weight: 1.0
+                    - from: 2.51188643150958
+                      to: 3.981071705534973
+                      weight: 1.0
+                    - from: 3.981071705534973
+                      to: 6.309573444801933
+                      weight: 2.0
+                    - from: 6.309573444801933
+                      to: 10.0
+                      weight: 1.0
+                    - from: 10.0
+                      to: 15.848931924611142
+                      weight: 2.0
+                    - from: 15.848931924611142
+                      to: 25.11886431509581
+                      weight: 1.0
+                    - from: 25.11886431509581
+                      to: 39.810717055349734
+                      weight: 3.0
+                    - from: 39.810717055349734
+                      to: 63.09573444801933
+                      weight: 3.0
+                    - from: 63.09573444801933
+                      to: 100.0
+                      weight: 2.0
+                    - from: 100.0
+                      to: 158.48931924611142
+                      weight: 1.0
+                    - from: 158.48931924611142
+                      to: 251.18864315095823
+                      weight: 4.0
+                    - from: 251.18864315095823
+                      to: 398.1071705534973
+                      weight: 12.0
+                    - from: 398.1071705534973
+                      to: 630.9573444801937
+                      weight: 49.0
+                    - from: 630.9573444801937
+                      to: 1000.0
+                      weight: 14.0
+                  collectionSpec:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+        - type: filter_groups_report
+          groupingKeys:
+            - allTags:Cell
+          numberOfGroups: 3
+          numberOfGroupsAccepted: 3
+          totalWeight: 40465.0
+          totalWeightAccepted: 40465.0
+          operatorReports:
+            - operatorReport:
+                type: generic_hist_report
+                threshold: 1.0
+              metricHists:
+                - bins:
+                    - from: 10.0
+                      to: 15.848931924611133
+                      weight: 2.0
+                    - from: 15.848931924611133
+                      to: 25.118864315095795
+                      weight: 0.0
+                    - from: 25.118864315095795
+                      to: 39.810717055349734
+                      weight: 0.0
+                    - from: 39.810717055349734
+                      to: 63.09573444801933
+                      weight: 0.0
+                    - from: 63.09573444801933
+                      to: 100.0
+                      weight: 1.0
+                  collectionSpec:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+        - type: filter_groups_report
+          groupingKeys:
+            - allTags:Cell
+            - allTags:Molecule
+          numberOfGroups: 89
+          numberOfGroupsAccepted: 62
+          totalWeight: 40465.0
+          totalWeightAccepted: 28166.0
+          operatorReports:
+            - operatorReport:
+                type: dummy_report
+              metricHists:
+                - bins:
+                    - from: 56.0
+                      to: 61.925
+                      weight: 25.0
+                    - from: 61.925
+                      to: 67.85
+                      weight: 1.0
+                    - from: 67.85
+                      to: 73.775
+                      weight: 1.0
+                    - from: 73.775
+                      to: 79.7
+                      weight: 0.0
+                    - from: 79.7
+                      to: 85.625
+                      weight: 0.0
+                    - from: 85.625
+                      to: 91.55
+                      weight: 0.0
+                    - from: 91.55
+                      to: 97.475
+                      weight: 0.0
+                    - from: 97.475
+                      to: 103.4
+                      weight: 0.0
+                    - from: 103.4
+                      to: 109.32499999999999
+                      weight: 0.0
+                    - from: 109.32499999999999
+                      to: 115.25
+                      weight: 0.0
+                    - from: 115.25
+                      to: 121.175
+                      weight: 0.0
+                    - from: 121.175
+                      to: 127.1
+                      weight: 0.0
+                    - from: 127.1
+                      to: 133.02499999999998
+                      weight: 0.0
+                    - from: 133.02499999999998
+                      to: 138.95
+                      weight: 0.0
+                    - from: 138.95
+                      to: 144.875
+                      weight: 0.0
+                    - from: 144.875
+                      to: 150.8
+                      weight: 0.0
+                    - from: 150.8
+                      to: 156.725
+                      weight: 1.0
+                    - from: 156.725
+                      to: 162.64999999999998
+                      weight: 0.0
+                    - from: 162.64999999999998
+                      to: 168.575
+                      weight: 0.0
+                    - from: 168.575
+                      to: 174.5
+                      weight: 0.0
+                    - from: 174.5
+                      to: 180.425
+                      weight: 1.0
+                    - from: 180.425
+                      to: 186.35
+                      weight: 0.0
+                    - from: 186.35
+                      to: 192.275
+                      weight: 0.0
+                    - from: 192.275
+                      to: 198.2
+                      weight: 0.0
+                    - from: 198.2
+                      to: 204.125
+                      weight: 0.0
+                    - from: 204.125
+                      to: 210.04999999999998
+                      weight: 0.0
+                    - from: 210.04999999999998
+                      to: 215.975
+                      weight: 3.0
+                    - from: 215.975
+                      to: 221.9
+                      weight: 1.0
+                    - from: 221.9
+                      to: 227.825
+                      weight: 2.0
+                    - from: 227.825
+                      to: 233.75
+                      weight: 6.0
+                    - from: 233.75
+                      to: 239.67499999999998
+                      weight: 10.0
+                    - from: 239.67499999999998
+                      to: 245.6
+                      weight: 7.0
+                    - from: 245.6
+                      to: 251.525
+                      weight: 10.0
+                    - from: 251.525
+                      to: 257.45
+                      weight: 13.0
+                    - from: 257.45
+                      to: 263.375
+                      weight: 6.0
+                    - from: 263.375
+                      to: 269.29999999999995
+                      weight: 1.0
+                    - from: 269.29999999999995
+                      to: 275.225
+                      weight: 0.0
+                    - from: 275.225
+                      to: 281.15
+                      weight: 0.0
+                    - from: 281.15
+                      to: 287.075
+                      weight: 0.0
+                    - from: 287.075
+                      to: 293.0
+                      weight: 1.0
+                  collectionSpec:
+                    log: false
+                    binNumber: 40
+                    minBinWidth: 0.0
+                    multiplyWeightByKey: false
