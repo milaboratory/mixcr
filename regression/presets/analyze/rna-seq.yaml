@@ -1,13 +1,13 @@
 flags:
-- species
+  - species
 pipeline:
-- align
-- assemblePartial
-- assemblePartial
-- extend
-- assemble
-- assembleContigs
-- exportClones
+  - align
+  - assemblePartial
+  - assemblePartial
+  - extend
+  - assemble
+  - assembleContigs
+  - exportClones
 align:
   species: ""
   libraryName: default
@@ -191,7 +191,7 @@ assemble:
   consensusAssemblerParameters: null
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -263,21 +263,21 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -285,28 +285,28 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -readCount
-  - field: -readFraction
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cloneId
+    - field: -readCount
+    - field: -readFraction
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   splitFilesBy:
-  - geneLabel:ReliableChain
+    - geneLabel:ReliableChain
   groupClonesBy: []
 qc:
   checks:
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.2
-    middle: 0.1
-    label: Alignments dropped due to low sequence quality
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.2
+      middle: 0.1
+      label: Alignments dropped due to low sequence quality

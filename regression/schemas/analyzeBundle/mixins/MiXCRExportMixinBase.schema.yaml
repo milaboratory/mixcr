@@ -1,71 +1,71 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 anyOf:
-- allOf:
-  - type: object
-    properties:
-      args:
-        type: array
-        items:
-          type: string
-      field:
-        type: string
-      insertIndex:
-        type: integer
+  - allOf:
+      - type: object
+        properties:
+          args:
+            type: array
+            items:
+              type: string
+          field:
+            type: string
+          insertIndex:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: AddExportAlignmentsField
+        required:
+          - type
+  - allOf:
+      - type: object
+        properties:
+          args:
+            type: array
+            items:
+              type: string
+          field:
+            type: string
+          insertIndex:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: AddExportCloneGroupsField
+        required:
+          - type
+  - allOf:
+      - type: object
+        properties:
+          args:
+            type: array
+            items:
+              type: string
+          field:
+            type: string
+          insertIndex:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: AddExportClonesField
+        required:
+          - type
   - type: object
     properties:
       type:
-        const: AddExportAlignmentsField
+        const: DontImputeGermlineOnExport
     required:
-    - type
-- allOf:
-  - type: object
-    properties:
-      args:
-        type: array
-        items:
-          type: string
-      field:
-        type: string
-      insertIndex:
-        type: integer
+      - type
   - type: object
     properties:
       type:
-        const: AddExportCloneGroupsField
+        const: ImputeGermlineOnExport
     required:
-    - type
-- allOf:
-  - type: object
-    properties:
-      args:
-        type: array
-        items:
-          type: string
-      field:
-        type: string
-      insertIndex:
-        type: integer
-  - type: object
-    properties:
-      type:
-        const: AddExportClonesField
-    required:
-    - type
-- type: object
-  properties:
-    type:
-      const: DontImputeGermlineOnExport
-  required:
-  - type
-- type: object
-  properties:
-    type:
-      const: ImputeGermlineOnExport
-  required:
-  - type
+      - type
 type: object
 properties:
   type:
     const: ExportMixins$MiXCRExportMixinBase
 required:
-- type
+  - type

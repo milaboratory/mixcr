@@ -4,221 +4,221 @@ findShmTrees:
     alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
     trees/result.shmt
   inputFiles:
-  - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
-  - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
+    - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+    - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
   outputFiles:
-  - trees/result.shmt
+    - trees/result.shmt
   stepResults:
-  - stepName: BuildingInitialTrees
-    clonesWasAdded: 264
-    cloneNodesWasAdded: 264
-    treesCountDelta: 100
-    commonVJMutationsCounts:
-      size: 100
-      sum: 1629.0
-      min: 5.0
-      max: 53.0
-      avg: 16.29000
-      quadraticMean: 18.53725
-      stdDeviation: 8.89137
-      percentile25: 10.0
-      percentile50: 15.0
-      percentile75: 21.0
-    clonesCountInTrees:
-      size: 100
-      sum: 264.0
-      min: 2.0
-      max: 10.0
-      avg: 2.63999
-      quadraticMean: 3.00998
-      stdDeviation: 1.45310
-      percentile25: 2.0
-      percentile50: 2.0
-      percentile75: 3.0
-    wildcardsScore:
-      size: 100
-      sum: 9.76969
-      min: 0.0
-      max: 1.33333
-      avg: 0.09769
-      quadraticMean: 0.25879
-      stdDeviation: 0.24085
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    wildcardsScoreForRoots:
-      size: 100
-      sum: 30.58496
-      min: 0.0
-      max: 4.0
-      avg: 0.30584
-      quadraticMean: 0.79171
-      stdDeviation: 0.73393
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    maxNDNsWildcardsScoreInTree:
-      size: 100
-      sum: 30.58496
-      min: 0.0
-      max: 4.0
-      avg: 0.30584
-      quadraticMean: 0.79171
-      stdDeviation: 0.73393
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    surenessOfDecisions:
-      size: 16
-      sum: NaN
-      min: 0.0
-      max: 0.0
-      avg: NaN
-      quadraticMean: NaN
-      stdDeviation: NaN
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-  - stepName: AttachClonesByDistanceChange
-    clonesWasAdded: 6
-    cloneNodesWasAdded: 6
-    treesCountDelta: 0
-    commonVJMutationsCounts:
-      size: 100
-      sum: 1629.0
-      min: 5.0
-      max: 53.0
-      avg: 16.29000
-      quadraticMean: 18.53725
-      stdDeviation: 8.89137
-      percentile25: 10.0
-      percentile50: 15.0
-      percentile75: 21.0
-    clonesCountInTrees:
-      size: 100
-      sum: 270.0
-      min: 2.0
-      max: 13.0
-      avg: 2.7
-      quadraticMean: 3.21558
-      stdDeviation: 1.75522
-      percentile25: 2.0
-      percentile50: 2.0
-      percentile75: 3.0
-    wildcardsScore:
-      size: 100
-      sum: 9.76969
-      min: 0.0
-      max: 1.33333
-      avg: 0.09769
-      quadraticMean: 0.25879
-      stdDeviation: 0.24085
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    wildcardsScoreForRoots:
-      size: 100
-      sum: 30.58496
-      min: 0.0
-      max: 4.0
-      avg: 0.30584
-      quadraticMean: 0.79171
-      stdDeviation: 0.73393
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    maxNDNsWildcardsScoreInTree:
-      size: 100
-      sum: 30.58496
-      min: 0.0
-      max: 4.0
-      avg: 0.30584
-      quadraticMean: 0.79171
-      stdDeviation: 0.73393
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    surenessOfDecisions:
-      size: 0
-      sum: 0.0
-      min: NaN
-      max: NaN
-      avg: NaN
-      quadraticMean: NaN
-      stdDeviation: NaN
-      percentile25: NaN
-      percentile50: NaN
-      percentile75: NaN
-  - stepName: CombineTrees
-    clonesWasAdded: 0
-    cloneNodesWasAdded: 0
-    treesCountDelta: -4
-    commonVJMutationsCounts:
-      size: 96
-      sum: 1583.0
-      min: 0.0
-      max: 53.0
-      avg: 16.48958
-      quadraticMean: 18.80242
-      stdDeviation: 9.08207
-      percentile25: 10.0
-      percentile50: 15.0
-      percentile75: 21.0
-    clonesCountInTrees:
-      size: 96
-      sum: 270.0
-      min: 2.0
-      max: 13.0
-      avg: 2.812
-      quadraticMean: 3.43996
-      stdDeviation: 1.99109
-      percentile25: 2.0
-      percentile50: 2.0
-      percentile75: 3.0
-    wildcardsScore:
-      size: 96
-      sum: 9.43636
-      min: 0.0
-      max: 1.33333
-      avg: 0.09829
-      quadraticMean: 0.26193
-      stdDeviation: 0.24406
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    wildcardsScoreForRoots:
-      size: 96
-      sum: 29.58496
-      min: 0.0
-      max: 4.0
-      avg: 0.30817
-      quadraticMean: 0.80157
-      stdDeviation: 0.74384
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    maxNDNsWildcardsScoreInTree:
-      size: 96
-      sum: 29.58496
-      min: 0.0
-      max: 4.0
-      avg: 0.30817
-      quadraticMean: 0.80157
-      stdDeviation: 0.74384
-      percentile25: 0.0
-      percentile50: 0.0
-      percentile75: 0.0
-    surenessOfDecisions:
-      size: 0
-      sum: 0.0
-      min: NaN
-      max: NaN
-      avg: NaN
-      quadraticMean: NaN
-      stdDeviation: NaN
-      percentile25: NaN
-      percentile50: NaN
-      percentile75: NaN
+    - stepName: BuildingInitialTrees
+      clonesWasAdded: 264
+      cloneNodesWasAdded: 264
+      treesCountDelta: 100
+      commonVJMutationsCounts:
+        size: 100
+        sum: 1629.0
+        min: 5.0
+        max: 53.0
+        avg: 16.29000
+        quadraticMean: 18.53725
+        stdDeviation: 8.89137
+        percentile25: 10.0
+        percentile50: 15.0
+        percentile75: 21.0
+      clonesCountInTrees:
+        size: 100
+        sum: 264.0
+        min: 2.0
+        max: 10.0
+        avg: 2.63999
+        quadraticMean: 3.00998
+        stdDeviation: 1.45310
+        percentile25: 2.0
+        percentile50: 2.0
+        percentile75: 3.0
+      wildcardsScore:
+        size: 100
+        sum: 9.76969
+        min: 0.0
+        max: 1.33333
+        avg: 0.09769
+        quadraticMean: 0.25879
+        stdDeviation: 0.24085
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      wildcardsScoreForRoots:
+        size: 100
+        sum: 30.58496
+        min: 0.0
+        max: 4.0
+        avg: 0.30584
+        quadraticMean: 0.79171
+        stdDeviation: 0.73393
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      maxNDNsWildcardsScoreInTree:
+        size: 100
+        sum: 30.58496
+        min: 0.0
+        max: 4.0
+        avg: 0.30584
+        quadraticMean: 0.79171
+        stdDeviation: 0.73393
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      surenessOfDecisions:
+        size: 16
+        sum: NaN
+        min: 0.0
+        max: 0.0
+        avg: NaN
+        quadraticMean: NaN
+        stdDeviation: NaN
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+    - stepName: AttachClonesByDistanceChange
+      clonesWasAdded: 6
+      cloneNodesWasAdded: 6
+      treesCountDelta: 0
+      commonVJMutationsCounts:
+        size: 100
+        sum: 1629.0
+        min: 5.0
+        max: 53.0
+        avg: 16.29000
+        quadraticMean: 18.53725
+        stdDeviation: 8.89137
+        percentile25: 10.0
+        percentile50: 15.0
+        percentile75: 21.0
+      clonesCountInTrees:
+        size: 100
+        sum: 270.0
+        min: 2.0
+        max: 13.0
+        avg: 2.7
+        quadraticMean: 3.21558
+        stdDeviation: 1.75522
+        percentile25: 2.0
+        percentile50: 2.0
+        percentile75: 3.0
+      wildcardsScore:
+        size: 100
+        sum: 9.76969
+        min: 0.0
+        max: 1.33333
+        avg: 0.09769
+        quadraticMean: 0.25879
+        stdDeviation: 0.24085
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      wildcardsScoreForRoots:
+        size: 100
+        sum: 30.58496
+        min: 0.0
+        max: 4.0
+        avg: 0.30584
+        quadraticMean: 0.79171
+        stdDeviation: 0.73393
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      maxNDNsWildcardsScoreInTree:
+        size: 100
+        sum: 30.58496
+        min: 0.0
+        max: 4.0
+        avg: 0.30584
+        quadraticMean: 0.79171
+        stdDeviation: 0.73393
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      surenessOfDecisions:
+        size: 0
+        sum: 0.0
+        min: NaN
+        max: NaN
+        avg: NaN
+        quadraticMean: NaN
+        stdDeviation: NaN
+        percentile25: NaN
+        percentile50: NaN
+        percentile75: NaN
+    - stepName: CombineTrees
+      clonesWasAdded: 0
+      cloneNodesWasAdded: 0
+      treesCountDelta: -4
+      commonVJMutationsCounts:
+        size: 96
+        sum: 1583.0
+        min: 0.0
+        max: 53.0
+        avg: 16.48958
+        quadraticMean: 18.80242
+        stdDeviation: 9.08207
+        percentile25: 10.0
+        percentile50: 15.0
+        percentile75: 21.0
+      clonesCountInTrees:
+        size: 96
+        sum: 270.0
+        min: 2.0
+        max: 13.0
+        avg: 2.812
+        quadraticMean: 3.43996
+        stdDeviation: 1.99109
+        percentile25: 2.0
+        percentile50: 2.0
+        percentile75: 3.0
+      wildcardsScore:
+        size: 96
+        sum: 9.43636
+        min: 0.0
+        max: 1.33333
+        avg: 0.09829
+        quadraticMean: 0.26193
+        stdDeviation: 0.24406
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      wildcardsScoreForRoots:
+        size: 96
+        sum: 29.58496
+        min: 0.0
+        max: 4.0
+        avg: 0.30817
+        quadraticMean: 0.80157
+        stdDeviation: 0.74384
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      maxNDNsWildcardsScoreInTree:
+        size: 96
+        sum: 29.58496
+        min: 0.0
+        max: 4.0
+        avg: 0.30817
+        quadraticMean: 0.80157
+        stdDeviation: 0.74384
+        percentile25: 0.0
+        percentile50: 0.0
+        percentile75: 0.0
+      surenessOfDecisions:
+        size: 0
+        sum: 0.0
+        min: NaN
+        max: NaN
+        avg: NaN
+        quadraticMean: NaN
+        stdDeviation: NaN
+        percentile25: NaN
+        percentile50: NaN
+        percentile75: NaN
   totalClonesProcessed: 1334
   cellCombination: null
   totalTreesCount: 96
@@ -230,10 +230,10 @@ upstreams:
       commandLine: align -p mikelov-et-al-2021 trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz
         trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       inputFiles:
-      - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz
-      - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz
+        - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R1.fastq.gz
+        - trees_samples/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M_R2.fastq.gz
       outputFiles:
-      - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       totalReadsProcessed: 49700
       aligned: 49574
       notAligned: 126
@@ -286,621 +286,621 @@ upstreams:
         projections:
           "1,2": 49620
         detailedReport:
-        - nested:
-            "1,2":
-              variantId: 0
-              nested:
-              - - positionDistributions:
-                    C:Left:
-                      "0": 70
-                      "1": 26766
-                      "2": 180
-                    C:Right:
-                      "15": 70
-                      "16": 26766
-                      "17": 180
-                    R1:Left:
-                      "15": 70
-                      "16": 26766
-                      "17": 180
-                    R1:Right:
-                      "310": 27016
-                    R1F:Left:
-                      "0": 27016
-                    R1F:Right:
-                      "310": 27016
-                  lengthDistributions:
-                    C:
-                      "15": 27016
-                    R1:
-                      "293": 180
-                      "294": 26766
-                      "295": 70
-                    R1F:
-                      "310": 27016
-                  costDistributions:
-                    "0": 25901
-                    "5": 931
-                    "9": 184
-                  variantDistribution:
-                    "0": 27016
-                - positionDistributions:
-                    C:Left:
-                      "0": 26
-                      "1": 4984
-                      "2": 360
-                    C:Right:
-                      "15": 26
-                      "16": 4984
-                      "17": 360
-                    R1:Left:
-                      "15": 26
-                      "16": 4984
-                      "17": 360
-                    R1:Right:
-                      "310": 5370
-                    R1F:Left:
-                      "0": 5370
-                    R1F:Right:
-                      "310": 5370
-                  lengthDistributions:
-                    C:
-                      "15": 5370
-                    R1:
-                      "293": 360
-                      "294": 4984
-                      "295": 26
-                    R1F:
-                      "310": 5370
-                  costDistributions:
-                    "0": 4911
-                    "5": 436
-                    "9": 23
-                  variantDistribution:
-                    "1": 5370
-                - positionDistributions:
-                    C:Left:
-                      "0": 1463
-                      "1": 13720
-                      "2": 23
-                    C:Right:
-                      "15": 1463
-                      "16": 13720
-                      "17": 23
-                    R1:Left:
-                      "15": 1463
-                      "16": 13720
-                      "17": 23
-                    R1:Right:
-                      "310": 15206
-                    R1F:Left:
-                      "0": 15206
-                    R1F:Right:
-                      "310": 15206
-                  lengthDistributions:
-                    C:
-                      "15": 15206
-                    R1:
-                      "293": 23
-                      "294": 13720
-                      "295": 1463
-                    R1F:
-                      "310": 15206
-                  costDistributions:
-                    "0": 13543
-                    "5": 872
-                    "9": 791
-                  variantDistribution:
-                    "2": 15206
-                - positionDistributions:
-                    C:Left:
-                      "0": 2
-                      "1": 2024
-                      "2": 2
-                    C:Right:
-                      "15": 2
-                      "16": 2024
-                      "17": 2
-                    R1:Left:
-                      "15": 2
-                      "16": 2024
-                      "17": 2
-                    R1:Right:
-                      "310": 2028
-                    R1F:Left:
-                      "0": 2028
-                    R1F:Right:
-                      "310": 2028
-                  lengthDistributions:
-                    C:
-                      "15": 2028
-                    R1:
-                      "293": 2
-                      "294": 2024
-                      "295": 2
-                    R1F:
-                      "310": 2028
-                  costDistributions:
-                    "0": 1929
-                    "5": 78
-                    "9": 21
-                  variantDistribution:
-                    "3": 2028
-              - - positionDistributions:
-                    R2:Left:
-                      "41": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "38": 1
-                  lengthDistributions:
-                    R2:
-                      "269": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "19": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "0": 1
-                - positionDistributions:
-                    R2:Left:
-                      "41": 6
-                    R2:Right:
-                      "310": 6
-                    R2F:Left:
-                      "0": 6
-                    R2F:Right:
-                      "310": 6
-                    UMI:Left:
-                      "19": 6
-                    UMI:Right:
-                      "38": 6
-                  lengthDistributions:
-                    R2:
-                      "269": 6
-                    R2F:
-                      "310": 6
-                    UMI:
-                      "19": 6
-                  costDistributions:
-                    "0": 4
-                    "8": 2
-                  variantDistribution:
-                    "1": 6
-                - positionDistributions:
-                    R2:Left:
-                      "41": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "38": 1
-                  lengthDistributions:
-                    R2:
-                      "269": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "19": 1
-                  costDistributions:
-                    "10": 1
-                  variantDistribution:
-                    "2": 1
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "3": 0
-                - positionDistributions:
-                    R2:Left:
-                      "41": 2
-                    R2:Right:
-                      "310": 2
-                    R2F:Left:
-                      "0": 2
-                    R2F:Right:
-                      "310": 2
-                    UMI:Left:
-                      "19": 2
-                    UMI:Right:
-                      "38": 2
-                  lengthDistributions:
-                    R2:
-                      "269": 2
-                    R2F:
-                      "310": 2
-                    UMI:
-                      "19": 2
-                  costDistributions:
-                    "0": 2
-                  variantDistribution:
-                    "4": 2
-                - positionDistributions:
-                    R2:Left:
-                      "41": 3
-                    R2:Right:
-                      "310": 3
-                    R2F:Left:
-                      "0": 3
-                    R2F:Right:
-                      "310": 3
-                    UMI:Left:
-                      "19": 3
-                    UMI:Right:
-                      "38": 3
-                  lengthDistributions:
-                    R2:
-                      "269": 3
-                    R2F:
-                      "310": 3
-                    UMI:
-                      "19": 3
-                  costDistributions:
-                    "0": 3
-                  variantDistribution:
-                    "5": 3
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "6": 0
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "7": 0
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "8": 0
-                - positionDistributions:
-                    R2:Left:
-                      "42": 4
-                    R2:Right:
-                      "310": 4
-                    R2F:Left:
-                      "0": 4
-                    R2F:Right:
-                      "310": 4
-                    UMI:Left:
-                      "19": 4
-                    UMI:Right:
-                      "39": 4
-                  lengthDistributions:
-                    R2:
-                      "268": 4
-                    R2F:
-                      "310": 4
-                    UMI:
-                      "20": 4
-                  costDistributions:
-                    "0": 4
-                  variantDistribution:
-                    "9": 4
-                - positionDistributions:
-                    R2:Left:
-                      "42": 7
-                    R2:Right:
-                      "310": 7
-                    R2F:Left:
-                      "0": 7
-                    R2F:Right:
-                      "310": 7
-                    UMI:Left:
-                      "19": 7
-                    UMI:Right:
-                      "39": 7
-                  lengthDistributions:
-                    R2:
-                      "268": 7
-                    R2F:
-                      "310": 7
-                    UMI:
-                      "20": 7
-                  costDistributions:
-                    "0": 6
-                    "10": 1
-                  variantDistribution:
-                    "10": 7
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "11": 0
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "12": 0
-                - positionDistributions:
-                    R2:Left:
-                      "43": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "40": 1
-                  lengthDistributions:
-                    R2:
-                      "267": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "21": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "13": 1
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "14": 0
-                - positionDistributions:
-                    R2:Left:
-                      "43": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "40": 1
-                  lengthDistributions:
-                    R2:
-                      "267": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "21": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "15": 1
-                - positionDistributions:
-                    R2:Left:
-                      "41": 456
-                      "42": 130
-                      "43": 48982
-                    R2:Right:
-                      "310": 49568
-                    R2F:Left:
-                      "0": 49568
-                    R2F:Right:
-                      "310": 49568
-                    UMI:Left:
-                      "19": 49568
-                    UMI:Right:
-                      "40": 49568
-                  lengthDistributions:
-                    R2:
-                      "267": 48982
-                      "268": 130
-                      "269": 456
-                    R2F:
-                      "310": 49568
-                    UMI:
-                      "21": 49568
-                  costDistributions:
-                    "0": 46401
-                    "3": 164
-                    "5": 2074
-                    "8": 756
-                    "10": 173
-                  variantDistribution:
-                    "16": 49568
-                - positionDistributions:
-                    R2:Left:
-                      "43": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "40": 1
-                  lengthDistributions:
-                    R2:
-                      "267": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "21": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "17": 1
-                - positionDistributions:
-                    R2:Left:
-                      "43": 2
-                    R2:Right:
-                      "310": 2
-                    R2F:Left:
-                      "0": 2
-                    R2F:Right:
-                      "310": 2
-                    UMI:Left:
-                      "19": 2
-                    UMI:Right:
-                      "40": 2
-                  lengthDistributions:
-                    R2:
-                      "267": 2
-                    R2F:
-                      "310": 2
-                    UMI:
-                      "21": 2
-                  costDistributions:
-                    "0": 1
-                    "5": 1
-                  variantDistribution:
-                    "18": 2
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "19": 0
-                - positionDistributions:
-                    R2:Left:
-                      "43": 11
-                    R2:Right:
-                      "310": 11
-                    R2F:Left:
-                      "0": 11
-                    R2F:Right:
-                      "310": 11
-                    UMI:Left:
-                      "19": 11
-                    UMI:Right:
-                      "40": 11
-                  lengthDistributions:
-                    R2:
-                      "267": 11
-                    R2F:
-                      "310": 11
-                    UMI:
-                      "21": 11
-                  costDistributions:
-                    "0": 9
-                    "5": 1
-                    "8": 1
-                  variantDistribution:
-                    "20": 11
-                - positionDistributions:
-                    R2:Left:
-                      "43": 12
-                    R2:Right:
-                      "310": 12
-                    R2F:Left:
-                      "0": 12
-                    R2F:Right:
-                      "310": 12
-                    UMI:Left:
-                      "19": 12
-                    UMI:Right:
-                      "40": 12
-                  lengthDistributions:
-                    R2:
-                      "267": 12
-                    R2F:
-                      "310": 12
-                    UMI:
-                      "21": 12
-                  costDistributions:
-                    "0": 11
-                    "5": 1
-                  variantDistribution:
-                    "21": 12
-              costDistributions:
-                "0": 43343
-                "3": 151
-                "5": 4083
-                "7": 9
-                "8": 719
-                "9": 937
-                "10": 253
-                "12": 37
-                "14": 59
-                "15": 10
-                "17": 7
-                "19": 12
+          - nested:
+              "1,2":
+                variantId: 0
+                nested:
+                  -   - positionDistributions:
+                          C:Left:
+                            "0": 70
+                            "1": 26766
+                            "2": 180
+                          C:Right:
+                            "15": 70
+                            "16": 26766
+                            "17": 180
+                          R1:Left:
+                            "15": 70
+                            "16": 26766
+                            "17": 180
+                          R1:Right:
+                            "310": 27016
+                          R1F:Left:
+                            "0": 27016
+                          R1F:Right:
+                            "310": 27016
+                        lengthDistributions:
+                          C:
+                            "15": 27016
+                          R1:
+                            "293": 180
+                            "294": 26766
+                            "295": 70
+                          R1F:
+                            "310": 27016
+                        costDistributions:
+                          "0": 25901
+                          "5": 931
+                          "9": 184
+                        variantDistribution:
+                          "0": 27016
+                      - positionDistributions:
+                          C:Left:
+                            "0": 26
+                            "1": 4984
+                            "2": 360
+                          C:Right:
+                            "15": 26
+                            "16": 4984
+                            "17": 360
+                          R1:Left:
+                            "15": 26
+                            "16": 4984
+                            "17": 360
+                          R1:Right:
+                            "310": 5370
+                          R1F:Left:
+                            "0": 5370
+                          R1F:Right:
+                            "310": 5370
+                        lengthDistributions:
+                          C:
+                            "15": 5370
+                          R1:
+                            "293": 360
+                            "294": 4984
+                            "295": 26
+                          R1F:
+                            "310": 5370
+                        costDistributions:
+                          "0": 4911
+                          "5": 436
+                          "9": 23
+                        variantDistribution:
+                          "1": 5370
+                      - positionDistributions:
+                          C:Left:
+                            "0": 1463
+                            "1": 13720
+                            "2": 23
+                          C:Right:
+                            "15": 1463
+                            "16": 13720
+                            "17": 23
+                          R1:Left:
+                            "15": 1463
+                            "16": 13720
+                            "17": 23
+                          R1:Right:
+                            "310": 15206
+                          R1F:Left:
+                            "0": 15206
+                          R1F:Right:
+                            "310": 15206
+                        lengthDistributions:
+                          C:
+                            "15": 15206
+                          R1:
+                            "293": 23
+                            "294": 13720
+                            "295": 1463
+                          R1F:
+                            "310": 15206
+                        costDistributions:
+                          "0": 13543
+                          "5": 872
+                          "9": 791
+                        variantDistribution:
+                          "2": 15206
+                      - positionDistributions:
+                          C:Left:
+                            "0": 2
+                            "1": 2024
+                            "2": 2
+                          C:Right:
+                            "15": 2
+                            "16": 2024
+                            "17": 2
+                          R1:Left:
+                            "15": 2
+                            "16": 2024
+                            "17": 2
+                          R1:Right:
+                            "310": 2028
+                          R1F:Left:
+                            "0": 2028
+                          R1F:Right:
+                            "310": 2028
+                        lengthDistributions:
+                          C:
+                            "15": 2028
+                          R1:
+                            "293": 2
+                            "294": 2024
+                            "295": 2
+                          R1F:
+                            "310": 2028
+                        costDistributions:
+                          "0": 1929
+                          "5": 78
+                          "9": 21
+                        variantDistribution:
+                          "3": 2028
+                  -   - positionDistributions:
+                          R2:Left:
+                            "41": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "38": 1
+                        lengthDistributions:
+                          R2:
+                            "269": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "19": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "0": 1
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 6
+                          R2:Right:
+                            "310": 6
+                          R2F:Left:
+                            "0": 6
+                          R2F:Right:
+                            "310": 6
+                          UMI:Left:
+                            "19": 6
+                          UMI:Right:
+                            "38": 6
+                        lengthDistributions:
+                          R2:
+                            "269": 6
+                          R2F:
+                            "310": 6
+                          UMI:
+                            "19": 6
+                        costDistributions:
+                          "0": 4
+                          "8": 2
+                        variantDistribution:
+                          "1": 6
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "38": 1
+                        lengthDistributions:
+                          R2:
+                            "269": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "19": 1
+                        costDistributions:
+                          "10": 1
+                        variantDistribution:
+                          "2": 1
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "3": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 2
+                          R2:Right:
+                            "310": 2
+                          R2F:Left:
+                            "0": 2
+                          R2F:Right:
+                            "310": 2
+                          UMI:Left:
+                            "19": 2
+                          UMI:Right:
+                            "38": 2
+                        lengthDistributions:
+                          R2:
+                            "269": 2
+                          R2F:
+                            "310": 2
+                          UMI:
+                            "19": 2
+                        costDistributions:
+                          "0": 2
+                        variantDistribution:
+                          "4": 2
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 3
+                          R2:Right:
+                            "310": 3
+                          R2F:Left:
+                            "0": 3
+                          R2F:Right:
+                            "310": 3
+                          UMI:Left:
+                            "19": 3
+                          UMI:Right:
+                            "38": 3
+                        lengthDistributions:
+                          R2:
+                            "269": 3
+                          R2F:
+                            "310": 3
+                          UMI:
+                            "19": 3
+                        costDistributions:
+                          "0": 3
+                        variantDistribution:
+                          "5": 3
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "6": 0
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "7": 0
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "8": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "42": 4
+                          R2:Right:
+                            "310": 4
+                          R2F:Left:
+                            "0": 4
+                          R2F:Right:
+                            "310": 4
+                          UMI:Left:
+                            "19": 4
+                          UMI:Right:
+                            "39": 4
+                        lengthDistributions:
+                          R2:
+                            "268": 4
+                          R2F:
+                            "310": 4
+                          UMI:
+                            "20": 4
+                        costDistributions:
+                          "0": 4
+                        variantDistribution:
+                          "9": 4
+                      - positionDistributions:
+                          R2:Left:
+                            "42": 7
+                          R2:Right:
+                            "310": 7
+                          R2F:Left:
+                            "0": 7
+                          R2F:Right:
+                            "310": 7
+                          UMI:Left:
+                            "19": 7
+                          UMI:Right:
+                            "39": 7
+                        lengthDistributions:
+                          R2:
+                            "268": 7
+                          R2F:
+                            "310": 7
+                          UMI:
+                            "20": 7
+                        costDistributions:
+                          "0": 6
+                          "10": 1
+                        variantDistribution:
+                          "10": 7
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "11": 0
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "12": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "40": 1
+                        lengthDistributions:
+                          R2:
+                            "267": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "21": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "13": 1
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "14": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "40": 1
+                        lengthDistributions:
+                          R2:
+                            "267": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "21": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "15": 1
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 456
+                            "42": 130
+                            "43": 48982
+                          R2:Right:
+                            "310": 49568
+                          R2F:Left:
+                            "0": 49568
+                          R2F:Right:
+                            "310": 49568
+                          UMI:Left:
+                            "19": 49568
+                          UMI:Right:
+                            "40": 49568
+                        lengthDistributions:
+                          R2:
+                            "267": 48982
+                            "268": 130
+                            "269": 456
+                          R2F:
+                            "310": 49568
+                          UMI:
+                            "21": 49568
+                        costDistributions:
+                          "0": 46401
+                          "3": 164
+                          "5": 2074
+                          "8": 756
+                          "10": 173
+                        variantDistribution:
+                          "16": 49568
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "40": 1
+                        lengthDistributions:
+                          R2:
+                            "267": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "21": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "17": 1
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 2
+                          R2:Right:
+                            "310": 2
+                          R2F:Left:
+                            "0": 2
+                          R2F:Right:
+                            "310": 2
+                          UMI:Left:
+                            "19": 2
+                          UMI:Right:
+                            "40": 2
+                        lengthDistributions:
+                          R2:
+                            "267": 2
+                          R2F:
+                            "310": 2
+                          UMI:
+                            "21": 2
+                        costDistributions:
+                          "0": 1
+                          "5": 1
+                        variantDistribution:
+                          "18": 2
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "19": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 11
+                          R2:Right:
+                            "310": 11
+                          R2F:Left:
+                            "0": 11
+                          R2F:Right:
+                            "310": 11
+                          UMI:Left:
+                            "19": 11
+                          UMI:Right:
+                            "40": 11
+                        lengthDistributions:
+                          R2:
+                            "267": 11
+                          R2F:
+                            "310": 11
+                          UMI:
+                            "21": 11
+                        costDistributions:
+                          "0": 9
+                          "5": 1
+                          "8": 1
+                        variantDistribution:
+                          "20": 11
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 12
+                          R2:Right:
+                            "310": 12
+                          R2F:Left:
+                            "0": 12
+                          R2F:Right:
+                            "310": 12
+                          UMI:Left:
+                            "19": 12
+                          UMI:Right:
+                            "40": 12
+                        lengthDistributions:
+                          R2:
+                            "267": 12
+                          R2F:
+                            "310": 12
+                          UMI:
+                            "21": 12
+                        costDistributions:
+                          "0": 11
+                          "5": 1
+                        variantDistribution:
+                          "21": 12
+                costDistributions:
+                  "0": 43343
+                  "3": 151
+                  "5": 4083
+                  "7": 9
+                  "8": 719
+                  "9": 937
+                  "10": 253
+                  "12": 37
+                  "14": 59
+                  "15": 10
+                  "17": 7
+                  "19": 12
       notMatchedByHeader: 0
       transformerReports: []
       coverage:
@@ -915,9 +915,9 @@ upstreams:
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
         assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
       inputFiles:
-      - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       outputFiles:
-      - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
+        - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
         inputGroups: 3038
@@ -982,13 +982,13 @@ upstreams:
         \ --export-alleles-mutations alleles/description.tsv assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns\
         \ assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
       inputFiles:
-      - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
-      - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
+        - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
+        - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       outputFiles:
-      - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
-      - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
-      - alleles/description.tsv
-      - alleles_library.json
+        - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+        - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
+        - alleles/description.tsv
+        - alleles_library.json
       clonesCountWithNoChangeOfScore: 1052
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
@@ -1000,9 +1000,9 @@ upstreams:
         quadraticMean: 54.15427
         stdDeviation: 34.32044
       notEnoughInformation:
-      - IGHJ1
-      - IGHJ2
-      - IGHV4-55
+        - IGHJ1
+        - IGHJ2
+        - IGHV4-55
       firstRoundResults:
         FOUND_KNOWN_VARIANT: 2
         NOT_CHANGED_AFTER_SEARCH: 7
@@ -1037,86 +1037,86 @@ upstreams:
       commandLine: refineTagsAndSort align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
         align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       inputFiles:
-      - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        - align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       outputFiles:
-      - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
+        - align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
       correctionReport:
         inputRecords: 49574
         outputRecords: 47703
         steps:
-        - tagName: UMI
-          inputGroups: 1
-          inputDiversity: 5631
-          inputCount: 49574
-          coreDiversity: 5629
-          coreCount: 49572
-          directlyCorrectedDiversity: 1224
-          directlyCorrectedCount: 1245
-          filteredDiversity: 1
-          filteredCount: 1
-          recursivelyCorrected: 30
-          diversityFilteredByWhitelist: 0
-          outputDiversity: 4406
-          outputCount: 49573
+          - tagName: UMI
+            inputGroups: 1
+            inputDiversity: 5631
+            inputCount: 49574
+            coreDiversity: 5629
+            coreCount: 49572
+            directlyCorrectedDiversity: 1224
+            directlyCorrectedCount: 1245
+            filteredDiversity: 1
+            filteredCount: 1
+            recursivelyCorrected: 30
+            diversityFilteredByWhitelist: 0
+            outputDiversity: 4406
+            outputCount: 49573
         filterReport:
           type: filter_groups_report
           groupingKeys:
-          - allTags:Molecule
+            - allTags:Molecule
           numberOfGroups: 4406
           numberOfGroupsAccepted: 3038
           totalWeight: 49573.0
           totalWeightAccepted: 47703.0
           operatorReports:
-          - operatorReport:
-              type: multi_operator_hist_report
-              threshold: 4.0
-              nestedThresholds:
-              - 4.0
-              - 9.0
-            metricHists:
-            - bins:
-              - from: 1.0
-                to: 1.58489
-                weight: 1000.0
-              - from: 1.58489
-                to: 2.51188
-                weight: 234.0
-              - from: 2.51188
-                to: 3.98107
-                weight: 134.0
-              - from: 3.98107
-                to: 6.30957
-                weight: 385.0
-              - from: 6.30957
-                to: 10.0
-                weight: 487.0
-              - from: 10.0
-                to: 15.84893
-                weight: 821.0
-              - from: 15.84893
-                to: 25.11886
-                weight: 895.0
-              - from: 25.11886
-                to: 39.81071
-                weight: 428.0
-              - from: 39.81071
-                to: 63.09573
-                weight: 22.0
-              collectionSpec:
-                log: true
-                binNumber: 0
-                minBinWidth: 0.2
-                multiplyWeightByKey: false
+            - operatorReport:
+                type: multi_operator_hist_report
+                threshold: 4.0
+                nestedThresholds:
+                  - 4.0
+                  - 9.0
+              metricHists:
+                - bins:
+                    - from: 1.0
+                      to: 1.58489
+                      weight: 1000.0
+                    - from: 1.58489
+                      to: 2.51188
+                      weight: 234.0
+                    - from: 2.51188
+                      to: 3.98107
+                      weight: 134.0
+                    - from: 3.98107
+                      to: 6.30957
+                      weight: 385.0
+                    - from: 6.30957
+                      to: 10.0
+                      weight: 487.0
+                    - from: 10.0
+                      to: 15.84893
+                      weight: 821.0
+                    - from: 15.84893
+                      to: 25.11886
+                      weight: 895.0
+                    - from: 25.11886
+                      to: 39.81071
+                      weight: 428.0
+                    - from: 39.81071
+                      to: 63.09573
+                      weight: 22.0
+                  collectionSpec:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
   alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns:
     align:
       type: alignerReport
       commandLine: align -p mikelov-et-al-2021 trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz
         trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       inputFiles:
-      - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz
-      - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
+        - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R1.fastq.gz
+        - trees_samples/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M_R2.fastq.gz
       outputFiles:
-      - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       totalReadsProcessed: 29871
       aligned: 29264
       notAligned: 607
@@ -1169,639 +1169,639 @@ upstreams:
         projections:
           "1,2": 29821
         detailedReport:
-        - nested:
-            "1,2":
-              variantId: 0
-              nested:
-              - - positionDistributions:
-                    C:Left:
-                      "0": 78
-                      "1": 24914
-                      "2": 154
-                    C:Right:
-                      "15": 78
-                      "16": 24914
-                      "17": 154
-                    R1:Left:
-                      "15": 78
-                      "16": 24914
-                      "17": 154
-                    R1:Right:
-                      "310": 25146
-                    R1F:Left:
-                      "0": 25146
-                    R1F:Right:
-                      "310": 25146
-                  lengthDistributions:
-                    C:
-                      "15": 25146
-                    R1:
-                      "293": 154
-                      "294": 24914
-                      "295": 78
-                    R1F:
-                      "310": 25146
-                  costDistributions:
-                    "0": 24069
-                    "5": 890
-                    "9": 187
-                  variantDistribution:
-                    "0": 25146
-                - positionDistributions:
-                    C:Left:
-                      "0": 2
-                      "1": 508
-                      "2": 48
-                    C:Right:
-                      "15": 2
-                      "16": 508
-                      "17": 48
-                    R1:Left:
-                      "15": 2
-                      "16": 508
-                      "17": 48
-                    R1:Right:
-                      "310": 558
-                    R1F:Left:
-                      "0": 558
-                    R1F:Right:
-                      "310": 558
-                  lengthDistributions:
-                    C:
-                      "15": 558
-                    R1:
-                      "293": 48
-                      "294": 508
-                      "295": 2
-                    R1F:
-                      "310": 558
-                  costDistributions:
-                    "0": 492
-                    "5": 62
-                    "9": 4
-                  variantDistribution:
-                    "1": 558
-                - positionDistributions:
-                    C:Left:
-                      "0": 290
-                      "1": 2564
-                    C:Right:
-                      "15": 290
-                      "16": 2564
-                    R1:Left:
-                      "15": 290
-                      "16": 2564
-                    R1:Right:
-                      "310": 2854
-                    R1F:Left:
-                      "0": 2854
-                    R1F:Right:
-                      "310": 2854
-                  lengthDistributions:
-                    C:
-                      "15": 2854
-                    R1:
-                      "294": 2564
-                      "295": 290
-                    R1F:
-                      "310": 2854
-                  costDistributions:
-                    "0": 2518
-                    "5": 179
-                    "9": 157
-                  variantDistribution:
-                    "2": 2854
-                - positionDistributions:
-                    C:Left:
-                      "1": 1262
-                      "2": 1
-                    C:Right:
-                      "16": 1262
-                      "17": 1
-                    R1:Left:
-                      "16": 1262
-                      "17": 1
-                    R1:Right:
-                      "310": 1263
-                    R1F:Left:
-                      "0": 1263
-                    R1F:Right:
-                      "310": 1263
-                  lengthDistributions:
-                    C:
-                      "15": 1263
-                    R1:
-                      "293": 1
-                      "294": 1262
-                    R1F:
-                      "310": 1263
-                  costDistributions:
-                    "0": 1189
-                    "5": 57
-                    "9": 17
-                  variantDistribution:
-                    "3": 1263
-              - - positionDistributions:
-                    R2:Left:
-                      "41": 2
-                    R2:Right:
-                      "310": 2
-                    R2F:Left:
-                      "0": 2
-                    R2F:Right:
-                      "310": 2
-                    UMI:Left:
-                      "19": 2
-                    UMI:Right:
-                      "38": 2
-                  lengthDistributions:
-                    R2:
-                      "269": 2
-                    R2F:
-                      "310": 2
-                    UMI:
-                      "19": 2
-                  costDistributions:
-                    "0": 2
-                  variantDistribution:
-                    "0": 2
-                - positionDistributions:
-                    R2:Left:
-                      "41": 52
-                    R2:Right:
-                      "310": 52
-                    R2F:Left:
-                      "0": 52
-                    R2F:Right:
-                      "310": 52
-                    UMI:Left:
-                      "19": 52
-                    UMI:Right:
-                      "38": 52
-                  lengthDistributions:
-                    R2:
-                      "269": 52
-                    R2F:
-                      "310": 52
-                    UMI:
-                      "19": 52
-                  costDistributions:
-                    "0": 48
-                    "5": 4
-                  variantDistribution:
-                    "1": 52
-                - positionDistributions:
-                    R2:Left:
-                      "41": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "38": 1
-                  lengthDistributions:
-                    R2:
-                      "269": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "19": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "2": 1
-                - positionDistributions:
-                    R2:Left:
-                      "41": 21
-                    R2:Right:
-                      "310": 21
-                    R2F:Left:
-                      "0": 21
-                    R2F:Right:
-                      "310": 21
-                    UMI:Left:
-                      "19": 21
-                    UMI:Right:
-                      "38": 21
-                  lengthDistributions:
-                    R2:
-                      "269": 21
-                    R2F:
-                      "310": 21
-                    UMI:
-                      "19": 21
-                  costDistributions:
-                    "0": 18
-                    "3": 1
-                    "5": 1
-                    "8": 1
-                  variantDistribution:
-                    "3": 21
-                - positionDistributions:
-                    R2:Left:
-                      "41": 4
-                    R2:Right:
-                      "310": 4
-                    R2F:Left:
-                      "0": 4
-                    R2F:Right:
-                      "310": 4
-                    UMI:Left:
-                      "19": 4
-                    UMI:Right:
-                      "38": 4
-                  lengthDistributions:
-                    R2:
-                      "269": 4
-                    R2F:
-                      "310": 4
-                    UMI:
-                      "19": 4
-                  costDistributions:
-                    "0": 3
-                    "5": 1
-                  variantDistribution:
-                    "4": 4
-                - positionDistributions:
-                    R2:Left:
-                      "41": 4
-                    R2:Right:
-                      "310": 4
-                    R2F:Left:
-                      "0": 4
-                    R2F:Right:
-                      "310": 4
-                    UMI:Left:
-                      "19": 4
-                    UMI:Right:
-                      "38": 4
-                  lengthDistributions:
-                    R2:
-                      "269": 4
-                    R2F:
-                      "310": 4
-                    UMI:
-                      "19": 4
-                  costDistributions:
-                    "0": 4
-                  variantDistribution:
-                    "5": 4
-                - positionDistributions:
-                    R2:Left:
-                      "41": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "38": 1
-                  lengthDistributions:
-                    R2:
-                      "269": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "19": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "6": 1
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "7": 0
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "8": 0
-                - positionDistributions:
-                    R2:Left:
-                      "42": 2
-                    R2:Right:
-                      "310": 2
-                    R2F:Left:
-                      "0": 2
-                    R2F:Right:
-                      "310": 2
-                    UMI:Left:
-                      "19": 2
-                    UMI:Right:
-                      "39": 2
-                  lengthDistributions:
-                    R2:
-                      "268": 2
-                    R2F:
-                      "310": 2
-                    UMI:
-                      "20": 2
-                  costDistributions:
-                    "0": 2
-                  variantDistribution:
-                    "9": 2
-                - positionDistributions:
-                    R2:Left:
-                      "41": 1
-                      "42": 5
-                    R2:Right:
-                      "310": 6
-                    R2F:Left:
-                      "0": 6
-                    R2F:Right:
-                      "310": 6
-                    UMI:Left:
-                      "19": 6
-                    UMI:Right:
-                      "39": 6
-                  lengthDistributions:
-                    R2:
-                      "268": 5
-                      "269": 1
-                    R2F:
-                      "310": 6
-                    UMI:
-                      "20": 6
-                  costDistributions:
-                    "0": 2
-                    "3": 2
-                    "10": 2
-                  variantDistribution:
-                    "10": 6
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "11": 0
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "12": 0
-                - positionDistributions:
-                    R2:Left:
-                      "43": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "40": 1
-                  lengthDistributions:
-                    R2:
-                      "267": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "21": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "13": 1
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "14": 0
-                - positionDistributions:
-                    R2:Left:
-                      "43": 1
-                    R2:Right:
-                      "310": 1
-                    R2F:Left:
-                      "0": 1
-                    R2F:Right:
-                      "310": 1
-                    UMI:Left:
-                      "19": 1
-                    UMI:Right:
-                      "40": 1
-                  lengthDistributions:
-                    R2:
-                      "267": 1
-                    R2F:
-                      "310": 1
-                    UMI:
-                      "21": 1
-                  costDistributions:
-                    "0": 1
-                  variantDistribution:
-                    "15": 1
-                - positionDistributions:
-                    R2:Left:
-                      "41": 23
-                      "42": 63
-                      "43": 29594
-                    R2:Right:
-                      "310": 29680
-                    R2F:Left:
-                      "0": 29680
-                    R2F:Right:
-                      "310": 29680
-                    UMI:Left:
-                      "19": 29680
-                    UMI:Right:
-                      "40": 29680
-                  lengthDistributions:
-                    R2:
-                      "267": 29594
-                      "268": 63
-                      "269": 23
-                    R2F:
-                      "310": 29680
-                    UMI:
-                      "21": 29680
-                  costDistributions:
-                    "0": 28172
-                    "3": 50
-                    "5": 833
-                    "8": 589
-                    "10": 36
-                  variantDistribution:
-                    "16": 29680
-                - positionDistributions:
-                    R2:Left:
-                      "43": 3
-                    R2:Right:
-                      "310": 3
-                    R2F:Left:
-                      "0": 3
-                    R2F:Right:
-                      "310": 3
-                    UMI:Left:
-                      "19": 3
-                    UMI:Right:
-                      "40": 3
-                  lengthDistributions:
-                    R2:
-                      "267": 3
-                    R2F:
-                      "310": 3
-                    UMI:
-                      "21": 3
-                  costDistributions:
-                    "0": 3
-                  variantDistribution:
-                    "17": 3
-                - positionDistributions:
-                    R2:Left:
-                      "43": 37
-                    R2:Right:
-                      "310": 37
-                    R2F:Left:
-                      "0": 37
-                    R2F:Right:
-                      "310": 37
-                    UMI:Left:
-                      "19": 37
-                    UMI:Right:
-                      "40": 37
-                  lengthDistributions:
-                    R2:
-                      "267": 37
-                    R2F:
-                      "310": 37
-                    UMI:
-                      "21": 37
-                  costDistributions:
-                    "0": 36
-                    "5": 1
-                  variantDistribution:
-                    "18": 37
-                - positionDistributions:
-                    R2:Left:
-                      "43": 2
-                    R2:Right:
-                      "310": 2
-                    R2F:Left:
-                      "0": 2
-                    R2F:Right:
-                      "310": 2
-                    UMI:Left:
-                      "19": 2
-                    UMI:Right:
-                      "40": 2
-                  lengthDistributions:
-                    R2:
-                      "267": 2
-                    R2F:
-                      "310": 2
-                    UMI:
-                      "21": 2
-                  costDistributions:
-                    "0": 1
-                    "3": 1
-                  variantDistribution:
-                    "19": 2
-                - positionDistributions:
-                    R2:Left: {}
-                    R2:Right: {}
-                    R2F:Left: {}
-                    R2F:Right: {}
-                    UMI:Left: {}
-                    UMI:Right: {}
-                  lengthDistributions:
-                    R2: {}
-                    R2F: {}
-                    UMI: {}
-                  costDistributions: {}
-                  variantDistribution:
-                    "20": 0
-                - positionDistributions:
-                    R2:Left:
-                      "43": 4
-                    R2:Right:
-                      "310": 4
-                    R2F:Left:
-                      "0": 4
-                    R2F:Right:
-                      "310": 4
-                    UMI:Left:
-                      "19": 4
-                    UMI:Right:
-                      "40": 4
-                  lengthDistributions:
-                    R2:
-                      "267": 4
-                    R2F:
-                      "310": 4
-                    UMI:
-                      "21": 4
-                  costDistributions:
-                    "0": 3
-                    "5": 1
-                  variantDistribution:
-                    "21": 4
-              costDistributions:
-                "0": 26851
-                "3": 49
-                "5": 1900
-                "7": 2
-                "8": 554
-                "9": 332
-                "10": 70
-                "12": 28
-                "14": 15
-                "15": 5
-                "17": 11
-                "19": 4
+          - nested:
+              "1,2":
+                variantId: 0
+                nested:
+                  -   - positionDistributions:
+                          C:Left:
+                            "0": 78
+                            "1": 24914
+                            "2": 154
+                          C:Right:
+                            "15": 78
+                            "16": 24914
+                            "17": 154
+                          R1:Left:
+                            "15": 78
+                            "16": 24914
+                            "17": 154
+                          R1:Right:
+                            "310": 25146
+                          R1F:Left:
+                            "0": 25146
+                          R1F:Right:
+                            "310": 25146
+                        lengthDistributions:
+                          C:
+                            "15": 25146
+                          R1:
+                            "293": 154
+                            "294": 24914
+                            "295": 78
+                          R1F:
+                            "310": 25146
+                        costDistributions:
+                          "0": 24069
+                          "5": 890
+                          "9": 187
+                        variantDistribution:
+                          "0": 25146
+                      - positionDistributions:
+                          C:Left:
+                            "0": 2
+                            "1": 508
+                            "2": 48
+                          C:Right:
+                            "15": 2
+                            "16": 508
+                            "17": 48
+                          R1:Left:
+                            "15": 2
+                            "16": 508
+                            "17": 48
+                          R1:Right:
+                            "310": 558
+                          R1F:Left:
+                            "0": 558
+                          R1F:Right:
+                            "310": 558
+                        lengthDistributions:
+                          C:
+                            "15": 558
+                          R1:
+                            "293": 48
+                            "294": 508
+                            "295": 2
+                          R1F:
+                            "310": 558
+                        costDistributions:
+                          "0": 492
+                          "5": 62
+                          "9": 4
+                        variantDistribution:
+                          "1": 558
+                      - positionDistributions:
+                          C:Left:
+                            "0": 290
+                            "1": 2564
+                          C:Right:
+                            "15": 290
+                            "16": 2564
+                          R1:Left:
+                            "15": 290
+                            "16": 2564
+                          R1:Right:
+                            "310": 2854
+                          R1F:Left:
+                            "0": 2854
+                          R1F:Right:
+                            "310": 2854
+                        lengthDistributions:
+                          C:
+                            "15": 2854
+                          R1:
+                            "294": 2564
+                            "295": 290
+                          R1F:
+                            "310": 2854
+                        costDistributions:
+                          "0": 2518
+                          "5": 179
+                          "9": 157
+                        variantDistribution:
+                          "2": 2854
+                      - positionDistributions:
+                          C:Left:
+                            "1": 1262
+                            "2": 1
+                          C:Right:
+                            "16": 1262
+                            "17": 1
+                          R1:Left:
+                            "16": 1262
+                            "17": 1
+                          R1:Right:
+                            "310": 1263
+                          R1F:Left:
+                            "0": 1263
+                          R1F:Right:
+                            "310": 1263
+                        lengthDistributions:
+                          C:
+                            "15": 1263
+                          R1:
+                            "293": 1
+                            "294": 1262
+                          R1F:
+                            "310": 1263
+                        costDistributions:
+                          "0": 1189
+                          "5": 57
+                          "9": 17
+                        variantDistribution:
+                          "3": 1263
+                  -   - positionDistributions:
+                          R2:Left:
+                            "41": 2
+                          R2:Right:
+                            "310": 2
+                          R2F:Left:
+                            "0": 2
+                          R2F:Right:
+                            "310": 2
+                          UMI:Left:
+                            "19": 2
+                          UMI:Right:
+                            "38": 2
+                        lengthDistributions:
+                          R2:
+                            "269": 2
+                          R2F:
+                            "310": 2
+                          UMI:
+                            "19": 2
+                        costDistributions:
+                          "0": 2
+                        variantDistribution:
+                          "0": 2
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 52
+                          R2:Right:
+                            "310": 52
+                          R2F:Left:
+                            "0": 52
+                          R2F:Right:
+                            "310": 52
+                          UMI:Left:
+                            "19": 52
+                          UMI:Right:
+                            "38": 52
+                        lengthDistributions:
+                          R2:
+                            "269": 52
+                          R2F:
+                            "310": 52
+                          UMI:
+                            "19": 52
+                        costDistributions:
+                          "0": 48
+                          "5": 4
+                        variantDistribution:
+                          "1": 52
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "38": 1
+                        lengthDistributions:
+                          R2:
+                            "269": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "19": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "2": 1
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 21
+                          R2:Right:
+                            "310": 21
+                          R2F:Left:
+                            "0": 21
+                          R2F:Right:
+                            "310": 21
+                          UMI:Left:
+                            "19": 21
+                          UMI:Right:
+                            "38": 21
+                        lengthDistributions:
+                          R2:
+                            "269": 21
+                          R2F:
+                            "310": 21
+                          UMI:
+                            "19": 21
+                        costDistributions:
+                          "0": 18
+                          "3": 1
+                          "5": 1
+                          "8": 1
+                        variantDistribution:
+                          "3": 21
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 4
+                          R2:Right:
+                            "310": 4
+                          R2F:Left:
+                            "0": 4
+                          R2F:Right:
+                            "310": 4
+                          UMI:Left:
+                            "19": 4
+                          UMI:Right:
+                            "38": 4
+                        lengthDistributions:
+                          R2:
+                            "269": 4
+                          R2F:
+                            "310": 4
+                          UMI:
+                            "19": 4
+                        costDistributions:
+                          "0": 3
+                          "5": 1
+                        variantDistribution:
+                          "4": 4
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 4
+                          R2:Right:
+                            "310": 4
+                          R2F:Left:
+                            "0": 4
+                          R2F:Right:
+                            "310": 4
+                          UMI:Left:
+                            "19": 4
+                          UMI:Right:
+                            "38": 4
+                        lengthDistributions:
+                          R2:
+                            "269": 4
+                          R2F:
+                            "310": 4
+                          UMI:
+                            "19": 4
+                        costDistributions:
+                          "0": 4
+                        variantDistribution:
+                          "5": 4
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "38": 1
+                        lengthDistributions:
+                          R2:
+                            "269": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "19": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "6": 1
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "7": 0
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "8": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "42": 2
+                          R2:Right:
+                            "310": 2
+                          R2F:Left:
+                            "0": 2
+                          R2F:Right:
+                            "310": 2
+                          UMI:Left:
+                            "19": 2
+                          UMI:Right:
+                            "39": 2
+                        lengthDistributions:
+                          R2:
+                            "268": 2
+                          R2F:
+                            "310": 2
+                          UMI:
+                            "20": 2
+                        costDistributions:
+                          "0": 2
+                        variantDistribution:
+                          "9": 2
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 1
+                            "42": 5
+                          R2:Right:
+                            "310": 6
+                          R2F:Left:
+                            "0": 6
+                          R2F:Right:
+                            "310": 6
+                          UMI:Left:
+                            "19": 6
+                          UMI:Right:
+                            "39": 6
+                        lengthDistributions:
+                          R2:
+                            "268": 5
+                            "269": 1
+                          R2F:
+                            "310": 6
+                          UMI:
+                            "20": 6
+                        costDistributions:
+                          "0": 2
+                          "3": 2
+                          "10": 2
+                        variantDistribution:
+                          "10": 6
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "11": 0
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "12": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "40": 1
+                        lengthDistributions:
+                          R2:
+                            "267": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "21": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "13": 1
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "14": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 1
+                          R2:Right:
+                            "310": 1
+                          R2F:Left:
+                            "0": 1
+                          R2F:Right:
+                            "310": 1
+                          UMI:Left:
+                            "19": 1
+                          UMI:Right:
+                            "40": 1
+                        lengthDistributions:
+                          R2:
+                            "267": 1
+                          R2F:
+                            "310": 1
+                          UMI:
+                            "21": 1
+                        costDistributions:
+                          "0": 1
+                        variantDistribution:
+                          "15": 1
+                      - positionDistributions:
+                          R2:Left:
+                            "41": 23
+                            "42": 63
+                            "43": 29594
+                          R2:Right:
+                            "310": 29680
+                          R2F:Left:
+                            "0": 29680
+                          R2F:Right:
+                            "310": 29680
+                          UMI:Left:
+                            "19": 29680
+                          UMI:Right:
+                            "40": 29680
+                        lengthDistributions:
+                          R2:
+                            "267": 29594
+                            "268": 63
+                            "269": 23
+                          R2F:
+                            "310": 29680
+                          UMI:
+                            "21": 29680
+                        costDistributions:
+                          "0": 28172
+                          "3": 50
+                          "5": 833
+                          "8": 589
+                          "10": 36
+                        variantDistribution:
+                          "16": 29680
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 3
+                          R2:Right:
+                            "310": 3
+                          R2F:Left:
+                            "0": 3
+                          R2F:Right:
+                            "310": 3
+                          UMI:Left:
+                            "19": 3
+                          UMI:Right:
+                            "40": 3
+                        lengthDistributions:
+                          R2:
+                            "267": 3
+                          R2F:
+                            "310": 3
+                          UMI:
+                            "21": 3
+                        costDistributions:
+                          "0": 3
+                        variantDistribution:
+                          "17": 3
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 37
+                          R2:Right:
+                            "310": 37
+                          R2F:Left:
+                            "0": 37
+                          R2F:Right:
+                            "310": 37
+                          UMI:Left:
+                            "19": 37
+                          UMI:Right:
+                            "40": 37
+                        lengthDistributions:
+                          R2:
+                            "267": 37
+                          R2F:
+                            "310": 37
+                          UMI:
+                            "21": 37
+                        costDistributions:
+                          "0": 36
+                          "5": 1
+                        variantDistribution:
+                          "18": 37
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 2
+                          R2:Right:
+                            "310": 2
+                          R2F:Left:
+                            "0": 2
+                          R2F:Right:
+                            "310": 2
+                          UMI:Left:
+                            "19": 2
+                          UMI:Right:
+                            "40": 2
+                        lengthDistributions:
+                          R2:
+                            "267": 2
+                          R2F:
+                            "310": 2
+                          UMI:
+                            "21": 2
+                        costDistributions:
+                          "0": 1
+                          "3": 1
+                        variantDistribution:
+                          "19": 2
+                      - positionDistributions:
+                          R2:Left: {}
+                          R2:Right: {}
+                          R2F:Left: {}
+                          R2F:Right: {}
+                          UMI:Left: {}
+                          UMI:Right: {}
+                        lengthDistributions:
+                          R2: {}
+                          R2F: {}
+                          UMI: {}
+                        costDistributions: {}
+                        variantDistribution:
+                          "20": 0
+                      - positionDistributions:
+                          R2:Left:
+                            "43": 4
+                          R2:Right:
+                            "310": 4
+                          R2F:Left:
+                            "0": 4
+                          R2F:Right:
+                            "310": 4
+                          UMI:Left:
+                            "19": 4
+                          UMI:Right:
+                            "40": 4
+                        lengthDistributions:
+                          R2:
+                            "267": 4
+                          R2F:
+                            "310": 4
+                          UMI:
+                            "21": 4
+                        costDistributions:
+                          "0": 3
+                          "5": 1
+                        variantDistribution:
+                          "21": 4
+                costDistributions:
+                  "0": 26851
+                  "3": 49
+                  "5": 1900
+                  "7": 2
+                  "8": 554
+                  "9": 332
+                  "10": 70
+                  "12": 28
+                  "14": 15
+                  "15": 5
+                  "17": 11
+                  "19": 4
       notMatchedByHeader: 0
       transformerReports: []
       coverage:
@@ -1816,9 +1816,9 @@ upstreams:
       commandLine: assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
         assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       inputFiles:
-      - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       outputFiles:
-      - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
+        - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
         inputGroups: 77
@@ -1883,13 +1883,13 @@ upstreams:
         \ --export-alleles-mutations alleles/description.tsv assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns\
         \ assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns"
       inputFiles:
-      - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
-      - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
+        - assemble/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.clns
+        - assemble/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.clns
       outputFiles:
-      - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
-      - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
-      - alleles/description.tsv
-      - alleles_library.json
+        - alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns
+        - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
+        - alleles/description.tsv
+        - alleles_library.json
       clonesCountWithNoChangeOfScore: 1052
       clonesCountWithNegativeScoreChange: 10
       clonesScoreDeltaStats:
@@ -1901,9 +1901,9 @@ upstreams:
         quadraticMean: 54.15427
         stdDeviation: 34.32044
       notEnoughInformation:
-      - IGHJ1
-      - IGHJ2
-      - IGHV4-55
+        - IGHJ1
+        - IGHJ2
+        - IGHV4-55
       firstRoundResults:
         FOUND_KNOWN_VARIANT: 2
         NOT_CHANGED_AFTER_SEARCH: 7
@@ -1938,91 +1938,91 @@ upstreams:
       commandLine: refineTagsAndSort align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
         align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       inputFiles:
-      - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        - align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       outputFiles:
-      - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
+        - align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
       correctionReport:
         inputRecords: 29264
         outputRecords: 28803
         steps:
-        - tagName: UMI
-          inputGroups: 1
-          inputDiversity: 1365
-          inputCount: 29264
-          coreDiversity: 1365
-          coreCount: 29264
-          directlyCorrectedDiversity: 896
-          directlyCorrectedCount: 1100
-          filteredDiversity: 0
-          filteredCount: 0
-          recursivelyCorrected: 235
-          diversityFilteredByWhitelist: 0
-          outputDiversity: 469
-          outputCount: 29264
+          - tagName: UMI
+            inputGroups: 1
+            inputDiversity: 1365
+            inputCount: 29264
+            coreDiversity: 1365
+            coreCount: 29264
+            directlyCorrectedDiversity: 896
+            directlyCorrectedCount: 1100
+            filteredDiversity: 0
+            filteredCount: 0
+            recursivelyCorrected: 235
+            diversityFilteredByWhitelist: 0
+            outputDiversity: 469
+            outputCount: 29264
         filterReport:
           type: filter_groups_report
           groupingKeys:
-          - allTags:Molecule
+            - allTags:Molecule
           numberOfGroups: 469
           numberOfGroupsAccepted: 77
           totalWeight: 29264.0
           totalWeightAccepted: 28803.0
           operatorReports:
-          - operatorReport:
-              type: multi_operator_hist_report
-              threshold: 19.0
-              nestedThresholds:
-              - 19.0
-              - 284.0
-            metricHists:
-            - bins:
-              - from: 1.0
-                to: 1.58489
-                weight: 368.0
-              - from: 1.58489
-                to: 2.51188
-                weight: 16.0
-              - from: 2.51188
-                to: 3.98107
-                weight: 1.0
-              - from: 3.98107
-                to: 6.30957
-                weight: 2.0
-              - from: 6.30957
-                to: 10.0
-                weight: 3.0
-              - from: 10.0
-                to: 15.84893
-                weight: 2.0
-              - from: 15.84893
-                to: 25.11886
-                weight: 4.0
-              - from: 25.11886
-                to: 39.81071
-                weight: 1.0
-              - from: 39.81071
-                to: 63.09573
-                weight: 1.0
-              - from: 63.09573
-                to: 100.0
-                weight: 2.0
-              - from: 100.0
-                to: 158.48931
-                weight: 5.0
-              - from: 158.48931
-                to: 251.18864
-                weight: 10.0
-              - from: 251.18864
-                to: 398.10717
-                weight: 12.0
-              - from: 398.10717
-                to: 630.95734
-                weight: 40.0
-              - from: 630.95734
-                to: 1000.0
-                weight: 2.0
-              collectionSpec:
-                log: true
-                binNumber: 0
-                minBinWidth: 0.2
-                multiplyWeightByKey: false
+            - operatorReport:
+                type: multi_operator_hist_report
+                threshold: 19.0
+                nestedThresholds:
+                  - 19.0
+                  - 284.0
+              metricHists:
+                - bins:
+                    - from: 1.0
+                      to: 1.58489
+                      weight: 368.0
+                    - from: 1.58489
+                      to: 2.51188
+                      weight: 16.0
+                    - from: 2.51188
+                      to: 3.98107
+                      weight: 1.0
+                    - from: 3.98107
+                      to: 6.30957
+                      weight: 2.0
+                    - from: 6.30957
+                      to: 10.0
+                      weight: 3.0
+                    - from: 10.0
+                      to: 15.84893
+                      weight: 2.0
+                    - from: 15.84893
+                      to: 25.11886
+                      weight: 4.0
+                    - from: 25.11886
+                      to: 39.81071
+                      weight: 1.0
+                    - from: 39.81071
+                      to: 63.09573
+                      weight: 1.0
+                    - from: 63.09573
+                      to: 100.0
+                      weight: 2.0
+                    - from: 100.0
+                      to: 158.48931
+                      weight: 5.0
+                    - from: 158.48931
+                      to: 251.18864
+                      weight: 10.0
+                    - from: 251.18864
+                      to: 398.10717
+                      weight: 12.0
+                    - from: 398.10717
+                      to: 630.95734
+                      weight: 40.0
+                    - from: 630.95734
+                      to: 1000.0
+                      weight: 2.0
+                  collectionSpec:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false

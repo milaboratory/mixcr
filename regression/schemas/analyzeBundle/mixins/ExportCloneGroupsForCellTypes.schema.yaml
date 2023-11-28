@@ -1,19 +1,19 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 allOf:
-- type: object
-  properties:
-    types:
-      type: array
-      items:
-        type: string
-        enum:
-        - IGHK
-        - IGHL
-        - TRAB
-        - TRGD
-- type: object
-  properties:
-    type:
-      const: ExportCloneGroupsForCellTypes
-  required:
-  - type
+  - type: object
+    properties:
+      types:
+        type: array
+        items:
+          type: string
+          enum:
+            - IGHK
+            - IGHL
+            - TRAB
+            - TRGD
+  - type: object
+    properties:
+      type:
+        const: ExportCloneGroupsForCellTypes
+    required:
+      - type

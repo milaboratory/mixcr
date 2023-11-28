@@ -7,12 +7,12 @@ $defs:
         type: array
         items:
           anyOf:
-          - $ref: '#/$defs/AndTaggedFilterReport-2'
-          - $ref: '#/$defs/DummyKeyedFilterReport'
-          - $ref: '#/$defs/GenericHistOpReport'
-          - $ref: '#/$defs/GroupFilterReport-2'
-          - $ref: '#/$defs/InGroupsFilterReport-2'
-          - $ref: '#/$defs/MultiHistOpReport'
+            - $ref: '#/$defs/AndTaggedFilterReport-2'
+            - $ref: '#/$defs/DummyKeyedFilterReport'
+            - $ref: '#/$defs/GenericHistOpReport'
+            - $ref: '#/$defs/GroupFilterReport-2'
+            - $ref: '#/$defs/InGroupsFilterReport-2'
+            - $ref: '#/$defs/MultiHistOpReport'
   AndTaggedFilterReport-2:
     $ref: '#/$defs/AndTaggedFilterReport-1'
     type: object
@@ -20,26 +20,26 @@ $defs:
       type:
         const: and_report
     required:
-    - type
+      - type
   DummyKeyedFilterReport:
     type: object
     properties:
       type:
         const: dummy_report
     required:
-    - type
+      - type
   GenericHistOpReport:
     allOf:
-    - type: object
-      properties:
-        threshold:
-          type: number
-    - type: object
-      properties:
-        type:
-          const: generic_hist_report
-      required:
-      - type
+      - type: object
+        properties:
+          threshold:
+            type: number
+      - type: object
+        properties:
+          type:
+            const: generic_hist_report
+        required:
+          - type
   GroupFilterReport-1:
     type: object
     properties:
@@ -85,12 +85,12 @@ $defs:
                         type: boolean
             operatorReport:
               anyOf:
-              - $ref: '#/$defs/AndTaggedFilterReport-2'
-              - $ref: '#/$defs/DummyKeyedFilterReport'
-              - $ref: '#/$defs/GenericHistOpReport'
-              - $ref: '#/$defs/GroupFilterReport-2'
-              - $ref: '#/$defs/InGroupsFilterReport-2'
-              - $ref: '#/$defs/MultiHistOpReport'
+                - $ref: '#/$defs/AndTaggedFilterReport-2'
+                - $ref: '#/$defs/DummyKeyedFilterReport'
+                - $ref: '#/$defs/GenericHistOpReport'
+                - $ref: '#/$defs/GroupFilterReport-2'
+                - $ref: '#/$defs/InGroupsFilterReport-2'
+                - $ref: '#/$defs/MultiHistOpReport'
       totalWeight:
         type: number
       totalWeightAccepted:
@@ -102,18 +102,18 @@ $defs:
       type:
         const: filter_groups_report
     required:
-    - type
+      - type
   InGroupsFilterReport-1:
     type: object
     properties:
       nestedAggregatedReport:
         anyOf:
-        - $ref: '#/$defs/AndTaggedFilterReport-2'
-        - $ref: '#/$defs/DummyKeyedFilterReport'
-        - $ref: '#/$defs/GenericHistOpReport'
-        - $ref: '#/$defs/GroupFilterReport-2'
-        - $ref: '#/$defs/InGroupsFilterReport-2'
-        - $ref: '#/$defs/MultiHistOpReport'
+          - $ref: '#/$defs/AndTaggedFilterReport-2'
+          - $ref: '#/$defs/DummyKeyedFilterReport'
+          - $ref: '#/$defs/GenericHistOpReport'
+          - $ref: '#/$defs/GroupFilterReport-2'
+          - $ref: '#/$defs/InGroupsFilterReport-2'
+          - $ref: '#/$defs/MultiHistOpReport'
       nestedPerGroupReports:
         type: object
       numberOfGroups:
@@ -125,23 +125,23 @@ $defs:
       type:
         const: filter_in_groups_report
     required:
-    - type
+      - type
   MultiHistOpReport:
     allOf:
-    - type: object
-      properties:
-        nestedThresholds:
-          type: array
-          items:
+      - type: object
+        properties:
+          nestedThresholds:
+            type: array
+            items:
+              type: number
+          threshold:
             type: number
-        threshold:
-          type: number
-    - type: object
-      properties:
-        type:
-          const: multi_operator_hist_report
-      required:
-      - type
+      - type: object
+        properties:
+          type:
+            const: multi_operator_hist_report
+        required:
+          - type
 type: object
 properties:
   commandLine:
@@ -151,12 +151,12 @@ properties:
     properties:
       filterReport:
         anyOf:
-        - $ref: '#/$defs/AndTaggedFilterReport-2'
-        - $ref: '#/$defs/DummyKeyedFilterReport'
-        - $ref: '#/$defs/GenericHistOpReport'
-        - $ref: '#/$defs/GroupFilterReport-2'
-        - $ref: '#/$defs/InGroupsFilterReport-2'
-        - $ref: '#/$defs/MultiHistOpReport'
+          - $ref: '#/$defs/AndTaggedFilterReport-2'
+          - $ref: '#/$defs/DummyKeyedFilterReport'
+          - $ref: '#/$defs/GenericHistOpReport'
+          - $ref: '#/$defs/GroupFilterReport-2'
+          - $ref: '#/$defs/InGroupsFilterReport-2'
+          - $ref: '#/$defs/MultiHistOpReport'
       inputRecords:
         type: integer
       outputRecords:

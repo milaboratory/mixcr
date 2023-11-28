@@ -42,57 +42,57 @@ properties:
         type: integer
       postFiltering:
         anyOf:
-        - allOf:
-          - type: object
-            properties:
-              minimalLength:
-                type: integer
-          - type: object
-            properties:
-              type:
-                const: MinimalContigLength
-            required:
-            - type
-        - type: object
-          properties:
-            type:
-              const: NoFiltering
-          required:
-          - type
-        - allOf:
-          - type: object
-            properties:
-              geneFeatures:
-                $ref: '#/$defs/GeneFeatures'
+          - allOf:
+              - type: object
+                properties:
+                  minimalLength:
+                    type: integer
+              - type: object
+                properties:
+                  type:
+                    const: MinimalContigLength
+                required:
+                  - type
           - type: object
             properties:
               type:
-                const: OnlyCovering
+                const: NoFiltering
             required:
-            - type
-        - type: object
-          properties:
-            type:
-              const: OnlyFullyAssembled
-          required:
-          - type
-        - type: object
-          properties:
-            type:
-              const: OnlyFullyDefined
-          required:
-          - type
-        - allOf:
-          - type: object
-            properties:
-              geneFeatures:
-                $ref: '#/$defs/GeneFeatures'
+              - type
+          - allOf:
+              - type: object
+                properties:
+                  geneFeatures:
+                    $ref: '#/$defs/GeneFeatures'
+              - type: object
+                properties:
+                  type:
+                    const: OnlyCovering
+                required:
+                  - type
           - type: object
             properties:
               type:
-                const: OnlyUnambiguouslyCovering
+                const: OnlyFullyAssembled
             required:
-            - type
+              - type
+          - type: object
+            properties:
+              type:
+                const: OnlyFullyDefined
+            required:
+              - type
+          - allOf:
+              - type: object
+                properties:
+                  geneFeatures:
+                    $ref: '#/$defs/GeneFeatures'
+              - type: object
+                properties:
+                  type:
+                    const: OnlyUnambiguouslyCovering
+                required:
+                  - type
       subCloningRegions:
         $ref: '#/$defs/GeneFeatures'
       trimmingParameters:

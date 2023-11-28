@@ -15,8 +15,8 @@ properties:
       identityType:
         type: string
         enum:
-        - Unweighted
-        - MinimalQualityWeighted
+          - Unweighted
+          - MinimalQualityWeighted
       maxQuality:
         type: integer
       minimalIdentity:
@@ -28,19 +28,19 @@ properties:
       partsLayout:
         type: string
         enum:
-        - DirectOnly
-        - ReverseOnly
-        - Opposite
-        - Collinear
-        - CollinearDirect
-        - Unknown
+          - DirectOnly
+          - ReverseOnly
+          - Opposite
+          - Collinear
+          - CollinearDirect
+          - Unknown
       qualityMergingAlgorithm:
         type: string
         enum:
-        - SumMax
-        - SumSubtraction
-        - MaxSubtraction
-        - MaxMax
+          - SumMax
+          - SumSubtraction
+          - MaxSubtraction
+          - MaxMax
   minimalAlignmentMergeIdentity:
     type: number
   minimalAssembleOverlap:

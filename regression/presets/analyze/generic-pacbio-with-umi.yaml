@@ -1,11 +1,11 @@
 flags:
-- species
-- tagPattern
+  - species
+  - tagPattern
 pipeline:
-- align
-- refineTagsAndSort
-- assemble
-- exportClones
+  - align
+  - refineTagsAndSort
+  - assemble
+  - exportClones
 align:
   species: ""
   libraryName: default
@@ -23,8 +23,8 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
-  - type: MustContainTagType
-    tagType: Molecule
+    - type: MustContainTagType
+      tagType: Molecule
   splitBySample: true
   limit: null
   parameters:
@@ -171,38 +171,38 @@ refineTagsAndSort:
     postFilter:
       type: filter_groups
       groupingKeys:
-      - allTags:Molecule
+        - allTags:Molecule
       predicates:
-      - metrics:
-        - type: group_metric_sum_weight
-          reportHist:
-            log: true
-            binNumber: 0
-            minBinWidth: 0.2
-            multiplyWeightByKey: false
-        operator:
-          type: group_operator_lowest_threshold
-          operators:
-          - type: group_operator_advanced_thresholding
-            algo:
-              type: otsu
-            histTransformers:
-            - type: inflate
-              fraction: 0.15
-              value: 1.0
-            logX: true
-            minimalSample: 20
-            fallbackThreshold: 1.0
+        - metrics:
+            - type: group_metric_sum_weight
+              reportHist:
+                log: true
+                binNumber: 0
+                minBinWidth: 0.2
+                multiplyWeightByKey: false
+          operator:
+            type: group_operator_lowest_threshold
+            operators:
+              - type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  - type: inflate
+                    fraction: 0.15
+                    value: 1.0
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+                accept: High
+              - type: group_operator_cumtop
+                share: 0.85
+                round: Down
+                accept: High
             accept: High
-          - type: group_operator_cumtop
-            share: 0.85
-            round: Down
-            accept: High
-          accept: High
-        expectedSorting: []
-        requiredSequences: []
+          expectedSorting: []
+          requiredSequences: []
       expectedSorting:
-      - allTags:Molecule
+        - allTags:Molecule
       requiredSequences: []
 assemblePartial:
   overlappedOnly: false
@@ -260,7 +260,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -332,21 +332,21 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -354,34 +354,34 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -readCount
-  - field: -readFraction
-  - field: -uniqueTagCount
-    args:
-    - Molecule
-  - field: -uniqueTagFraction
-    args:
-    - Molecule
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cloneId
+    - field: -readCount
+    - field: -readFraction
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqueTagFraction
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   splitFilesBy:
-  - geneLabel:ReliableChain
+    - geneLabel:ReliableChain
   groupClonesBy: []
 qc:
   checks:
-  - type: SuccessfullyAlignedReads
-    upper: 0.85
-    middle: 0.7
-    label: Successfully aligned reads
+    - type: SuccessfullyAlignedReads
+      upper: 0.85
+      middle: 0.7
+      label: Successfully aligned reads

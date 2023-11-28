@@ -1,15 +1,15 @@
 flags:
-- species
+  - species
 pipeline:
-- align
-- refineTagsAndSort
-- assemblePartial
-- extend
-- assemble
-- assembleContigs
-- groupClones
-- exportClones
-- exportCloneGroups
+  - align
+  - refineTagsAndSort
+  - assemblePartial
+  - extend
+  - assemble
+  - assembleContigs
+  - groupClones
+  - exportClones
+  - exportCloneGroups
 align:
   species: ""
   libraryName: default
@@ -27,10 +27,10 @@ align:
   readIdAsCellTag: false
   sampleTable: null
   tagsValidations:
-  - type: MustContainTagType
-    tagType: Cell
-  - type: MustNotContainTagType
-    tagType: Molecule
+    - type: MustContainTagType
+      tagType: Cell
+    - type: MustNotContainTagType
+      tagType: Molecule
   splitBySample: true
   limit: null
   parameters:
@@ -232,7 +232,7 @@ assemble:
     minTagSuffixShare: 0.0
   cloneAssemblerParameters:
     assemblingFeatures:
-    - CDR3
+      - CDR3
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -277,32 +277,32 @@ assemble:
     mappingThreshold: 2of5
     minimalQuality: 20
     postFilters:
-    - type: filter_in_groups
-      isolationKeys:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      nestedFilter:
-        type: filter_groups
-        groupingKeys:
-        - clone
-        predicates:
-        - metrics:
-          - type: group_metric_sum_weight
-            reportHist: null
-          operator:
-            type: group_operator_cumtop
-            share: 0.95
-            accept: High
-          expectedSorting: []
+      - type: filter_in_groups
+        isolationKeys:
+          - geneLabel:ReliableChain
+          - allTags:Cell
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist: null
+              operator:
+                type: group_operator_cumtop
+                share: 0.95
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
+          expectedSorting:
+            - clone
           requiredSequences: []
+        aggregateReport: true
         expectedSorting:
-        - clone
-        requiredSequences: []
-      aggregateReport: true
-      expectedSorting:
-      - geneLabel:ReliableChain
-      - allTags:Cell
-      - clone
+          - geneLabel:ReliableChain
+          - allTags:Cell
+          - clone
   inferMinRecordsPerConsensus: false
 assembleContigs:
   ignoreTags: false
@@ -351,24 +351,24 @@ exportAlignments:
   chains: ALL
   noHeader: false
   fields:
-  - field: -readIds
-  - field: -tags
-    args:
-    - Cell
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -readIds
+    - field: -tags
+      args:
+        - Cell
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
 exportClones:
   splitByTagType: null
   filterOutOfFrames: false
@@ -376,26 +376,26 @@ exportClones:
   chains: ALL
   noHeader: false
   fields:
-  - field: -cloneId
-  - field: -cellGroup
-  - field: -tags
-    args:
-    - Cell
-  - field: -readCount
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
-  - field: -topChains
+    - field: -cloneId
+    - field: -cellGroup
+    - field: -tags
+      args:
+        - Cell
+    - field: -readCount
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
 exportCloneGroups:
@@ -406,38 +406,38 @@ exportCloneGroups:
   types: []
   noHeader: false
   fields:
-  - field: -cellGroup
-  - field: -groupReadCount
-  - field: -groupUniqueTagCount
-    args:
-    - Cell
-  - field: -uniqClonesPerChainCount
-  - field: -readCount
-  - field: -targetSequences
-  - field: -targetQualities
-  - field: -vHitsWithScore
-  - field: -dHitsWithScore
-  - field: -jHitsWithScore
-  - field: -cHitsWithScore
-  - field: -vAlignments
-  - field: -dAlignments
-  - field: -jAlignments
-  - field: -cAlignments
-  - field: -allNFeaturesWithMinQuality
-  - field: -allAAFeatures
-  - field: -defaultAnchorPoints
+    - field: -cellGroup
+    - field: -groupReadCount
+    - field: -groupUniqueTagCount
+      args:
+        - Cell
+    - field: -uniqClonesPerChainCount
+    - field: -readCount
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
   sortChainsBy: Auto
 qc:
   checks:
-  - type: SuccessfullyAlignedReads
-    upper: 0.8
-    middle: 0.6
-    label: Successfully aligned reads
-  - type: UnassignedAlignments
-    upper: 0.2
-    middle: 0.1
-    label: Unassigned alignments in clonotype assembly
-  - type: AlignmentsDroppedLowQuality
-    upper: 0.2
-    middle: 0.1
-    label: Alignments dropped due to low sequence quality
+    - type: SuccessfullyAlignedReads
+      upper: 0.8
+      middle: 0.6
+      label: Successfully aligned reads
+    - type: UnassignedAlignments
+      upper: 0.2
+      middle: 0.1
+      label: Unassigned alignments in clonotype assembly
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.2
+      middle: 0.1
+      label: Alignments dropped due to low sequence quality
