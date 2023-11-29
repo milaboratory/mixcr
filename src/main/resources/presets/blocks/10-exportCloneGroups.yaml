@@ -10,19 +10,14 @@ exportCloneGroups-single-cell-no-umi-base:
         args: [ "Cell" ]
       - field: "-uniqClonesPerChainCount"
       - field: "-readCount"
-      - field: "-targetSequences"
-      - field: "-targetQualities"
       - field: "-vHitsWithScore"
       - field: "-dHitsWithScore"
       - field: "-jHitsWithScore"
       - field: "-cHitsWithScore"
-      - field: "-vAlignments"
-      - field: "-dAlignments"
-      - field: "-jAlignments"
-      - field: "-cAlignments"
-      - field: "-allNFeaturesWithMinQuality"
-      - field: "-allAAFeatures"
-      - field: "-defaultAnchorPoints"
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
 
 exportCloneGroups-single-cell-with-umi-base:
   abstract: true
@@ -40,16 +35,11 @@ exportCloneGroups-single-cell-with-umi-base:
       - field: "-readCount"
       - field: "-uniqueTagCount"
         args: [ "Molecule" ]
-      - field: "-targetSequences"
-      - field: "-targetQualities"
       - field: "-vHitsWithScore"
       - field: "-dHitsWithScore"
       - field: "-jHitsWithScore"
       - field: "-cHitsWithScore"
-      - field: "-vAlignments"
-      - field: "-dAlignments"
-      - field: "-jAlignments"
-      - field: "-cAlignments"
-      - field: "-allNFeaturesWithMinQuality"
-      - field: "-allAAFeatures"
-      - field: "-defaultAnchorPoints"
+      - field: "-nFeature"
+        args: [ "CDR3" ]
+      - field: "-aaFeature"
+        args: [ "CDR3" ]
