@@ -124,6 +124,15 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
     var feature: GeneFeature? = null
 
     @Option(
+        description = ["Output only alignments which don't contain a corresponding gene feature"],
+        names = ["-ng", "--no-feature"],
+        paramLabel = Labels.GENE_FEATURE,
+        order = OptionsOrder.main + 10_850,
+        completionCandidates = GeneFeaturesCandidates::class
+    )
+    var noFeature: GeneFeature? = null
+
+    @Option(
         description = ["Output only alignments where target read contains a given substring"],
         names = ["-r", "--read-contains"],
         paramLabel = "<seq>",
@@ -200,6 +209,11 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
         feature?.let { feature ->
             resultFilter = resultFilter.and { vdjcAlignments ->
                 (vdjcAlignments.getFeature(feature)?.size() ?: 0) > 0
+            }
+        }
+        if (noFeature != null) {
+            resultFilter = resultFilter.and { vdjcAlignments ->
+                (vdjcAlignments.getFeature(noFeature)?.size() ?: 0) == 0
             }
         }
         if (readContains != null) {
