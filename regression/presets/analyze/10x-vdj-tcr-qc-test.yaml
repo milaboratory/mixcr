@@ -402,7 +402,7 @@ assemble:
                     - allTags:Molecule
               operator:
                 type: group_operator_cumtop
-                share: 0.95
+                share: 0.8
                 accept: High
               expectedSorting:
                 - allTags:Molecule
@@ -431,7 +431,7 @@ assemble:
                   reportHist: null
               operator:
                 type: group_operator_cumtop
-                share: 0.95
+                share: 0.9
                 accept: High
               expectedSorting: []
               requiredSequences: []
@@ -593,19 +593,16 @@ exportCloneGroups:
     - field: -uniqueTagCount
       args:
         - Molecule
-    - field: -targetSequences
-    - field: -targetQualities
     - field: -vHitsWithScore
     - field: -dHitsWithScore
     - field: -jHitsWithScore
     - field: -cHitsWithScore
-    - field: -vAlignments
-    - field: -dAlignments
-    - field: -jAlignments
-    - field: -cAlignments
-    - field: -allNFeaturesWithMinQuality
-    - field: -allAAFeatures
-    - field: -defaultAnchorPoints
+    - field: -nFeature
+      args:
+        - CDR3
+    - field: -aaFeature
+      args:
+        - CDR3
   sortChainsBy: Auto
 qc:
   checks:
