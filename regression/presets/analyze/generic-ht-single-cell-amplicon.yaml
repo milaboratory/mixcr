@@ -440,19 +440,16 @@ exportCloneGroups:
         - Cell
     - field: -uniqClonesPerChainCount
     - field: -readCount
-    - field: -targetSequences
-    - field: -targetQualities
     - field: -vHitsWithScore
     - field: -dHitsWithScore
     - field: -jHitsWithScore
     - field: -cHitsWithScore
-    - field: -vAlignments
-    - field: -dAlignments
-    - field: -jAlignments
-    - field: -cAlignments
-    - field: -allNFeaturesWithMinQuality
-    - field: -allAAFeatures
-    - field: -defaultAnchorPoints
+    - field: -nFeature
+      args:
+        - CDR3
+    - field: -aaFeature
+      args:
+        - CDR3
   sortChainsBy: Auto
 qc:
   checks:
@@ -488,3 +485,7 @@ qc:
       upper: 0.05
       middle: 0.01
       label: Alignments dropped in clones post-filtering
+    - type: CellBarcodesWithFoundGroups
+      upper: 0.9
+      middle: 0.8
+      label: Cell barcodes used in result groups
