@@ -117,7 +117,7 @@
                         - allTags:Molecule
                   operator:
                     type: group_operator_cumtop
-                    share: 0.5
+                    share: 0.8
             aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
@@ -133,7 +133,7 @@
                       reportHist: null
                   operator:
                     type: group_operator_cumtop
-                    share: 0.5
+                    share: 0.9
             aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
