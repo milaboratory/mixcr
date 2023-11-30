@@ -483,127 +483,127 @@ refineTagsAndSort:
               metricHists:
                 - bins:
                     - from: 56.0
-                      to: 61.925
+                      to: 62.0
                       weight: 25.0
-                    - from: 61.925
-                      to: 67.85
+                    - from: 62.0
+                      to: 68.0
                       weight: 1.0
-                    - from: 67.85
-                      to: 73.775
+                    - from: 68.0
+                      to: 74.0
                       weight: 1.0
-                    - from: 73.775
-                      to: 79.7
+                    - from: 74.0
+                      to: 80.0
                       weight: 0.0
-                    - from: 79.7
-                      to: 85.625
+                    - from: 80.0
+                      to: 86.0
                       weight: 0.0
-                    - from: 85.625
-                      to: 91.55
+                    - from: 86.0
+                      to: 92.0
                       weight: 0.0
-                    - from: 91.55
-                      to: 97.475
+                    - from: 92.0
+                      to: 98.0
                       weight: 0.0
-                    - from: 97.475
-                      to: 103.4
+                    - from: 98.0
+                      to: 104.0
                       weight: 0.0
-                    - from: 103.4
-                      to: 109.32499999999999
+                    - from: 104.0
+                      to: 110.0
                       weight: 0.0
-                    - from: 109.32499999999999
-                      to: 115.25
+                    - from: 110.0
+                      to: 116.0
                       weight: 0.0
-                    - from: 115.25
-                      to: 121.175
+                    - from: 116.0
+                      to: 122.0
                       weight: 0.0
-                    - from: 121.175
-                      to: 127.1
+                    - from: 122.0
+                      to: 128.0
                       weight: 0.0
-                    - from: 127.1
-                      to: 133.02499999999998
+                    - from: 128.0
+                      to: 134.0
                       weight: 0.0
-                    - from: 133.02499999999998
-                      to: 138.95
+                    - from: 134.0
+                      to: 140.0
                       weight: 0.0
-                    - from: 138.95
-                      to: 144.875
+                    - from: 140.0
+                      to: 146.0
                       weight: 0.0
-                    - from: 144.875
-                      to: 150.8
+                    - from: 146.0
+                      to: 152.0
                       weight: 0.0
-                    - from: 150.8
-                      to: 156.725
+                    - from: 152.0
+                      to: 158.0
                       weight: 1.0
-                    - from: 156.725
-                      to: 162.64999999999998
+                    - from: 158.0
+                      to: 164.0
                       weight: 0.0
-                    - from: 162.64999999999998
-                      to: 168.575
+                    - from: 164.0
+                      to: 170.0
                       weight: 0.0
-                    - from: 168.575
-                      to: 174.5
+                    - from: 170.0
+                      to: 176.0
                       weight: 0.0
-                    - from: 174.5
-                      to: 180.425
+                    - from: 176.0
+                      to: 182.0
                       weight: 1.0
-                    - from: 180.425
-                      to: 186.35
+                    - from: 182.0
+                      to: 188.0
                       weight: 0.0
-                    - from: 186.35
-                      to: 192.275
+                    - from: 188.0
+                      to: 194.0
                       weight: 0.0
-                    - from: 192.275
-                      to: 198.2
+                    - from: 194.0
+                      to: 200.0
                       weight: 0.0
-                    - from: 198.2
-                      to: 204.125
+                    - from: 200.0
+                      to: 206.0
                       weight: 0.0
-                    - from: 204.125
-                      to: 210.04999999999998
+                    - from: 206.0
+                      to: 212.0
                       weight: 0.0
-                    - from: 210.04999999999998
-                      to: 215.975
+                    - from: 212.0
+                      to: 218.0
                       weight: 3.0
-                    - from: 215.975
-                      to: 221.9
-                      weight: 1.0
-                    - from: 221.9
-                      to: 227.825
+                    - from: 218.0
+                      to: 224.0
                       weight: 2.0
-                    - from: 227.825
-                      to: 233.75
-                      weight: 6.0
-                    - from: 233.75
-                      to: 239.67499999999998
+                    - from: 224.0
+                      to: 230.0
+                      weight: 2.0
+                    - from: 230.0
+                      to: 236.0
+                      weight: 8.0
+                    - from: 236.0
+                      to: 242.0
                       weight: 10.0
-                    - from: 239.67499999999998
-                      to: 245.6
+                    - from: 242.0
+                      to: 248.0
+                      weight: 8.0
+                    - from: 248.0
+                      to: 254.0
+                      weight: 12.0
+                    - from: 254.0
+                      to: 260.0
                       weight: 7.0
-                    - from: 245.6
-                      to: 251.525
-                      weight: 10.0
-                    - from: 251.525
-                      to: 257.45
-                      weight: 13.0
-                    - from: 257.45
-                      to: 263.375
+                    - from: 260.0
+                      to: 266.0
                       weight: 6.0
-                    - from: 263.375
-                      to: 269.29999999999995
+                    - from: 266.0
+                      to: 272.0
                       weight: 1.0
-                    - from: 269.29999999999995
-                      to: 275.225
+                    - from: 272.0
+                      to: 278.0
                       weight: 0.0
-                    - from: 275.225
-                      to: 281.15
+                    - from: 278.0
+                      to: 284.0
                       weight: 0.0
-                    - from: 281.15
-                      to: 287.075
+                    - from: 284.0
+                      to: 290.0
                       weight: 0.0
-                    - from: 287.075
-                      to: 293.0
+                    - from: 290.0
+                      to: 296.0
                       weight: 1.0
                   collectionSpec:
                     log: false
-                    binNumber: 40
-                    minBinWidth: 0.0
+                    binNumber: 0
+                    minBinWidth: 6.0
                     multiplyWeightByKey: false
