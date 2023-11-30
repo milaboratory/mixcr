@@ -263,8 +263,8 @@ refineTagsAndSort:
                   minSequenceCount: 4
                   reportHist:
                     log: false
-                    binNumber: 40
-                    minBinWidth: 0.0
+                    binNumber: 0
+                    minBinWidth: 6.0
                     multiplyWeightByKey: false
               operator:
                 type: group_operator_range
