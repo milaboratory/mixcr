@@ -381,7 +381,7 @@ exportClones:
       args:
         - auto
   splitFilesBy:
-    - geneLabel:ReliableChain
+    - chain
   groupClonesBy: []
 qc:
   checks:

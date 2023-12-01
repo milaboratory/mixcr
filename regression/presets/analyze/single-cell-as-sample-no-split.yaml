@@ -393,5 +393,5 @@ exportClones:
     - field: -defaultAnchorPoints
   splitFilesBy:
     - tag:SAMPLE
-    - geneLabel:ReliableChain
+    - chain
   groupClonesBy: []
