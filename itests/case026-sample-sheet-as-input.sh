@@ -68,7 +68,7 @@ mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
   case026-sample-barcode-split_2
 
 for s in 1 2 3; do
-  for chain in TRAD TRB; do
+  for chain in TRA TRB; do
     cmp "case026-sample-barcode-split_1.S${s}.clones_${chain}.tsv" "case026-sample-barcode-split_2.S${s}.clones_${chain}.tsv"
     cmp "case026-sample-barcode-split_2.S${s}.clones_${chain}.tsv" "case026-sample-barcode-split_2.S$((s + 3)).clones_${chain}.tsv"
   done

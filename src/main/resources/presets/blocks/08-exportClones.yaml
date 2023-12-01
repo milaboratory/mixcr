@@ -2,7 +2,7 @@ exportClones-base:
   abstract: true
   exportClones:
     chains: ALL
-    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    splitFilesBy: [ "chain" ]
     fields:
       - field: "-cloneId"
       - field: "-readCount"
@@ -25,7 +25,7 @@ exportClones-umi-base:
   abstract: true
   exportClones:
     chains: ALL
-    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    splitFilesBy: [ "chain" ]
     fields:
       - field: "-cloneId"
       - field: "-readCount"
