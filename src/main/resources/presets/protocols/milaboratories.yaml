@@ -13,7 +13,7 @@ milab-human-rna-ig-umi-multiplex:
       species: hsa
     - type: MaterialTypeRNA
     - type: SetTagPattern
-      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{22}(R2:*)
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{12}(R2:*)
     - type: LeftAlignmentBoundaryNoPoint
       floating: false
     - type: RightAlignmentBoundaryNoPoint
