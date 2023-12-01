@@ -59,6 +59,7 @@ exportClones-single-cell-no-umi-base:
       - field: "-tags"
         args: [ "Cell" ]
       - field: "-readCount"
+      - field: "-readFraction"
       - field: "-targetSequences"
       - field: "-targetQualities"
       - field: "-vHitsWithScore"
@@ -85,7 +86,10 @@ exportClones-single-cell-with-umi-base:
       - field: "-tags"
         args: [ "Cell" ]
       - field: "-readCount"
+      - field: "-readFraction"
       - field: "-uniqueTagCount"
+        args: [ "Molecule" ]
+      - field: "-uniqueTagFraction"
         args: [ "Molecule" ]
       - field: "-targetSequences"
       - field: "-targetQualities"
