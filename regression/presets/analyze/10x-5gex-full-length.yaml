@@ -404,10 +404,10 @@ exportCloneGroups:
     - field: -uniqueTagCount
       args:
         - Molecule
-    - field: -vHitsWithScore
-    - field: -dHitsWithScore
-    - field: -jHitsWithScore
-    - field: -cHitsWithScore
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
     - field: -nFeature
       args:
         - CDR3
