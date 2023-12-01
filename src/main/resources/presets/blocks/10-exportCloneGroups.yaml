@@ -10,10 +10,10 @@ exportCloneGroups-single-cell-no-umi-base:
         args: [ "Cell" ]
       - field: "-uniqClonesPerChainCount"
       - field: "-readCount"
-      - field: "-vHitsWithScore"
-      - field: "-dHitsWithScore"
-      - field: "-jHitsWithScore"
-      - field: "-cHitsWithScore"
+      - field: "-vHit"
+      - field: "-dHit"
+      - field: "-jHit"
+      - field: "-cHit"
       - field: "-nFeature"
         args: [ "CDR3" ]
       - field: "-aaFeature"
@@ -35,10 +35,10 @@ exportCloneGroups-single-cell-with-umi-base:
       - field: "-readCount"
       - field: "-uniqueTagCount"
         args: [ "Molecule" ]
-      - field: "-vHitsWithScore"
-      - field: "-dHitsWithScore"
-      - field: "-jHitsWithScore"
-      - field: "-cHitsWithScore"
+      - field: "-vHit"
+      - field: "-dHit"
+      - field: "-jHit"
+      - field: "-cHit"
       - field: "-nFeature"
         args: [ "CDR3" ]
       - field: "-aaFeature"
