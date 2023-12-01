@@ -470,7 +470,7 @@
   exportClones:
     chains: ALL
     splitByTags: [ "SAMPLE" ]
-    splitFilesBy: [ "tag:SAMPLE", "geneLabel:ReliableChain" ]
+    splitFilesBy: [ "tag:SAMPLE", "chain" ]
     fields:
       - field: "-cloneId"
       - field: "-readCount"
@@ -550,7 +550,7 @@
     inheritFrom: assemble-with-consensus-base
   exportClones:
     chains: ALL
-    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    splitFilesBy: [ "chain" ]
     fields:
       - field: "-cloneId"
       - field: "-readCount"
@@ -650,7 +650,7 @@
     inheritFrom: exportAlignments-base
   exportClones:
     chains: ALL
-    splitFilesBy: [ "geneLabel:ReliableChain" ]
+    splitFilesBy: [ "chain" ]
     fields:
       - field: "-cloneId"
       - field: "-readCount"

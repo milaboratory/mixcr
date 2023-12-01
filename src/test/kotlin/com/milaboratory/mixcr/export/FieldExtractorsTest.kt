@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner
 import com.milaboratory.mixcr.tests.MiXCRTestUtils
 import com.milaboratory.mixcr.tests.TargetBuilder
 import com.milaboratory.mixcr.vdjaligners.VDJCParametersPresets
+import io.repseq.core.GeneFeature
 import io.repseq.core.GeneType
 import io.repseq.core.ReferencePoint
 import io.repseq.core.VDJCLibraryRegistry
@@ -34,8 +35,12 @@ class FieldExtractorsTest {
         val rnaSeqParams = VDJCParametersPresets.getByName("rna-seq")
         val aligner = PartialAlignmentsAssemblerAligner(rnaSeqParams)
         val lib = VDJCLibraryRegistry.getDefault().getLibrary("default", "hs")
-        for (gene in VDJCLibraryRegistry.getDefault()
-            .getLibrary("default", "hs").allGenes) if (gene.isFunctional) aligner.addGene(gene)
+        VDJCLibraryRegistry.getDefault().getLibrary("default", "hs").allGenes
+            .filter { it.isFunctional }
+            .filter {
+                it.geneType != GeneType.Variable || it.getFeature(GeneFeature.VGene) != null
+            }
+            .forEach { aligner.addGene(it) }
         val genes = TargetBuilder.VDJCGenes(
             lib,
             "TRBV12-3*00", "TRBD1*00", "TRBJ1-3*00", "TRBC2*00"

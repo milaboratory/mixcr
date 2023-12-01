@@ -386,7 +386,7 @@ assemble:
     postFilters:
       - type: filter_in_groups
         isolationKeys:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
         nestedFilter:
           type: filter_groups
@@ -411,13 +411,13 @@ assemble:
           requiredSequences: []
         aggregateReport: true
         expectedSorting:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
           - clone
           - allTags:Molecule
       - type: filter_in_groups
         isolationKeys:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
         nestedFilter:
           type: filter_groups
@@ -438,7 +438,7 @@ assemble:
           requiredSequences: []
         aggregateReport: true
         expectedSorting:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
           - clone
       - type: filter_in_groups

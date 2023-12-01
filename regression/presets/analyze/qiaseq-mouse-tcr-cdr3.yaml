@@ -393,7 +393,7 @@ exportClones:
     - field: -allAAFeatures
     - field: -defaultAnchorPoints
   splitFilesBy:
-    - geneLabel:ReliableChain
+    - chain
   groupClonesBy: []
 qc:
   checks:
