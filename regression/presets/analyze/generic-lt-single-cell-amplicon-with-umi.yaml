@@ -431,7 +431,11 @@ exportClones:
       args:
         - Cell
     - field: -readCount
+    - field: -readFraction
     - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqueTagFraction
       args:
         - Molecule
     - field: -targetSequences
