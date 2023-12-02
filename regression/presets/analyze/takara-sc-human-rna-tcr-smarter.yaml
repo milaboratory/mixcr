@@ -403,6 +403,7 @@ exportClones:
       args:
         - Cell
     - field: -readCount
+    - field: -readFraction
     - field: -targetSequences
     - field: -targetQualities
     - field: -vHitsWithScore
@@ -434,6 +435,7 @@ exportCloneGroups:
         - Cell
     - field: -uniqClonesPerChainCount
     - field: -readCount
+    - field: -readFraction
     - field: -targetSequences
     - field: -targetQualities
     - field: -vHitsWithScore
