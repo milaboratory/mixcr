@@ -6,10 +6,7 @@ exportCloneGroups-single-cell-no-umi-base:
     fields:
       - field: "-cellGroup"
       - field: "-groupReadCount"
-      - field: "-groupReadFraction"
       - field: "-groupUniqueTagCount"
-        args: [ "Cell" ]
-      - field: "-groupUniqueTagFraction"
         args: [ "Cell" ]
       - field: "-uniqClonesPerChainCount"
       - field: "-readCount"
@@ -36,14 +33,9 @@ exportCloneGroups-single-cell-with-umi-base:
     fields:
       - field: "-cellGroup"
       - field: "-groupReadCount"
-      - field: "-groupReadFraction"
       - field: "-groupUniqueTagCount"
         args: [ "Cell" ]
-      - field: "-groupUniqueTagFraction"
-        args: [ "Cell" ]
       - field: "-groupUniqueTagCount"
-        args: [ "Molecule" ]
-      - field: "-groupUniqueTagFraction"
         args: [ "Molecule" ]
       - field: "-uniqClonesPerChainCount"
       - field: "-readCount"
