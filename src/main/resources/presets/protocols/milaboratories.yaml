@@ -20,12 +20,6 @@ milab-human-rna-ig-umi-multiplex:
       floating: false
       geneType: C
     - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
-    - type: SetSplitClonesBy
       geneType: C
       value: true
     - type: SetClonotypeAssemblingFeatures
