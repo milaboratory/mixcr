@@ -90,7 +90,8 @@
                     topShare: 0.7
                     minSequenceCount: 4
                     reportHist:
-                      binNumber: 40
+                      binNumber: 0
+                      minBinWidth: 6
                 operator:
                   type: group_operator_range
                   lower: 150.0
