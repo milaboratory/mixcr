@@ -308,7 +308,7 @@ assemble:
     postFilters:
       - type: filter_in_groups
         isolationKeys:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
         nestedFilter:
           type: filter_groups
@@ -329,7 +329,7 @@ assemble:
           requiredSequences: []
         aggregateReport: true
         expectedSorting:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
           - clone
   inferMinRecordsPerConsensus: false
@@ -411,6 +411,7 @@ exportClones:
       args:
         - Cell
     - field: -readCount
+    - field: -readFraction
     - field: -targetSequences
     - field: -targetQualities
     - field: -vHitsWithScore
@@ -442,6 +443,7 @@ exportCloneGroups:
         - Cell
     - field: -uniqClonesPerChainCount
     - field: -readCount
+    - field: -readFraction
     - field: -targetSequences
     - field: -targetQualities
     - field: -vHitsWithScore

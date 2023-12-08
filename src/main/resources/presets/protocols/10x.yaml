@@ -104,7 +104,7 @@
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -122,7 +122,7 @@
             aggregateReport: true
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups

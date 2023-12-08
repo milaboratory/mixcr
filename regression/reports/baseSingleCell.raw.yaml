@@ -13,12 +13,12 @@ align:
   aligned: 40525
   notAligned: 6354
   notAlignedReasons:
-    NoHits: 5777
+    NoHits: 5776
     NoCDR3Parts: 0
     NoVHits: 0
     NoJHits: 0
     VAndJOnDifferentTargets: 0
-    LowTotalScore: 577
+    LowTotalScore: 578
     NoBarcode: 0
     SampleNotMatched: 0
   overlapped: 0

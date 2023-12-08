@@ -382,7 +382,7 @@ exportClones:
       args:
         - VDJRegion
   splitFilesBy:
-    - geneLabel:ReliableChain
+    - chain
   groupClonesBy: []
 qc:
   checks:

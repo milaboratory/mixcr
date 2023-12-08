@@ -61,7 +61,7 @@ mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
 assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqCDR1" "1"
 assert "head -n 1 trees/trees_with_nodes.tsv | grep -c nSeqCDR2" "0"
 
-assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "2"
+assert "head -n 1 alleles/report.json | jq -r .statuses.FOUND_KNOWN_VARIANT" "3"
 assert "cat alleles/report.json | head -n 1 | jq -r '.zygotes.\"2\"'" "1"
 
 keyOfRelativeMutations=`head -n 1 alleles/description.tsv | sed 's/mutations/#/' | cut -d# -f1 | wc -w  | awk '{ print $1 + 1 }'`
