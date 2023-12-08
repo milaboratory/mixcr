@@ -999,7 +999,7 @@ assemble:
     postFilters:
       - type: filter_in_groups
         isolationKeys:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
         nestedFilter:
           type: filter_groups
@@ -1024,7 +1024,7 @@ assemble:
           requiredSequences: []
         aggregateReport: true
         expectedSorting:
-          - geneLabel:ReliableChain
+          - chain
           - allTags:Cell
           - clone
           - allTags:Molecule
@@ -1110,7 +1110,11 @@ exportClones:
       args:
         - Cell
     - field: -readCount
+    - field: -readFraction
     - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqueTagFraction
       args:
         - Molecule
     - field: -targetSequences
