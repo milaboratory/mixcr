@@ -1,9 +1,9 @@
 Usage: mixcr exportAlignmentsPretty [--top] [--gene] [--limit-before <n>] [--limit <n>] [--skip
                                     <n>] [--chains <chains>] [--cdr3-equals <seq>] [--feature
-                                    <gene_feature>] [--read-contains <seq>] [--filter <s>]
-                                    [--descriptions] [--read-ids <id>]... [--clone-ids <id>]...
-                                    [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                                    alignments.(vdjca|clna) [output.txt]
+                                    <gene_feature>] [--no-feature <gene_feature>] [--read-contains
+                                    <seq>] [--filter <s>] [--descriptions] [--read-ids <id>]...
+                                    [--clone-ids <id>]... [--force-overwrite] [--no-warnings]
+                                    [--verbose] [--help] alignments.(vdjca|clna) [output.txt]
 Export verbose information about alignments.
       alignments.(vdjca|clna)
                             Path to input file with alignments.
@@ -19,6 +19,8 @@ Export verbose information about alignments.
   -e, --cdr3-equals <seq>   Output only alignments where CDR3 exactly equals to given sequence
   -g, --feature <gene_feature>
                             Output only alignments which contain a corresponding gene feature
+      -ng, --no-feature <gene_feature>
+                            Output only alignments which don't contain a corresponding gene feature
   -r, --read-contains <seq> Output only alignments where target read contains a given substring
       --filter <s>          Custom filter
   -d, --descriptions        Print read descriptions
