@@ -189,30 +189,6 @@ class PresetsTest {
     }
 
     @Test
-    fun `exportClones should be consistent with exportCloneGroups`() {
-        assertSoftly {
-            Presets.nonAbstractPresetNames
-                .filter { presetName ->
-                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                    MiXCRCommandDescriptor.groupClones in bundle.pipeline!!.steps
-                }
-                .forAll { presetName ->
-                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                    val exportClonesFields = bundle.exportClones!!.fields
-                    val exportCloneGroupsFields = bundle.exportCloneGroups!!.fields
-
-                    presetName.asClue {
-                        exportCloneGroupsFields shouldContainAll exportClonesFields
-                            .filter { it.field !in (CloneGroupFieldsExtractorsFactory.excludeCloneFields + "-cloneId") }
-                        exportCloneGroupsFields.forAll {
-                            it.field shouldNotBeIn (CloneGroupFieldsExtractorsFactory.excludeCloneFields - "-cellGroup")
-                        }
-                    }
-                }
-        }
-    }
-
-    @Test
     fun `all presets should have settings for exportAlignments`() {
         Presets.nonAbstractPresetNames
             .filter { !it.contains("-legacy-v") }

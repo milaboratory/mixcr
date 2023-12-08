@@ -400,7 +400,7 @@ assemble:
                     - allTags:Molecule
               operator:
                 type: group_operator_cumtop
-                share: 0.95
+                share: 0.8
                 accept: High
               expectedSorting:
                 - allTags:Molecule
@@ -429,7 +429,7 @@ assemble:
                   reportHist: null
               operator:
                 type: group_operator_cumtop
-                share: 0.95
+                share: 0.9
                 accept: High
               expectedSorting: []
               requiredSequences: []
@@ -592,26 +592,19 @@ exportCloneGroups:
         - Molecule
     - field: -uniqClonesPerChainCount
     - field: -readCount
-    - field: -readFraction
     - field: -uniqueTagCount
       args:
         - Molecule
-    - field: -uniqueTagFraction
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
+    - field: -nFeature
       args:
-        - Molecule
-    - field: -targetSequences
-    - field: -targetQualities
-    - field: -vHitsWithScore
-    - field: -dHitsWithScore
-    - field: -jHitsWithScore
-    - field: -cHitsWithScore
-    - field: -vAlignments
-    - field: -dAlignments
-    - field: -jAlignments
-    - field: -cAlignments
-    - field: -allNFeaturesWithMinQuality
-    - field: -allAAFeatures
-    - field: -defaultAnchorPoints
+        - CDR3
+    - field: -aaFeature
+      args:
+        - CDR3
   sortChainsBy: Auto
 qc:
   checks:
@@ -640,3 +633,7 @@ qc:
       upper: 0.2
       middle: 0.1
       label: Reads dropped in tags filtering
+    - type: CellBarcodesWithFoundGroups
+      upper: 0.9
+      middle: 0.8
+      label: Cell barcodes used in result groups
