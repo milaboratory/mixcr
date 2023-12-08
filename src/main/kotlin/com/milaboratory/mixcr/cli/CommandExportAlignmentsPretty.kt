@@ -211,7 +211,7 @@ class CommandExportAlignmentsPretty : MiXCRCommandWithOutputs() {
                 (vdjcAlignments.getFeature(feature)?.size() ?: 0) > 0
             }
         }
-        if (noFeature != null) {
+        noFeature?.let { noFeature ->
             resultFilter = resultFilter.and { vdjcAlignments ->
                 (vdjcAlignments.getFeature(noFeature)?.size() ?: 0) == 0
             }
