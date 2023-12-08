@@ -14,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \\ ^N{22}(R2:*)"
+  tagPattern: "^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \\ ^N{12}(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []
@@ -291,8 +291,8 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
-    separateByV: true
-    separateByJ: true
+    separateByV: false
+    separateByJ: false
     separateByC: true
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
@@ -381,7 +381,7 @@ exportClones:
       args:
         - auto
   splitFilesBy:
-    - geneLabel:ReliableChain
+    - chain
   groupClonesBy: []
 qc:
   checks:

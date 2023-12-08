@@ -62,7 +62,7 @@ generic-lt-single-cell-amplicon:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -207,7 +207,7 @@ generic-lt-single-cell-amplicon-with-umi:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -278,7 +278,7 @@ generic-lt-single-cell-fragmented:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -391,7 +391,7 @@ generic-lt-single-cell-fragmented-with-umi:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -507,7 +507,7 @@ generic-ht-single-cell-amplicon:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -681,7 +681,7 @@ generic-ht-single-cell-amplicon-with-umi:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -790,7 +790,7 @@ generic-ht-single-cell-fragmented:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups
@@ -928,7 +928,7 @@ generic-ht-single-cell-fragmented-with-umi:
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - geneLabel:ReliableChain
+              - chain
               - allTags:Cell
             nestedFilter:
               type: filter_groups

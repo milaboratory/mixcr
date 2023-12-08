@@ -148,7 +148,7 @@ object CommandExportClones {
 
         @Option(
             description = [
-                "Split files by (currently the only supported value is \"geneLabel:reliableChain\" etc... ).",
+                "Split files by. Possible values `chain`, `tag:...`, `tagType:(Sample|Cell|Molecule)`.",
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--split-files-by"],
@@ -389,6 +389,10 @@ object CommandExportClones {
         override fun getLabel(clone: Clone): String = clone.getGeneLabel(labelName)!!
     }
 
+    private object ChainGroupingKey : CloneGroupingKey {
+        override fun getLabel(clone: Clone): String = clone.chains.toString()
+    }
+
     private class CloneTagGroupingKey(
         val tagIdx: Int,
         val tagType: TagType?
@@ -399,6 +403,7 @@ object CommandExportClones {
 
     private fun parseGroupingKey(header: MiXCRHeader, key: String) =
         when {
+            key == "chain" -> ChainGroupingKey
             key.startsWith("geneLabel:", ignoreCase = true) ->
                 CloneGeneLabelGroupingKey(key.substring(10))
 
@@ -419,7 +424,7 @@ object CommandExportClones {
             key.startsWith("tagType:", ignoreCase = true) -> {
                 val tagType = TagType.valueOfCaseInsensitiveOrNull(key.substring(8))
                 ValidationException.requireNotNull(tagType) {
-                    "Unknown tag type `$tagType`"
+                    "Unknown tag type `$key`"
                 }
                 ValidationException.require(header.tagsInfo.hasTagsWithType(tagType)) {
                     "No tag type `$tagType` in a file"

@@ -96,8 +96,8 @@ Export assembled clones into tab delimited file.
                                not specified.
                                Default value determined by the preset.
       --split-files-by <splitFilesBy>
-                             Split files by (currently the only supported value is "geneLabel:
-                               reliableChain" etc... ).
+                             Split files by. Possible values `chain`, `tag:...`, `tagType:
+                               (Sample|Cell|Molecule)`.
                                Default value determined by the preset.
       --dont-split-files     Don't split files.
       --impute-germline-on-export

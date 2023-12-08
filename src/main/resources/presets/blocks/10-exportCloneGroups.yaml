@@ -10,6 +10,7 @@ exportCloneGroups-single-cell-no-umi-base:
         args: [ "Cell" ]
       - field: "-uniqClonesPerChainCount"
       - field: "-readCount"
+      - field: "-readFraction"
       - field: "-vHit"
       - field: "-dHit"
       - field: "-jHit"
