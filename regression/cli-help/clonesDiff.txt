@@ -1,5 +1,6 @@
-Usage: mixcr clonesDiff [--use-v] [--use-j] [--use-cc] [--force-overwrite] [--no-warnings]
-                        [--verbose] [--help] input1.(clns|clna) input2.(clns|clna) [report.txt]
+Usage: mixcr clonesDiff [--use-v] [--use-j] [--use-cc] [--print-clones] [--force-overwrite]
+                        [--no-warnings] [--verbose] [--help] input1.(clns|clna) input2.(clns|clna)
+                        [report.txt]
 Calculates the difference between two .clns files.
       input1.(clns|clna)
       input2.(clns|clna)
@@ -10,6 +11,7 @@ Calculates the difference between two .clns files.
                              clone sequence).
   -c, --use-cc             Use C gene in clone comparison (include it as a clone key along with a
                              clone sequence).
+      --print-clones       Output clone sequences.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.
