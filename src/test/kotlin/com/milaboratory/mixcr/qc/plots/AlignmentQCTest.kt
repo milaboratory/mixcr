@@ -20,6 +20,7 @@ class AlignmentQCTest {
     fun testAllFailReasonsAccounted() {
         val all = setOf(
             VDJCAlignmentFailCause.NoHits,
+            VDJCAlignmentFailCause.FailedAfterAOverlap,
             VDJCAlignmentFailCause.NoCDR3Parts,
             VDJCAlignmentFailCause.NoVHits,
             VDJCAlignmentFailCause.NoJHits,
