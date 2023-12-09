@@ -10,66 +10,66 @@ findShmTrees:
     - trees/result.shmt
   stepResults:
     - stepName: BuildingInitialTrees
-      clonesWasAdded: 264
-      cloneNodesWasAdded: 264
-      treesCountDelta: 100
+      clonesWasAdded: 270
+      cloneNodesWasAdded: 270
+      treesCountDelta: 103
       commonVJMutationsCounts:
-        size: 100
-        sum: 1629.0
+        size: 103
+        sum: 1666.0
         min: 5.0
         max: 53.0
-        avg: 16.29000
-        quadraticMean: 18.53725
-        stdDeviation: 8.89137
+        avg: 16.17475
+        quadraticMean: 18.38636
+        stdDeviation: 8.78549
         percentile25: 10.0
-        percentile50: 15.0
+        percentile50: 14.0
         percentile75: 21.0
       clonesCountInTrees:
-        size: 100
-        sum: 264.0
+        size: 103
+        sum: 270.0
         min: 2.0
         max: 10.0
-        avg: 2.63999
-        quadraticMean: 3.00998
-        stdDeviation: 1.45310
+        avg: 2.62135
+        quadraticMean: 2.98540
+        stdDeviation: 1.43565
         percentile25: 2.0
         percentile50: 2.0
         percentile75: 3.0
       wildcardsScore:
-        size: 100
+        size: 103
         sum: 9.76969
         min: 0.0
         max: 1.33333
-        avg: 0.09769
-        quadraticMean: 0.25879
-        stdDeviation: 0.24085
+        avg: 0.09485
+        quadraticMean: 0.25499
+        stdDeviation: 0.23785
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       wildcardsScoreForRoots:
-        size: 100
+        size: 103
         sum: 30.58496
         min: 0.0
         max: 4.0
-        avg: 0.30584
-        quadraticMean: 0.79171
-        stdDeviation: 0.73393
+        avg: 0.29694
+        quadraticMean: 0.78010
+        stdDeviation: 0.72490
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       maxNDNsWildcardsScoreInTree:
-        size: 100
+        size: 103
         sum: 30.58496
         min: 0.0
         max: 4.0
-        avg: 0.30584
-        quadraticMean: 0.79171
-        stdDeviation: 0.73393
+        avg: 0.29694
+        quadraticMean: 0.78010
+        stdDeviation: 0.72490
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       surenessOfDecisions:
-        size: 25
+        size: 21
         sum: NaN
         min: 0.0
         max: 0.0
@@ -84,57 +84,57 @@ findShmTrees:
       cloneNodesWasAdded: 6
       treesCountDelta: 0
       commonVJMutationsCounts:
-        size: 100
-        sum: 1629.0
+        size: 103
+        sum: 1666.0
         min: 5.0
         max: 53.0
-        avg: 16.29000
-        quadraticMean: 18.53725
-        stdDeviation: 8.89137
+        avg: 16.17475
+        quadraticMean: 18.38636
+        stdDeviation: 8.78549
         percentile25: 10.0
-        percentile50: 15.0
+        percentile50: 14.0
         percentile75: 21.0
       clonesCountInTrees:
-        size: 100
-        sum: 270.0
+        size: 103
+        sum: 276.0
         min: 2.0
         max: 13.0
-        avg: 2.7
-        quadraticMean: 3.21558
-        stdDeviation: 1.75522
+        avg: 2.67961
+        quadraticMean: 3.18674
+        stdDeviation: 1.73325
         percentile25: 2.0
         percentile50: 2.0
         percentile75: 3.0
       wildcardsScore:
-        size: 100
+        size: 103
         sum: 9.76969
         min: 0.0
         max: 1.33333
-        avg: 0.09769
-        quadraticMean: 0.25879
-        stdDeviation: 0.24085
+        avg: 0.09485
+        quadraticMean: 0.25499
+        stdDeviation: 0.23785
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       wildcardsScoreForRoots:
-        size: 100
+        size: 103
         sum: 30.58496
         min: 0.0
         max: 4.0
-        avg: 0.30584
-        quadraticMean: 0.79171
-        stdDeviation: 0.73393
+        avg: 0.29694
+        quadraticMean: 0.78010
+        stdDeviation: 0.72490
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       maxNDNsWildcardsScoreInTree:
-        size: 100
+        size: 103
         sum: 30.58496
         min: 0.0
         max: 4.0
-        avg: 0.30584
-        quadraticMean: 0.79171
-        stdDeviation: 0.73393
+        avg: 0.29694
+        quadraticMean: 0.78010
+        stdDeviation: 0.72490
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
@@ -154,57 +154,57 @@ findShmTrees:
       cloneNodesWasAdded: 0
       treesCountDelta: -4
       commonVJMutationsCounts:
-        size: 96
-        sum: 1583.0
+        size: 99
+        sum: 1620.0
         min: 0.0
         max: 53.0
-        avg: 16.48958
-        quadraticMean: 18.80242
-        stdDeviation: 9.08207
+        avg: 16.36363
+        quadraticMean: 18.63959
+        stdDeviation: 8.97099
         percentile25: 10.0
         percentile50: 15.0
         percentile75: 21.0
       clonesCountInTrees:
-        size: 96
-        sum: 270.0
+        size: 99
+        sum: 276.0
         min: 2.0
         max: 13.0
-        avg: 2.812
-        quadraticMean: 3.43996
-        stdDeviation: 1.99109
+        avg: 2.78787
+        quadraticMean: 3.40528
+        stdDeviation: 1.96537
         percentile25: 2.0
         percentile50: 2.0
         percentile75: 3.0
       wildcardsScore:
-        size: 96
+        size: 99
         sum: 9.43636
         min: 0.0
         max: 1.33333
-        avg: 0.09829
-        quadraticMean: 0.26193
-        stdDeviation: 0.24406
+        avg: 0.09531
+        quadraticMean: 0.25793
+        stdDeviation: 0.24089
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       wildcardsScoreForRoots:
-        size: 96
+        size: 99
         sum: 29.58496
         min: 0.0
         max: 4.0
-        avg: 0.30817
-        quadraticMean: 0.80157
-        stdDeviation: 0.74384
+        avg: 0.29883
+        quadraticMean: 0.78933
+        stdDeviation: 0.73429
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       maxNDNsWildcardsScoreInTree:
-        size: 96
+        size: 99
         sum: 29.58496
         min: 0.0
         max: 4.0
-        avg: 0.30817
-        quadraticMean: 0.80157
-        stdDeviation: 0.74384
+        avg: 0.29883
+        quadraticMean: 0.78933
+        stdDeviation: 0.73429
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
@@ -219,10 +219,10 @@ findShmTrees:
         percentile25: NaN
         percentile50: NaN
         percentile75: NaN
-  totalClonesProcessed: 1334
+  totalClonesProcessed: 1342
   cellCombination: null
-  totalTreesCount: 96
-  totalClonesCountInTrees: 270
+  totalTreesCount: 99
+  totalClonesCountInTrees: 276
 upstreams:
   alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns:
     align:
@@ -246,16 +246,16 @@ upstreams:
         LowTotalScore: 0
         NoBarcode: 80
         SampleNotMatched: 0
-      overlapped: 47619
-      overlappedAligned: 47585
+      overlapped: 48145
+      overlappedAligned: 48111
       overlappedNotAligned: 34
-      alignmentAidedOverlaps: 322
+      alignmentAidedOverlaps: 848
       noCDR3PartsAlignments: 3
       partialAlignments: 232
       chimeras: 0
       vChimeras: 90
       jChimeras: 0
-      pairedEndAlignmentConflicts: 1247
+      pairedEndAlignmentConflicts: 721
       realignedWithForcedNonFloatingBound: 4646
       realignedWithForcedNonFloatingRightBoundInLeftRead: 1557
       realignedWithForcedNonFloatingLeftBoundInRightRead: 1557
@@ -921,53 +921,53 @@ upstreams:
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
         inputGroups: 3038
-        groupsWithNoAssemblingFeature: 96
+        groupsWithNoAssemblingFeature: 80
         inputAlignments: 47703
-        inputAlignmentsWithAssemblingFeature: 45379
+        inputAlignmentsWithAssemblingFeature: 45857
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
-        preClones: 2942
+        preClones: 2958
         preClonesPerGroup:
-          "1": 2942
+          "1": 2958
         assemblingFeatureSequencesInZeroPreClones: 0
-        coreAlignments: 45366
+        coreAlignments: 45844
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
         discardedCoreAlignments: 13
-        empiricallyAssignedAlignments: 1337
+        empiricallyAssignedAlignments: 1053
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 1337
+        geneAndTagEmpiricallyAssignedAlignments: 1053
         empiricalAssignmentConflicts: 0
         ignoredAlignments: 0
         unassignedAlignments: 16
       totalReadsProcessed: 49700
-      totalAlignmentsProcessed: 2942
-      totalAlignedReadsProcessed: 46703
-      initialClonesCreated: 1312
-      readsDroppedNoTargetSequence: 2324
+      totalAlignmentsProcessed: 2958
+      totalAlignedReadsProcessed: 46897
+      initialClonesCreated: 1321
+      readsDroppedNoTargetSequence: 1846
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 46528
-      readsDroppedFailedMapping: 148
-      lowQualityRescued: 17
+      coreReads: 46755
+      readsDroppedFailedMapping: 115
+      lowQualityRescued: 5
       clonesClustered: 23
       readsClustered: 367
-      clones: 1287
-      clonesDroppedAsLowQuality: 2
+      clones: 1295
+      clonesDroppedAsLowQuality: 3
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 46178
-      readsInClonesBeforeClustering: 46545
-      readsDroppedWithLowQualityClones: 10
+      readsInClones: 46393
+      readsInClonesBeforeClustering: 46760
+      readsDroppedWithLowQualityClones: 22
       clonalChainUsage:
         type: chainUsage
         chimeras: 0
-        total: 1287
+        total: 1295
         chains:
           IGH:
-            total: 1287
+            total: 1295
             nonFunctional: 37
             isOOF: 32
             hasStops: 5
@@ -989,16 +989,16 @@ upstreams:
         - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
         - alleles/description.tsv
         - alleles_library.json
-      clonesCountWithNoChangeOfScore: 958
-      clonesCountWithNegativeScoreChange: 10
+      clonesCountWithNoChangeOfScore: 925
+      clonesCountWithNegativeScoreChange: 49
       clonesScoreDeltaStats:
-        size: 376
-        sum: 22735.99987
+        size: 417
+        sum: 21923.99990
         min: -58.0
         max: 232.00003
-        avg: 60.46808
-        quadraticMean: 75.37389
-        stdDeviation: 45.05811
+        avg: 52.57553
+        quadraticMean: 72.85727
+        stdDeviation: 50.49861
       notEnoughInformation:
         - IGHJ1
         - IGHJ2
@@ -1009,37 +1009,36 @@ upstreams:
         COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT: 2
       statuses:
         FOUND_KNOWN_VARIANT: 3
-        NOT_CHANGED_AFTER_SEARCH: 7
+        NOT_CHANGED_AFTER_SEARCH: 6
         COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT: 2
         REMOVED_BECAUSE_NOT_REPRESENTED_IN_SOURCE_FILES: 507
       zygotes:
-        "1": 10
-        "2": 1
+        "1": 11
       allelesScoreChange:
         IGHJ6*05x:
-          size: 188
-          sum: 8178.0
+          size: 191
+          sum: 8439.0
           min: -58.0
           max: 116.0
-          avg: 43.5
-          quadraticMean: 58.07707
-          stdDeviation: 38.58257
+          avg: 44.18324
+          quadraticMean: 58.86656
+          stdDeviation: 39.00098
         IGHV2-70*15:
-          size: 130
-          sum: 3770.0
-          min: 29.0
+          size: 175
+          sum: 2523.0
+          min: -29.0
           max: 29.0
-          avg: 29.0
+          avg: 14.41714
           quadraticMean: 29.0
-          stdDeviation: 0.0
+          stdDeviation: 25.23459
         IGHV2-70D*04:
-          size: 101
-          sum: 10875.0
+          size: 103
+          sum: 11049.0
           min: 29.0
           max: 116.0
-          avg: 107.67326
-          quadraticMean: 109.84277
-          stdDeviation: 21.83167
+          avg: 107.27184
+          quadraticMean: 109.51920
+          stdDeviation: 22.18071
     refineTagsAndSort:
       type: refineTagsAndSort
       commandLine: refineTagsAndSort align/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -1137,16 +1136,16 @@ upstreams:
         LowTotalScore: 0
         NoBarcode: 50
         SampleNotMatched: 0
-      overlapped: 27883
-      overlappedAligned: 27352
+      overlapped: 28446
+      overlappedAligned: 27915
       overlappedNotAligned: 531
-      alignmentAidedOverlaps: 243
+      alignmentAidedOverlaps: 806
       noCDR3PartsAlignments: 0
       partialAlignments: 73
       chimeras: 0
       vChimeras: 91
       jChimeras: 1
-      pairedEndAlignmentConflicts: 1290
+      pairedEndAlignmentConflicts: 727
       realignedWithForcedNonFloatingBound: 4362
       realignedWithForcedNonFloatingRightBoundInLeftRead: 1341
       realignedWithForcedNonFloatingLeftBoundInRightRead: 1341
@@ -1830,35 +1829,35 @@ upstreams:
       preCloneAssemblerReport:
         type: preCloneAssemblerReport
         inputGroups: 77
-        groupsWithNoAssemblingFeature: 8
+        groupsWithNoAssemblingFeature: 7
         inputAlignments: 28815
-        inputAlignmentsWithAssemblingFeature: 26511
+        inputAlignmentsWithAssemblingFeature: 27057
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
-        preClones: 69
+        preClones: 70
         preClonesPerGroup:
-          "1": 69
+          "1": 70
         assemblingFeatureSequencesInZeroPreClones: 0
-        coreAlignments: 26503
+        coreAlignments: 27048
         tagConflicts: 0
         geneAndTagConflicts: 0
         geneConflicts: {}
-        discardedCoreAlignments: 8
-        empiricallyAssignedAlignments: 1143
+        discardedCoreAlignments: 9
+        empiricallyAssignedAlignments: 972
         vjEmpiricallyAssignedAlignments: 0
         tagEmpiricallyAssignedAlignments: 0
-        geneAndTagEmpiricallyAssignedAlignments: 1143
+        geneAndTagEmpiricallyAssignedAlignments: 972
         empiricalAssignmentConflicts: 0
         ignoredAlignments: 0
-        unassignedAlignments: 93
+        unassignedAlignments: 94
       totalReadsProcessed: 29871
-      totalAlignmentsProcessed: 69
-      totalAlignedReadsProcessed: 27646
+      totalAlignmentsProcessed: 70
+      totalAlignedReadsProcessed: 28020
       initialClonesCreated: 47
-      readsDroppedNoTargetSequence: 2304
+      readsDroppedNoTargetSequence: 1758
       readsDroppedTooShortClonalSequence: 0
       readsDroppedLowQuality: 0
-      coreReads: 27646
+      coreReads: 28020
       readsDroppedFailedMapping: 0
       lowQualityRescued: 0
       clonesClustered: 0
@@ -1867,8 +1866,8 @@ upstreams:
       clonesDroppedAsLowQuality: 0
       clonesPreClustered: 0
       readsPreClustered: 0
-      readsInClones: 27646
-      readsInClonesBeforeClustering: 27646
+      readsInClones: 28020
+      readsInClonesBeforeClustering: 28020
       readsDroppedWithLowQualityClones: 0
       clonalChainUsage:
         type: chainUsage
@@ -1898,16 +1897,16 @@ upstreams:
         - alleles/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.with_alleles.clns
         - alleles/description.tsv
         - alleles_library.json
-      clonesCountWithNoChangeOfScore: 958
-      clonesCountWithNegativeScoreChange: 10
+      clonesCountWithNoChangeOfScore: 925
+      clonesCountWithNegativeScoreChange: 49
       clonesScoreDeltaStats:
-        size: 376
-        sum: 22735.99987
+        size: 417
+        sum: 21923.99990
         min: -58.0
         max: 232.00003
-        avg: 60.46808
-        quadraticMean: 75.37389
-        stdDeviation: 45.05811
+        avg: 52.57553
+        quadraticMean: 72.85727
+        stdDeviation: 50.49861
       notEnoughInformation:
         - IGHJ1
         - IGHJ2
@@ -1918,37 +1917,36 @@ upstreams:
         COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT: 2
       statuses:
         FOUND_KNOWN_VARIANT: 3
-        NOT_CHANGED_AFTER_SEARCH: 7
+        NOT_CHANGED_AFTER_SEARCH: 6
         COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT: 2
         REMOVED_BECAUSE_NOT_REPRESENTED_IN_SOURCE_FILES: 507
       zygotes:
-        "1": 10
-        "2": 1
+        "1": 11
       allelesScoreChange:
         IGHJ6*05x:
-          size: 188
-          sum: 8178.0
+          size: 191
+          sum: 8439.0
           min: -58.0
           max: 116.0
-          avg: 43.5
-          quadraticMean: 58.07707
-          stdDeviation: 38.58257
+          avg: 44.18324
+          quadraticMean: 58.86656
+          stdDeviation: 39.00098
         IGHV2-70*15:
-          size: 130
-          sum: 3770.0
-          min: 29.0
+          size: 175
+          sum: 2523.0
+          min: -29.0
           max: 29.0
-          avg: 29.0
+          avg: 14.41714
           quadraticMean: 29.0
-          stdDeviation: 0.0
+          stdDeviation: 25.23459
         IGHV2-70D*04:
-          size: 101
-          sum: 10875.0
+          size: 103
+          sum: 11049.0
           min: 29.0
           max: 116.0
-          avg: 107.67326
-          quadraticMean: 109.84277
-          stdDeviation: 21.83167
+          avg: 107.27184
+          quadraticMean: 109.51920
+          stdDeviation: 22.18071
     refineTagsAndSort:
       type: refineTagsAndSort
       commandLine: refineTagsAndSort align/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
