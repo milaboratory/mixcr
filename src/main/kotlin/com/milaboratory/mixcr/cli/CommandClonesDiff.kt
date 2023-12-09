@@ -69,22 +69,29 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
     )
     var useC = false
 
+    @Option(
+        names = ["--print-clones"],
+        description = ["Output clone sequences."],
+        order = OptionsOrder.main + 10_400
+    )
+    var verbose = false
+
     //@Parameter(names = {"-o1", "--only-in-first"}, description = "output for alignments contained only " +
     //        "in the first .vdjca file")
-    //public String onlyFirst;
+    // public String onlyFirst;
     //@Parameter(names = {"-o2", "--only-in-second"}, description = "output for alignments contained only " +
     //        "in the second .vdjca file")
-    //public String onlySecond;
+    // public String onlySecond;
     //@Parameter(names = {"-d1", "--diff-from-first"}, description = "output for alignments from the first file " +
     //        "that are different from those alignments in the second file")
-    //public String diff1;
+    // public String diff1;
     //@Parameter(names = {"-d2", "--diff-from-second"}, description = "output for alignments from the second file " +
     //        "that are different from those alignments in the first file")
-    //public String diff2;
+    // public String diff2;
     //@Parameter(names = {"-g", "--gene-feature"}, description = "Gene feature to compare")
-    //public String geneFeatureToMatch = "CDR3";
+    // public String geneFeatureToMatch = "CDR3";
     //@Parameter(names = {"-l", "--top-hits-level"}, description = "Number of top hits to search for match")
-    //public int hitsCompareLevel = 1;
+    // public int hitsCompareLevel = 1;
     override val inputFiles
         get() = listOf(in1, in2)
 
@@ -113,14 +120,18 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
             var newClones2 = 0
             var newClones1Reads: Long = 0
             var newClones2Reads: Long = 0
-            for (cRec in recs.values) {
+            for ((cKey, cRec) in recs) {
                 if (cRec.clones[0] == null) {
                     newClones2++
                     newClones2Reads += cRec.clones[1]!!.count.toLong()
+                    if (verbose)
+                        report.println("UniqueIn2\t$cKey")
                 }
                 if (cRec.clones[1] == null) {
                     newClones1++
                     newClones1Reads += cRec.clones[0]!!.count.toLong()
+                    if (verbose)
+                        report.println("UniqueIn1\t$cKey")
                 }
             }
             report.println(
@@ -156,6 +167,7 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
                 val error: String = when {
                     letter != 'X' -> "Error: clones with the same key present in one of the clonesets. Seems that clones were assembled " +
                             "using -OseparateBy${letter.uppercaseChar()}=true option, please add -$letter option to this command."
+
                     else -> ""
                 }
                 throw ValidationException(error)
@@ -188,6 +200,7 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
         val j: VDJCGeneId?,
         val c: VDJCGeneId?
     ) {
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -208,6 +221,10 @@ class CommandClonesDiff : MiXCRCommandWithOutputs() {
             result = 31 * result + (j?.hashCode() ?: 0)
             result = 31 * result + (c?.hashCode() ?: 0)
             return result
+        }
+
+        override fun toString(): String {
+            return clonalSequence.joinToString("\t") + "\t${v}\t${j}\t${c}"
         }
     }
 }
