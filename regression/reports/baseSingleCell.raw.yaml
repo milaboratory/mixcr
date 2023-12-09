@@ -14,6 +14,7 @@ align:
   notAligned: 6354
   notAlignedReasons:
     NoHits: 5776
+    FailedAfterAOverlap: 0
     NoCDR3Parts: 0
     NoVHits: 0
     NoJHits: 0

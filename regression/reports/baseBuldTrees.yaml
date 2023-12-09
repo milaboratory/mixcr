@@ -239,6 +239,7 @@ upstreams:
       notAligned: 126
       notAlignedReasons:
         NoHits: 0
+        FailedAfterAOverlap: 0
         NoCDR3Parts: 0
         NoVHits: 3
         NoJHits: 34
@@ -250,8 +251,8 @@ upstreams:
       overlappedAligned: 48111
       overlappedNotAligned: 34
       alignmentAidedOverlaps: 848
-      noCDR3PartsAlignments: 3
-      partialAlignments: 232
+      noCDR3PartsAlignments: 4
+      partialAlignments: 469
       chimeras: 0
       vChimeras: 90
       jChimeras: 0
@@ -266,9 +267,9 @@ upstreams:
         chains:
           IGH:
             total: 49574
-            nonFunctional: 1055
-            isOOF: 722
-            hasStops: 333
+            nonFunctional: 1041
+            isOOF: 716
+            hasStops: 325
       trimmingReport:
         total: 49700
         r1LeftTrimmedEvents: 0
@@ -904,12 +905,12 @@ upstreams:
       notMatchedByHeader: 0
       transformerReports: []
       coverage:
-        VDJRegion: 46268
-        CDR1_TO_FR4: 47317
-        FR2_TO_FR4: 49090
-        CDR2_TO_FR4: 49560
-        FR3_TO_FR4: 49556
-        CDR3: 49339
+        VDJRegion: 47110
+        CDR1_TO_FR4: 48117
+        FR2_TO_FR4: 49190
+        CDR2_TO_FR4: 49314
+        FR3_TO_FR4: 49310
+        CDR3: 49101
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -1129,6 +1130,7 @@ upstreams:
       notAligned: 595
       notAlignedReasons:
         NoHits: 0
+        FailedAfterAOverlap: 0
         NoCDR3Parts: 0
         NoVHits: 0
         NoJHits: 532
@@ -1141,7 +1143,7 @@ upstreams:
       overlappedNotAligned: 531
       alignmentAidedOverlaps: 806
       noCDR3PartsAlignments: 0
-      partialAlignments: 73
+      partialAlignments: 326
       chimeras: 0
       vChimeras: 91
       jChimeras: 1
@@ -1156,9 +1158,9 @@ upstreams:
         chains:
           IGH:
             total: 29276
-            nonFunctional: 587
-            isOOF: 367
-            hasStops: 220
+            nonFunctional: 565
+            isOOF: 361
+            hasStops: 204
       trimmingReport:
         total: 29871
         r1LeftTrimmedEvents: 0
@@ -1812,12 +1814,12 @@ upstreams:
       notMatchedByHeader: 0
       transformerReports: []
       coverage:
-        VDJRegion: 26470
-        CDR1_TO_FR4: 27003
-        FR2_TO_FR4: 28973
-        CDR2_TO_FR4: 29275
-        FR3_TO_FR4: 29275
-        CDR3: 29203
+        VDJRegion: 27273
+        CDR1_TO_FR4: 27806
+        FR2_TO_FR4: 28779
+        CDR2_TO_FR4: 29010
+        FR3_TO_FR4: 29010
+        CDR3: 28950
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
