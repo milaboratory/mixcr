@@ -1,0 +1,30 @@
+name: Clean packages
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        required: true
+        description: 'dry-run'
+        default: true
+jobs:
+  build:
+    name: Delete old none release containers
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: milaboratory/github-ci/actions/housekeeping/delete-old-packages@v4
+        with:
+          organization: milaboratory
+          type: container
+          version-pattern: "^\\d+\\.\\d+\\.\\d+-"
+          names: |
+            mixcr/mixcr
+          dry-run: ${{ github.event.inputs.dry-run }}
+      - uses: milaboratory/github-ci/actions/housekeeping/action-ghcr-prune@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: milaboratory
+          container: 'mixcr/mixcr'
+          dry-run: ${{ github.event.inputs.dry-run }}
+          prune-untagged: true
