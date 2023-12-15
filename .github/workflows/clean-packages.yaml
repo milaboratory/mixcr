@@ -29,9 +29,8 @@ jobs:
           organization: milaboratory
           container: 'mixcr/mixcr'
           dry-run: ${{ github.event.inputs.dry-run }}
-          keep-last: 70
+          keep-last: 100
           keep-tags: |
             latest-develop
           prune-tags-regexes: |
               ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-(0|[1-9]\d*)-develop$
-          prune-untagged: true
