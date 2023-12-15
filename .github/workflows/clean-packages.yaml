@@ -1,4 +1,4 @@
-name: Clean packages
+ame: Clean packages
 on:
   workflow_dispatch:
     inputs:
@@ -13,18 +13,25 @@ jobs:
     permissions:
       packages: write
     steps:
-      - uses: milaboratory/github-ci/actions/housekeeping/delete-old-packages@v4
-        with:
-          organization: milaboratory
-          type: container
-          version-pattern: "^\\d+\\.\\d+\\.\\d+-"
-          names: |
-            mixcr/mixcr
-          dry-run: ${{ github.event.inputs.dry-run }}
-      - uses: milaboratory/github-ci/actions/housekeeping/action-ghcr-prune@v4
+      - uses: milaboratory/github-ci/actions/housekeeping/action-ghcr-prune@v4-beta
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: milaboratory
           container: 'mixcr/mixcr'
           dry-run: ${{ github.event.inputs.dry-run }}
+          keep-last: 10
+          prune-tags-regexes: |
+              ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-(0|[1-9]\d*)-(?!develop).*$
+          prune-untagged: true
+      - uses: milaboratory/github-ci/actions/housekeeping/action-ghcr-prune@v4-beta
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: milaboratory
+          container: 'mixcr/mixcr'
+          dry-run: ${{ github.event.inputs.dry-run }}
+          keep-last: 70
+          keep-tags: |
+            latest-develop
+          prune-tags-regexes: |
+              ^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-(0|[1-9]\d*)-develop$
           prune-untagged: true
