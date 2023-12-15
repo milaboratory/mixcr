@@ -1,4 +1,4 @@
-ame: Clean packages
+name: Clean packages
 on:
   workflow_dispatch:
     inputs:
