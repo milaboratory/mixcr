@@ -9,7 +9,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -24,11 +23,10 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainAnyOf
-import io.kotest.matchers.collections.shouldNotBeIn
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.repseq.core.GeneFeature
 import org.junit.Assert
 import org.junit.Test
 import java.nio.file.Paths
@@ -216,5 +214,16 @@ class PresetsTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `should be no split by VJ if VDJRegion set as assemble feature`() {
+        Presets.visiblePresets.filter { presetName ->
+            val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+            val assemble = bundle.assemble ?: return@filter false
+            if (assemble.cloneAssemblerParameters.assemblingFeatures.toList() != listOf(GeneFeature.VDJRegion))
+                return@filter false
+            assemble.cloneAssemblerParameters.separateByV || assemble.cloneAssemblerParameters.separateByJ
+        }.also { println(it) } shouldBe emptyList()
     }
 }
