@@ -218,12 +218,13 @@ class PresetsTest {
 
     @Test
     fun `should be no split by VJ if VDJRegion set as assemble feature`() {
+        val exceptions = setOf<String>()
         Presets.visiblePresets.filter { presetName ->
             val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             val assemble = bundle.assemble ?: return@filter false
             if (assemble.cloneAssemblerParameters.assemblingFeatures.toList() != listOf(GeneFeature.VDJRegion))
                 return@filter false
             assemble.cloneAssemblerParameters.separateByV || assemble.cloneAssemblerParameters.separateByJ
-        }.also { println(it) } shouldBe emptyList()
+        }.minus(exceptions).also { println(it) } shouldBe emptyList()
     }
 }
