@@ -11,8 +11,8 @@ Export SHMTree as newick
       --filter-min-height <n>
                              Minimal height of the tree
       --ids <id>[,<id>...]   Filter specific trees by id
-      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
-                               or IGH).
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. IGK,
+                               IGL or IGH).
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

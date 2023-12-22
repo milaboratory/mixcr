@@ -76,8 +76,8 @@ separate columns. Initial data for building tree should contain cell data.
       --filter-min-height <n>
                              Minimal height of the tree
       --ids <id>[,<id>...]   Filter specific trees by id
-      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
-                               or IGH).
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. IGK,
+                               IGL or IGH).
   -p, --preset <preset>      Specify preset of export fields. Possible values: min, default.
       -pf, --preset-file <presetFile>
                              Specify preset file of export fields
