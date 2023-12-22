@@ -228,6 +228,7 @@ assemble:
       minQualityScore: 0
       maxConsensuses: 1
     minTagSuffixShare: 0.0
+    isolateChains: false
   cloneAssemblerParameters:
     assemblingFeatures:
       - CDR3
