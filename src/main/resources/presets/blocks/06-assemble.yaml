@@ -103,6 +103,7 @@ assemble-with-consensus-sc-cell-level:
       inferMinRecordsPerConsensus: false
       cellLevel: true
       consensusAssemblerParameters:
+        isolateChains: true
         assembler:
           aAssemblerParameters:
             bandWidth: 4
