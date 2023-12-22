@@ -149,6 +149,12 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
+    @ArgGroup(
+        multiplicity = "0..*",
+        order = OptionsOrder.mixins.qc
+    )
+    var qcMixins: List<QcChecksMixins> = mutableListOf()
+
     override fun initialize() {
         if (outputFile == null)
             logger.redirectSysOutToSysErr()
@@ -156,7 +162,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
 
     override fun run1() {
         val mixinsFromArgs = MiXCRMixinCollection.empty + genericMixins + alignMixins + assembleMixins +
-                assembleContigsMixins + exportMixins + pipelineMixins
+                assembleContigsMixins + exportMixins + pipelineMixins + qcMixins
         val bundleSpec = when {
             presetInput.presetName != null -> ParamsBundleSpecBaseAddress(presetInput.presetName!!)
 

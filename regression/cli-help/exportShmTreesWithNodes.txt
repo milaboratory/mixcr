@@ -80,18 +80,17 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [-nMutationsRate [<gene_feature[,gene_feature]...>]
                                      [(substitutions|indels|inserts|deletions)]]...
                                      [-aaMutationsRate [<gene_feature[,gene_feature]...>]
-                                     [(substitutions|indels|inserts|deletions)]]... [-topChains]
-                                     [-geneLabel <label>]... [-isotype
-                                     [(primary|subclass|auto)]]... [-tagCounts] [-cellId
-                                     [(none|space|dash)]]... [-tags (Molecule|Cell|Sample)]...
-                                     [-uniqueTagCount (Molecule|Cell|Sample)]...
-                                     [-uniqueTagFraction (Molecule|Cell|Sample)]... [-cellGroup]
-                                     [-rankByTag (Molecule|Cell|Sample)]... [-hasStops
-                                     <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
-                                     [<gene_feature>]]... [-biochemicalProperty <gene_feature>
-                                     <property> [(germline|mrca|parent)]]...
-                                     [-baseBiochemicalProperties <gene_feature>
-                                     [(germline|mrca|parent)]]... [--use-local-temp]
+                                     [(substitutions|indels|inserts|deletions)]]... [-geneLabel
+                                     <label>]... [-isotype [(primary|subclass|auto)]]...
+                                     [-tagCounts] [-cellId [(none|space|dash)]]... [-tags
+                                     (Molecule|Cell|Sample)]... [-uniqueTagCount
+                                     (Molecule|Cell|Sample)]... [-uniqueTagFraction
+                                     (Molecule|Cell|Sample)]... [-cellGroup] [-rankByTag
+                                     (Molecule|Cell|Sample)]... [-hasStops <gene_feature>]...
+                                     [-isOOF <gene_feature>]... [-isProductive [<gene_feature>]]...
+                                     [-biochemicalProperty <gene_feature> <property>
+                                     [(germline|mrca|parent)]]... [-baseBiochemicalProperties
+                                     <gene_feature> [(germline|mrca|parent)]]... [--use-local-temp]
                                      [--force-overwrite] [--no-warnings] [--verbose] [--help]
                                      [[--filter-in-feature <gene_feature>] [--pattern-max-errors
                                      <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
@@ -108,8 +107,8 @@ root if no single cell data)
       --filter-min-height <n>
                              Minimal height of the tree
       --ids <id>[,<id>...]   Filter specific trees by id
-      --chains <chains>      Export only trees that contains clones with specific chain (e.g. TRA
-                               or IGH).
+      --chains <chains>      Export only trees that contains clones with specific chain (e.g. IGK,
+                               IGL or IGH).
   -p, --preset <preset>      Specify preset of export fields. Possible values: min, default.
       -pf, --preset-file <presetFile>
                              Specify preset file of export fields
@@ -484,7 +483,6 @@ Possible fields to export
                                Resolutions of wildcards in CDR3 are excluded from calculation.
                                Second parameter will filter mutations by type, by default no
                                filtering.
-      -topChains             Top chains (only for nodes with clones)
       -geneLabel <label>     Export gene label (i.e. ReliableChain) (only for nodes with clones)
       -isotype [(primary|subclass|auto)]
                              Export isotype for IGH chains if it's can be distinguishable.

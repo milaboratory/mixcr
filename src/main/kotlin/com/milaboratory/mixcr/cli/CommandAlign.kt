@@ -746,9 +746,15 @@ object CommandAlign {
         )
         var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
+        @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.qc
+        )
+        var qcMixins: List<QcChecksMixins> = mutableListOf()
+
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + refineTagsAndSortMixins +
-                    assembleMixins + assembleContigsMixins + exportMixins + genericMixins
+                    assembleMixins + assembleContigsMixins + exportMixins + genericMixins + qcMixins
 
         @Parameters(
             index = "0",

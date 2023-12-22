@@ -6,6 +6,10 @@ allOf:
         type: array
         items:
           type: string
+      cmdArgs:
+        type: array
+        items:
+          type: string
   - type: object
     properties:
       type:

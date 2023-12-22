@@ -62,6 +62,7 @@ abstract class MiXCRCommand : Runnable {
             const val exports = begin + 50_000
             const val generic = begin + 60_000
             const val resetPreset = begin + 70_000
+            const val qc = begin + 80_000
         }
 
         const val exportOptions = 450_000

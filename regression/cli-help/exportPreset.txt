@@ -28,7 +28,8 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)]
                           [--force-overwrite] [--no-warnings] [--verbose] [--help] (--preset-name
                           <preset> | --mixcr-file <input.(vdjca|clns|clna)>) [-M <key=value>]...
-                          [preset_file.(yaml|yml)]
+                          [--remove-qc-check <type> [--remove-qc-check <type>]...]... [preset_file.
+                          (yaml|yml)]
 Export a preset file given the preset name or source file and a set of mix-ins
       [preset_file.(yaml|yml)]
                              Path where to write preset yaml file. Will write to output if omitted.
@@ -36,6 +37,9 @@ Export a preset file given the preset name or source file and a set of mix-ins
       --mixcr-file <input.(vdjca|clns|clna)>
                              File that was processed by MiXCR.
       --no-validation        Don't validate preset before export.
+      --remove-qc-check <type>
+                             Remove qc check with given type. Use `exportPreset` command to see
+                               what `qc.checks` are included in the preset.
   -M  <key=value>            Overrides arbitrary preset parameter
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.

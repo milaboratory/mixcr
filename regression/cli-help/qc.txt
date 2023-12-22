@@ -1,5 +1,6 @@
 Usage: mixcr qc [--json] [--print-to-stdout] [--print-warn] [--force-overwrite] [--no-warnings]
-                [--verbose] [--help] input.(vdjca|clns|clna) [output.(txt|json) [output.(txt|json)]]
+                [--verbose] [--help] [--remove-qc-check <type> [--remove-qc-check <type>]...]...
+                input.(vdjca|clns|clna) [output.(txt|json) [output.(txt|json)]]
 Perform quality control checks on results.
       input.(vdjca|clns|clna)
                            Path to input file.
@@ -8,6 +9,9 @@ Perform quality control checks on results.
       --json               Export in json format. Used if output printed in stdout
       --print-to-stdout    Print to stdout.
       --print-warn         Print warning if some checks not passed to stderr.
+      --remove-qc-check <type>
+                           Remove qc check with given type. Use `exportPreset` command to see what
+                             `qc.checks` are included in the preset.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

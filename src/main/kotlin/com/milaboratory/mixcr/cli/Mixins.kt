@@ -46,6 +46,7 @@ import com.milaboratory.mixcr.presets.GenericMixin
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
+import com.milaboratory.mixcr.presets.QcMixins
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
@@ -722,6 +723,19 @@ object ExportMiXCRMixins {
     }
 
     const val DESCRIPTION = "Params for export commands:%n"
+}
+
+class QcChecksMixins : MiXCRMixinCollector() {
+    @Option(
+        description = ["Remove qc check with given type. Use `exportPreset` command to see what `qc.checks` are included in the preset."],
+        names = [QcMixins.RemoveQcChecks.CMD_OPTION],
+        arity = "1..*",
+        paramLabel = "<type>",
+        hideParamSyntax = true,
+        order = OptionsOrder.mixins.qc + 100,
+    )
+    fun removeQc(types: Set<String>) =
+        mixIn(QcMixins.RemoveQcChecks(types))
 }
 
 class GenericMiXCRMixins : MiXCRMixinCollector() {
