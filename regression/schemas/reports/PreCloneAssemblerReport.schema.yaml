@@ -8,6 +8,8 @@ allOf:
         type: integer
       coreAlignmentsDroppedByTagSuffix:
         type: integer
+      coreAlignmentsDroppedByUncertainChain:
+        type: integer
       corePreClonesDroppedByTagSuffix:
         type: integer
       discardedCoreAlignments:

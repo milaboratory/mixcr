@@ -670,6 +670,8 @@ properties:
             type: integer
           minRecursiveRecordShare:
             type: number
+      isolateChains:
+        type: boolean
       minTagSuffixShare:
         type: number
   inferMinRecordsPerConsensus:

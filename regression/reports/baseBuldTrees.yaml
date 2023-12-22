@@ -925,6 +925,7 @@ upstreams:
         groupsWithNoAssemblingFeature: 80
         inputAlignments: 47703
         inputAlignmentsWithAssemblingFeature: 45857
+        coreAlignmentsDroppedByUncertainChain: 0
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
         preClones: 2958
@@ -1834,6 +1835,7 @@ upstreams:
         groupsWithNoAssemblingFeature: 7
         inputAlignments: 28815
         inputAlignmentsWithAssemblingFeature: 27057
+        coreAlignmentsDroppedByUncertainChain: 0
         corePreClonesDroppedByTagSuffix: 0
         coreAlignmentsDroppedByTagSuffix: 0
         preClones: 70
