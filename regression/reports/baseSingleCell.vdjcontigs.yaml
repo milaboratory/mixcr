@@ -152,34 +152,36 @@ assemble:
     groupsWithNoAssemblingFeature: 0
     inputAlignments: 28024
     inputAlignmentsWithAssemblingFeature: 936
+    coreAlignmentsDroppedByUncertainChain: 0
     corePreClonesDroppedByTagSuffix: 0
     coreAlignmentsDroppedByTagSuffix: 0
-    preClones: 7
+    preClones: 8
     preClonesPerGroup:
-      "2": 2
-      "3": 1
+      "2": 1
+      "3": 2
     assemblingFeatureSequencesInZeroPreClones: 0
-    coreAlignments: 856
-    tagConflicts: 0
-    geneAndTagConflicts: 0
-    geneConflicts: {}
-    discardedCoreAlignments: 80
+    coreAlignments: 857
+    tagConflicts: 1
+    geneAndTagConflicts: 1
+    geneConflicts:
+      Variable: 1
+    discardedCoreAlignments: 79
     empiricallyAssignedAlignments: 13109
     vjEmpiricallyAssignedAlignments: 8
     tagEmpiricallyAssignedAlignments: 0
     geneAndTagEmpiricallyAssignedAlignments: 13101
     empiricalAssignmentConflicts: 0
     ignoredAlignments: 0
-    unassignedAlignments: 14059
+    unassignedAlignments: 14058
   totalReadsProcessed: 46737
-  totalAlignmentsProcessed: 7
-  totalAlignedReadsProcessed: 14107
+  totalAlignmentsProcessed: 8
+  totalAlignedReadsProcessed: 14108
   initialClonesCreated: 7
   readsDroppedNoTargetSequence: 27088
   readsDroppedTooShortClonalSequence: 0
   readsDroppedLowQuality: 0
   coreReads: 14107
-  readsDroppedFailedMapping: 0
+  readsDroppedFailedMapping: 1
   lowQualityRescued: 0
   clonesClustered: 0
   readsClustered: 0
