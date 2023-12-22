@@ -18,6 +18,7 @@ import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mixcr.basictypes.IOUtil
+import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.qc.checks.QcCheckResult
@@ -26,6 +27,7 @@ import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.OK
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.WARN
 import com.milaboratory.util.K_PRETTY_OM
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
+import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
@@ -87,6 +89,12 @@ object CommandQcChecks {
         )
         private var printWarn = false
 
+        @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.qc
+        )
+        var qcMixins: List<QcChecksMixins> = mutableListOf()
+
         override val inputFiles
             get() = listOf(input)
 
@@ -106,7 +114,7 @@ object CommandQcChecks {
             val fileInfo = IOUtil.extractFileInfo(input)
 
             val (_, params) = paramsResolver.resolve(
-                resetPreset.overridePreset(fileInfo.header.paramsSpec)
+                resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(qcMixins.mixins)
             )
 
             val results = params.checks

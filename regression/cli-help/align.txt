@@ -35,8 +35,9 @@ Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimmin
                    [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)] [-O <key=value>]...
                    [--report <path>] [--json-report <path>] [--use-local-temp] [--threads <n>]
                    [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M <key=value>]...
-                   ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.
-                   gz]]|file.(fasta[.gz]|bam|sam|cram)) alignments.vdjca
+                   [--remove-qc-check <type> [--remove-qc-check <type>]...]... ([file_I1.fastq[.gz]
+                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]
+                   |bam|sam|cram)) alignments.vdjca
 Builds alignments with V,D,J and C genes for input sequencing reads.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta
         [.gz]|bam|sam|cram))
@@ -152,6 +153,9 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
                              Drop all alignments that do not cover CDR3 region or cover it only
                                partially.
       --limit-input <n>      Maximal number of reads to process on `align`
+      --remove-qc-check <type>
+                             Remove qc check with given type. Use `exportPreset` command to see
+                               what `qc.checks` are included in the preset.
   -O  <key=value>            Overrides aligner parameters from the selected preset
   -M  <key=value>            Overrides arbitrary preset parameter
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for

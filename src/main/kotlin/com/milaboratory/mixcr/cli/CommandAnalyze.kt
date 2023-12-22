@@ -181,6 +181,11 @@ object CommandAnalyze {
         )
         var genericMixins: List<GenericMiXCRMixins> = mutableListOf()
 
+        @ArgGroup(
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.qc
+        )
+        var qcMixins: List<QcChecksMixins> = mutableListOf()
 
         @Mixin
         lateinit var pathsForNotAligned: CommandAlign.PathsForNotAligned
@@ -193,7 +198,7 @@ object CommandAnalyze {
 
         private val mixins: MiXCRMixinCollection
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + refineAndSortMixins + assembleMixins +
-                    assembleContigsMixins + exportMixins + genericMixins
+                    assembleContigsMixins + exportMixins + genericMixins + qcMixins
 
         // @Option(
         //     description = ["Delete all output files of the command if they already exist."],
