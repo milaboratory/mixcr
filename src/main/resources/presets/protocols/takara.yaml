@@ -20,12 +20,6 @@
       floating: true
       geneType: C
     - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
-    - type: SetSplitClonesBy
       geneType: C
       value: true
     - type: SetClonotypeAssemblingFeatures
@@ -88,12 +82,6 @@
       geneType: C
       floating: true
     - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
-    - type: SetSplitClonesBy
       geneType: C
       value: true
     - type: SetClonotypeAssemblingFeatures
@@ -129,12 +117,6 @@
     - type: RightAlignmentBoundaryNoPoint
       geneType: C
       floating: true
-    - type: SetSplitClonesBy
-      geneType: V
-      value: true
-    - type: SetSplitClonesBy
-      geneType: J
-      value: true
     - type: SetSplitClonesBy
       geneType: C
       value: true
