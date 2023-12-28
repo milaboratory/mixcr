@@ -18,6 +18,7 @@ import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
 import cc.redberry.pipe.util.drainToAndClose
 import cc.redberry.pipe.util.flatMap
+import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
@@ -61,6 +62,7 @@ import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.cached
 import com.milaboratory.util.groupByOnDisk
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeatures
@@ -363,8 +365,19 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                     processSingleCell
                 )
 
-                val writer = shmTreesWriter.treesWriter()
-                writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
+                shmTreesWriter.treesWriter { writer ->
+                    writeResults(writer, singleCellTrees, datasets, shmTreeBuilder)
+                }
+                shmTreesWriter.clonesWriter { writer ->
+                    datasets
+                        .mapIndexed { datasetId, clnsReader ->
+                            clnsReader.readClones().map { clone -> CloneWithDatasetId(clone, datasetId) }
+                        }
+                        .flatten()
+                        .withExpectedSize(datasets.sumOf { it.numberOfClones().toLong() })
+                        .reportProgress("Writing clones")
+                        .drainToAndClose(writer)
+                }
             }
             reportBuilder.setFinishMillis(System.currentTimeMillis())
             report = reportBuilder.buildReport()
