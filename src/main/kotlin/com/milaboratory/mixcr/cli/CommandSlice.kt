@@ -13,11 +13,11 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.asSequence
+import cc.redberry.pipe.util.drainToAndClose
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.it
 import cc.redberry.pipe.util.map
 import cc.redberry.pipe.util.toList
-import cc.redberry.pipe.util.use
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.mixcr.basictypes.ClnAReader
@@ -238,7 +238,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
             SHMTreesWriter(out).use { writer ->
                 writer.copyHeaderFrom(reader)
 
-                writer.treesWriter().use { treesWriter ->
+                writer.treesWriter { treesWriter ->
                     reader.readTrees()
                         .filter { it.treeId.toLong() in ids }
                         .asSequence().withIndex()
@@ -250,6 +250,10 @@ class CommandSlice : MiXCRCommandWithOutputs() {
 
                             treesWriter.put(tree.withId(treeId))
                         }
+                }
+
+                writer.clonesWriter { clonesWriter ->
+                    reader.readAllClones().drainToAndClose(clonesWriter)
                 }
 
                 writer.setFooter(reader.footer)
