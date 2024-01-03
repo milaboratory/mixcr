@@ -307,8 +307,8 @@ assemble:
         absoluteMinScore: null
         maxHits: null
         scoring: null
-    separateByV: true
-    separateByJ: true
+    separateByV: false
+    separateByJ: false
     separateByC: true
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
