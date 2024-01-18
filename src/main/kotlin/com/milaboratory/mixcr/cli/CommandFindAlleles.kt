@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -308,7 +308,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         }
 
         ValidationException.requireTheSame(datasets.flatMap { it.usedGenes }.map { it.id.libraryId }) {
-            "input files must be aligned on the same library"
+            "Input files must be aligned on the same library"
         }
         val originalLibrary = datasets.first().usedGenes.first().parentLibrary
         logger.debug { "Name of the original library: ${originalLibrary.libraryId.libraryName}" }
