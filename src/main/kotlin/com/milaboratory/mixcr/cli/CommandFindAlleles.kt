@@ -184,6 +184,14 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             field = value
         }
 
+    @Option(
+        description = ["Don't remove genes that weren't used in clones in the result library"],
+        names = ["--dont-remove-unused-genes"],
+        arity = "0",
+        order = OptionsOrder.main + 11_000
+    )
+    var dontRemoveUnusedGenes: Boolean = false
+
     @Mixin
     lateinit var useLocalTemp: UseLocalTempOption
 
@@ -349,9 +357,13 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Recursive allele variants are not supported."
         }
 
-        val stepsCount = 7
+        val stepsCount = when {
+            dontRemoveUnusedGenes -> 6
+            else -> 7
+        }
+        var stepNumber = 0
         val allelesBuilder = AllelesBuilder.create(
-            "Step 1 of $stepsCount",
+            "Step ${++stepNumber} of $stepsCount",
             clonesFilter,
             originalLibrary,
             tempDest,
@@ -363,14 +375,14 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         )
 
         val JAllelesFromFirstRound = allelesBuilder.searchForAlleles(
-            "Step 2 of $stepsCount",
+            "Step ${++stepNumber} of $stepsCount",
             findAllelesParameters.searchAlleleParameterForFirstRound,
             null,
             Joining,
             emptyMap()
         )
         val VAllelesFromFirstRound = allelesBuilder.searchForAlleles(
-            "Step 3 of $stepsCount",
+            "Step ${++stepNumber} of $stepsCount",
             findAllelesParameters.searchAlleleParameterForFirstRound,
             null,
             Variable,
@@ -378,24 +390,29 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         )
         reportBuilder.reportFirstRound((JAllelesFromFirstRound.values + VAllelesFromFirstRound.values).flatten())
         val JAllelesFromSecondRound = allelesBuilder.searchForAlleles(
-            "Step 4 of $stepsCount",
+            "Step ${++stepNumber} of $stepsCount",
             findAllelesParameters.searchAlleleParameterForSecondRound,
             findAllelesParameters.searchMutationsInCDR3,
             Joining,
             VAllelesFromFirstRound
         )
         val VAllelesFromSecondRound = allelesBuilder.searchForAlleles(
-            "Step 5 of $stepsCount",
+            "Step ${++stepNumber} of $stepsCount",
             findAllelesParameters.searchAlleleParameterForSecondRound,
             findAllelesParameters.searchMutationsInCDR3,
             Variable,
             JAllelesFromSecondRound
         )
-        // cleanup results
-        var allelesAfterRemoval = allelesBuilder.removeAllelesIfPossible(
-            "Step 6 of $stepsCount",
-            VAllelesFromSecondRound + JAllelesFromSecondRound
-        )
+        var allelesAfterRemoval =
+            if (dontRemoveUnusedGenes) {
+                (VAllelesFromSecondRound + JAllelesFromSecondRound).values.flatten()
+            } else {
+                // cleanup results
+                allelesBuilder.removeAllelesIfPossible(
+                    "Step ${++stepNumber} of $stepsCount",
+                    VAllelesFromSecondRound + JAllelesFromSecondRound
+                )
+            }
         allelesAfterRemoval = allelesBuilder.removeDuplicatedDeNovoAlleles(allelesAfterRemoval)
         // what variants will be used to replace genes in hits (key is base gene of original hit).
         val allelesMapping = allelesAfterRemoval
@@ -432,7 +449,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
-                val reportPrefix = "Step 7 of $stepsCount"
+                val reportPrefix = "Step ${++stepNumber} of $stepsCount"
                 val message = when (outputClnsOptions.outputTemplate) {
                     null -> "$reportPrefix: recalculating scores ${inputFiles[i]}"
                     else -> "$reportPrefix: realigning ${inputFiles[i]}"

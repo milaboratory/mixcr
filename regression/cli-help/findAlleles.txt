@@ -1,8 +1,9 @@
 Usage: mixcr findAlleles [--export-library <path.(json|fasta)>]... [--export-alleles-mutations
-                         <path>] [-O <key=value>]... [--report <path>] [--json-report <path>]
-                         [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
-                         [--verbose] [--help] (--output-template <template.clns> |
-                         --no-clns-output) (input_file.(clns|clna)|directory)...
+                         <path>] [--dont-remove-unused-genes] [-O <key=value>]... [--report <path>]
+                         [--json-report <path>] [--use-local-temp] [--threads <n>]
+                         [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                         (--output-template <template.clns> | --no-clns-output) (input_file.
+                         (clns|clna)|directory)...
 Find allele variants in clnx.
 All inputs must be fully covered by the same feature, have the same align library, the same scoring
 of V and J genes and the same features to align.
@@ -78,6 +79,8 @@ of V and J genes and the same features to align.
                                searching before
                              scoreDelta - stats for score change of clones afeter aligning to this
                                allele.
+      --dont-remove-unused-genes
+                             Don't remove genes that weren't used in clones in the result library
   -O  <key=value>            Overrides default build SHM parameter values
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
