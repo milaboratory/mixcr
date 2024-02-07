@@ -13,18 +13,18 @@ Usage: mixcr exportReportsTable [--without-upstreams] [--preset <preset>] [--pre
                                 inputGroups] [-assemble.preCloneAssembler.preClones] [-assemble.
                                 preCloneAssembler.assemblingFeatureSequencesInZeroPreClones]
                                 [-assemble.preCloneAssembler.unassignedAlignments]
-                                [-assembleContigs.inputFiles] [-groupClones.inputFiles]
-                                [-groupClones.numberOfGroups] [-groupClones.unassignedClonotypes]
-                                [-groupClones.invalidGroups] [-groupClones.
-                                groupsWithTooMatchClones] [-groupClones.cloneContamination]
-                                [-groupClones.contaminatedCells] [-groupClones.
-                                cellsNotIncludedBecauseContamination] [-groupClones.
-                                cellBarcodesWithFoundGroups] [-findAlleles.inputFiles]
-                                [-findAlleles.found] [-findAlleles.deNova] [-findAlleles.
-                                notEnoughInformation] [-findTrees.inputFiles] [-findTrees.
-                                treesCount] [-findTrees.cloneInTrees] [--force-overwrite]
-                                [--no-warnings] [--verbose] [--help] (data.(vdjca|clns|clna|shmt)
-                                |directory)... [report.tsv]
+                                [-assembleContigs.inputFiles] [-assembleCells.inputFiles]
+                                [-assembleCells.numberOfGroups] [-assembleCells.
+                                unassignedClonotypes] [-assembleCells.invalidGroups]
+                                [-assembleCells.groupsWithTooMatchClones] [-assembleCells.
+                                cloneContamination] [-assembleCells.contaminatedCells]
+                                [-assembleCells.cellsNotIncludedBecauseContamination]
+                                [-assembleCells.cellBarcodesWithFoundGroups] [-findAlleles.
+                                inputFiles] [-findAlleles.found] [-findAlleles.deNova]
+                                [-findAlleles.notEnoughInformation] [-findTrees.inputFiles]
+                                [-findTrees.treesCount] [-findTrees.cloneInTrees]
+                                [--force-overwrite] [--no-warnings] [--verbose] [--help] (data.
+                                (vdjca|clns|clna|shmt)|directory)... [report.tsv]
 Export reports from files in tabular format.
       (data.(vdjca|clns|clna|shmt)|directory)...
                              Path to input files or directories.
@@ -106,23 +106,23 @@ Possible fields to export
                              Unassigned alignments as absolute and percentage of input alignments
       -assembleContigs.inputFiles
                              Input files on `assembleContigs` command.
-      -groupClones.inputFiles
-                             Input files on `groupClones` command.
-      -groupClones.numberOfGroups
+      -assembleCells.inputFiles
+                             Input files on `assembleCells` command.
+      -assembleCells.numberOfGroups
                              Number of formed groups of clones
-      -groupClones.unassignedClonotypes
+      -assembleCells.unassignedClonotypes
                              Number of clones that haven't been included in any group
-      -groupClones.invalidGroups
+      -assembleCells.invalidGroups
                              Count of groups with incompatible chains
-      -groupClones.groupsWithTooMatchClones
+      -assembleCells.groupsWithTooMatchClones
                              Groups with more than two chains of the same type
-      -groupClones.cloneContamination
+      -assembleCells.cloneContamination
                              Clones that possibly are contamination
-      -groupClones.contaminatedCells
+      -assembleCells.contaminatedCells
                              Cells with detected and resolved contamination
-      -groupClones.cellsNotIncludedBecauseContamination
+      -assembleCells.cellsNotIncludedBecauseContamination
                              Cell barcodes filtered out because it's clones are contamination
-      -groupClones.cellBarcodesWithFoundGroups
+      -assembleCells.cellBarcodesWithFoundGroups
                              Cell barcodes used in result groups
       -findAlleles.inputFiles
                              Input files on `findAlleles` command.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -44,7 +44,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 object CommandGroupClones {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.groupClones.name
+    const val COMMAND_NAME = MiXCRCommandDescriptor.assembleCells.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandGroupClonesParams> {
         @Option(
@@ -56,7 +56,7 @@ object CommandGroupClones {
         private var overrides: Map<String, String> = mutableMapOf()
 
         override val paramsResolver =
-            object : MiXCRParamsResolver<CommandGroupClonesParams>(MiXCRParamsBundle::groupClones) {
+            object : MiXCRParamsResolver<CommandGroupClonesParams>(MiXCRParamsBundle::assembleCells) {
                 override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {
                     CommandGroupClonesParams::algorithm jsonOverrideWith overrides
                 }
@@ -129,7 +129,7 @@ object CommandGroupClones {
                     writer.writeCloneSet(result)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
                     val report = reportBuilder.buildReport()
-                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.groupClones, report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.assembleCells, report))
                     report
                 }
             }
@@ -154,7 +154,7 @@ object CommandGroupClones {
                     writer.collateAlignments(allAlignmentsList.flatten(), newNumberOfAlignments)
                     reportBuilder.setFinishMillis(System.currentTimeMillis())
                     val report = reportBuilder.buildReport()
-                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.groupClones, report))
+                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.assembleCells, report))
                     writer.writeAlignmentsAndIndex()
                     report
                 }
@@ -195,7 +195,7 @@ object CommandGroupClones {
                 input.usedGenes,
                 input.header
                     .copy(calculatedCloneGroups = true)
-                    .addStepParams(MiXCRCommandDescriptor.groupClones, cmdParams)
+                    .addStepParams(MiXCRCommandDescriptor.assembleCells, cmdParams)
                     .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
             )
                 .sort(input.ordering)
