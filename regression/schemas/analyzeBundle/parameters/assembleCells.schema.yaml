@@ -1,0 +1,73 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  Threshold:
+    type: object
+    properties:
+      percentage:
+        type: number
+      roundingMode:
+        type: string
+        enum:
+          - UP
+          - DOWN
+type: object
+properties:
+  algorithm:
+    anyOf:
+      - allOf:
+          - type: object
+            properties:
+              maxCountOfChainsInACell:
+                type: integer
+              maxDifferentVJPairsPerGroup:
+                type: integer
+          - type: object
+            properties:
+              type:
+                const: BaseSingleCellGrouping
+            required:
+              - type
+      - allOf:
+          - type: object
+            properties:
+              countCellBarcodesWithOneClone:
+                type: boolean
+              minOverlapForBigger:
+                $ref: '#/$defs/Threshold'
+              minOverlapForSmaller:
+                $ref: '#/$defs/Threshold'
+              nonFunctional:
+                anyOf:
+                  - type: object
+                    properties:
+                      type:
+                        const: DontProcess
+                    required:
+                      - type
+                  - allOf:
+                      - type: object
+                        properties:
+                          minOverlapForClone:
+                            $ref: '#/$defs/Threshold'
+                          minOverlapForGroup:
+                            $ref: '#/$defs/Threshold'
+                      - type: object
+                        properties:
+                          type:
+                            const: OverlapWithFoundGroups
+                        required:
+                          - type
+                  - type: object
+                    properties:
+                      type:
+                        const: ProcessWithFunctional
+                    required:
+                      - type
+              thresholdForAssigningLeftoverCells:
+                $ref: '#/$defs/Threshold'
+          - type: object
+            properties:
+              type:
+                const: SingleCellGroupingByOverlappingCellIds
+            required:
+              - type

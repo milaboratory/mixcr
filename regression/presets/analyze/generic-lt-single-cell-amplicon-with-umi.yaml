@@ -6,7 +6,7 @@ pipeline:
   - align
   - refineTagsAndSort
   - assemble
-  - groupClones
+  - assembleCells
   - exportClones
   - exportCloneGroups
 align:
@@ -373,7 +373,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
-groupClones:
+assembleCells:
   algorithm:
     type: SingleCellGroupingByOverlappingCellIds
     minOverlapForSmaller:
