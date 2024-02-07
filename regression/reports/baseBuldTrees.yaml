@@ -973,6 +973,8 @@ upstreams:
             nonFunctional: 37
             isOOF: 32
             hasStops: 5
+      clonesFilteredInFineFiltering: 0
+      readsFilteredInFineFiltering: 0.0
       clonesFilteredInPostFiltering: 0
       readsFilteredInPostFiltering: 0.0
       postFilteringReports: null
@@ -1883,6 +1885,8 @@ upstreams:
             nonFunctional: 1
             isOOF: 1
             hasStops: 0
+      clonesFilteredInFineFiltering: 0
+      readsFilteredInFineFiltering: 0.0
       clonesFilteredInPostFiltering: 0
       readsFilteredInPostFiltering: 0.0
       postFilteringReports: null
