@@ -207,6 +207,8 @@ assemble:
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
+  clonesFilteredInFineFiltering: 0
+  readsFilteredInFineFiltering: 0.0
   clonesFilteredInPostFiltering: 0
   readsFilteredInPostFiltering: 0.0
   postFilteringReports:
