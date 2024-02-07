@@ -1,6 +1,6 @@
-groupClones-base:
+assembleCells-base:
   abstract: true
-  groupClones:
+  assembleCells:
     algorithm:
       type: SingleCellGroupingByOverlappingCellIds
       minOverlapForSmaller:

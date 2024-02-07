@@ -188,11 +188,11 @@ Params for export commands:
                              Reset all clone grouping in the output clone tables.
       --filter-out-group-types (found|undefined|contamination)
                              Filter out clones from groups of particular type.
-                             `found` - groups that were found on `groupClones`.
-                             `undefined` - there were not enough info on `groupClones` to form a
+                             `found` - groups that were found on `assembleCells`.
+                             `undefined` - there were not enough info on `assembleCells` to form a
                                group.
                              `contamination` - clones that were marked as contamination on
-                               `groupClones`.
+                               `assembleCells`.
       --reset-group-types-filter
                              Reset filter of clones by group type.
       --export-productive-clones-only

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -116,7 +116,7 @@ object CommandExportCloneGroups {
     }
 
     @Command(
-        description = ["Export clone groups into tab delimited file. Data should be processed by `${MiXCRCommandDescriptor.groupClones.name}`"]
+        description = ["Export clone groups into tab delimited file. Data should be processed by `${MiXCRCommandDescriptor.assembleCells.name}`"]
     )
     class Cmd : CmdBase() {
         @Parameters(

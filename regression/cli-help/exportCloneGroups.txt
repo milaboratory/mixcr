@@ -80,7 +80,7 @@ Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                <gene_feature> <property>]... [-baseBiochemicalProperties
                                <gene_feature>]... [--force-overwrite] [--no-warnings] [--verbose]
                                [--help] data.(clns|clna) [table.tsv]
-Export clone groups into tab delimited file. Data should be processed by `groupClones`
+Export clone groups into tab delimited file. Data should be processed by `assembleCells`
       data.(clns|clna)       Path to input file with clones
       [table.tsv]            Path where to write export table.
   -o, --filter-out-of-frames Exclude clones with out-of-frame clone sequences (fractions will be

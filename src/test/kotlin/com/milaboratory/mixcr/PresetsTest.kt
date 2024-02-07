@@ -9,7 +9,6 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
-import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
@@ -24,9 +23,7 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainAnyOf
-import io.kotest.matchers.collections.shouldNotBeIn
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.Assert
@@ -180,7 +177,7 @@ class PresetsTest {
         Presets.nonAbstractPresetNames
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                MiXCRCommandDescriptor.groupClones in bundle.pipeline!!.steps
+                MiXCRCommandDescriptor.assembleCells in bundle.pipeline!!.steps
             }
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
