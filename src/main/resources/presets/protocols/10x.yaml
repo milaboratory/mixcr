@@ -104,40 +104,6 @@
         postFilters:
           - type: filter_in_groups
             isolationKeys:
-              - chain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_nunique
-                      reportHist: null
-                      keys:
-                        - allTags:Molecule
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.8
-            aggregateReport: true
-          - type: filter_in_groups
-            isolationKeys:
-              - chain
-              - allTags:Cell
-            nestedFilter:
-              type: filter_groups
-              groupingKeys:
-                - clone
-              predicates:
-                - metrics:
-                    - type: group_metric_sum_weight
-                      reportHist: null
-                  operator:
-                    type: group_operator_cumtop
-                    share: 0.9
-            aggregateReport: true
-          - type: filter_in_groups
-            isolationKeys:
               - clone
             nestedFilter:
               type: filter_groups
