@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -68,6 +68,7 @@ import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.Path
+import kotlin.io.path.absolute
 import kotlin.system.exitProcess
 
 object Main {
@@ -385,6 +386,12 @@ object Main {
                     err.println("   Version: " + MiXCRVersionInfo.get().shortestVersionString)
                     err.println("        OS: " + System.getProperty("os.name"))
                     err.println("      Java: " + System.getProperty("java.version"))
+                    err.println("  Abs path: " + Path("").absolute())
+                    if (logger.verbose)
+                        err.println(" Libraries: " + VDJCLibraryRegistry.getDefault().loadedLibraries.map { library ->
+                            val sources = library.data.genes.map { it.baseSequence.origin }.distinct()
+                            "`${library.name}:${library.taxonId}` with sources $sources"
+                        })
                     err.println("  Cmd args: " + cmdArgs.joinToString(" "))
                     try {
                         ex.rethrowOOM()

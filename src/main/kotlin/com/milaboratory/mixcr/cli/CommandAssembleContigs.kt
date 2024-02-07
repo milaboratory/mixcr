@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,7 +13,6 @@
 
 package com.milaboratory.mixcr.cli
 
-import cc.redberry.pipe.CUtils
 import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.mapInParallelOrdered
 import com.milaboratory.app.InputFileType
@@ -46,14 +45,12 @@ import com.milaboratory.primitivio.PrimitivI
 import com.milaboratory.primitivio.PrimitivO
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.StreamUtil
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
-import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -67,7 +64,6 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.nio.file.Path
 import java.util.*
-import java.util.stream.Collectors
 
 object CommandAssembleContigs {
     const val COMMAND_NAME = MiXCRCommandDescriptor.assembleContigs.name
@@ -221,75 +217,37 @@ object CommandAssembleContigs {
                                 try {
                                     // Collecting statistics
                                     var coverages = clone.hitsMap
-                                        .entries.stream()
-                                        .filter { (_, value) -> value != null && value.isNotEmpty() }
-                                        .collect(
-                                            Collectors.toMap(
-                                                { (key, _) -> key },
-                                                { (_, value) ->
-                                                    Arrays.stream(
-                                                        value
-                                                    )
-                                                        .filter { h ->
-                                                            h.geneType != Variable && h.geneType != Joining ||
-                                                                    FullSeqAssembler.checkGeneCompatibility(
-                                                                        h,
-                                                                        reader.assemblingFeatures
-                                                                    )
-                                                        }
-                                                        .collect(
-                                                            Collectors.toMap(
-                                                                { h -> h.gene.id },
-                                                                { hit -> CoverageAccumulator(hit) })
+                                        .filterValues { value -> value != null && value.isNotEmpty() }
+                                        .mapValuesTo(EnumMap(GeneType::class.java)) { (_, value) ->
+                                            value.filter { hit ->
+                                                hit.geneType !in GeneType.VJ_REFERENCE ||
+                                                        FullSeqAssembler.checkGeneCompatibility(
+                                                            hit, reader.assemblingFeatures
                                                         )
-                                                },
-                                                StreamUtil.noMerge(),
-                                                { EnumMap(GeneType::class.java) }
-                                            )
-                                        )
+                                            }.associate { hit -> hit.gene.id to CoverageAccumulator(hit) }
+                                        }
 
                                     // Filtering empty maps
-                                    coverages = coverages.entries.stream()
-                                        .filter { (_, value) -> value.isNotEmpty() }
-                                        .collect(
-                                            Collectors.toMap(
-                                                { (key, _) -> key },
-                                                { (_, value) -> value },
-                                                StreamUtil.noMerge(),
-                                                { EnumMap(GeneType::class.java) }
-                                            )
-                                        )
-                                    if (!coverages.containsKey(Variable) || !coverages.containsKey(Joining)) {
+                                    coverages = coverages
+                                        .filterValues { it.isNotEmpty() }
+                                        .toMap(EnumMap(GeneType::class.java))
+                                    if (Variable !in coverages || Joining !in coverages) {
                                         // Something went really wrong
                                         reportBuilder.onAssemblyCanceled(clone)
                                         return@mapInParallelOrdered arrayOf(clone)
                                     }
-                                    for (alignments in CUtils.it(cloneAlignments.alignments())) {
+                                    cloneAlignments.alignments().forEach { alignments ->
                                         for ((key, value) in alignments.hitsMap) {
                                             for (hit in value) {
-                                                Optional.ofNullable(coverages[key])
-                                                    .flatMap { Optional.ofNullable(it[hit.gene.id]) }
-                                                    .ifPresent { acc -> acc.accumulate(hit) }
+                                                coverages[key]?.let { it[hit.gene.id]?.accumulate(hit) }
                                             }
                                         }
                                     }
 
                                     // Selecting best hits for clonal sequence assembly based in the coverage information
-                                    val bestGenes = coverages.entries.stream()
-                                        .collect(
-                                            Collectors.toMap(
-                                                { (key, _) -> key },
-                                                { (_, value) ->
-                                                    value.entries.stream()
-                                                        .max(Comparator.comparing { (_, value1): Map.Entry<VDJCGeneId?, CoverageAccumulator> ->
-                                                            value1.getNumberOfCoveredPoints(1)
-                                                        })
-                                                        .map { (_, value1) -> value1.hit }
-                                                        .get()
-                                                },
-                                                StreamUtil.noMerge(),
-                                                { EnumMap(GeneType::class.java) })
-                                        )
+                                    val bestGenes = coverages.mapValuesTo(EnumMap(GeneType::class.java)) { (_, value) ->
+                                        value.values.maxByOrNull { it.getNumberOfCoveredPoints(1) }?.hit
+                                    }
 
                                     // Performing contig assembly
                                     val fullSeqAssembler = FullSeqAssembler(
@@ -302,7 +260,6 @@ object CommandAssembleContigs {
                                     val rawVariantsData =
                                         fullSeqAssembler.calculateRawData { cloneAlignments.alignments() }
                                     if (debugReport != null) {
-                                        @Suppress("BlockingMethodInNonBlockingContext")
                                         synchronized(debugReport) {
                                             FileOutputStream(debugReportFile?.toString() + "." + clone.id).use { fos ->
                                                 val content = rawVariantsData.toCsv(10.toByte())
