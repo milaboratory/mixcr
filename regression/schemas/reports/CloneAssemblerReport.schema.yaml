@@ -168,6 +168,8 @@ properties:
     type: integer
   clonesDroppedAsLowQuality:
     type: integer
+  clonesFilteredInFineFiltering:
+    type: integer
   clonesFilteredInPostFiltering:
     type: integer
   clonesPreClustered:
@@ -268,6 +270,8 @@ properties:
     type: integer
   readsDroppedWithLowQualityClones:
     type: integer
+  readsFilteredInFineFiltering:
+    type: number
   readsFilteredInPostFiltering:
     type: number
   readsInClones:
