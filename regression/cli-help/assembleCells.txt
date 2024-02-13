@@ -1,6 +1,6 @@
-Usage: mixcr groupClones [-O <key=value>]... [--report <path>] [--json-report <path>]
-                         [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
-                         [--help] clones.(clns|clna) grouped.(clns|clna)
+Usage: mixcr assembleCells [-O <key=value>]... [--report <path>] [--json-report <path>]
+                           [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
+                           [--help] clones.(clns|clna) grouped.(clns|clna)
 Group clones by cells. Required data with cell tags.
       clones.(clns|clna)     Path to input file.
       grouped.(clns|clna)    Path where to write output. Will have the same file type.

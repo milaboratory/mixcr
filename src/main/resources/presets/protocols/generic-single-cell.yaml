@@ -11,7 +11,7 @@ generic-lt-single-cell-amplicon:
     - align
     - refineTagsAndSort
     - assemble
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -80,8 +80,8 @@ generic-lt-single-cell-amplicon:
     inheritFrom: exportAlignments-single-cell-no-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-no-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # Low throughput (plates etc) amplicon-based single cell, with UMIs
 generic-lt-single-cell-amplicon-with-umi:
@@ -96,7 +96,7 @@ generic-lt-single-cell-amplicon-with-umi:
     - align
     - refineTagsAndSort
     - assemble
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -227,8 +227,8 @@ generic-lt-single-cell-amplicon-with-umi:
     inheritFrom: exportAlignments-single-cell-with-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-with-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # Low throughput (plates etc) shotgun single cell, no UMIs
 generic-lt-single-cell-fragmented:
@@ -244,7 +244,7 @@ generic-lt-single-cell-fragmented:
     - extend
     - assemble
     - assembleContigs
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -296,8 +296,8 @@ generic-lt-single-cell-fragmented:
     inheritFrom: exportAlignments-single-cell-no-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-no-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # Low throughput (plates etc) shotgun single cell, with UMIs
 generic-lt-single-cell-fragmented-with-umi:
@@ -313,7 +313,7 @@ generic-lt-single-cell-fragmented-with-umi:
     - extend
     - assemble
     - assembleContigs
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -411,8 +411,8 @@ generic-lt-single-cell-fragmented-with-umi:
     inheritFrom: exportAlignments-single-cell-with-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-with-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 
 # High throughput amplicon-based single cell, no UMIs
@@ -429,7 +429,7 @@ generic-ht-single-cell-amplicon:
     - align
     - refineTagsAndSort
     - assemble
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -525,8 +525,8 @@ generic-ht-single-cell-amplicon:
     inheritFrom: exportAlignments-single-cell-no-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-no-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # High throughput amplicon-based single cell, with UMIs
 generic-ht-single-cell-amplicon-with-umi:
@@ -542,7 +542,7 @@ generic-ht-single-cell-amplicon-with-umi:
     - align
     - refineTagsAndSort
     - assemble
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -701,8 +701,8 @@ generic-ht-single-cell-amplicon-with-umi:
     inheritFrom: exportAlignments-single-cell-with-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-with-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # High throughput fragmented-based single cell, no UMIs
 generic-ht-single-cell-fragmented:
@@ -719,7 +719,7 @@ generic-ht-single-cell-fragmented:
     - extend
     - assemble
     - assembleContigs
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -808,8 +808,8 @@ generic-ht-single-cell-fragmented:
     inheritFrom: exportAlignments-single-cell-no-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-no-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # High throughput fragmented-based single cell, with UMIs
 generic-ht-single-cell-fragmented-with-umi:
@@ -826,7 +826,7 @@ generic-ht-single-cell-fragmented-with-umi:
     - extend
     - assemble
     - assembleContigs
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -948,8 +948,8 @@ generic-ht-single-cell-fragmented-with-umi:
     inheritFrom: exportAlignments-single-cell-with-umi-base
   exportCloneGroups:
     inheritFrom: exportCloneGroups-single-cell-with-umi-base
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 generic-single-cell-gex-base:
   category: generic
@@ -962,7 +962,7 @@ generic-single-cell-gex-base:
     - extend
     - assemble
     - assembleContigs
-    - groupClones
+    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -983,8 +983,8 @@ generic-single-cell-gex-base:
     inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
-  groupClones:
-    inheritFrom: groupClones-base
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # Single cell GEX without UMI
 generic-single-cell-gex:

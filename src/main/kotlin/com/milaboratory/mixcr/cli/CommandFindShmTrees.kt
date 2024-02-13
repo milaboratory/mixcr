@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -411,7 +411,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 val filesToGroup = inputFiles
                     .filterIndexed { index, _ -> index in datasetsThatShouldHaveGroups }
                     .joinToString(", ")
-                "Can't use information about cell, run `${MiXCRCommandDescriptor.groupClones}` for $filesToGroup"
+                "Can't use information about cell, run `${MiXCRCommandDescriptor.assembleCells}` for $filesToGroup"
             }
         }
         return datasetsWithGroups

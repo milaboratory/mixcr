@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -699,9 +699,9 @@ object ExportMiXCRMixins {
         @Option(
             description = [
                 "Filter out clones from groups of particular type.",
-                "`found` - groups that were found on `${MiXCRCommandDescriptor.groupClones.name}`.",
-                "`undefined` - there were not enough info on `${MiXCRCommandDescriptor.groupClones.name}` to form a group.",
-                "`contamination` - clones that were marked as contamination on `${MiXCRCommandDescriptor.groupClones.name}`.",
+                "`found` - groups that were found on `${MiXCRCommandDescriptor.assembleCells.name}`.",
+                "`undefined` - there were not enough info on `${MiXCRCommandDescriptor.assembleCells.name}` to form a group.",
+                "`contamination` - clones that were marked as contamination on `${MiXCRCommandDescriptor.assembleCells.name}`.",
             ],
             names = [ExportMixins.FilterOutCloneGroupTypes.CMD_OPTION],
             arity = "1..*",

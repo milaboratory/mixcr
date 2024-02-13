@@ -1047,7 +1047,7 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
-groupClones:
+assembleCells:
   algorithm:
     type: SingleCellGroupingByOverlappingCellIds
     minOverlapForSmaller:
