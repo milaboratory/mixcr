@@ -249,7 +249,7 @@ assemble:
       minRecordsPerConsensus: 0
       minRecursiveRecordShare: 0.1
       minQualityScore: 0
-      maxConsensuses: 6
+      maxConsensuses: 2
     minTagSuffixShare: 0.0
     isolateChains: true
   cloneAssemblerParameters:
