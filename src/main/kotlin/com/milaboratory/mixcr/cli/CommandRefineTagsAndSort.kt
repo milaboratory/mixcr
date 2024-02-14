@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -39,7 +39,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
@@ -61,7 +61,7 @@ import java.nio.file.Path
 import java.util.*
 
 object CommandRefineTagsAndSort {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.refineTagsAndSort.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.refineTagsAndSort.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandRefineTagsAndSortParams> {
         @Option(
@@ -436,7 +436,7 @@ object CommandRefineTagsAndSort {
                     writer.writeHeader(
                         header
                             .updateTagInfo { tagsInfo -> tagsInfo.setSorted(tagsInfo.size) }
-                            .addStepParams(MiXCRCommandDescriptor.refineTagsAndSort, cmdParams)
+                            .addStepParams(AnalyzeCommandDescriptor.refineTagsAndSort, cmdParams)
                             .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                         mainReader.usedGenes
                     )
@@ -454,7 +454,7 @@ object CommandRefineTagsAndSort {
                     writer.setFooter(
                         mainReader.footer
                             .withThresholds(thresholds)
-                            .addStepReport(MiXCRCommandDescriptor.refineTagsAndSort, refineTagsAndSortReport)
+                            .addStepReport(AnalyzeCommandDescriptor.refineTagsAndSort, refineTagsAndSortReport)
                     )
                 }
             }

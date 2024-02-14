@@ -32,8 +32,8 @@ import com.milaboratory.mixcr.export.CloneGroupFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.ExportMixins
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.SubstitutionHelper
 import com.milaboratory.util.asOutputPortWithProgress
@@ -49,7 +49,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 object CommandExportCloneGroups {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.exportCloneGroups.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.exportCloneGroups.name
 
     private fun CommandExportCloneGroupsParams.test(
         clone: Clone,
@@ -116,7 +116,7 @@ object CommandExportCloneGroups {
     }
 
     @Command(
-        description = ["Export clone groups into tab delimited file. Data should be processed by `${MiXCRCommandDescriptor.assembleCells.name}`"]
+        description = ["Export clone groups into tab delimited file. Data should be processed by `${AnalyzeCommandDescriptor.assembleCells.name}`"]
     )
     class Cmd : CmdBase() {
         @Parameters(

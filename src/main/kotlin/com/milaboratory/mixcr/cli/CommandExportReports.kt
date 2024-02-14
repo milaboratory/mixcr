@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -18,7 +18,7 @@ import com.milaboratory.app.InputFileType.YAML
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.getReportSafe
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
@@ -130,7 +130,7 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
                         else -> footer.reports.collection.steps
                     }
                     steps.forEach { step ->
-                        val command = MiXCRCommandDescriptor.fromString(step)
+                        val command = AnalyzeCommandDescriptor.fromString(step)
                         val reports = footer.reports.getReportSafe(command)
                         if (reports == null) {
                             helper.println("Can't read report for $step, file has too old version")

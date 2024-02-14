@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -33,7 +33,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCObject
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.util.VDJCObjectExtender
@@ -53,7 +53,7 @@ import java.nio.file.Path
 
 
 object CommandExtend {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.extend.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.extend.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandExtendParams> {
         @Option(
@@ -185,7 +185,7 @@ object CommandExtend {
                     process.output.toList(),
                     cloneSet.usedGenes,
                     cloneSet.header
-                        .addStepParams(MiXCRCommandDescriptor.extend, process.params)
+                        .addStepParams(AnalyzeCommandDescriptor.extend, process.params)
                         .copy(allFullyCoveredBy = null)
                         .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
                 )
@@ -195,7 +195,7 @@ object CommandExtend {
                 ClnsWriter(outputFile).use { writer ->
                     writer.writeCloneSet(newCloneSet)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.extend, report))
+                    writer.setFooter(reader.footer.addStepReport(AnalyzeCommandDescriptor.extend, report))
                 }
             }
         }
@@ -209,7 +209,7 @@ object CommandExtend {
                     writer.writeHeader(
                         reader.header
                             .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
-                            .addStepParams(MiXCRCommandDescriptor.extend, process.params),
+                            .addStepParams(AnalyzeCommandDescriptor.extend, process.params),
                         reader.usedGenes
                     )
                     writer.setFooter(reader.footer)
@@ -226,7 +226,7 @@ object CommandExtend {
 
                     writer.setNumberOfProcessedReads(reader.numberOfReads)
                     val report = process.finish()
-                    writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.extend, report))
+                    writer.setFooter(reader.footer.addStepReport(AnalyzeCommandDescriptor.extend, report))
                 }
             }
         }

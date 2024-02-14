@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -23,7 +23,7 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.ReportFieldsExtractors
 import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.export.RowMetaForExport
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.StepDataCollection
 import com.milaboratory.mixcr.presets.getReportSafe
 import picocli.CommandLine
@@ -121,7 +121,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             }
             upstreamRecords + ReportsWithSource(
                 input.toString(),
-                MiXCRCommandDescriptor.values().mapNotNull { footer.reports.getReportSafe(it) }.flatten(),
+                AnalyzeCommandDescriptor.values().mapNotNull { footer.reports.getReportSafe(it) }.flatten(),
                 upstreamRecords.flatMap { it.reports }
             )
         }
@@ -139,7 +139,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             val upstreamReports = collection.upstreamReportsWithSources()
             upstreamReports + ReportsWithSource(
                 sourceName,
-                MiXCRCommandDescriptor.values().mapNotNull { collection.getReportSafe(it) }.flatten(),
+                AnalyzeCommandDescriptor.values().mapNotNull { collection.getReportSafe(it) }.flatten(),
                 upstreamReports.flatMap { it.reports }
             )
         }
