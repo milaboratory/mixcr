@@ -221,10 +221,6 @@ object Main {
             )
             .commandsGroup(
                 CommandsGroup("Util commands")
-                    .addSubcommand(
-                        CommandReduceToCommonAssembleFeature.COMMAND_NAME,
-                        CommandReduceToCommonAssembleFeature::class.java
-                    )
                     .addSubcommand("exportReadsForClones", CommandExportReadsForClones::class.java)
                     .addSubcommand("exportAlignmentsForClones", CommandExportAlignmentsForClones::class.java)
                     .addSubcommand("exportReads", CommandExportReads::class.java)
