@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -45,7 +45,7 @@ public class VDJCAlignerParametersTest {
                 VJAlignmentOrder.JThenV, VDJCLibraryStructure.Unknown,
                 false, false,
                 120.0f, 5, 0.7f, false, false, false, PairedEndReadsLayout.Opposite, new MergerParameters(
-                QualityMergingAlgorithm.SumSubtraction, null, 12, 12, null, 0.12, Unweighted), false, 5, 120, 10, true, true, true);
+                QualityMergingAlgorithm.SumSubtraction, null, 12, 12, null, 0.12, Unweighted), false, 5, 120, 10, true, true, true, null, null);
 
         String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         VDJCAlignerParameters deser = GlobalObjectMappers.getPretty().readValue(str, VDJCAlignerParameters.class);
