@@ -2,7 +2,7 @@ package com.milaboratory.mixcr.cli
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.mixcr.export.ExportFieldDescription
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.TempFileManager
@@ -52,7 +52,7 @@ class CommandExportPresetTest {
         output.delete()
         TestMain.execute("exportPreset --species hs --floating-left-alignment-boundary --floating-right-alignment-boundary C --dna --add-step assembleContigs --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
-        result.pipeline!!.steps shouldContain MiXCRCommandDescriptor.assembleContigs
+        result.pipeline!!.steps shouldContain AnalyzeCommandDescriptor.assembleContigs
         result.assemble!!.clnaOutput shouldBe true
     }
 
@@ -62,8 +62,8 @@ class CommandExportPresetTest {
         output.delete()
         TestMain.execute("exportPreset --floating-left-alignment-boundary --floating-right-alignment-boundary C --species hs --dna --remove-step exportClones --remove-step exportAlignments --preset-name test-tcr-shotgun ${output.path}")
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
-        result.pipeline!!.steps shouldNotContain MiXCRCommandDescriptor.exportClones
-        result.pipeline!!.steps shouldNotContain MiXCRCommandDescriptor.exportAlignments
+        result.pipeline!!.steps shouldNotContain AnalyzeCommandDescriptor.exportClones
+        result.pipeline!!.steps shouldNotContain AnalyzeCommandDescriptor.exportAlignments
     }
 
     @Test
@@ -85,8 +85,8 @@ class CommandExportPresetTest {
         val result = K_YAML_OM.readValue<MiXCRParamsBundle>(output)
         result.flags shouldBe emptySet()
         result.align!!.species shouldBe "hsa"
-        result.pipeline!!.steps shouldNotContain MiXCRCommandDescriptor.exportClones
-        result.pipeline!!.steps shouldNotContain MiXCRCommandDescriptor.exportAlignments
+        result.pipeline!!.steps shouldNotContain AnalyzeCommandDescriptor.exportClones
+        result.pipeline!!.steps shouldNotContain AnalyzeCommandDescriptor.exportAlignments
         result.align!!.tagPattern shouldBe "^(R1F:N{0:2}(C:gggggaaaagggttg)(R1:*))"
         result.align!!.tagUnstranded shouldBe true
         result.align!!.limit shouldBe 1000

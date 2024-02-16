@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -17,8 +17,8 @@ import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.Flags
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.Presets
@@ -39,18 +39,18 @@ abstract class MiXCRParamsResolver<P : Any>(
             throw ValidationException("Error validating preset bundle.");
         }
         if (
-            bundle.pipeline?.steps?.contains(MiXCRCommandDescriptor.assembleContigs) == true &&
+            bundle.pipeline?.steps?.contains(AnalyzeCommandDescriptor.assembleContigs) == true &&
             bundle.assemble?.clnaOutput == false
         )
             throw ValidationException("assembleContigs step required clnaOutput=true on assemble step")
 
         bundle.align?.parameters?.featuresToAlignMap?.let { HasFeatureToAlign(it) }?.let { featuresToAlign ->
-            if (bundle.pipeline?.steps?.contains(MiXCRCommandDescriptor.assemble) == true) {
+            if (bundle.pipeline?.steps?.contains(AnalyzeCommandDescriptor.assemble) == true) {
                 bundle.assemble?.let { params ->
                     CommandAssemble.validateParams(params, featuresToAlign)
                 }
             }
-            if (bundle.pipeline?.steps?.contains(MiXCRCommandDescriptor.assembleContigs) == true) {
+            if (bundle.pipeline?.steps?.contains(AnalyzeCommandDescriptor.assembleContigs) == true) {
                 bundle.assembleContigs?.let { params ->
                     CommandAssembleContigs.validateParams(params, featuresToAlign)
                 }

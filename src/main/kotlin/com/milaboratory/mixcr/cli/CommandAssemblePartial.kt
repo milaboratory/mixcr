@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -25,7 +25,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssembler
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
@@ -38,7 +38,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 object CommandAssemblePartial {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.assemblePartial.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.assemblePartial.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssemblePartialParams> {
         @Option(
@@ -144,7 +144,7 @@ object CommandAssemblePartial {
                 writer.writeHeader(
                     header
                         .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
-                        .addStepParams(MiXCRCommandDescriptor.assemblePartial, cmdParams)
+                        .addStepParams(AnalyzeCommandDescriptor.assemblePartial, cmdParams)
                         .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                     reader.usedGenes
                 )
@@ -203,7 +203,7 @@ object CommandAssemblePartial {
                 }
                 reportOptions.appendToFiles(report)
                 writer.setNumberOfProcessedReads(reader.numberOfReads - assembler.overlapped.get())
-                writer.setFooter(reader.footer.addStepReport(MiXCRCommandDescriptor.assemblePartial, report))
+                writer.setFooter(reader.footer.addStepReport(AnalyzeCommandDescriptor.assemblePartial, report))
             }
         }
     }

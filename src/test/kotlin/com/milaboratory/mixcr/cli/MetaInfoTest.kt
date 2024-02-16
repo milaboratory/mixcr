@@ -1,5 +1,6 @@
 package com.milaboratory.mixcr.cli
 
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
@@ -13,7 +14,7 @@ class MetaInfoTest {
         mixcrCommandDescriptions()
             .map { it.command }
             .filter { commandName ->
-                MiXCRCommandDescriptor.fromStringOrNull(commandName) == null
+                AnalyzeCommandDescriptor.fromStringOrNull(commandName) == null
             } shouldBe emptyList()
     }
 
@@ -24,7 +25,7 @@ class MetaInfoTest {
             MiXCRCommandDescriptor.findAlleles,
             MiXCRCommandDescriptor.findShmTrees,
 
-            MiXCRCommandDescriptor.align
+            AnalyzeCommandDescriptor.align
         )
         (mixcrCommandDescriptions() - exclusions)
             .map { it.command }
@@ -41,10 +42,10 @@ class MetaInfoTest {
             MiXCRCommandDescriptor.findAlleles,
             MiXCRCommandDescriptor.findShmTrees,
 
-            MiXCRCommandDescriptor.exportClones,
-            MiXCRCommandDescriptor.exportCloneGroups,
-            MiXCRCommandDescriptor.exportAlignments,
-            MiXCRCommandDescriptor.qc,
+            AnalyzeCommandDescriptor.exportClones,
+            AnalyzeCommandDescriptor.exportCloneGroups,
+            AnalyzeCommandDescriptor.exportAlignments,
+            AnalyzeCommandDescriptor.qc,
         )
         (mixcrCommandDescriptions() - exclusions)
             .map { it.command }
@@ -55,7 +56,7 @@ class MetaInfoTest {
     }
 
     private fun mixcrCommandDescriptions() =
-        MiXCRCommandDescriptor::class.resolveSealedSubclasses().map { it.objectInstance!! }
+        AnalyzeCommandDescriptor::class.resolveSealedSubclasses().map { it.objectInstance!! }
 
     private fun <T : Any> KClass<T>.resolveSealedSubclasses(): List<KClass<out T>> =
         when {

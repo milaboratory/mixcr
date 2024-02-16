@@ -11,7 +11,7 @@ import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
 import com.milaboratory.mixcr.presets.Presets
@@ -152,7 +152,7 @@ class PresetsTest {
     fun `all presets should have exportClones step`() {
         Presets.nonAbstractPresetNames.filter { presetName ->
             val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-            MiXCRCommandDescriptor.exportClones !in bundle.pipeline!!.steps
+            AnalyzeCommandDescriptor.exportClones !in bundle.pipeline!!.steps
         } shouldBe emptyList()
     }
 
@@ -162,7 +162,7 @@ class PresetsTest {
             presetName.asClue {
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                 bundle.pipeline!!.steps
-                    .filterIsInstance<MiXCRCommandDescriptor.ExportCommandDescriptor<*>>()
+                    .filterIsInstance<AnalyzeCommandDescriptor.ExportCommandDescriptor<*>>()
                     .forEach { exportStep ->
                         exportStep.command.asClue {
                             bundle.pipeline!!.steps shouldContainAnyOf exportStep.runAfterLastOf()
@@ -177,11 +177,11 @@ class PresetsTest {
         Presets.nonAbstractPresetNames
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                MiXCRCommandDescriptor.assembleCells in bundle.pipeline!!.steps
+                AnalyzeCommandDescriptor.assembleCells in bundle.pipeline!!.steps
             }
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                MiXCRCommandDescriptor.exportCloneGroups !in bundle.pipeline!!.steps
+                AnalyzeCommandDescriptor.exportCloneGroups !in bundle.pipeline!!.steps
             } shouldBe emptyList()
     }
 

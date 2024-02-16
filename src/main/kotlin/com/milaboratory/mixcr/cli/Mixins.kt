@@ -33,6 +33,7 @@ import com.milaboratory.mixcr.presets.AlignMixins.RightAlignmentBoundaryWithPoin
 import com.milaboratory.mixcr.presets.AlignMixins.SetLibrary
 import com.milaboratory.mixcr.presets.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.presets.AlignMixins.SetTagPattern
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AssembleContigsMixins.SetContigAssemblingFeatures
 import com.milaboratory.mixcr.presets.AssembleMixins.SetClonotypeAssemblingFeatures
 import com.milaboratory.mixcr.presets.AssembleMixins.SetSplitClonesBy
@@ -43,7 +44,6 @@ import com.milaboratory.mixcr.presets.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.GenericMixin
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.presets.QcMixins
@@ -699,9 +699,9 @@ object ExportMiXCRMixins {
         @Option(
             description = [
                 "Filter out clones from groups of particular type.",
-                "`found` - groups that were found on `${MiXCRCommandDescriptor.assembleCells.name}`.",
-                "`undefined` - there were not enough info on `${MiXCRCommandDescriptor.assembleCells.name}` to form a group.",
-                "`contamination` - clones that were marked as contamination on `${MiXCRCommandDescriptor.assembleCells.name}`.",
+                "`found` - groups that were found on `${AnalyzeCommandDescriptor.assembleCells.name}`.",
+                "`undefined` - there were not enough info on `${AnalyzeCommandDescriptor.assembleCells.name}` to form a group.",
+                "`contamination` - clones that were marked as contamination on `${AnalyzeCommandDescriptor.assembleCells.name}`.",
             ],
             names = [ExportMixins.FilterOutCloneGroupTypes.CMD_OPTION],
             arity = "1..*",

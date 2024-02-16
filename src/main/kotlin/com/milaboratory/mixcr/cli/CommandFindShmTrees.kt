@@ -33,6 +33,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
@@ -411,7 +412,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
                 val filesToGroup = inputFiles
                     .filterIndexed { index, _ -> index in datasetsThatShouldHaveGroups }
                     .joinToString(", ")
-                "Can't use information about cell, run `${MiXCRCommandDescriptor.assembleCells}` for $filesToGroup"
+                "Can't use information about cell, run `${AnalyzeCommandDescriptor.assembleCells}` for $filesToGroup"
             }
         }
         return datasetsWithGroups

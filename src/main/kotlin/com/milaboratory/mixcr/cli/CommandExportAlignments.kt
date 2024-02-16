@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -30,7 +30,7 @@ import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.RowMetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.OutputPortWithProgress
@@ -48,7 +48,7 @@ import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
 object CommandExportAlignments {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.exportAlignments.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.exportAlignments.name
 
     fun CommandExportAlignmentsParams.mkFilter(): Filter<VDJCAlignments> {
         val chainsParsed = Chains.parse(chains)

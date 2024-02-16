@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -19,7 +19,7 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.qc.checks.QcCheckResult
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.ALERT
@@ -36,7 +36,7 @@ import java.io.PrintStream
 import java.nio.file.Path
 
 object CommandQcChecks {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.qc.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.qc.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandQcChecksParams> {
         @Mixin

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -42,7 +42,7 @@ import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.HashFunctions
@@ -66,7 +66,7 @@ import kotlin.io.path.bufferedWriter
 import kotlin.io.path.extension
 
 object CommandAssemble {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.assemble.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.assemble.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssembleParams> {
         @Option(
@@ -388,7 +388,7 @@ object CommandAssemble {
                     val resultHeader = inputHeader
                         .withAssemblerParameters(cloneAssemblerParameters)
                         .addStepParams(
-                            MiXCRCommandDescriptor.assemble,
+                            AnalyzeCommandDescriptor.assemble,
                             paramsResolver.resolve(paramSpec).second
                         )
                         .copy(paramsSpec = dontSavePresetOption.presetToSave(paramSpec))
@@ -440,7 +440,7 @@ object CommandAssemble {
                             report = reportBuilder.buildReport()
                             writer.setFooter(
                                 alignmentsReader.footer.addStepReport(
-                                    MiXCRCommandDescriptor.assemble,
+                                    AnalyzeCommandDescriptor.assemble,
                                     report
                                 )
                             )
@@ -453,7 +453,7 @@ object CommandAssemble {
                             report = reportBuilder.buildReport()
                             writer.setFooter(
                                 alignmentsReader.footer.addStepReport(
-                                    MiXCRCommandDescriptor.assemble,
+                                    AnalyzeCommandDescriptor.assemble,
                                     report
                                 )
                             )
