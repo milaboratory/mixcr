@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -44,7 +44,7 @@ public class RunMiXCRTest {
         RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
 
         for (Clone clone : assemble.cloneSet.getClones()) {
-            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
+            Chains vjLoci = VDJCAligner.Companion.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
                     null);
             for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
                 Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
@@ -195,7 +195,7 @@ public class RunMiXCRTest {
         // }
 
         for (Clone clone : assemble.cloneSet.getClones()) {
-            Chains vjLoci = VDJCAligner.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
+            Chains vjLoci = VDJCAligner.Companion.getPossibleDLoci(clone.getHits(GeneType.Variable), clone.getHits(GeneType.Joining),
                     null);
             for (VDJCHit dHit : clone.getHits(GeneType.Diversity))
                 Assert.assertTrue(vjLoci.intersects(dHit.getGene().getChains()));
