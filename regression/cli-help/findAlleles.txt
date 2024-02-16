@@ -12,14 +12,13 @@ of V and J genes and the same features to align.
                              In case of directory no filter by file type will be applied.
       --output-template <template.clns>
                              Output template may contain {file_name} and {file_dir_path},
-                             outputs for '-o /output/folder/{file_name}_with_alleles.clns
-                               input_file.clns input_file2.clns' will be
-                               /output/folder/input_file_with_alleles.clns and
-                               /output/folder/input_file2_with_alleles.clns,
-                             outputs for '-o {file_dir_path}/{file_name}_with_alleles.clns
+                             outputs for '-o /output/folder/{file_name}_suffix.clns input_file.clns
+                               input_file2.clns' will be /output/folder/input_file_suffix.clns and
+                               /output/folder/input_file2_suffix.clns,
+                             outputs for '-o {file_dir_path}/{file_name}_suffix.clns
                                /some/folder1/input_file.clns /some/folder2/input_file2.clns' will
-                               be /seme/folder1/input_file_with_alleles.clns and
-                               /some/folder2/input_file2_with_alleles.clns
+                               be /seme/folder1/input_file_suffix.clns and
+                               /some/folder2/input_file2_suffix.clns
                              Resulted outputs must be uniq
       --no-clns-output       Command will not realign input clns files. Must be specified if
                                `--output-template` is omitted.
@@ -81,7 +80,7 @@ of V and J genes and the same features to align.
                                allele.
       --dont-remove-unused-genes
                              Don't remove genes that weren't used in clones in the result library
-  -O  <key=value>            Overrides default build SHM parameter values
+  -O  <key=value>            Overrides default find alleles parameter values
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.
