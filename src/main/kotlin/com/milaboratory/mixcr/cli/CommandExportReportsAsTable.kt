@@ -23,7 +23,7 @@ import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.ReportFieldsExtractors
 import com.milaboratory.mixcr.export.ReportFieldsExtractors.ReportsWithSource
 import com.milaboratory.mixcr.export.RowMetaForExport
-import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.StepDataCollection
 import com.milaboratory.mixcr.presets.getReportSafe
 import picocli.CommandLine
@@ -121,7 +121,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             }
             upstreamRecords + ReportsWithSource(
                 input.toString(),
-                AnalyzeCommandDescriptor.values().mapNotNull { footer.reports.getReportSafe(it) }.flatten(),
+                MiXCRCommandDescriptor.values().mapNotNull { footer.reports.getReportSafe(it) }.flatten(),
                 upstreamRecords.flatMap { it.reports }
             )
         }
@@ -139,7 +139,7 @@ class CommandExportReportsAsTable : MiXCRCommandWithOutputs() {
             val upstreamReports = collection.upstreamReportsWithSources()
             upstreamReports + ReportsWithSource(
                 sourceName,
-                AnalyzeCommandDescriptor.values().mapNotNull { collection.getReportSafe(it) }.flatten(),
+                MiXCRCommandDescriptor.values().mapNotNull { collection.getReportSafe(it) }.flatten(),
                 upstreamReports.flatMap { it.reports }
             )
         }
