@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -21,7 +21,7 @@ import com.milaboratory.mixcr.cli.CommandRefineTagsAndSort
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommandWithOutputs
 import com.milaboratory.mixcr.cli.exportTypes
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.qc.plots.TagRefinementQc
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -101,7 +101,7 @@ class CommandExportQcTags : MiXCRCommandWithOutputs() {
     override fun run1() {
         val plots = inputFiles.mapNotNull { file ->
             val info = IOUtil.extractFileInfo(file)
-            val report = info.footer.reports[MiXCRCommandDescriptor.refineTagsAndSort]
+            val report = info.footer.reports[AnalyzeCommandDescriptor.refineTagsAndSort]
             if (report.isEmpty()) {
                 println("No tag refinement report for $file; did you run ${CommandRefineTagsAndSort.COMMAND_NAME} command?")
                 null

@@ -15,11 +15,11 @@ import com.milaboratory.app.ValidationException
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.string.shouldStartWith
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import picocli.CommandLine
-import java.io.IOException
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -30,7 +30,6 @@ class CommandFindAllelesTest {
     private val file3: Path = temp.resolvePath("folder3/file1.clns")
 
     @Before
-    @Throws(IOException::class)
     fun prepareFiles() {
         file1.toFile().parentFile.mkdirs()
         file1.toFile().createNewFile()
@@ -122,7 +121,7 @@ class CommandFindAllelesTest {
             command.outputFiles
             Assert.fail()
         } catch (e: ValidationException) {
-            Assert.assertTrue(e.message, e.message.startsWith("Output clns files are not uniq:"))
+            e.message shouldStartWith "Output files are not uniq:"
         }
     }
 
@@ -136,7 +135,7 @@ class CommandFindAllelesTest {
         ).parseResult
         val command = p.asCommandLineList()[p.asCommandLineList().size - 1].getCommand<CommandFindAlleles>()
         try {
-            command.outputFiles
+            command.validate()
             Assert.fail()
         } catch (e: ValidationException) {
             Assert.assertEquals(

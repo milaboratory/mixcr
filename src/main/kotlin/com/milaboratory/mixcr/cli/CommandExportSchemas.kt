@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -25,7 +25,7 @@ import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerParameters
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersIndividual
 import com.milaboratory.mixcr.postanalysis.ui.PostanalysisParametersOverlap
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.trees.CommandFindShmTreesParams
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -112,7 +112,7 @@ class CommandExportSchemas : Runnable {
         val analyzeBundleDir = outputPath.resolve("analyzeBundle")
         val parametersDir = analyzeBundleDir.resolve("parameters")
         parametersDir.toFile().mkdirs()
-        for (command in MiXCRCommandDescriptor::class.sealedFinalSubclasses()) {
+        for (command in AnalyzeCommandDescriptor::class.sealedFinalSubclasses()) {
             val parameters = command.objectInstance?.paramClass!!
             K_YAML_OM.writeValue(
                 parametersDir.resolve("${command.simpleName}.schema.yaml").toFile(),

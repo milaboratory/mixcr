@@ -27,7 +27,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.SHMT
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParams
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
@@ -184,7 +184,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     header.paramsSpec, printParameters = false, validate = false
                 )
 
-                fun <P : MiXCRParams, T : MiXCRCommandDescriptor<P, *>> paramsWithOverride(
+                fun <P : MiXCRParams, T : AnalyzeCommandDescriptor<P, *>> paramsWithOverride(
                     descriptor: T
                 ): P? = header.stepParams[descriptor].firstOrNull() ?: descriptor.extractFromBundle(originalPreset)
 
@@ -192,17 +192,17 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     flags = originalPreset.flags,
                     pipeline = originalPreset.pipeline,
                     validation = originalPreset.validation,
-                    align = paramsWithOverride(MiXCRCommandDescriptor.align),
-                    refineTagsAndSort = paramsWithOverride(MiXCRCommandDescriptor.refineTagsAndSort),
-                    assemblePartial = paramsWithOverride(MiXCRCommandDescriptor.assemblePartial),
-                    extend = paramsWithOverride(MiXCRCommandDescriptor.extend),
-                    assemble = paramsWithOverride(MiXCRCommandDescriptor.assemble),
-                    assembleContigs = paramsWithOverride(MiXCRCommandDescriptor.assembleContigs),
-                    assembleCells = paramsWithOverride(MiXCRCommandDescriptor.assembleCells),
-                    exportAlignments = paramsWithOverride(MiXCRCommandDescriptor.exportAlignments),
-                    exportClones = paramsWithOverride(MiXCRCommandDescriptor.exportClones),
-                    exportCloneGroups = paramsWithOverride(MiXCRCommandDescriptor.exportCloneGroups),
-                    qc = paramsWithOverride(MiXCRCommandDescriptor.qc)
+                    align = paramsWithOverride(AnalyzeCommandDescriptor.align),
+                    refineTagsAndSort = paramsWithOverride(AnalyzeCommandDescriptor.refineTagsAndSort),
+                    assemblePartial = paramsWithOverride(AnalyzeCommandDescriptor.assemblePartial),
+                    extend = paramsWithOverride(AnalyzeCommandDescriptor.extend),
+                    assemble = paramsWithOverride(AnalyzeCommandDescriptor.assemble),
+                    assembleContigs = paramsWithOverride(AnalyzeCommandDescriptor.assembleContigs),
+                    assembleCells = paramsWithOverride(AnalyzeCommandDescriptor.assembleCells),
+                    exportAlignments = paramsWithOverride(AnalyzeCommandDescriptor.exportAlignments),
+                    exportClones = paramsWithOverride(AnalyzeCommandDescriptor.exportClones),
+                    exportCloneGroups = paramsWithOverride(AnalyzeCommandDescriptor.exportCloneGroups),
+                    qc = paramsWithOverride(AnalyzeCommandDescriptor.qc)
                 )
                 ParamsBundleSpecBaseEmbedded(bundle)
             }

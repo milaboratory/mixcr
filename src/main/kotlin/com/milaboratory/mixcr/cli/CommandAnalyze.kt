@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -22,10 +22,9 @@ import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
 import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
-import com.milaboratory.mixcr.presets.AnyMiXCRCommand
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRPipeline
@@ -338,7 +337,7 @@ object CommandAnalyze {
                 .let { (first, second) -> first to second.steps.sortedBy { it.order } }
 
             // Creating execution plan
-            if (pipeline[0] != MiXCRCommandDescriptor.align)
+            if (pipeline[0] != AnalyzeCommandDescriptor.align)
                 throw ValidationException("Pipeline must stat from the align action.")
 
             val planBuilder = PlanBuilder(
@@ -365,7 +364,7 @@ object CommandAnalyze {
             // Adding "align" step
             if (outputNoUsedReads)
                 pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
-            planBuilder.addStep(MiXCRCommandDescriptor.align) { _, _, _ ->
+            planBuilder.addStep(AnalyzeCommandDescriptor.align) { _, _, _ ->
                 listOf("--preset", presetName) + extraAlignArgs +
                         mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
             }
@@ -381,24 +380,24 @@ object CommandAnalyze {
             // Adding all steps with calculations
             pipeline
                 .drop(1)
-                .filter { cmd -> cmd !is MiXCRCommandDescriptor.ExportCommandDescriptor }
+                .filter { cmd -> cmd !is AnalyzeCommandDescriptor.ExportCommandDescriptor }
                 .forEach { cmd ->
                     planBuilder.addStep(cmd) { outputFolder, prefix, sampleName ->
                         when (cmd) {
-                            MiXCRCommandDescriptor.assemble -> {
+                            AnalyzeCommandDescriptor.assemble -> {
                                 val additionalArgs = mutableListOf<String>()
                                 if (consensusAlignments)
                                     additionalArgs += listOf(
                                         "--consensus-alignments",
                                         outputFolder.resolve(
-                                            MiXCRCommandDescriptor.assemble.consensusAlignments(prefix, sampleName)
+                                            AnalyzeCommandDescriptor.assemble.consensusAlignments(prefix, sampleName)
                                         ).toString()
                                     )
                                 if (consensusStateStats)
                                     additionalArgs += listOf(
                                         "--consensus-state-stat",
                                         outputFolder.resolve(
-                                            MiXCRCommandDescriptor.assemble.consensusStateStats(prefix, sampleName)
+                                            AnalyzeCommandDescriptor.assemble.consensusStateStats(prefix, sampleName)
                                         ).toString()
                                     )
                                 consensusStateStatsDownsampling?.let {
@@ -417,7 +416,7 @@ object CommandAnalyze {
             }
 
             pipeline
-                .filterIsInstance<MiXCRCommandDescriptor.ExportCommandDescriptor<*>>()
+                .filterIsInstance<AnalyzeCommandDescriptor.ExportCommandDescriptor<*>>()
                 .forEach { cmd ->
                     planBuilder.addExportStep(cmd)
                 }
@@ -442,9 +441,9 @@ object CommandAnalyze {
             private val forceOverride: Boolean
         ) {
             private val executionPlan = mutableListOf<ExecutionStep>()
-            private val rounds = mutableMapOf<AnyMiXCRCommand, Int>()
+            private val rounds = mutableMapOf<AnalyzeCommandDescriptor<*, *>, Int>()
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
-            private val outputsForCommands = mutableListOf<Pair<AnyMiXCRCommand, List<InputFileSet>>>()
+            private val outputsForCommands = mutableListOf<Pair<AnalyzeCommandDescriptor<*, *>, List<InputFileSet>>>()
 
             fun setActualAlignOutputs(fileNames: List<String>) {
                 val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
@@ -483,7 +482,7 @@ object CommandAnalyze {
                 for (input in inputsForQc) {
                     check(input.fileNames.size == 1)
                     val round = 0
-                    val cmd = MiXCRCommandDescriptor.qc
+                    val cmd = AnalyzeCommandDescriptor.qc
                     val outputName = cmd.outputName(outputNamePrefix, input.sampleName, paramsBundle, round)
                     val arguments = mutableListOf("--print-to-stdout")
                     if (forceOverride)
@@ -503,7 +502,7 @@ object CommandAnalyze {
                 }
             }
 
-            fun addExportStep(cmd: MiXCRCommandDescriptor.ExportCommandDescriptor<*>) {
+            fun addExportStep(cmd: AnalyzeCommandDescriptor.ExportCommandDescriptor<*>) {
                 val runAfter = cmd.runAfterLastOf()
                 val inputsForExport = outputsForCommands.findLast { (cmd) -> cmd in runAfter }!!.second
                 for (input in inputsForExport) {
@@ -527,7 +526,7 @@ object CommandAnalyze {
             }
 
             fun addStep(
-                cmd: AnyMiXCRCommand,
+                cmd: AnalyzeCommandDescriptor<*, *>,
                 extraArgs: (outputFolder: Path, prefix: String, sampleName: String) -> List<String> = { _, _, _ -> emptyList() }
             ) {
                 val round = rounds.compute(cmd) { c, p ->

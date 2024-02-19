@@ -36,7 +36,7 @@ import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.util.Concurrency
@@ -66,7 +66,7 @@ import java.nio.file.Path
 import java.util.*
 
 object CommandAssembleContigs {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.assembleContigs.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.assembleContigs.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssembleContigsParams> {
         @Option(
@@ -172,11 +172,11 @@ object CommandAssembleContigs {
 
                 validateParams(cmdParams, reader.header)
 
-                require(reader.assemblingFeatures.size == 1) {
+                ValidationException.require(reader.assemblingFeatures.size == 1) {
                     "Supports only singular assemblingFeature."
                 }
                 val assemblingFeature = reader.assemblingFeatures.first()
-                require(!assemblingFeature.isComposite) {
+                ValidationException.require(!assemblingFeature.isComposite) {
                     "Supports only non-composite gene features as an assemblingFeature."
                 }
 
@@ -184,7 +184,7 @@ object CommandAssembleContigs {
                     val fullyIncluded = assemblingRegions.features.any { assemblingRegion ->
                         GeneFeature.intersection(assemblingRegion, assemblingFeature) == assemblingFeature
                     }
-                    require(fullyIncluded) {
+                    ValidationException.require(fullyIncluded) {
                         "AssemblingFeature of input must be included fully in assemblingRegions"
                     }
                 }
@@ -305,10 +305,10 @@ object CommandAssembleContigs {
                     clones += clone.withId(cloneId++)
                 }
             }
-            val allFullyCoveredBy = cmdParams.allClonesWillBeCoveredByFeature()
+            val allFullyCoveredBy = cmdParams.parameters.allClonesWillBeCoveredByFeature()
             val resultHeader = header
                 .copy(allFullyCoveredBy = if (allFullyCoveredBy) assemblingRegions else null)
-                .addStepParams(MiXCRCommandDescriptor.assembleContigs, cmdParams)
+                .addStepParams(AnalyzeCommandDescriptor.assembleContigs, cmdParams)
                 .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
             val cloneSet = CloneSet.Builder(clones, genes, resultHeader)
@@ -327,7 +327,7 @@ object CommandAssembleContigs {
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)
                 reportOptions.appendToFiles(report)
-                writer.setFooter(footer.addStepReport(MiXCRCommandDescriptor.assembleContigs, report))
+                writer.setFooter(footer.addStepReport(AnalyzeCommandDescriptor.assembleContigs, report))
             }
         }
     }

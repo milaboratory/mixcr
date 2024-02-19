@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -73,9 +73,9 @@ import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRStepParams
@@ -127,7 +127,7 @@ import kotlin.io.path.readText
 import kotlin.math.max
 
 object CommandAlign {
-    const val COMMAND_NAME = MiXCRCommandDescriptor.align.name
+    const val COMMAND_NAME = AnalyzeCommandDescriptor.align.name
 
     const val SAVE_OUTPUT_FILE_NAMES_OPTION = "--save-output-file-names"
     const val STRICT_SAMPLE_NAME_MATCHING_OPTION = "--strict-sample-sheet-matching"
@@ -1165,7 +1165,7 @@ object CommandAlign {
                     MiXCRHeader(
                         inputHash,
                         dontSavePresetOption.presetToSave(paramsSpecPacked),
-                        MiXCRStepParams().add(MiXCRCommandDescriptor.align, cmdParams),
+                        MiXCRStepParams().add(AnalyzeCommandDescriptor.align, cmdParams),
                         tagsExtractor.tagsInfo,
                         aligner.parameters,
                         aligner.parameters.featuresToAlignMap,
@@ -1306,7 +1306,7 @@ object CommandAlign {
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 
                 val report = reportBuilder.buildReport()
-                writers?.setFooter(MiXCRFooter().addStepReport(MiXCRCommandDescriptor.align, report))
+                writers?.setFooter(MiXCRFooter().addStepReport(AnalyzeCommandDescriptor.align, report))
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)

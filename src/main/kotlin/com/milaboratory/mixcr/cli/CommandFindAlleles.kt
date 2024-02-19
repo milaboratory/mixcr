@@ -75,12 +75,10 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.File
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.collections.set
 import kotlin.io.path.createDirectories
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.nameWithoutExtension
 
 @Command(
     description = [
@@ -110,12 +108,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     class OutputClnsOptions {
         @Option(
-            description = [
-                "Output template may contain {file_name} and {file_dir_path},",
-                "outputs for '-o /output/folder/{file_name}_with_alleles.clns input_file.clns input_file2.clns' will be /output/folder/input_file_with_alleles.clns and /output/folder/input_file2_with_alleles.clns,",
-                "outputs for '-o {file_dir_path}/{file_name}_with_alleles.clns /some/folder1/input_file.clns /some/folder2/input_file2.clns' will be /seme/folder1/input_file_with_alleles.clns and /some/folder2/input_file2_with_alleles.clns",
-                "Resulted outputs must be uniq"
-            ],
+            description = [OutputTemplate.description],
             names = ["--output-template"],
             paramLabel = "<template.clns>",
             required = true,
@@ -200,7 +193,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     @Option(
         names = ["-O"],
-        description = ["Overrides default build SHM parameter values"],
+        description = ["Overrides default find alleles parameter values"],
         paramLabel = Labels.OVERRIDES,
         order = OptionsOrder.overrides
     )
@@ -215,24 +208,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
 
     private val outputClnsFiles: List<Path> by lazy {
         val template = outputClnsOptions.outputTemplate ?: return@lazy emptyList()
-        if (!template.endsWith(".clns")) {
-            throw ValidationException("Wrong template: command produces only clns, got $template")
-        }
-        val clnsFiles = inputFiles
-            .map { it.toAbsolutePath() }
-            .map { path ->
-                template
-                    .replace(Regex("\\{file_name}"), path.nameWithoutExtension)
-                    .replace(Regex("\\{file_dir_path}"), path.parent.toString())
-            }
-            .map { Paths.get(it) }
-            .toList()
-        if (clnsFiles.distinct().count() < clnsFiles.size) {
-            var message = "Output clns files are not uniq: $clnsFiles"
-            message += "\nTry to use `{file_name}` and/or `{file_dir_path}` in template to get different output paths for every input. See help for more details"
-            throw ValidationException(message)
-        }
-        clnsFiles
+        OutputTemplate.calculateOutputs(template, inputFiles)
     }
 
     public override val outputFiles get() = outputClnsFiles + listOfNotNull(allelesMutationsOutput) + libraryOutputs
@@ -262,6 +238,12 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         libraryOutputs.forEach { output ->
             ValidationException.requireFileType(output, InputFileType.JSON, InputFileType.FASTA)
         }
+        outputClnsOptions.outputTemplate?.let { template ->
+            if (!template.endsWith(".clns")) {
+                throw ValidationException("Wrong template: command produces only clns, got $template")
+            }
+        }
+
         if ((listOfNotNull(outputClnsOptions.outputTemplate, allelesMutationsOutput) + libraryOutputs).isEmpty()) {
             throw ValidationException("--output-template, --export-library or --export-alleles-mutations must be set")
         }
@@ -345,8 +327,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val baseGenes = originalLibrary.allGenes
             .mapNotNull { it.data.alleleInfo?.parent }
             .distinct()
-        val absentBaseGenes = baseGenes.filter { it !in originalLibrary }
-        ValidationException.requireEmpty(absentBaseGenes) {
+        ValidationException.requireEmpty(baseGenes.filter { it !in originalLibrary }) {
             "All base genes must be presented in the library"
         }
 
