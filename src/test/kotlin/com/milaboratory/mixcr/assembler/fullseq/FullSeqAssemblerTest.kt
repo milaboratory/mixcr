@@ -182,9 +182,7 @@ class FullSeqAssemblerTest {
         params.alignerParameters = VDJCParametersPresets.getByName("rna-seq")
         params.alignerParameters.isSaveOriginalReads = true
         params.alignerParameters.setVAlignmentParameters(
-            params.alignerParameters.vAlignerParameters.setGeneFeatureToAlign(
-                GeneFeature.VTranscriptWithP
-            )
+            params.alignerParameters.vAlignerParameters.copy(geneFeatureToAlign = GeneFeature.VTranscriptWithP)
         )
         val align = RunMiXCR.align(params)
 
