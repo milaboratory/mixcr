@@ -756,6 +756,16 @@ object CommandAlign {
             get() = MiXCRMixinCollection.empty + pipelineMixins + alignMixins + refineTagsAndSortMixins +
                     assembleMixins + assembleContigsMixins + exportMixins + genericMixins + qcMixins
 
+        /**
+         * Prefix used by `com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.align.outputName`
+         */
+        @Option(
+            names = ["--output-name-suffix"],
+            hidden = true,
+            arity = "0..1"
+        )
+        var outputPrefix: String? = null
+
         @Parameters(
             index = "0",
             arity = "2..5",
@@ -1340,31 +1350,29 @@ object CommandAlign {
         private fun alignedWriter(outputFile: Path): Writers? =
             when (outputFile.toString()) {
                 "." -> null
-                else -> {
-                    object : Writers() {
-                        private val lock = Any()
-                        private val sampleNameWriter = outputFileList?.bufferedWriter(
-                            Charset.defaultCharset(), DEFAULT_BUFFER_SIZE,
-                            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
-                        )
+                else -> object : Writers() {
+                    private val lock = Any()
+                    private val sampleNameWriter = outputFileList?.bufferedWriter(
+                        Charset.defaultCharset(), DEFAULT_BUFFER_SIZE,
+                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+                    )
 
-                        override fun writerFactory(sample: List<String>) = run {
-                            val sampleName = addSampleToFileName(outputFile.fileName.toString(), sample)
-                            synchronized(lock) {
-                                sampleNameWriter?.appendLine(sampleName)
-                            }
-                            VDJCAlignmentsWriter(
-                                outputFile.resolveSibling(sampleName),
-                                concurrencyLimiter, VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
-                            )
+                    override fun writerFactory(sample: List<String>) = run {
+                        val sampleName = addSampleToFileName(outputPrefix ?: "", outputFile.fileName.toString(), sample)
+                        synchronized(lock) {
+                            sampleNameWriter?.appendLine(sampleName)
                         }
+                        VDJCAlignmentsWriter(
+                            outputFile.resolveSibling(sampleName),
+                            concurrencyLimiter, VDJCAlignmentsWriter.DEFAULT_ALIGNMENTS_IN_BLOCK, highCompression
+                        )
+                    }
 
-                        override fun close() {
-                            try {
-                                sampleNameWriter?.close()
-                            } finally {
-                                super.close()
-                            }
+                    override fun close() {
+                        try {
+                            sampleNameWriter?.close()
+                        } finally {
+                            super.close()
                         }
                     }
                 }
@@ -1427,35 +1435,45 @@ object CommandAlign {
         }
     }
 
-    private fun toPrefixAndExtension(seedFileName: String): Pair<String, String> {
+    private fun toPrefixAndExtension(outputNameSuffix: String, seedFileName: String): Pair<String, String> {
         val dotIndex = seedFileName.lastIndexOf('.')
-        return seedFileName.substring(0, dotIndex) to seedFileName.substring(dotIndex)
+        return seedFileName.substring(0, dotIndex).removeSuffix(outputNameSuffix) to seedFileName.substring(dotIndex)
     }
 
     // Consistent with com.milaboratory.mixcr.presets.MiXCRCommandDescriptor.align.outputName
-    fun addSampleToFileName(seedFileName: String, sample: List<String>): String {
+    fun addSampleToFileName(outputNameSuffix: String, seedFileName: String, sample: List<String>): String {
         val sampleName = listToSampleName(sample)
-        val (prefix, extension) = toPrefixAndExtension(seedFileName)
-        val insert = if (sampleName == "") "" else ".$sampleName"
-        return prefix + insert + extension
+        val (prefix, extension) = toPrefixAndExtension(outputNameSuffix, seedFileName)
+        var insert = sampleName
+        if (insert.isNotBlank()) {
+            if (prefix.isNotBlank() && !prefix.endsWith("."))
+                insert = ".$insert"
+            if (outputNameSuffix.isNotBlank() && !outputNameSuffix.startsWith("."))
+                insert = "$insert."
+        }
+        return prefix + insert + outputNameSuffix + extension
     }
 
     data class FileAndSample(val fileName: String, val sample: String)
 
     /** Opposite operation to [addSampleToFileName] */
-    fun listSamplesForSeedFileName(seedFileName: String, fileNames: List<String>): List<FileAndSample> {
-        val (prefix, extension) = toPrefixAndExtension(seedFileName)
+    fun listSamplesForSeedFileName(
+        outputNameSuffix: String,
+        seedFileName: String,
+        fileNames: List<String>
+    ): List<FileAndSample> {
+        val (prefix, extension) = toPrefixAndExtension(outputNameSuffix, seedFileName)
         val result = mutableListOf<FileAndSample>()
         var emptySampleDetected = false
         fileNames.map { name ->
-            require(name.startsWith(prefix) && name.endsWith(extension))
+            require(name.startsWith(prefix) && name.endsWith(outputNameSuffix + extension))
             if (emptySampleDetected)
                 throw IllegalArgumentException("Unexpected file sequence.")
-            var sample = name.removePrefix(prefix).removeSuffix(extension)
+            var sample = name.removePrefix(prefix).removeSuffix(outputNameSuffix + extension)
             if (sample == "")
                 emptySampleDetected = true
             else
-                sample = sample.removePrefix(".")
+                sample = sample.removePrefix(".").removeSuffix(".")
             result += FileAndSample(name, sample)
         }
         return result
