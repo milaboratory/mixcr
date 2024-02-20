@@ -370,7 +370,8 @@ object CommandAnalyze {
                     this += extraAlignArgs
                     this += mixins.flatMap { it.cmdArgs }
                     this += pathsForNotAligned.argsForAlign()
-                    this += listOf("--output-name-suffix", "alignments")
+                    if (outputNamePrefix.isBlank())
+                        this += listOf("--output-name-suffix", "alignments")
                 }
             }
 
