@@ -453,7 +453,7 @@ object CommandAnalyze {
 
             fun setActualAlignOutputs(fileNames: List<String>) {
                 val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
-                val samples = listSamplesForSeedFileName("alignments", outputSeed, fileNames)
+                val samples = listSamplesForSeedFileName(if (outputNamePrefix.isBlank()) "alignments" else "", outputSeed, fileNames)
                 nextInputs = samples.map {
                     InputFileSet(it.sample, listOf(outputFolder.resolve(it.fileName).toString()))
                 }
