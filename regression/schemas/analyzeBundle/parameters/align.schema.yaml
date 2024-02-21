@@ -154,38 +154,6 @@ $defs:
       - Collinear
       - CollinearDirect
       - Unknown
-  ReferencePoint:
-    type: object
-    properties:
-      basicPoint:
-        type: string
-        enum:
-          - V5UTRBegin
-          - V5UTRBeginTrimmed
-          - V5UTREndL1Begin
-          - L1EndVIntronBegin
-          - VIntronEndL2Begin
-          - L2EndFR1Begin
-          - FR1EndCDR1Begin
-          - CDR1EndFR2Begin
-          - FR2EndCDR2Begin
-          - CDR2EndFR3Begin
-          - FR3EndCDR3Begin
-          - VEndTrimmed
-          - VEnd
-          - DBegin
-          - DBeginTrimmed
-          - DEndTrimmed
-          - DEnd
-          - JBegin
-          - JBeginTrimmed
-          - CDR3EndFR4Begin
-          - FR4End
-          - CBegin
-          - CExon1End
-          - CEnd
-      offset:
-        type: integer
   TagType:
     type: string
     enum:
@@ -244,8 +212,6 @@ properties:
         type: boolean
       includeDScore:
         type: boolean
-      leftForceRealignmentTrigger:
-        $ref: '#/$defs/ReferencePoint'
       libraryStructure:
         type: string
         enum:
@@ -286,8 +252,6 @@ properties:
         $ref: '#/$defs/PairedEndReadsLayout'
       relativeMinVFR3CDR3Score:
         type: number
-      rightForceRealignmentTrigger:
-        $ref: '#/$defs/ReferencePoint'
       saveOriginalReads:
         type: boolean
       saveOriginalSequence:
