@@ -365,8 +365,14 @@ object CommandAnalyze {
             if (outputNoUsedReads)
                 pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
             planBuilder.addStep(AnalyzeCommandDescriptor.align) { _, _, _ ->
-                listOf("--preset", presetName) + extraAlignArgs +
-                        mixins.flatMap { it.cmdArgs } + pathsForNotAligned.argsForAlign()
+                buildList {
+                    this += listOf("--preset", presetName)
+                    this += extraAlignArgs
+                    this += mixins.flatMap { it.cmdArgs }
+                    this += pathsForNotAligned.argsForAlign()
+                    if (outputNamePrefix.isBlank())
+                        this += listOf("--output-name-suffix", "alignments")
+                }
             }
 
             planBuilder.executeSteps(dryRun)
@@ -447,7 +453,7 @@ object CommandAnalyze {
 
             fun setActualAlignOutputs(fileNames: List<String>) {
                 val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
-                val samples = listSamplesForSeedFileName(outputSeed, fileNames)
+                val samples = listSamplesForSeedFileName(if (outputNamePrefix.isBlank()) "alignments" else "", outputSeed, fileNames)
                 nextInputs = samples.map {
                     InputFileSet(it.sample, listOf(outputFolder.resolve(it.fileName).toString()))
                 }
