@@ -1,6 +1,6 @@
 Usage: mixcr findAlleles [--export-library <path.(json|fasta)>]... [--export-alleles-mutations
-                         <path>] [--dont-remove-unused-genes] [-O <key=value>]... [--report <path>]
-                         [--json-report <path>] [--use-local-temp] [--threads <n>]
+                         <path.(t|c)sv>] [--dont-remove-unused-genes] [-O <key=value>]... [--report
+                         <path>] [--json-report <path>] [--use-local-temp] [--threads <n>]
                          [--force-overwrite] [--no-warnings] [--verbose] [--help]
                          (--output-template <template.clns> | --no-clns-output) (input_file.
                          (clns|clna)|directory)...
@@ -28,33 +28,33 @@ of V and J genes and the same features to align.
                              For `.json` library will be written in reqpseqio format.
                              For `.fasta` library will be written in FASTA format with gene name
                                and feature name in description.
-      --export-alleles-mutations <path>
+      --export-alleles-mutations <path.(t|c)sv>
                              Path where to write descriptions and stats for all result alleles,
                                existed and new.
                              Available columns:
                              alleleName - result allele name. If it's de nova, then before `-M` is
                                nearest known variant, M{n} is how many mutations in it and CDR3-{n}
                                is how many mutations in CDR3, at the end uniq hash.
-                             geneName - gene name, the same for zigotes
+                             geneName - gene name, the same for zygotes
                              type - gene type (Variable or Joining)
-                             status - DE_NOVO: De novo alleles
-                             FOUND_KNOWN_VARIANT: Found allele identical to one of genes in the
-                               library, but it's not a main variant. If enoughInfo is true, then it
-                               was found by main algorithm. In some cases gene name could be
-                               changed. If enoughInfo is false, then it was found by aligning
-                               clones on known variants.
-                             ALIGNED_ON_KNOWN_VARIANT: Not enough info for search, but aligned on
-                               known allele
-                             NOT_CHANGED_AFTER_SEARCH: Not changed after search
-                             NO_CLONES_TO_SEARCH: No clones to search
+                             status - DE_NOVO: New allelic variant, that doesn't match with any
+                               from the library.
+                             FOUND_KNOWN_VARIANT: Known variant from the library, found by main
+                               algorithm.
+                             ALIGNED_ON_KNOWN_VARIANT: Not enough info for main algorithm, but the
+                               main bulk of clones aligns with a known allele from the database.
+                             NOT_CHANGED_AFTER_SEARCH: The found allele variant is the same as was
+                               used in `align` command (clones are not changed).
+                                If enoughInfo is true, then it was found by main algorithm,
+                               otherwise, by aligning clones on known variants.
+                             NO_CLONES_TO_SEARCH: All clones were filtered out before search (there
+                               are filters by productivity and reads/UMI count).
                              COULD_NOT_BE_ALIGNED_ON_KNOWN_VARIANT: Have clones to search, but not
-                               enough info for search and can't be aligned on known variant
-                             REMOVED_BECAUSE_NO_TOP_HITS_IN_RESULT_FILES: No top hits in result
-                               files
-                             REMOVED_BECAUSE_NO_TOP_HITS_IN_SOURCE_FILES: No top hits in source
-                               files
+                               enough info for search and can't be aligned on known variant.
+                             REMOVED_BECAUSE_NO_TOP_HITS_IN_RESULT_FILES: Removed because no top
+                               hits in any result clone.
                              REMOVED_BECAUSE_NOT_REPRESENTED_IN_SOURCE_FILES: Not represented in
-                               source files
+                               source clones.
                              .
                              enoughInfo - is there enough clones to search by the main algorithm.
                              mutations - list of mutations for de nova alleles.
@@ -76,7 +76,7 @@ of V and J genes and the same features to align.
                              filteredForAlleleSearchClonesCountWithNegativeScoreChange - how many
                                clones get lower score after aligned to this allele and was used in
                                searching before
-                             scoreDelta - stats for score change of clones afeter aligning to this
+                             scoreDelta - stats for score change of clones after aligning to this
                                allele.
       --dont-remove-unused-genes
                              Don't remove genes that weren't used in clones in the result library
