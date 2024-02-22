@@ -30,8 +30,6 @@ properties:
     enum:
       - Unknown
       - R1V
-  maxHits:
-    type: integer
   mergerParameters:
     type: object
     properties:
