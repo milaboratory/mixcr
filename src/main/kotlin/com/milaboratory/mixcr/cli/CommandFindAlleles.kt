@@ -150,7 +150,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "Path where to write descriptions and stats for all result alleles, existed and new.",
             "Available columns:",
             "alleleName - result allele name. If it's de nova, then before `-M` is nearest known variant, M{n} is how many mutations in it and CDR3-{n} is how many mutations in CDR3, at the end uniq hash.",
-            "geneName - gene name, the same for zigotes",
+            "geneName - gene name, the same for zygotes",
             "type - gene type (Variable or Joining)",
             "status - ${AlleleSearchResult.Status.helpDescription}.",
             "enoughInfo - is there enough clones to search by the main algorithm.",
@@ -165,10 +165,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             "filteredForAlleleSearchNaivesCount - how many naive clones aligned to this allele and was used in searching.",
             "filteredForAlleleSearchClonesCount - how many clones aligned to this allele and was used in searching.",
             "filteredForAlleleSearchClonesCountWithNegativeScoreChange - how many clones get lower score after aligned to this allele and was used in searching before",
-            "scoreDelta - stats for score change of clones afeter aligning to this allele."
+            "scoreDelta - stats for score change of clones after aligning to this allele."
         ],
         names = ["--export-alleles-mutations"],
-        paramLabel = "<path>",
+        paramLabel = "<path.(t|c)sv>",
         order = OptionsOrder.main + 10_200
     )
     var allelesMutationsOutput: Path? = null
