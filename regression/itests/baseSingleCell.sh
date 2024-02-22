@@ -17,5 +17,3 @@ mixcr analyze -f 10x-vdj-bcr \
 
 mixcr exportReports --yaml baseSingleCell.raw.contigs.clns | grep -v -E 'version:|rev=|lib=' > ../reports/baseSingleCell.raw.yaml
 mixcr exportReports --yaml baseSingleCell.vdjcontigs.contigs.clns | grep -v -E 'version:|rev=|lib=' > ../reports/baseSingleCell.vdjcontigs.yaml
-echo 'abc' >> ../reports/baseSingleCell.raw.yaml
-echo 'abc' >> ../reports/baseSingleCell.vdjcontigs.yaml

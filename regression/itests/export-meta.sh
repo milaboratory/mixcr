@@ -6,4 +6,3 @@ mixcr exportHelp ../cli-help
 mixcr exportAllPresets ../presets
 mixcr exportSchemas ../schemas
 mixcr listPresets > ../presets/list.txt
-echo 'abc' >> ../presets/list.txt
