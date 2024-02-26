@@ -315,7 +315,7 @@ private class Assembler(
 ) {
 
     private val cloneFactory = CloneFactory(
-        reader.assemblerParameters.cloneFactoryParameters,
+        reader.assemblerParameters.updateFrom(header.alignerParameters).cloneFactoryParameters,
         reader.assemblingFeatures,
         reader.usedGenes,
         reader.header.featuresToAlignMap

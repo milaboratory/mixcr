@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -23,11 +23,11 @@ public class CloneFactoryParametersTest {
     @Test
     public void test1() throws Exception {
         CloneFactoryParameters paramentrs = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(0.3f,
+                new VJCClonalAlignerParameters(0.3f, 3,
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
-                new VJCClonalAlignerParameters(0.4f,
+                new VJCClonalAlignerParameters(0.4f, 3,
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
-                new VJCClonalAlignerParameters(0.2f,
+                new VJCClonalAlignerParameters(0.2f, 3,
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 9),
                 new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
@@ -44,9 +44,9 @@ public class CloneFactoryParametersTest {
     @Test
     public void test2() throws Exception {
         CloneFactoryParameters paramentrs = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(0.3f,
+                new VJCClonalAlignerParameters(0.3f, 3,
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3),
-                new VJCClonalAlignerParameters(0.4f,
+                new VJCClonalAlignerParameters(0.4f, 3,
                         LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5),
                 null, new DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
         );
