@@ -32,6 +32,7 @@ align:
       geneFeatureToAlign: VTranscriptWithP
       minSumScore: 60
       relativeMinScore: 0.97
+      maxHits: 5
       edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
@@ -76,6 +77,7 @@ align:
       geneFeatureToAlign: JRegionWithP
       minSumScore: 150
       relativeMinScore: 0.97
+      maxHits: 5
       parameters:
         type: kaligner2
         mapperNValue: 8
@@ -109,6 +111,7 @@ align:
       geneFeatureToAlign: CExon1
       minSumScore: 40
       relativeMinScore: 0.97
+      maxHits: 5
       parameters:
         type: kaligner
         mapperKValue: 5
@@ -137,7 +140,6 @@ align:
     includeDScore: false
     includeCScore: false
     minSumScore: 120.0
-    maxHits: 5
     relativeMinVFR3CDR3Score: 0.7
     allowPartialAlignments: true
     allowNoCDR3PartAlignments: true
@@ -301,18 +303,12 @@ assemble:
         backgroundIndelRate: 2.0E-4
     cloneFactoryParameters:
       vParameters:
-        relativeMinScore: null
-        scoring: null
         maxAlignmentWidthLinear: 5
         maxAlignmentWidthAffine: 500
       jParameters:
-        relativeMinScore: null
-        scoring: null
         maxAlignmentWidthLinear: 5
         maxAlignmentWidthAffine: 500
       cParameters:
-        relativeMinScore: null
-        scoring: null
         maxAlignmentWidthLinear: 5
         maxAlignmentWidthAffine: 500
       dParameters:

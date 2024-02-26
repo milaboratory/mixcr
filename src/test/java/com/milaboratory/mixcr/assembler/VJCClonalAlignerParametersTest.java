@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 public class VJCClonalAlignerParametersTest {
     @Test
     public void test1() throws Exception {
-        VJCClonalAlignerParameters paramentrs = new VJCClonalAlignerParameters(0.3f,
+        VJCClonalAlignerParameters paramentrs = new VJCClonalAlignerParameters(0.3f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3);
         String str = GlobalObjectMappers.getPretty().writeValueAsString(paramentrs);
         VJCClonalAlignerParameters deser = GlobalObjectMappers.getPretty().readValue(str, VJCClonalAlignerParameters.class);
@@ -31,13 +31,13 @@ public class VJCClonalAlignerParametersTest {
 
     @Test
     public void test2() throws Exception {
-        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f,
+        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3), true);
 
-        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f,
+        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), null, 2, 3), true);
 
-        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f,
+        TestUtil.assertJson(new VJCClonalAlignerParameters(0.3f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 1, 2, 3), true);
     }
 }

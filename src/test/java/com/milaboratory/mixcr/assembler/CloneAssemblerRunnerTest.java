@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -92,10 +92,8 @@ public class CloneAssemblerRunnerTest {
 
         LinearGapAlignmentScoring<NucleotideSequence> scoring = new LinearGapAlignmentScoring<>(NucleotideSequence.ALPHABET, 5, -9, -12);
         CloneFactoryParameters factoryParameters = new CloneFactoryParameters(
-                new VJCClonalAlignerParameters(0.8f,
-                        scoring, 5),
-                new VJCClonalAlignerParameters(0.8f,
-                        scoring, 5),
+                new VJCClonalAlignerParameters(0.8f, 3, scoring, 5),
+                new VJCClonalAlignerParameters(0.8f, 3, scoring, 5),
                 null,
                 new DClonalAlignerParameters(0.85f, 30.0f, 3, scoring)
         );

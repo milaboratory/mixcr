@@ -27,11 +27,11 @@ class CloneAssemblerParametersTest {
     fun test1() {
         val factoryParameters = CloneFactoryParameters(
             VJCClonalAlignerParameters(
-                0.3f,
+                0.3f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3
             ),
             VJCClonalAlignerParameters(
-                0.4f,
+                0.4f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5
             ),
             null,
@@ -61,11 +61,11 @@ class CloneAssemblerParametersTest {
     fun test2() {
         val factoryParameters = CloneFactoryParameters(
             VJCClonalAlignerParameters(
-                0.3f,
+                0.3f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 3
             ),
             VJCClonalAlignerParameters(
-                0.4f,
+                0.4f, 3,
                 LinearGapAlignmentScoring.getNucleotideBLASTScoring(), 5
             ),
             null, DClonalAlignerParameters(0.85f, 30.0f, 3, AffineGapAlignmentScoring.getNucleotideBLASTScoring())
