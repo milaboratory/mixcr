@@ -11,6 +11,8 @@ properties:
     type: integer
   clonesWithAmbiguousLettersInSplittingRegion:
     type: integer
+  combinedCloneCount:
+    type: integer
   commandLine:
     type: string
   date:

@@ -247,6 +247,7 @@ assembleContigs:
   initialCloneCount: 7
   canceledAssemblies: 0
   finalCloneCount: 7
+  combinedCloneCount: 0
   totalReadsProcessed: 14107.0
   clonesClustered: 0
   readsClustered: 0.0
