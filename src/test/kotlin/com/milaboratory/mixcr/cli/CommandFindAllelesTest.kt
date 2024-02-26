@@ -12,9 +12,13 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
+import com.milaboratory.mixcr.alleles.AlleleSearchResult
 import com.milaboratory.util.TempFileDest
 import com.milaboratory.util.TempFileManager
+import io.kotest.assertions.asClue
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import org.junit.Assert
 import org.junit.Before
@@ -37,6 +41,20 @@ class CommandFindAllelesTest {
         file2.toFile().createNewFile()
         file3.toFile().parentFile.mkdirs()
         file3.toFile().createNewFile()
+    }
+
+    @Test
+    fun `check that help contains all not hidden statuses`() {
+        AlleleSearchResult.Status.values().filter { !it.hideInReport }.forEach { status ->
+            status.asClue {
+                AlleleSearchResult.Status.helpDescription shouldContain status.name
+            }
+        }
+        AlleleSearchResult.Status.values().filter { it.hideInReport }.forEach { status ->
+            status.asClue {
+                AlleleSearchResult.Status.helpDescription shouldNotContain status.name
+            }
+        }
     }
 
     @Test
