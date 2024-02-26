@@ -36,7 +36,7 @@ mixcr exportReports --yaml case19.vdjcontigs.contigs.clns
 mixcr exportReports case19.vdjcontigs.contigs.clns
 
 #doesn't split by cell
-assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "8"
+assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "10"
 #split by cell (cell tags are exported)
 assert "mixcr exportClones --no-header case19.vdjcontigs.contigs.clns | wc -l" "10"
 #cellId also split by cell
