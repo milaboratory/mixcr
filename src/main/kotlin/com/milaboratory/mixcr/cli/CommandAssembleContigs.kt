@@ -194,13 +194,13 @@ object CommandAssembleContigs {
                         .use { debugReport ->
                             footer = reader.footer
                             ordering = reader.ordering
+                            header = reader.header
                             val cloneFactory = CloneFactory(
-                                reader.assemblerParameters.cloneFactoryParameters,
+                                reader.assemblerParameters.updateFrom(header.alignerParameters).cloneFactoryParameters,
                                 reader.assemblingFeatures,
                                 reader.usedGenes,
                                 reader.header.featuresToAlignMap
                             )
-                            header = reader.header
                             genes = reader.usedGenes
 
                             IOUtil.registerGeneReferences(tmpOut, genes, header)
