@@ -350,7 +350,7 @@ private class Assembler(
                 .groupBy { clone ->
                     // in the case of the same clones from different cells, we should combine clones back by target+isotype
                     val key = mutableListOf<Any?>()
-                    for (i in 0..clone.numberOfTargets()) {
+                    for (i in 0 until clone.numberOfTargets()) {
                         key += clone.getTarget(i).sequence
                     }
                     key += clone.isotypeSubclass ?: clone.isotype
