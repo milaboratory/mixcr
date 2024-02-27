@@ -68,6 +68,7 @@ import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData.metaKey
+import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -176,6 +177,15 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
+
+    @Option(
+        description = ["Name for result library."],
+        names = ["--result-library-name"],
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
+        paramLabel = "<name>",
+        order = OptionsOrder.main + 10_300
+    )
+    var resultLibraryName: String = "{originalLibraryName}_with_found_alleles"
 
     @Option(
         description = ["Don't remove genes that weren't used in clones in the result library"],
@@ -599,7 +609,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
             originalLibrary.data.useAsTemplate(genesToAdd),
-            originalLibrary.name + "_with_found_alleles",
+            resultLibraryName.replace("{originalLibraryName}", originalLibrary.name),
             libraryRegistry,
             originalLibrary.context
         )
