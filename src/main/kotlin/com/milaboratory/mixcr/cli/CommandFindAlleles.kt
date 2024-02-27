@@ -68,6 +68,7 @@ import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData.metaKey
+import picocli.CommandLine
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -176,6 +177,15 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             ValidationException.requireFileType(value, InputFileType.XSV)
             field = value
         }
+
+    @Option(
+        description = ["Name for result library."],
+        names = ["--result-library-name"],
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS,
+        paramLabel = "<name>",
+        order = OptionsOrder.main + 10_300
+    )
+    var resultLibraryName: String = "{originalLibraryName}_with_found_alleles"
 
     @Option(
         description = ["Don't remove genes that weren't used in clones in the result library"],
@@ -303,17 +313,21 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val originalLibrary = datasets.first().usedGenes.first().parentLibrary
         logger.debug { "Name of the original library: ${originalLibrary.libraryId.libraryName}" }
 
+        val cloneFactoryParameters = datasets.map { cloneReader ->
+            cloneReader.assemblerParameters.updateFrom(cloneReader.header.alignerParameters).cloneFactoryParameters
+        }
+
         for (geneType in VJ_REFERENCE) {
-            val scores = datasets.map {
-                it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring
+            val scores = cloneFactoryParameters.map {
+                it.getVJCParameters(geneType).scoring
             }
             ValidationException.requireTheSame(scores) {
                 "Require the same ${geneType.letter} scoring for all input files"
             }
         }
         val scoring = VJPair(
-            V = datasets.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
-            J = datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring
+            V = cloneFactoryParameters.first().vParameters.scoring,
+            J = cloneFactoryParameters.first().jParameters.scoring
         )
 
         ValidationException.requireTheSame(datasets.map { it.header.featuresToAlignMap }) {
@@ -426,7 +440,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 allelesMapping,
                 allFullyCoveredBy,
                 threadsOptions.value,
-                cloneReader.assemblerParameters.cloneFactoryParameters,
+                cloneFactoryParameters[i],
                 cloneReader.header.featuresToAlignMap
             )
             cloneReader.readClones().use { port ->
@@ -595,7 +609,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         val genesToAdd = vAndJ + restGenes
         val resultLibrary = VDJCLibrary(
             originalLibrary.data.useAsTemplate(genesToAdd),
-            originalLibrary.name + "_with_found_alleles",
+            resultLibraryName.replace("{originalLibraryName}", originalLibrary.name),
             libraryRegistry,
             originalLibrary.context
         )

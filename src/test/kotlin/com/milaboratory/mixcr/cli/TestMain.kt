@@ -13,10 +13,10 @@ object TestMain {
     }
 
     fun execute(args: String) {
-        Main.mkCmd(emptyArray()).execute(*args.split(" ").toTypedArray()) shouldBe 0
+        Main.execute(*args.split(" ").toTypedArray()) shouldBe 0
     }
 
     fun shouldFail(args: String) {
-        Main.mkCmd(emptyArray()).execute(*args.split(" ").toTypedArray()) shouldNotBe 0
+        Main.execute(*args.split(" ").toTypedArray()) shouldNotBe 0
     }
 }

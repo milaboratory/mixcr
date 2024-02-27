@@ -1,6 +1,7 @@
 Usage: mixcr findAlleles [--export-library <path.(json|fasta)>]... [--export-alleles-mutations
-                         <path.(t|c)sv>] [--dont-remove-unused-genes] [-O <key=value>]... [--report
-                         <path>] [--json-report <path>] [--use-local-temp] [--threads <n>]
+                         <path.(t|c)sv>] [--result-library-name <name>]
+                         [--dont-remove-unused-genes] [-O <key=value>]... [--report <path>]
+                         [--json-report <path>] [--use-local-temp] [--threads <n>]
                          [--force-overwrite] [--no-warnings] [--verbose] [--help]
                          (--output-template <template.clns> | --no-clns-output) (input_file.
                          (clns|clna)|directory)...
@@ -78,6 +79,9 @@ of V and J genes and the same features to align.
                                searching before
                              scoreDelta - stats for score change of clones after aligning to this
                                allele.
+      --result-library-name <name>
+                             Name for result library.
+                               Default: {originalLibraryName}_with_found_alleles
       --dont-remove-unused-genes
                              Don't remove genes that weren't used in clones in the result library
   -O  <key=value>            Overrides default find alleles parameter values
