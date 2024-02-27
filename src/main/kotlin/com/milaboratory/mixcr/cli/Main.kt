@@ -97,9 +97,13 @@ object Main {
         // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.registerModule(kotlinModule {}) }
         // GlobalObjectMappers.addModifier { om: ObjectMapper -> om.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
         SequenceSetCollection.addSearchPath(Path(System.getProperty("user.home"), ".mixcr", "presets"))
+        exitProcess(execute(*args))
+    }
+
+    fun execute(vararg args: String): Int {
         val commandLine = mkCmd(args)
         try {
-            exitProcess(commandLine.execute(*args))
+            return commandLine.execute(*args)
         } catch (e: OutOfMemoryError) {
             if (logger.verbose) {
                 e.printStackTrace()
@@ -109,7 +113,7 @@ object Main {
             System.err.println("Example: `mixcr -Xmx40g ${args.joinToString(" ")}`")
             val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
             System.err.println("This run used approximately ${mb}m of memory")
-            exitProcess(2)
+            return 2
         } catch (e: Error) {
             System.err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
             throw e
