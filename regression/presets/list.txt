@@ -196,6 +196,8 @@ takara-human-rna-bcr-umi-smarter (SMARTer Human BCR IgG IgM H/K/L Profiling Kit)
 
 takara-human-rna-tcr-smarter (SMARTer Human TCR a/b Profiling Kit)
 
+takara-mouse-rna-bcr-umi-smarseq (SMART-Seq Mouse BCR (with UMIs))
+
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
 -----MiLaboratories-----
