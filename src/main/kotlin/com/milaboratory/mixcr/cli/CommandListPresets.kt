@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
 import com.milaboratory.mixcr.presets.PresetSpecification
@@ -90,4 +91,5 @@ private val flagOptions = mapOf(
     Flags.SampleTable to
             "${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} sample_table.tsv\n" +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} sample_table.tsv",
+    Flags.AssembleContigsBy to "${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} {${Labels.GENE_FEATURES}}",
 )

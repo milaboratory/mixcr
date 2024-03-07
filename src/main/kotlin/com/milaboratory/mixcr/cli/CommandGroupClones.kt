@@ -66,7 +66,7 @@ object CommandGroupClones {
     }
 
     @Command(
-        description = ["Group clones by cells. Required data with cell tags."]
+        description = ["Group clones by cells. Required data with cell tags. All clones should be fully covered by the same feature."]
     )
     class Cmd : CmdBase() {
         @Parameters(
