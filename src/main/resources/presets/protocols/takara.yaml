@@ -150,6 +150,17 @@
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
 
+"takara-mouse-rna-bcr-umi-smarseq":
+  vendor: "Takara Bio"
+  label: "SMART-Seq Mouse BCR (with UMIs)"
+  category: non-generic
+  inheritFrom: takara-human-rna-bcr-umi-smartseq
+  mixins:
+    - type: SetSpecies
+      species: mmu
+    - type: SetTagPattern
+      tagPattern: ^N{7}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
+
 "takara-sc-human-rna-tcr-smarter":
   vendor: "Takara Bio"
   label: "SMARTer Human scTCR a/b Profiling Kit"

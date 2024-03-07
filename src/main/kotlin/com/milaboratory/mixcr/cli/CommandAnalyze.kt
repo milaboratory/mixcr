@@ -470,7 +470,7 @@ object CommandAnalyze {
                         println("Running:")
                         println(executionStep)
                         val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
-                        val exitCode = Main.mkCmd(actualArgs).execute(*actualArgs)
+                        val exitCode = Main.execute(*actualArgs)
                         if (exitCode != 0)
                         // Terminating execution if one of the steps resulted in error
                             exitProcess(exitCode)
