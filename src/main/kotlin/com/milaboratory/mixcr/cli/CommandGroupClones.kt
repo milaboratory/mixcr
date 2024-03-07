@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
@@ -31,6 +32,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.clonegrouping.CloneGroupingParams.Companion.mkGrouper
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.ReportUtil
@@ -118,8 +120,15 @@ object CommandGroupClones {
             reportOptions.appendToFiles(report)
         }
 
+        private fun validate(reader: CloneReader) {
+            ValidationException.require(reader.header.allFullyCoveredBy != null) {
+                "Input were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION}` option."
+            }
+        }
+
         private fun processClns(): CloneGroupingReport =
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
+                validate(reader)
                 val reportBuilder = CloneGroupingReport.Builder()
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
@@ -136,6 +145,7 @@ object CommandGroupClones {
 
         private fun processClna(): CloneGroupingReport =
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
+                validate(reader)
                 val reportBuilder = CloneGroupingReport.Builder()
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
