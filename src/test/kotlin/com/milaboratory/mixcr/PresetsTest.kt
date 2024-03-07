@@ -7,11 +7,15 @@ import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.allClonesWillBeCoveredByFeature
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
+import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
 import com.milaboratory.mixcr.presets.Presets
@@ -177,7 +181,7 @@ class PresetsTest {
         Presets.nonAbstractPresetNames
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                AnalyzeCommandDescriptor.assembleCells in bundle.pipeline!!.steps
+                assembleCells in bundle.pipeline!!.steps
             }
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
@@ -213,5 +217,19 @@ class PresetsTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `all presets with assemble cells should have assemble contigs feature`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val steps = bundle.pipeline?.steps ?: emptyList()
+                assembleCells in steps && assembleContigs in steps && Flags.AssembleContigsBy !in bundle.flags
+            }
+            .forAll { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature() shouldBe true
+            }
     }
 }

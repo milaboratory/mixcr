@@ -106,6 +106,10 @@ val presetFlagsMessages = mapOf(
             "This preset requires to specify sample table, \n" +
             "please use ${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} or " +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} mix-in.",
+
+    Flags.AssembleContigsBy to
+            "This preset requires to specify feature to assemble contigs, \n" +
+            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`.",
 )
 
 
