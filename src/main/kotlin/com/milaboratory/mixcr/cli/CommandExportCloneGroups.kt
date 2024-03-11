@@ -304,7 +304,7 @@ object CommandExportCloneGroups {
             params: CommandExportCloneGroupsParams,
             fileInfo: MiXCRFileInfo
         ): CloneSet {
-            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
+            val assemblingFeatures = fileInfo.header.assemblingFeatures!!
             val filteredClones = initialSet
                 .filter { params.test(it, assemblingFeatures) }
                 .groupBy { it.group!! }

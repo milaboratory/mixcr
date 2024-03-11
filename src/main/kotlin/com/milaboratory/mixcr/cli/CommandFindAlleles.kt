@@ -314,7 +314,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
         logger.debug { "Name of the original library: ${originalLibrary.libraryId.libraryName}" }
 
         val cloneFactoryParameters = datasets.map { cloneReader ->
-            cloneReader.assemblerParameters.updateFrom(cloneReader.header.alignerParameters).cloneFactoryParameters
+            cloneReader.cloneFactoryParameters
         }
 
         for (geneType in VJ_REFERENCE) {

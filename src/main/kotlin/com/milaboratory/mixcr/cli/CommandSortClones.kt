@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -113,7 +113,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
 
     private fun chooseOrdering(reader: CloneReader): VDJCSProperties.CloneOrdering {
         val assemblingFeatures = byFeatures.toTypedArray().ifEmpty {
-            sortGeneFeaturesContainingCDR3First(reader.assemblerParameters.assemblingFeatures)
+            sortGeneFeaturesContainingCDR3First(reader.assemblingFeatures)
         }
         val segments = byGenes.toTypedArray().ifEmpty {
             arrayOf(Variable, Joining)

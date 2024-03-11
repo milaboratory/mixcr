@@ -203,8 +203,13 @@ object CommandAssembleContigs {
                 ordering = reader.ordering
                 header = reader.header
                 genes = reader.usedGenes
-                cloneFactoryParameters =
-                    reader.assemblerParameters.updateFrom(header.alignerParameters).cloneFactoryParameters
+                cloneFactoryParameters = cmdParams.cloneFactoryParameters?.let { cloneFactoryParameters ->
+                    // if cloneFactoryParameters is overriden for this command
+                    cloneFactoryParameters.clone().also {
+                        // set defaults from align params
+                        it.update(header.alignerParameters)
+                    }
+                } ?: reader.cloneFactoryParameters // for old versions use params from assemble as is
 
                 PrimitivO(BufferedOutputStream(FileOutputStream(outputFile.toFile()))).use { tmpOut ->
                     debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it.toFile()))) }
@@ -267,9 +272,12 @@ object CommandAssembleContigs {
             }
             val allFullyCoveredBy = cmdParams.parameters.allClonesWillBeCoveredByFeature()
             val resultHeader = header
-                .copy(allFullyCoveredBy = if (allFullyCoveredBy) assemblingRegions else null)
+                .copy(
+                    allFullyCoveredBy = if (allFullyCoveredBy) assemblingRegions else null,
+                    paramsSpec = dontSavePresetOption.presetToSave(paramsSpec),
+                    _cloneFactoryParameters = cloneFactoryParameters
+                )
                 .addStepParams(AnalyzeCommandDescriptor.assembleContigs, cmdParams)
-                .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
 
             val cloneSet = CloneSet.Builder(clones, genes, resultHeader)
                 .sort(ordering)
@@ -415,7 +423,7 @@ private class Assembler(
         // Performing contig assembly
         val fullSeqAssembler = FullSeqAssembler(
             cloneFactory, parameters,
-            header.assemblerParameters!!.assemblingFeatures,
+            header.assemblingFeatures,
             originalClone, header.alignerParameters,
             bestGenes[Variable], bestGenes[Joining]
         )
