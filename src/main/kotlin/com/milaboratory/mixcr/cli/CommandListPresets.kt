@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
+import com.milaboratory.mixcr.presets.PipelineMixins
 import com.milaboratory.mixcr.presets.PresetSpecification
 import com.milaboratory.mixcr.presets.Presets
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
@@ -91,5 +92,6 @@ private val flagOptions = mapOf(
     Flags.SampleTable to
             "${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} sample_table.tsv\n" +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} sample_table.tsv",
-    Flags.AssembleContigsBy to "${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} {${Labels.GENE_FEATURES}}",
+    Flags.AssembleContigsBy to "${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}",
+    Flags.AssembleContigsByOrByCell to "(${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}|${PipelineMixins.RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP})",
 )
