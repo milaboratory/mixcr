@@ -90,7 +90,8 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
         names = [RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP],
         order = OptionsOrder.mixins.assembleContigs + 101
     )
-    fun assembleContigsByCells() = mixIn(RemovePipelineStep(assembleCells.name, Flags.AssembleContigsByOrByCell))
+    fun assembleContigsByCells(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(RemovePipelineStep(assembleCells.name, Flags.AssembleContigsByOrByCell))
 
     companion object {
         const val DESCRIPTION = "Params to change pipeline steps:%n"
@@ -121,7 +122,8 @@ class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
         hidden = true,
         names = [RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP]
     )
-    fun assembleContigsByCells() = mixIn(RemovePipelineStep(assembleCells.name, Flags.AssembleContigsByOrByCell))
+    fun assembleContigsByCells(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(RemovePipelineStep(assembleCells.name, Flags.AssembleContigsByOrByCell))
 
 }
 

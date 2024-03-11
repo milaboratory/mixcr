@@ -23,6 +23,7 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.assembler.CloneFactory
+import com.milaboratory.mixcr.assembler.CloneFactoryParameters
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssembler
 import com.milaboratory.mixcr.assembler.fullseq.FullSeqAssemblerParameters
@@ -170,6 +171,7 @@ object CommandAssembleContigs {
             var totalClonesCount = 0
             val genes: List<VDJCGene>
             val header: MiXCRHeader
+            val cloneFactoryParameters: CloneFactoryParameters
             val ordering: CloneOrdering
             val footer: MiXCRFooter
 
@@ -197,13 +199,16 @@ object CommandAssembleContigs {
                     }
                 }
 
+                footer = reader.footer
+                ordering = reader.ordering
+                header = reader.header
+                genes = reader.usedGenes
+                cloneFactoryParameters =
+                    reader.assemblerParameters.updateFrom(header.alignerParameters).cloneFactoryParameters
+
                 PrimitivO(BufferedOutputStream(FileOutputStream(outputFile.toFile()))).use { tmpOut ->
                     debugReportFile?.let { BufferedWriter(OutputStreamWriter(FileOutputStream(it.toFile()))) }
                         .use { debugReport ->
-                            footer = reader.footer
-                            ordering = reader.ordering
-                            header = reader.header
-                            genes = reader.usedGenes
 
                             IOUtil.registerGeneReferences(tmpOut, genes, header)
                             val cloneAlignmentsPort = reader.clonesAndAlignments()
@@ -214,7 +219,8 @@ object CommandAssembleContigs {
                                 reportBuilder,
                                 cmdParams.parameters,
                                 debugReport,
-                                debugReportFile
+                                debugReportFile,
+                                cloneFactoryParameters
                             )
 
                             val parallelProcessor = cloneAlignmentsPort.mapInParallelOrdered(
@@ -311,11 +317,12 @@ private class Assembler(
     private val reportBuilder: FullSeqAssemblerReportBuilder,
     private val parameters: FullSeqAssemblerParameters,
     private val debugReport: BufferedWriter?,
-    private val debugReportFile: Path?
+    private val debugReportFile: Path?,
+    cloneFactoryParameters: CloneFactoryParameters
 ) {
 
     private val cloneFactory = CloneFactory(
-        reader.assemblerParameters.updateFrom(header.alignerParameters).cloneFactoryParameters,
+        cloneFactoryParameters,
         reader.assemblingFeatures,
         reader.usedGenes,
         reader.header.featuresToAlignMap
