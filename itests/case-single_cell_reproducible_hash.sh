@@ -21,6 +21,7 @@ cd result_1
 
 mixcr analyze --verbose 10x-vdj-bcr \
   --species hs \
+  --assemble-contigs-by VDJRegion \
   ../single_cell_vdj_t_subset_R1.fastq.gz \
   ../single_cell_vdj_t_subset_R2.fastq.gz \
   result
@@ -33,6 +34,7 @@ cd result_2
 
 mixcr analyze --verbose 10x-vdj-bcr \
   --species hs \
+  --assemble-contigs-by VDJRegion \
   ../single_cell_vdj_t_subset_R1.fastq.gz \
   ../single_cell_vdj_t_subset_R2.fastq.gz \
   result
