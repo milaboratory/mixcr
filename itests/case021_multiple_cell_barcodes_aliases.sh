@@ -18,7 +18,7 @@ set -euxo pipefail
 
 mixcr analyze --verbose -f 10x-vdj-tcr-alias-multi-barcode-test \
   --species hs \
-  --assemble-contigs-by-cell \
+  --assemble-contigs-by-cells \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   case21.vdjcontigs
