@@ -4,6 +4,7 @@ set -euxo pipefail
 
 mixcr analyze -f 10x-vdj-bcr \
   --species hs \
+  --assemble-contigs-by-cells \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   baseSingleCell.raw
