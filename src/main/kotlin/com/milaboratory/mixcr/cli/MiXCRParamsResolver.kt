@@ -61,17 +61,6 @@ abstract class MiXCRParamsResolver<P : Any>(
             }
         }
 
-        if (assembleCells in steps) {
-            if (assembleContigs in steps) {
-                val params = bundle.assembleContigs ?: throw ValidationException("no assembleContigs params")
-                ValidationException.require(params.parameters.allClonesWillBeCoveredByFeature()) {
-                    "There is `assembleCells` but `assembleContigs` don't have fixed feature to assemble. " +
-                            "Either use `${PipelineMixins.RemovePipelineStep.CMD_OPTION} ${assembleCells.name}` or " +
-                            "`${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`"
-                }
-            }
-        }
-
         bundle.validation?.items?.forEach { validation ->
             validation.validate(bundle)
         }
