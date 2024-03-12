@@ -5,6 +5,8 @@ properties:
     type: number
   canceledAssemblies:
     type: integer
+  cloneBeforeFilteringCount:
+    type: integer
   clonesClustered:
     type: integer
   clonesWithAmbiguousLetters:
