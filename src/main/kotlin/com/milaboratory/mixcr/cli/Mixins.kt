@@ -43,9 +43,9 @@ import com.milaboratory.mixcr.presets.ExportMixins.AddExportCloneGroupsField
 import com.milaboratory.mixcr.presets.ExportMixins.AddExportClonesField
 import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
-import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.GenericMixin
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
+import com.milaboratory.mixcr.presets.PipelineMixins.AssembleContigsByCells
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.presets.QcMixins
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
@@ -87,11 +87,11 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     // We don't need it assembleClones command
     @Option(
         description = ["Assemble contigs separately by cells. It will cancel `assembleCells` step."],
-        names = [RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP],
+        names = [AssembleContigsByCells.CMD_OPTION],
         order = OptionsOrder.mixins.assembleContigs + 101
     )
     fun assembleContigsByCells(@Suppress("UNUSED_PARAMETER") f: Boolean) =
-        mixIn(RemovePipelineStep(assembleCells.name, Flags.AssembleContigsByOrByCell))
+        mixIn(AssembleContigsByCells)
 
     companion object {
         const val DESCRIPTION = "Params to change pipeline steps:%n"
@@ -120,10 +120,10 @@ class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
 
     @Option(
         hidden = true,
-        names = [RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP]
+        names = [AssembleContigsByCells.CMD_OPTION]
     )
     fun assembleContigsByCells(@Suppress("UNUSED_PARAMETER") f: Boolean) =
-        mixIn(RemovePipelineStep(assembleCells.name, Flags.AssembleContigsByOrByCell))
+        mixIn(AssembleContigsByCells)
 
 }
 

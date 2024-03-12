@@ -48,7 +48,7 @@ import java.nio.file.Path
 object CommandAssembleCells {
     const val COMMAND_NAME = AnalyzeCommandDescriptor.assembleCells.name
 
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandGroupClonesParams> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssembleCellsParams> {
         @Option(
             names = ["-O"],
             description = ["Overrides for the clone grouping parameters."],
@@ -58,9 +58,9 @@ object CommandAssembleCells {
         private var overrides: Map<String, String> = mutableMapOf()
 
         override val paramsResolver =
-            object : MiXCRParamsResolver<CommandGroupClonesParams>(MiXCRParamsBundle::assembleCells) {
-                override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {
-                    CommandGroupClonesParams::algorithm jsonOverrideWith overrides
+            object : MiXCRParamsResolver<CommandAssembleCellsParams>(MiXCRParamsBundle::assembleCells) {
+                override fun POverridesBuilderOps<CommandAssembleCellsParams>.paramsOverrides() {
+                    CommandAssembleCellsParams::algorithm jsonOverrideWith overrides
                 }
             }
     }
@@ -126,10 +126,10 @@ object CommandAssembleCells {
             }
         }
 
-        private fun processClns(): CloneGroupingReport =
+        private fun processClns(): AssembleCellsReport =
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
                 validate(reader)
-                val reportBuilder = CloneGroupingReport.Builder()
+                val reportBuilder = AssembleCellsReport.Builder()
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
@@ -143,10 +143,10 @@ object CommandAssembleCells {
                 }
             }
 
-        private fun processClna(): CloneGroupingReport =
+        private fun processClna(): AssembleCellsReport =
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
                 validate(reader)
-                val reportBuilder = CloneGroupingReport.Builder()
+                val reportBuilder = AssembleCellsReport.Builder()
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
@@ -173,7 +173,7 @@ object CommandAssembleCells {
         private fun calculateGroupIdForClones(
             input: CloneSet,
             header: MiXCRHeader,
-            reportBuilder: CloneGroupingReport.Builder
+            reportBuilder: AssembleCellsReport.Builder
         ): CloneSet {
             ValidationException.require(input.tagsInfo.hasTagsWithType(TagType.Cell)) {
                 "Input doesn't have cell tags"

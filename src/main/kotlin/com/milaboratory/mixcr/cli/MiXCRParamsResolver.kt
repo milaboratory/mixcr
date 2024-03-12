@@ -101,7 +101,7 @@ val presetFlagsMessages = mapOf(
             "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`.",
     Flags.AssembleContigsByOrByCell to
             "This preset requires to specify feature to assemble contigs by `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or" +
-            "explicitly call `${PipelineMixins.RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP}` that will cancel `${assembleCells.name}` step.",
+            "explicitly call `${PipelineMixins.AssembleContigsByCells.CMD_OPTION}` that will cancel `${assembleCells.name}` step.",
 )
 
 

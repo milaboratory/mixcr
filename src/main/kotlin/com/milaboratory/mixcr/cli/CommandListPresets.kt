@@ -93,5 +93,5 @@ private val flagOptions = mapOf(
             "${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} sample_table.tsv\n" +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} sample_table.tsv",
     Flags.AssembleContigsBy to "${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}",
-    Flags.AssembleContigsByOrByCell to "(${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}|${PipelineMixins.RemovePipelineStep.REMOVE_ASSEMBLE_CELLS_STEP})",
+    Flags.AssembleContigsByOrByCell to "(${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}|${PipelineMixins.AssembleContigsByCells.CMD_OPTION})",
 )
