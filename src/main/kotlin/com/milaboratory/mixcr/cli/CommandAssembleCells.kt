@@ -45,7 +45,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
-object CommandGroupClones {
+object CommandAssembleCells {
     const val COMMAND_NAME = AnalyzeCommandDescriptor.assembleCells.name
 
     abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandGroupClonesParams> {
