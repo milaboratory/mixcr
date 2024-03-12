@@ -2,7 +2,7 @@ align:
   type: alignerReport
   commandLine: align -f --report baseSingleCell.raw.align.report.txt --json-report
     baseSingleCell.raw.align.report.json --preset 10x-vdj-bcr --save-output-file-names
-    baseSingleCell.raw.align.list --species hs single_cell_vdj_t_subset_R1.fastq.gz
+    baseSingleCell.raw.align.list --assemble-contigs-by-cells --species hs single_cell_vdj_t_subset_R1.fastq.gz
     single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.raw.vdjca
   inputFiles:
     - single_cell_vdj_t_subset_R1.fastq.gz
@@ -246,6 +246,7 @@ assembleContigs:
   totalAmbiguousLettersInSplittingRegion: 0
   initialCloneCount: 7
   canceledAssemblies: 0
+  cloneBeforeFilteringCount: 7
   finalCloneCount: 7
   combinedCloneCount: 0
   totalReadsProcessed: 14107.0

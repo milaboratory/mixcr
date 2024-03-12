@@ -9,9 +9,10 @@ Usage: mixcr exportPreset [--no-validation] [--add-step <step>] [--remove-step <
                           [--drop-non-CDR3-alignments] [--limit-input <n>]
                           [--assemble-clonotypes-by <gene_features>] [--split-clones-by
                           <gene_type>]... [--dont-split-clones-by <gene_type>]...
-                          [--assemble-contigs-by <gene_features>] [--impute-germline-on-export]
-                          [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
-                          [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
+                          [--assemble-contigs-by <gene_features>] [--assemble-contigs-by-cells]
+                          [--impute-germline-on-export] [--dont-impute-germline-on-export]
+                          [--prepend-export-clones-field <field> [<param>...]]...
+                          [--append-export-clones-field <field> [<param>...]]...
                           [--prepend-export-clone-groups-field <field> [<param>...]]...
                           [--append-export-clone-groups-field <field> [<param>...]]...
                           [--prepend-export-alignments-field <field> [<param>...]]...
@@ -48,6 +49,9 @@ Export a preset file given the preset name or source file and a set of mix-ins
 Params to change pipeline steps:
       --add-step <step>      Add a step to pipeline
       --remove-step <step>   Remove a step from pipeline
+      --assemble-contigs-by-cells
+                             Assemble contigs separately by cells. It will cancel `assembleCells`
+                               step.
 Params for align command:
   -s, --species <species>    Species (organism). Possible values: `hsa` (or HomoSapiens), `mmu` (or
                                MusMusculus), `rat`, `spalax`, `alpaca`, `lamaGlama`, `mulatta`

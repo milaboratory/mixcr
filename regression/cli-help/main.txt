@@ -10,7 +10,8 @@ Base commands:
   extend             Impute alignments or clones with germline sequences.
   assemble           Assemble clones.
   assembleContigs    Assemble full sequences.
-  assembleCells      Group clones by cells. Required data with cell tags.
+  assembleCells      Group clones by cells. Required data with cell tags. All clones should be
+                       fully covered by the same feature.
   findAlleles        Find allele variants in clnx.
   findShmTrees       Builds SHM trees.
   downsample         Downsample clonesets.
