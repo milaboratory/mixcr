@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assemble
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
 import com.milaboratory.mixcr.presets.AssembleContigsMixins
+import com.milaboratory.mixcr.presets.AssembleMixins
 import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
@@ -96,11 +97,17 @@ val presetFlagsMessages = mapOf(
             "please use ${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} or " +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} mix-in.",
 
+    Flags.AssembleClonesBy to
+            "This preset requires to specify feature to assemble, \n" +
+            "please use `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`.",
     Flags.AssembleContigsBy to
             "This preset requires to specify feature to assemble contigs, \n" +
             "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`.",
+    Flags.AssembleContigsByOrMaxLength to
+            "This preset requires to specify feature to assemble contigs mode, \n" +
+            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or `${AssembleContigsMixins.AssembleContigsWithMaxLength.CMD_OPTION}`.",
     Flags.AssembleContigsByOrByCell to
-            "This preset requires to specify feature to assemble contigs by `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or" +
+            "This preset requires to specify feature to assemble contigs by `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or " +
             "explicitly call `${PipelineMixins.AssembleContigsByCells.CMD_OPTION}` that will cancel `${assembleCells.name}` step.",
 )
 

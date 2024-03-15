@@ -222,6 +222,35 @@ class PresetsTest {
     }
 
     @Test
+    fun `all presets should have assemble feature or flag for it`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val hasFeature = bundle.assemble!!.cloneAssemblerParameters.assemblingFeatures != null
+                val hasFlag = Flags.AssembleClonesBy in bundle.flags
+                (hasFeature && hasFlag) || (!hasFeature && !hasFlag)
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets should have assemble contigs feature or flag for it`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val steps = bundle.pipeline?.steps ?: emptyList()
+                assembleContigs in steps
+            }
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val hasFeature = bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature()
+                val hasFlag = Flags.AssembleContigsBy in bundle.flags ||
+                        Flags.AssembleContigsByOrMaxLength in bundle.flags ||
+                        Flags.AssembleContigsByOrByCell in bundle.flags
+                (hasFeature && hasFlag) || (!hasFeature && !hasFlag)
+            } shouldBe emptyList()
+    }
+
+    @Test
     fun `all presets with assemble cells should have assemble contigs feature`() {
         Presets.visiblePresets
             .filter { presetName ->

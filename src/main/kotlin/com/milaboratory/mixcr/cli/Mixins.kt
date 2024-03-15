@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.presets.AlignMixins.SetLibrary
 import com.milaboratory.mixcr.presets.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.presets.AlignMixins.SetTagPattern
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
+import com.milaboratory.mixcr.presets.AssembleContigsMixins.AssembleContigsWithMaxLength
 import com.milaboratory.mixcr.presets.AssembleContigsMixins.SetContigAssemblingFeatures
 import com.milaboratory.mixcr.presets.AssembleMixins.SetClonotypeAssemblingFeatures
 import com.milaboratory.mixcr.presets.AssembleMixins.SetSplitClonesBy
@@ -459,6 +460,15 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
     )
     fun assembleContigsBy(gf: GeneFeatures) =
         mixIn(SetContigAssemblingFeatures(gf))
+
+    @Option(
+        description = ["Contigs with maximum possible length will be assembled."],
+        names = [AssembleContigsWithMaxLength.CMD_OPTION],
+        paramLabel = Labels.GENE_FEATURES,
+        order = OptionsOrder.mixins.assembleContigs + 102
+    )
+    fun assembleContigsWithMaxLength(ignored: Boolean) =
+        mixIn(AssembleContigsWithMaxLength)
 
     companion object {
         const val DESCRIPTION = "Params for ${CommandAssembleContigs.COMMAND_NAME} command:%n"
