@@ -245,9 +245,6 @@ object CommandAssembleContigs {
                             parallelProcessor.forEach { clones ->
                                 totalClonesCount += clones.size
                                 for (cl in clones) {
-                                    println("------------")
-                                    println("${cl.getBestHit(Variable)}:${cl.getBestHit(Joining)}")
-                                    println(cl.tagCount)
                                     tmpOut.writeObject(cl)
                                 }
                             }
