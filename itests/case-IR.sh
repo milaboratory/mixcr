@@ -19,6 +19,7 @@ assert() {
 set -eux
 
 mixcr analyze generic-lt-single-cell-amplicon \
+    --assemble-contigs-by-cells \
     --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)\^(CELL2:*)" \
     --species hsa \
     --rna \
@@ -31,6 +32,7 @@ mixcr analyze generic-lt-single-cell-amplicon \
     output_normal
 
 mixcr analyze generic-lt-single-cell-amplicon \
+    --assemble-contigs-by-cells \
     --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)\^(CELL2:*)" \
     --species hsa \
     --rna \
@@ -41,6 +43,7 @@ mixcr analyze generic-lt-single-cell-amplicon \
 
 ## R2 as UMI
 mixcr analyze generic-lt-single-cell-amplicon-with-umi \
+    --assemble-contigs-by-cells \
     --tag-pattern "^(R1:*)\^(UMI:*)\^(CELL1:*)\^(CELL2:*)" \
     --species hsa \
     --rna \
@@ -54,6 +57,7 @@ mixcr analyze generic-lt-single-cell-amplicon-with-umi \
 
 # R1 as UMI and payload
 mixcr analyze generic-lt-single-cell-amplicon-with-umi \
+    --assemble-contigs-by-cells \
     --tag-pattern "^N{16}(UMI:N{10})(R1:*)\^(R2:*)\^(CELL1:*)\^(CELL2:*)" \
     --species hsa \
     --rna \
@@ -67,6 +71,7 @@ mixcr analyze generic-lt-single-cell-amplicon-with-umi \
 
 # R1+R2+I1
 mixcr analyze generic-lt-single-cell-amplicon \
+    --assemble-contigs-by-cells \
     --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)" \
     --species hsa \
     --rna \

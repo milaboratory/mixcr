@@ -7,6 +7,7 @@ generic-lt-single-cell-amplicon:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -92,6 +93,7 @@ generic-lt-single-cell-amplicon-with-umi:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -237,6 +239,7 @@ generic-lt-single-cell-fragmented:
   inheritFrom: bundle-base
   flags:
     - species
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -275,6 +278,8 @@ generic-lt-single-cell-fragmented:
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -306,6 +311,7 @@ generic-lt-single-cell-fragmented-with-umi:
   inheritFrom: bundle-base
   flags:
     - species
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -388,6 +394,8 @@ generic-lt-single-cell-fragmented-with-umi:
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -425,6 +433,7 @@ generic-ht-single-cell-amplicon:
     - leftAlignmentMode
     - rightAlignmentMode
     - tagPattern
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -538,6 +547,7 @@ generic-ht-single-cell-amplicon-with-umi:
     - leftAlignmentMode
     - rightAlignmentMode
     - tagPattern
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -712,6 +722,7 @@ generic-ht-single-cell-fragmented:
   flags:
     - species
     - tagPattern
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -787,6 +798,8 @@ generic-ht-single-cell-fragmented:
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -819,6 +832,7 @@ generic-ht-single-cell-fragmented-with-umi:
   flags:
     - species
     - tagPattern
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -925,6 +939,8 @@ generic-ht-single-cell-fragmented-with-umi:
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -954,6 +970,8 @@ generic-ht-single-cell-fragmented-with-umi:
 generic-single-cell-gex-base:
   category: generic
   inheritFrom: bundle-base
+  flags:
+    - assembleContigsByOrByCell
   abstract: true
   pipeline:
     - align
@@ -983,6 +1001,9 @@ generic-single-cell-gex-base:
     inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:
       clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
   assembleCells:
     inheritFrom: assembleCells-base
 

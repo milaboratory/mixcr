@@ -9,6 +9,7 @@ gzip -dc CD4M1_test_R2.fastq.gz CD4M1_test_R2.fastq.gz | tr 'N' 'A' > case5_R2.f
 #mixcr analyze --verbose amplicon --assemble '-OcloneClusteringParameters=null' --impute-germline-on-export -s hs --starting-material rna --contig-assembly --5-end v-primers --3-end j-primers --adapters adapters-present case5_R1.fastq case5_R2.fastq case5
 
 mixcr analyze --verbose generic-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

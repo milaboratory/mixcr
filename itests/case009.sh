@@ -19,6 +19,7 @@ assert() {
 set -e
 
 mixcr analyze --verbose generic-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

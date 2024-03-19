@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 mixcr align -p generic-amplicon --species hs \
+            --assemble-clonotypes-by CDR3 \
             --dna \
             -OsaveOriginalReads=true \
             --floating-left-alignment-boundary \

@@ -5,6 +5,7 @@ shotgun-base:
   flags:
     - species
     - materialType
+    - assembleContigsByOrMaxLength
   pipeline:
     - align
     - assemblePartial
@@ -24,6 +25,9 @@ shotgun-base:
     inheritFrom: assemble-base
     overrides:
       clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
 
 rna-seq:
   label: "Generic RNA-Seq data"

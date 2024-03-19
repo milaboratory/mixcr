@@ -25,6 +25,7 @@ ln -s single_cell_vdj_t_subset_R1.fastq.gz S2_single_cell_vdj_t_subset_R1.fastq.
 ln -s single_cell_vdj_t_subset_R2.fastq.gz S2_single_cell_vdj_t_subset_R2.fastq.gz
 
 mixcr analyze --verbose generic-tcr-amplicon-separate-samples-umi \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --rigid-left-alignment-boundary \

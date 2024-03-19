@@ -6,6 +6,7 @@ touch empty_R1.fastq
 touch empty_R2.fastq
 
 mixcr analyze --verbose generic-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

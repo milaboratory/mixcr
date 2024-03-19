@@ -6,8 +6,7 @@ assemble-base:
     cellLevel: false
     inferMinRecordsPerConsensus: false
     cloneAssemblerParameters:
-      assemblingFeatures:
-        - CDR3
+      assemblingFeatures: null
       minimalClonalSequenceLength: 12
       qualityAggregationType: BetaScore
       separateByV: false

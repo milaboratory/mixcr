@@ -4,6 +4,7 @@
   inheritFrom: bundle-base
   flags:
     - species
+    - assembleContigsByOrMaxLength
   pipeline:
     - align
     - assemble
@@ -18,6 +19,8 @@
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         badQualityThreshold: 0
         minimalQuality: 15
         cloneClusteringParameters:
@@ -43,6 +46,7 @@
   flags:
     - species
     - tagPattern
+    - assembleContigsByOrMaxLength
   pipeline:
     - align
     - refineTagsAndSort
@@ -64,6 +68,8 @@
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         badQualityThreshold: 0
         minimalQuality: 15
         cloneClusteringParameters:

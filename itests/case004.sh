@@ -4,6 +4,7 @@ set -euxo pipefail
 
 # Checking generic pipeline with relatively big input files
 mixcr analyze --verbose generic-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

@@ -101,6 +101,8 @@
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
