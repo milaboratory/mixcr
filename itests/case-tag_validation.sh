@@ -51,6 +51,7 @@ mixcr analyze generic-lt-single-cell-amplicon \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
+    --assemble-clonotypes-by CDR3 \
     subset_B004-7_S247_L001_R1_001.fastq.gz \
     subset_B004-7_S247_L001_R2_001.fastq.gz \
     subset_B004-7_S247_L001_I1_001.fastq.gz \
@@ -65,6 +66,7 @@ mixcr analyze generic-lt-single-cell-amplicon \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
+    --assemble-clonotypes-by CDR3 \
     subset_B004-7_S247_L001_R1_001.fastq.gz \
     subset_B004-7_S247_L001_R2_001.fastq.gz \
     output 2>err
@@ -78,6 +80,7 @@ mixcr analyze generic-lt-single-cell-amplicon \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
+    --assemble-clonotypes-by CDR3 \
     subset_B004-7_S247_L001_R1_001.fastq.gz \
     subset_B004-7_S247_L001_R2_001.fastq.gz \
     output 2>err
@@ -91,6 +94,7 @@ mixcr analyze generic-amplicon \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
+    --assemble-clonotypes-by CDR3 \
     subset_B004-7_S247_L001_R1_001.fastq.gz \
     output 2>err
 
@@ -103,6 +107,7 @@ mixcr analyze generic-amplicon \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
+    --assemble-clonotypes-by CDR3 \
     subset_B004-7_S247_L001_R1_001.fastq.gz \
     subset_B004-7_S247_L001_R2_001.fastq.gz \
     output 2>err
