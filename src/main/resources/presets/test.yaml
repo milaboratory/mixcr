@@ -102,6 +102,9 @@
     - align
     - assemble
     - exportClones
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-amplicon
     overrides:
@@ -127,6 +130,9 @@
     - align
     - assemble
     - exportClones
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-amplicon
 
@@ -164,6 +170,9 @@
     - assemblePartial
     - assemble
     - exportClones
+  mixins:
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-shotgun
     overrides:

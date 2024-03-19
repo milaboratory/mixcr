@@ -23,6 +23,8 @@ mixcr analyze --verbose single-cell-as-sample-split \
   --rna \
   --floating-left-alignment-boundary \
   --floating-right-alignment-boundary C \
+  --assemble-clonotypes-by CDR3 \
+  --assemble-contigs-by-cells \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   sample-barcode-split
@@ -32,6 +34,8 @@ mixcr analyze --verbose single-cell-as-sample-no-split \
   --rna \
   --floating-left-alignment-boundary \
   --floating-right-alignment-boundary C \
+  --assemble-clonotypes-by CDR3 \
+  --assemble-contigs-by-cells \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   sample-barcode-no-split

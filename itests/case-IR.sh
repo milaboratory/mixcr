@@ -71,7 +71,7 @@ mixcr analyze generic-lt-single-cell-amplicon-with-umi \
 
 # R1+R2+I1
 mixcr analyze generic-lt-single-cell-amplicon \
-    --assemble-contigs-by-cells \
+    --assemble-clonotypes-by CDR3 \
     --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)" \
     --species hsa \
     --rna \

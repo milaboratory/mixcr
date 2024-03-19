@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 mixcr analyze --verbose \
+    --assemble-clonotypes-by CDR3 \
     --species hs \
     --rna \
     --floating-left-alignment-boundary \
@@ -10,6 +11,7 @@ mixcr analyze --verbose \
     test-tcr-shotgun test_R1.fastq test_R2.fastq result
 
 mixcr exportPreset --preset-name test-tcr-shotgun \
+    --assemble-clonotypes-by CDR3 \
     --species hs \
     --rna \
     --floating-left-alignment-boundary \
