@@ -20,6 +20,8 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.app.matches
+import com.milaboratory.cli.apply
+import com.milaboratory.cli.resolve
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
 import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
@@ -39,8 +41,11 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AssembleContigsMixins.SetContigAssemblingFeatures
+import com.milaboratory.mixcr.presets.AssembleMixins.SetClonotypeAssemblingFeatures
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
+import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.VJPair
 import com.milaboratory.util.GlobalObjectMappers
 import com.milaboratory.util.JsonOverrider
@@ -296,9 +301,35 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                 .joinToString(", ")
             "Some of the inputs were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${SetContigAssemblingFeatures.CMD_OPTION}` option: $withoutFullyCovered"
         }
-        val allFullyCoveredBy = ValidationException.requireTheSame(datasets.map { it.header.allFullyCoveredBy!! }) {
-            "Input files must be cut by the same geneFeature"
+        ValidationException.require(datasets.map { it.header.allFullyCoveredBy!! }.distinct().size == 1) {
+            val commonFeature = datasets.map { it.header.allFullyCoveredBy!! }.reduce { a, b -> a.intersection(b)!! }
+            if (commonFeature == GeneFeatures(CDR3)) {
+                val filesDescription = datasets.withIndex()
+                    .groupBy({ it.value.header.allFullyCoveredBy!! }, { inputFiles[it.index] })
+                    .map { (feature, files) -> feature.encode() + ": " + files.joinToString(", ") }
+                    .joinToString("\n")
+                return@require "Input files should be cut by the same geneFeature.\n" +
+                        "Common feature for input files is CDR3, so you should select other subset of data to process.\n" +
+                        filesDescription
+            }
+            val toRecalculate = datasets.withIndex().filter { it.value.header.allFullyCoveredBy!! != commonFeature }
+            val (assembledContigs, assembled) = toRecalculate.partition {
+                val paramsSpec = it.value.header.paramsSpec
+                val bundle = paramsSpec.mixins.apply(Presets.MiXCRBundleResolver.resolve(paramsSpec.base))
+                AnalyzeCommandDescriptor.assembleContigs in (bundle.pipeline?.steps ?: emptySet())
+            }
+            val message = listOfNotNull(
+                assembledContigs.takeIf { it.isNotEmpty() }?.let { files ->
+                    files.joinToString(", ") { inputFiles[it.index].toString() } + " should be calculated with `${SetContigAssemblingFeatures.CMD_OPTION} ${commonFeature.encode()}`"
+                },
+                assembled.takeIf { it.isNotEmpty() }?.let { files ->
+                    files.joinToString(", ") { inputFiles[it.index].toString() } + " should be calculated with `${SetClonotypeAssemblingFeatures.CMD_OPTION} ${commonFeature.encode()}`"
+                },
+            ).joinToString("\n")
+            "Input files should be cut by the same geneFeature.\n" +
+                    "Common feature for input files is ${commonFeature.encode()}\n" + message
         }
+        val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
         logger.debug { "Feature for search alleles: $allFullyCoveredBy" }
         ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"

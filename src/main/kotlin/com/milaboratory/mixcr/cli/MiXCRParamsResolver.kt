@@ -27,6 +27,9 @@ import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.PipelineMixins
 import com.milaboratory.mixcr.presets.Presets
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeature.VDJRegion
 import kotlin.reflect.KProperty1
 
 abstract class MiXCRParamsResolver<P : Any>(
@@ -99,16 +102,21 @@ val presetFlagsMessages = mapOf(
 
     Flags.AssembleClonesBy to
             "This preset requires to specify feature to assemble, \n" +
-            "please use `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`.",
+            "please use `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`, \n" +
+            "for example `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(CDR3)}.",
     Flags.AssembleContigsBy to
             "This preset requires to specify feature to assemble contigs, \n" +
-            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`.",
+            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`, \n" +
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}.",
     Flags.AssembleContigsByOrMaxLength to
             "This preset requires to specify feature to assemble contigs mode, \n" +
-            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or `${AssembleContigsMixins.AssembleContigsWithMaxLength.CMD_OPTION}`.",
+            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or `${AssembleContigsMixins.AssembleContigsWithMaxLength.CMD_OPTION}`, \n" +
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}.",
     Flags.AssembleContigsByOrByCell to
-            "This preset requires to specify feature to assemble contigs by `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or " +
-            "explicitly call `${PipelineMixins.AssembleContigsByCells.CMD_OPTION}` that will cancel `${assembleCells.name}` step.",
+            "This preset requires to specify feature to assemble contigs by \n" +
+            "`${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or " +
+            " `${PipelineMixins.AssembleContigsByCells.CMD_OPTION}` that will cancel `${assembleCells.name}` step,\n" +
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}",
 )
 
 
