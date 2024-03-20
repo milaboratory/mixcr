@@ -1012,8 +1012,10 @@ generic-single-cell-gex-base:
       cloneAssemblerParameters:
         assemblingFeatures:
           - CDR3
-  assembleCells:
+  assembleContigs:
     inheritFrom: assembleContigs-sc-fr
+  assembleCells:
+    inheritFrom: assembleCells-base
 
 # Single cell GEX without UMI
 generic-single-cell-gex:

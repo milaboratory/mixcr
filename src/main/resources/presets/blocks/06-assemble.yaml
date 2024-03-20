@@ -127,6 +127,7 @@ assemble-with-consensus-sc-cell-level:
           maxConsensuses: 2
 
 assemble-with-consensus-sc-cell-level-fr:
+  abstract: true
   assemble:
     inheritFrom: assemble-with-consensus-sc-cell-level
     overrides:

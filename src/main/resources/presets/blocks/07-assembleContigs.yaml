@@ -21,6 +21,7 @@ assembleContigs-base:
         type: NoFiltering
 
 assembleContigs-sc-fr:
+  abstract: true
   assembleContigs:
     inheritFrom: assembleContigs-base
     overrides:
