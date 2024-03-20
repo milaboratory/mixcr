@@ -274,7 +274,7 @@ generic-lt-single-cell-fragmented:
   align:
     inheritFrom: align-single-cell
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
@@ -295,6 +295,8 @@ generic-lt-single-cell-fragmented:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
@@ -390,7 +392,7 @@ generic-lt-single-cell-fragmented-with-umi:
                         share: 0.85
                         round: Down
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
@@ -413,6 +415,8 @@ generic-lt-single-cell-fragmented-with-umi:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
@@ -794,7 +798,7 @@ generic-ht-single-cell-fragmented:
                 minimalSample: 20
                 fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
@@ -815,6 +819,8 @@ generic-ht-single-cell-fragmented:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
@@ -935,7 +941,7 @@ generic-ht-single-cell-fragmented-with-umi:
                     minimalSample: 20
                     fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
@@ -958,6 +964,8 @@ generic-ht-single-cell-fragmented-with-umi:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
@@ -998,14 +1006,14 @@ generic-single-cell-gex-base:
     overrides:
       cellLevel: true
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
         assemblingFeatures:
           - CDR3
   assembleCells:
-    inheritFrom: assembleCells-base
+    inheritFrom: assembleContigs-sc-fr
 
 # Single cell GEX without UMI
 generic-single-cell-gex:

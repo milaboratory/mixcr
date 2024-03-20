@@ -19,3 +19,30 @@ assembleContigs-base:
       alignedRegionsOnly: false
       postFiltering:
         type: NoFiltering
+
+assembleContigs-sc-fr:
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+    overrides:
+      cloneFactoryParameters:
+        vParameters:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore: 0.97
+          scoring: null
+        jParameters:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring: null
+        dParameters:
+          absoluteMinScore:
+          relativeMinScore:
+          maxHits:
+          scoring: null
+        cParameters:
+          maxAlignmentWidthLinear: 5
+          maxAlignmentWidthAffine: 500
+          relativeMinScore:
+          scoring: null
+
