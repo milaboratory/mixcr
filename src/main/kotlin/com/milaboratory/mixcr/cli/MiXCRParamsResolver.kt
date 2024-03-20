@@ -103,20 +103,20 @@ val presetFlagsMessages = mapOf(
     Flags.AssembleClonesBy to
             "This preset requires to specify feature to assemble, \n" +
             "please use `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`, \n" +
-            "for example `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(CDR3)}.",
+            "for example `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(CDR3)}`.",
     Flags.AssembleContigsBy to
             "This preset requires to specify feature to assemble contigs, \n" +
             "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`, \n" +
-            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}.",
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}`.",
     Flags.AssembleContigsByOrMaxLength to
             "This preset requires to specify feature to assemble contigs mode, \n" +
             "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or `${AssembleContigsMixins.AssembleContigsWithMaxLength.CMD_OPTION}`, \n" +
-            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}.",
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}`.",
     Flags.AssembleContigsByOrByCell to
             "This preset requires to specify feature to assemble contigs by \n" +
             "`${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or " +
             " `${PipelineMixins.AssembleContigsByCells.CMD_OPTION}` that will cancel `${assembleCells.name}` step,\n" +
-            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}",
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}`",
 )
 
 
