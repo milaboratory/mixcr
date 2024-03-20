@@ -33,9 +33,20 @@ abstract class MiXCRParamsResolver<P : Any>(
     paramsProperty: KProperty1<MiXCRParamsBundle, P?>
 ) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsProperty) {
     override fun validateBundle(bundle: MiXCRParamsBundle) {
-        if (bundle.flags.isNotEmpty()) {
+        val flags = bundle.flags.toMutableSet()
+
+        // for backward capability
+        if (bundle.assemble?.cloneAssemblerParameters?.assemblingFeatures != null)
+            flags -= Flags.AssembleClonesBy
+        if (bundle.assembleContigs?.parameters?.allClonesWillBeCoveredByFeature() == true) {
+            flags -= Flags.AssembleContigsBy
+            flags -= Flags.AssembleContigsByOrMaxLength
+            flags -= Flags.AssembleContigsByOrByCell
+        }
+
+        if (flags.isNotEmpty()) {
             println("Preset errors: ")
-            bundle.flags.forEach { flag ->
+            flags.forEach { flag ->
                 println()
                 println("- " + presetFlagsMessages[flag]!!.replace("\n", "\n  "))
             }
