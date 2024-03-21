@@ -8,6 +8,7 @@ gzip -dc CD4M1_test_R1.fastq.gz | head -n 1012 | tail -n 4 >>case7_R1.fastq
 gzip -dc CD4M1_test_R2.fastq.gz | head -n 1012 | tail -n 4 >>case7_R2.fastq
 
 mixcr analyze --verbose generic-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

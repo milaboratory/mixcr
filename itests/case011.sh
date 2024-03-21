@@ -27,6 +27,7 @@ mixcr analyze --verbose test-mikelov-et-al-2021-without-contigs \
       case11-without-contigs
 
 mixcr analyze --verbose test-mikelov-et-al-2021-with-contigs \
+      --assemble-clonotypes-by CDR3 \
       --output-consensus-alignments \
       --output-consensus-state-stat \
       --downsample-consensus-state-stat 0.2 \

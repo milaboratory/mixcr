@@ -17,6 +17,7 @@ assert() {
 set -euxo pipefail
 
 mixcr analyze -f test-tag-from-header \
+  --assemble-clonotypes-by CDR3 \
   sample_IGH_{{R}}.fastq \
   case_header_parse
 

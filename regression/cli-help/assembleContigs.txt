@@ -1,7 +1,7 @@
-Usage: mixcr assembleContigs [--ignore-tags] [--assemble-contigs-by <gene_features>] [-O
-                             <key=value>]... [--report <path>] [--json-report <path>] [--threads
-                             <n>] [--force-overwrite] [--no-warnings] [--verbose] [--help] clones.
-                             clna clones.clns
+Usage: mixcr assembleContigs [--ignore-tags] [--assemble-contigs-by <gene_features>]
+                             [--assemble-longest-contigs] [-O <key=value>]... [--report <path>]
+                             [--json-report <path>] [--threads <n>] [--force-overwrite]
+                             [--no-warnings] [--verbose] [--help] clones.clna clones.clns
 Assemble full sequences.
       clones.clna            Path to input clna file
       clones.clns            Path where to write assembled clones.
@@ -13,6 +13,8 @@ Assemble full sequences.
                                region, assembling procedure will be limited to the region, and only
                                clonotypes that fully cover the region will be outputted, others
                                will be filtered out.
+      --assemble-longest-contigs
+                             Contigs with maximum possible length will be assembled.
   -O  <key=value>            Overrides for the assembler parameters.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).

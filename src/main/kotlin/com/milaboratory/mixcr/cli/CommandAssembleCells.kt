@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.basictypes.ClnAWriter
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.ClnsWriter
 import com.milaboratory.mixcr.basictypes.Clone
+import com.milaboratory.mixcr.basictypes.CloneReader
 import com.milaboratory.mixcr.basictypes.CloneSet
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.CLNA
@@ -31,6 +32,7 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.clonegrouping.CloneGroupingParams.Companion.mkGrouper
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.ReportUtil
@@ -43,10 +45,10 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 
-object CommandGroupClones {
+object CommandAssembleCells {
     const val COMMAND_NAME = AnalyzeCommandDescriptor.assembleCells.name
 
-    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandGroupClonesParams> {
+    abstract class CmdBase : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<CommandAssembleCellsParams> {
         @Option(
             names = ["-O"],
             description = ["Overrides for the clone grouping parameters."],
@@ -56,15 +58,15 @@ object CommandGroupClones {
         private var overrides: Map<String, String> = mutableMapOf()
 
         override val paramsResolver =
-            object : MiXCRParamsResolver<CommandGroupClonesParams>(MiXCRParamsBundle::assembleCells) {
-                override fun POverridesBuilderOps<CommandGroupClonesParams>.paramsOverrides() {
-                    CommandGroupClonesParams::algorithm jsonOverrideWith overrides
+            object : MiXCRParamsResolver<CommandAssembleCellsParams>(MiXCRParamsBundle::assembleCells) {
+                override fun POverridesBuilderOps<CommandAssembleCellsParams>.paramsOverrides() {
+                    CommandAssembleCellsParams::algorithm jsonOverrideWith overrides
                 }
             }
     }
 
     @Command(
-        description = ["Group clones by cells. Required data with cell tags."]
+        description = ["Group clones by cells. Required data with cell tags. All clones should be fully covered by the same feature."]
     )
     class Cmd : CmdBase() {
         @Parameters(
@@ -118,9 +120,16 @@ object CommandGroupClones {
             reportOptions.appendToFiles(report)
         }
 
-        private fun processClns(): CloneGroupingReport =
+        private fun validate(reader: CloneReader) {
+            ValidationException.require(reader.header.allFullyCoveredBy != null) {
+                "Input were processed by `${CommandAssembleContigs.COMMAND_NAME}` or `${CommandAnalyze.COMMAND_NAME}` without `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION}` option."
+            }
+        }
+
+        private fun processClns(): AssembleCellsReport =
             ClnsReader(inputFile, VDJCLibraryRegistry.getDefault()).use { reader ->
-                val reportBuilder = CloneGroupingReport.Builder()
+                validate(reader)
+                val reportBuilder = AssembleCellsReport.Builder()
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
@@ -134,9 +143,10 @@ object CommandGroupClones {
                 }
             }
 
-        private fun processClna(): CloneGroupingReport =
+        private fun processClna(): AssembleCellsReport =
             ClnAReader(inputFile, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-                val reportBuilder = CloneGroupingReport.Builder()
+                validate(reader)
+                val reportBuilder = AssembleCellsReport.Builder()
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
@@ -163,7 +173,7 @@ object CommandGroupClones {
         private fun calculateGroupIdForClones(
             input: CloneSet,
             header: MiXCRHeader,
-            reportBuilder: CloneGroupingReport.Builder
+            reportBuilder: AssembleCellsReport.Builder
         ): CloneSet {
             ValidationException.require(input.tagsInfo.hasTagsWithType(TagType.Cell)) {
                 "Input doesn't have cell tags"

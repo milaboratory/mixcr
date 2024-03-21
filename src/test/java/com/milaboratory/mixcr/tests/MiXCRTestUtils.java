@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -36,7 +36,7 @@ public class MiXCRTestUtils {
                 new MiXCRParamsSpec("generic-amplicon"), new MiXCRStepParams(), TagsInfo.NO_TAGS,
                 Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("generic-amplicon").getAlign().getParameters(),
                 Presets.MiXCRBundleResolver.INSTANCE.resolvePreset("generic-amplicon").getAlign().getParameters().getFeaturesToAlignMap(),
-                null, null, null, false);
+                null, null, null, false, null);
     }
 
     public static MiXCRFooter emptyFooter() {

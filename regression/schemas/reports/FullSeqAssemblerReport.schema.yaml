@@ -5,11 +5,15 @@ properties:
     type: number
   canceledAssemblies:
     type: integer
+  cloneBeforeFilteringCount:
+    type: integer
   clonesClustered:
     type: integer
   clonesWithAmbiguousLetters:
     type: integer
   clonesWithAmbiguousLettersInSplittingRegion:
+    type: integer
+  combinedCloneCount:
     type: integer
   commandLine:
     type: string

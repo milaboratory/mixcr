@@ -440,9 +440,10 @@ align-single-cell:
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
+        rightForceRealignmentTrigger: CDR3Begin(-6)
         minSumScore: 60
         edgeRealignmentMinScoreOverride: 35
-        relativeMinScore: 0.97
+        relativeMinScore: 0.9
         parameters:
           type: kaligner2
           mapperNValue: 9
@@ -459,7 +460,7 @@ align-single-cell:
           mapperMaxClusterIndels: 4
           mapperKMersPerPosition: 4
           mapperAbsoluteMinScore: 250
-          mapperRelativeMinScore: 0.75
+          mapperRelativeMinScore: 0.9
           mapperMinSeedsDistance: 6
           mapperMaxSeedsDistance: 6
           alignmentStopPenalty: 0

@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 mixcr analyze --verbose generic-tcr-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \
@@ -13,6 +14,7 @@ mixcr analyze --verbose generic-tcr-amplicon \
 [[ -f use_of_templates_1.contigs.clns ]] || exit 1
 
 mixcr align -p generic-tcr-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

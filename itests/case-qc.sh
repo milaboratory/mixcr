@@ -31,6 +31,7 @@ set -euxo pipefail
 
 mixcr analyze --verbose 10x-vdj-tcr-qc-test \
   --species hs \
+  --assemble-contigs-by-cells \
   single_cell_vdj_t_subset_R1.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
   result

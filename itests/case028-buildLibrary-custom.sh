@@ -35,6 +35,7 @@ mixcr buildLibrary --verbose \
   library_xxx.json.gz
 
 mixcr align -p generic-amplicon --verbose \
+  --assemble-clonotypes-by CDR3 \
   --species xxx \
   --rna \
   --library library_xxx \

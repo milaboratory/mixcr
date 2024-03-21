@@ -1182,7 +1182,8 @@ object CommandAlign {
                         null,
                         null,
                         null,
-                        false
+                        false,
+                        null
                     ),
                     aligner.usedGenes
                 )

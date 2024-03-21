@@ -151,10 +151,10 @@ object Main {
             .addSubcommand(CommandExtend.COMMAND_NAME, CommandExtend.Cmd::class.java)
             .addSubcommand(CommandAssemble.COMMAND_NAME, CommandAssemble.Cmd::class.java)
             .addSubcommand(CommandAssembleContigs.COMMAND_NAME, CommandAssembleContigs.Cmd::class.java)
-            .addSubcommand("groupClones", CommandSpec.forAnnotatedObject(CommandGroupClones.Cmd::class.java).also {
+            .addSubcommand("groupClones", CommandSpec.forAnnotatedObject(CommandAssembleCells.Cmd::class.java).also {
                 it.usageMessage().hidden(true)
             })
-            .addSubcommand(CommandGroupClones.COMMAND_NAME, CommandGroupClones.Cmd::class.java)
+            .addSubcommand(CommandAssembleCells.COMMAND_NAME, CommandAssembleCells.Cmd::class.java)
             .addSubcommand(CommandFindAlleles.COMMAND_NAME, CommandFindAlleles::class.java)
             .addSubcommand(CommandFindShmTrees.COMMAND_NAME, CommandFindShmTrees.mkCommandSpec())
             .addSubcommand("downsample", CommandDownsample::class.java)

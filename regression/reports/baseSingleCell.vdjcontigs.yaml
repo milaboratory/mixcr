@@ -247,7 +247,9 @@ assembleContigs:
   totalAmbiguousLettersInSplittingRegion: 0
   initialCloneCount: 7
   canceledAssemblies: 0
+  cloneBeforeFilteringCount: 7
   finalCloneCount: 6
+  combinedCloneCount: 0
   totalReadsProcessed: 14107.0
   clonesClustered: 0
   readsClustered: 0.0

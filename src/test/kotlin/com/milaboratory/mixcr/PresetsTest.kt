@@ -1,17 +1,23 @@
 package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommandAlignPipeline
+import com.milaboratory.mixcr.cli.allClonesWillBeCoveredByFeature
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
+import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
 import com.milaboratory.mixcr.presets.Presets
@@ -177,7 +183,7 @@ class PresetsTest {
         Presets.nonAbstractPresetNames
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                AnalyzeCommandDescriptor.assembleCells in bundle.pipeline!!.steps
+                assembleCells in bundle.pipeline!!.steps
             }
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
@@ -212,6 +218,88 @@ class PresetsTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun `all presets should have assemble feature or flag for it`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val hasFeature = bundle.assemble!!.cloneAssemblerParameters.assemblingFeatures != null
+                val hasFlag = Flags.AssembleClonesBy in bundle.flags
+                (hasFeature && hasFlag) || (!hasFeature && !hasFlag)
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets should have assemble contigs feature or flag for it`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val steps = bundle.pipeline?.steps ?: emptyList()
+                assembleContigs in steps
+            }
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val hasFeature = bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature()
+                val hasFlag = Flags.AssembleContigsBy in bundle.flags ||
+                        Flags.AssembleContigsByOrMaxLength in bundle.flags ||
+                        Flags.AssembleContigsByOrByCell in bundle.flags
+                (hasFeature && hasFlag) || (!hasFeature && !hasFlag)
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets with assemble cells should have assemble contigs feature`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val steps = bundle.pipeline?.steps ?: emptyList()
+                assembleCells in steps && assembleContigs in steps
+                        && Flags.AssembleContigsBy !in bundle.flags && Flags.AssembleContigsByOrByCell !in bundle.flags
+            }
+            .forAll { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature() shouldBe true
+            }
+    }
+
+    @Test
+    fun `consistency of flags`() {
+        "Presets with cell barcodes should not contain ${Flags.AssembleContigsBy} flag".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val tagsExtractor = try {
+                        CommandAlignPipeline.getTagsExtractor(bundle.align!!, emptyList())
+                    } catch (e: ValidationException) {
+                        return@filter false
+                    }
+                    val tags = tagsExtractor.tagsInfo
+                    tags.any { it.type == TagType.Cell }
+                }
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    Flags.AssembleContigsBy in bundle.flags
+                }
+        }
+        "Presets without cell barcodes should not contain ${Flags.AssembleContigsByOrByCell} flag".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val tagsExtractor = try {
+                        CommandAlignPipeline.getTagsExtractor(bundle.align!!, emptyList())
+                    } catch (e: ValidationException) {
+                        return@filter false
+                    }
+                    val tags = tagsExtractor.tagsInfo
+                    tags.none { it.type == TagType.Cell }
+                }
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    Flags.AssembleContigsByOrByCell in bundle.flags
+                }
         }
     }
 }

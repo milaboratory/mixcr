@@ -4,6 +4,7 @@ generic-pacbio:
   inheritFrom: bundle-base
   flags:
     - species
+    - assembleClonesBy
   pipeline:
     - align
     - assemble
@@ -35,6 +36,7 @@ generic-pacbio-with-umi:
   flags:
     - species
     - tagPattern
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort

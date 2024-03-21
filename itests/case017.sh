@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 mixcr analyze --verbose generic-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --tag-pattern '^N(R1:*) \ ^N(R2:*)' \
   --species hs \
   --rna \
