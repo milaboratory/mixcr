@@ -1,4 +1,5 @@
-flags: []
+flags:
+  - assembleClonesBy
 pipeline:
   - align
   - refineTagsAndSort
@@ -954,8 +955,7 @@ assemble:
     minTagSuffixShare: 0.0
     isolateChains: true
   cloneAssemblerParameters:
-    assemblingFeatures:
-      - CDR3
+    assemblingFeatures: null
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:

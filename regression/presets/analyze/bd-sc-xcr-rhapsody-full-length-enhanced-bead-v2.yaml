@@ -1,5 +1,6 @@
 flags:
   - species
+  - assembleContigsByOrByCell
 pipeline:
   - align
   - refineTagsAndSort
@@ -2398,7 +2399,7 @@ align:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
       minSumScore: 60
-      relativeMinScore: 0.97
+      relativeMinScore: 0.9
       maxHits: 5
       edgeRealignmentMinScoreOverride: 35
       parameters:
@@ -2417,7 +2418,7 @@ align:
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
         mapperAbsoluteMinScore: 250
-        mapperRelativeMinScore: 0.75
+        mapperRelativeMinScore: 0.9
         mapperMinSeedsDistance: 6
         mapperMaxSeedsDistance: 6
         alignmentStopPenalty: 0
@@ -2430,6 +2431,7 @@ align:
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
+      rightForceRealignmentTrigger: CDR3Begin(-6)
     dParameters:
       geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
@@ -2684,6 +2686,7 @@ assemble:
         backgroundIndelRate: 2.0E-4
     cloneFactoryParameters:
       vParameters:
+        relativeMinScore: 0.9
         maxAlignmentWidthLinear: 5
         maxAlignmentWidthAffine: 500
       jParameters:
@@ -2704,7 +2707,7 @@ assemble:
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 15
+    badQualityThreshold: 10
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 20
@@ -2763,6 +2766,22 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  cloneFactoryParameters:
+    vParameters:
+      relativeMinScore: 0.97
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    jParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    cParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    dParameters:
+      relativeMinScore: null
+      absoluteMinScore: null
+      maxHits: null
+      scoring: null
 assembleCells:
   algorithm:
     type: SingleCellGroupingByOverlappingCellIds

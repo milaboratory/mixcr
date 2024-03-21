@@ -1,4 +1,5 @@
-flags: []
+flags:
+  - assembleClonesBy
 pipeline:
   - align
   - assemble
@@ -170,8 +171,7 @@ assemble:
   cellLevel: false
   consensusAssemblerParameters: null
   cloneAssemblerParameters:
-    assemblingFeatures:
-      - CDR3
+    assemblingFeatures: null
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
