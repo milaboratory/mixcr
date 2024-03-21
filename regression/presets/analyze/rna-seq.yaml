@@ -1,5 +1,6 @@
 flags:
   - species
+  - assembleContigsByOrMaxLength
 pipeline:
   - align
   - assemblePartial

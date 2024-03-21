@@ -1,6 +1,7 @@
 flags:
   - species
   - tagPattern
+  - assembleContigsByOrMaxLength
 pipeline:
   - align
   - refineTagsAndSort

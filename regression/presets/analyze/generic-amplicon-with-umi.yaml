@@ -1,5 +1,6 @@
 flags:
   - leftAlignmentMode
+  - assembleClonesBy
   - species
   - rightAlignmentMode
   - materialType
@@ -265,8 +266,7 @@ assemble:
     minTagSuffixShare: 0.0
     isolateChains: false
   cloneAssemblerParameters:
-    assemblingFeatures:
-      - CDR3
+    assemblingFeatures: null
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
