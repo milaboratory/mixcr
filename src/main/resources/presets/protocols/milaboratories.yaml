@@ -62,6 +62,8 @@ milab-human-rna-tcr-umi-race:
     - type: SetSplitClonesBy
       geneType: J
       value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -95,6 +97,8 @@ milab-human-rna-tcr-umi-multiplex:
     - type: SetSplitClonesBy
       geneType: J
       value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
@@ -120,6 +124,8 @@ milab-human-dna-tcr-multiplex:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter

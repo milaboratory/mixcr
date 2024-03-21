@@ -18,6 +18,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
 
 "invivoscribe-human-dna-trg-lymphotrack":
   label: "LymphoTrack TRG Assay Panel"

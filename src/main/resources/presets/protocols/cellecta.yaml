@@ -22,6 +22,8 @@
     - type: SetSplitClonesBy
       geneType: C
       value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter

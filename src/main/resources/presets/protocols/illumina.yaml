@@ -16,6 +16,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: true
       geneType: J
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
