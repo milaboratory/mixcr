@@ -506,7 +506,7 @@ object Main {
     private fun CommandLine.registerLogger(): CommandLine {
         setExecutionStrategy { parseResult ->
             val setVerbose = parseResult.subcommands().any { it.matchedOption("--verbose")?.getValue() ?: false }
-            val verbose = logger.verbose || setVerbose
+            val verbose = logger.verbose || setVerbose || System.getenv("MIXCR_DEBUG") != null
             if (verbose)
                 logger.debugDestination = logger.Destination.SystemOut
             val noWarnings = logger.warningDestination == logger.Destination.NoDev ||

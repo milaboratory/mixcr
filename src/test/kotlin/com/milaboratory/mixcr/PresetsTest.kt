@@ -1,14 +1,13 @@
 package com.milaboratory.mixcr
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
 import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.cli.CommandAlignPipeline
+import com.milaboratory.mixcr.cli.CommandAlignParams
 import com.milaboratory.mixcr.cli.allClonesWillBeCoveredByFeature
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
@@ -267,39 +266,45 @@ class PresetsTest {
 
     @Test
     fun `consistency of flags`() {
-        "Presets with cell barcodes should not contain ${Flags.AssembleContigsBy} flag".asClue {
+        "Presets should have only one AssembleContigsBy flag".asClue {
             Presets.visiblePresets
                 .filter { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                    val tagsExtractor = try {
-                        CommandAlignPipeline.getTagsExtractor(bundle.align!!, emptyList())
-                    } catch (e: ValidationException) {
-                        return@filter false
+                    val flags = listOf(
+                        Flags.AssembleContigsBy,
+                        Flags.AssembleContigsByOrByCell,
+                        Flags.AssembleContigsByOrMaxLength
+                    ).filter {
+                        it in bundle.flags
                     }
-                    val tags = tagsExtractor.tagsInfo
-                    tags.any { it.type == TagType.Cell }
+                    flags.size > 1
+                } shouldBe emptyList()
+        }
+        "Presets with cell barcodes should not contain ${Flags.AssembleContigsBy} or ${Flags.AssembleContigsByOrMaxLength} flag".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    bundle.align!!.tagsValidations
+                        .filterIsInstance<CommandAlignParams.MustContainTagType>()
+                        .any { it.tagType == TagType.Cell }
                 }
                 .filter { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                    Flags.AssembleContigsBy in bundle.flags
-                }
+                    Flags.AssembleContigsBy in bundle.flags || Flags.AssembleContigsByOrMaxLength in bundle.flags
+                } shouldBe emptyList()
         }
         "Presets without cell barcodes should not contain ${Flags.AssembleContigsByOrByCell} flag".asClue {
             Presets.visiblePresets
                 .filter { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                    val tagsExtractor = try {
-                        CommandAlignPipeline.getTagsExtractor(bundle.align!!, emptyList())
-                    } catch (e: ValidationException) {
-                        return@filter false
-                    }
-                    val tags = tagsExtractor.tagsInfo
-                    tags.none { it.type == TagType.Cell }
+                    bundle.align!!.tagsValidations
+                        .filterIsInstance<CommandAlignParams.MustContainTagType>()
+                        .none { it.tagType == TagType.Cell }
                 }
                 .filter { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                     Flags.AssembleContigsByOrByCell in bundle.flags
-                }
+                } shouldBe emptyList()
         }
     }
 }
