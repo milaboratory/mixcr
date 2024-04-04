@@ -149,7 +149,7 @@ object CommandAssemblePartial {
                     reader.usedGenes
                 )
                 val assembler = PartialAlignmentsAssembler(
-                    cmdParams.parameters, reader.parameters,
+                    cmdParams.parameters, reader.header.alignerParameters,
                     reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly,
                     InputPort { alignment: VDJCAlignments? -> writer.write(alignment) }
                 )
