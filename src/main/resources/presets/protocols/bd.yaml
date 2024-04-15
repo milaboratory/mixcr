@@ -712,6 +712,8 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^<<acagN{16}(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -1403,16 +1405,6 @@
                       - type: group_operator_cumtop
                         share: 0.85
                         round: Down
-  assembleContigs:
-    inheritFrom: assembleContigs-base
-    overrides:
-      parameters:
-        subCloningRegions:
-          - "VDJRegion"
-        assemblingRegions:
-          - "VDJRegion"
-        postFiltering:
-          type: "OnlyFullyDefined"
 
 "bd-rhapsody-cdr3-amplicon-B384-base":
   inheritFrom: generic-ht-single-cell-amplicon-with-umi
@@ -3856,6 +3848,8 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -6275,16 +6269,6 @@
                       - type: group_operator_cumtop
                         share: 0.85
                         round: Down
-  assembleContigs:
-    inheritFrom: assembleContigs-base
-    overrides:
-      parameters:
-        subCloningRegions:
-          - "VDJRegion"
-        assemblingRegions:
-          - "VDJRegion"
-        postFiltering:
-          type: "OnlyFullyDefined"
 
 # HUMAN
 
@@ -6364,7 +6348,6 @@
   inheritFrom: bd-rhapsody-full-length-single-cell-B384-base
   flags:
     - species
-
 
 
 
