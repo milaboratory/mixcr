@@ -70,6 +70,8 @@
         ^NN(CELL3PLATE:N{5})ga(CELL1ROW:N{5})ccagggttttcccagtcacgac(R1:*) \
         ^NN(CELL2COLUMN:N{5})gtcactggatttagagtctctcag(R2:*) |
         ^NN(CELL2COLUMN:N{5})gagatctctgcttctgatggctc(R2:*)
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   refineTagsAndSort:
     whitelists:
       CELL3PLATE: builtin:han-2014-cell3-plate
@@ -221,6 +223,8 @@
       floating: false
     - type: RightAlignmentBoundaryNoPoint
       floating: false
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: generic-amplicon
     overrides:

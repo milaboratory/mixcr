@@ -12,6 +12,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-amplicon
     overrides:
@@ -1401,6 +1403,16 @@
                       - type: group_operator_cumtop
                         share: 0.85
                         round: Down
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+    overrides:
+      parameters:
+        subCloningRegions:
+          - "VDJRegion"
+        assemblingRegions:
+          - "VDJRegion"
+        postFiltering:
+          type: "OnlyFullyDefined"
 
 "bd-rhapsody-cdr3-amplicon-B384-base":
   inheritFrom: generic-ht-single-cell-amplicon-with-umi
@@ -1416,6 +1428,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-amplicon
     overrides:
@@ -6261,6 +6275,16 @@
                       - type: group_operator_cumtop
                         share: 0.85
                         round: Down
+  assembleContigs:
+    inheritFrom: assembleContigs-base
+    overrides:
+      parameters:
+        subCloningRegions:
+          - "VDJRegion"
+        assemblingRegions:
+          - "VDJRegion"
+        postFiltering:
+          type: "OnlyFullyDefined"
 
 # HUMAN
 

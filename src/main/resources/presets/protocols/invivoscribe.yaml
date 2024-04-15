@@ -3,8 +3,6 @@
   category: non-generic
   abstract: true
   inheritFrom: generic-amplicon
-  flags:
-    - assembleClonesBy
   pipeline:
     - align
     - assemble
@@ -32,8 +30,6 @@
 "invivoscribe-human-dna-igk-lymphotrack":
   label: "LymphoTrack IGK Assay Panel"
   inheritFrom: invivoscribe-human-lymphotrack-base
-  flags:
-    - assembleClonesBy
 
 "invivoscribe-human-dna-ighv-leader-lymphotrack":
   label: "LymphoTrack IGHV Leader Somatic Hypermutation"
