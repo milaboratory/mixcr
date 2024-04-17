@@ -26,7 +26,7 @@ shotgun-base:
       clnaOutput: true
 
 rna-seq:
-  label: "Generic RNA-Seq data"
+  label: "RNA-Seq data"
   category: generic
   inheritFrom: shotgun-base
   flags:
@@ -35,7 +35,7 @@ rna-seq:
     - type: MaterialTypeRNA
 
 exome-seq:
-  label: "Generic Exome-Seq data"
+  label: "Exome-Seq data"
   category: generic
   inheritFrom: shotgun-base
   flags:
