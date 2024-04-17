@@ -3,11 +3,11 @@ generic-single-cell-gex (Generic single-cell gene expression)
   Required args:
     --species <name>
 
-generic-ont (Generic Oxford Nanopore data)
+generic-ont (Oxford Nanopore data)
   Required args:
     --species <name>
 
-generic-pacbio-with-umi (Generic PacBio data with UMIs)
+generic-pacbio-with-umi (PacBio data with UMIs)
   Required args:
     --species <name>
     --tag-pattern <pattern>
@@ -23,7 +23,7 @@ generic-amplicon (Generic amplicon)
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     (--dna|--rna)
 
-generic-ont-with-umi (Generic Oxford Nanopore data with UMIs)
+generic-ont-with-umi (Oxford Nanopore data with UMIs)
   Required args:
     --species <name>
     --tag-pattern <pattern>
@@ -74,15 +74,15 @@ generic-ht-single-cell-amplicon-with-umi (Generic high throughput amplicon singl
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     --tag-pattern <pattern>
 
-generic-pacbio (Generic PacBio data)
+generic-pacbio (PacBio data)
   Required args:
     --species <name>
 
-rna-seq (Generic RNA-Seq data)
+rna-seq (RNA-Seq data)
   Required args:
     --species <name>
 
-exome-seq (Generic Exome-Seq data)
+exome-seq (Exome-Seq data)
   Required args:
     --species <name>
 

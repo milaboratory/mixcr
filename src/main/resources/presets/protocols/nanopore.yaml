@@ -1,5 +1,5 @@
 "generic-ont":
-  label: "Generic Oxford Nanopore data"
+  label: "Oxford Nanopore data"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -37,7 +37,7 @@
         upper: 0.5
 
 "generic-ont-with-umi":
-  label: "Generic Oxford Nanopore data with UMIs"
+  label: "Oxford Nanopore data with UMIs"
   category: generic
   inheritFrom: bundle-base
   flags:
