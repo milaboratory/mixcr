@@ -158,6 +158,8 @@ align:
     saveOriginalSequence: false
     saveOriginalReads: false
     smartForceEdgeAlignments: true
+    longReadsParameters:
+      windowSize: 1000
 refineTagsAndSort:
   whitelists: {}
   runCorrection: true
