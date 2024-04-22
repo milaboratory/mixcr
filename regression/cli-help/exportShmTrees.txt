@@ -7,10 +7,15 @@ Usage: mixcr exportShmTrees [--filter-min-nodes <n>] [--filter-min-height <n>] [
                             [-chains] [-treeHeight] [-vHit] [-jHit] [-vGene] [-jGene] [-vFamily]
                             [-jFamily] [-nFeature <gene_feature> (germline|mrca)]... [-allNFeatures
                             (germline|mrca)]... [-aaFeature <gene_feature> (germline|mrca)]...
-                            [-allAAFeatures (germline|mrca)]... [--force-overwrite] [--no-warnings]
-                            [--verbose] [--help] [[--filter-in-feature <gene_feature>]
-                            [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
-                            --filter-nt-pattern <pattern>)] trees.shmt [trees.tsv]
+                            [-allAAFeatures (germline|mrca)]... [-nFeatureImputed <gene_feature>
+                            (germline|mrca)]... [-allNFeaturesImputed [<from_reference_point>
+                            <to_reference_point>] (germline|mrca)]... [-aaFeatureImputed
+                            <gene_feature> (germline|mrca)]... [-allAAFeaturesImputed
+                            [<from_reference_point> <to_reference_point>] (germline|mrca)]...
+                            [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                            [[--filter-in-feature <gene_feature>] [--pattern-max-errors <n>]
+                            (--filter-aa-pattern <pattern> | --filter-nt-pattern <pattern>)] trees.
+                            shmt [trees.tsv]
 Export SHMTree as a table with a row for every SHM root in a table (single row if no single cell
 data)
       trees.shmt             Input file produced by 'findShmTrees' command.
@@ -79,3 +84,15 @@ Possible fields to export
                                type
       -allAAFeatures (germline|mrca)
                              Export nucleotide sequences for all covered gene features.
+      -nFeatureImputed <gene_feature> (germline|mrca)
+                             Export nucleotide sequence using letters from germline (marked
+                               lowercase) for uncovered regions.
+      -allNFeaturesImputed [<from_reference_point> <to_reference_point>] (germline|mrca)
+                             Export nucleotide sequences for all covered gene features. By default,
+                               boundaries will be `FR1Begin FR4End`.
+      -aaFeatureImputed <gene_feature> (germline|mrca)
+                             Export amino acid sequence using letters from germline (marked
+                               lowercase) for uncovered regions.
+      -allAAFeaturesImputed [<from_reference_point> <to_reference_point>] (germline|mrca)
+                             Export amino acid sequences for all covered gene features. By default,
+                               boundaries will be `FR1Begin FR4End`.
