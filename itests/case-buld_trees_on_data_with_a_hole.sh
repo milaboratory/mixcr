@@ -30,8 +30,8 @@ for filename in $FILES; do
   R1=${id}_R1.fastq.gz
   R2=${id}_R2.fastq.gz
 
-  # skip FR1 abd CDR2
-  mixcr analyze --verbose --assemble-clonotypes-by '[{CDR1Begin:CDR2Begin},{FR3Begin:FR4End}]' mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 $id
+  # skip part of FR1 and whole CDR2
+  mixcr analyze --verbose --assemble-clonotypes-by '[{CDR1Begin(-1):CDR2Begin},{FR3Begin:FR4End}]' mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 $id
 done
 
 mixcr findAlleles \
@@ -51,8 +51,12 @@ mixcr findShmTrees \
   $(ls alleles/*.clns) trees/result.shmt
 
 mixcr exportShmTrees trees/result.shmt trees/trees.tsv
+# test imputed
+mixcr exportShmTrees -treeId -nFeatureImputed VDJRegion mrca -allNFeaturesImputed mrca -aaFeatureImputed VDJRegion mrca -allAAFeaturesImputed mrca trees/result.shmt tree/trees.imputed.tsv
 
 mixcr exportShmTreesWithNodes trees/result.shmt trees/trees_with_nodes.tsv
+# test imputed
+mixcr exportShmTreesWithNodes -treeId -nodeId -nFeatureImputed VDJRegion mrca -allNFeaturesImputed mrca -aaFeatureImputed VDJRegion mrca -allAAFeaturesImputed mrca trees/result.shmt trees/trees_with_nodes.imputed.tsv
 
 mixcr exportPlots shmTrees trees/result.shmt trees/plots.pdf
 
