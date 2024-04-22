@@ -31,7 +31,7 @@ for filename in $FILES; do
   R2=${id}_R2.fastq.gz
 
   # skip part of FR1 and whole CDR2
-  mixcr analyze --verbose --assemble-clonotypes-by '[{CDR1Begin(-9):CDR2Begin},{FR3Begin:FR4End}]' mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 $id
+  mixcr analyze --verbose --assemble-clonotypes-by '[{CDR1Begin(-1):CDR2Begin},{FR3Begin:FR4End}]' mikelov-et-al-2021 trees_samples/$R1 trees_samples/$R2 $id
 done
 
 mixcr findAlleles \
