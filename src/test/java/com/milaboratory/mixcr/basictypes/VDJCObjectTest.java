@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -66,7 +66,7 @@ public class VDJCObjectTest {
                         assemble.cloneSet,
                         assembleFullSeq.cloneSet)) {
                     for (VDJCObject o : it) {
-                        VDJCObject.CaseSensitiveNucleotideSequence seq = o.getIncompleteFeature(feature);
+                        CaseSensitiveNucleotideSequence seq = o.getIncompleteFeature(feature);
                         if (seq == null)
                             continue;
 
@@ -109,7 +109,7 @@ public class VDJCObjectTest {
 
         RunMiXCR.AlignResult align = RunMiXCR.align(params);
         VDJCAlignments al = align.alignments.get(0);
-        VDJCObject.CaseSensitiveNucleotideSequence seq = al.getIncompleteFeature(VDJRegion);
+        CaseSensitiveNucleotideSequence seq = al.getIncompleteFeature(VDJRegion);
         assertTrue(seq.toString().contains(al.getFeature(CDR3).getSequence().toString().toUpperCase()));
     }
 
@@ -137,7 +137,7 @@ public class VDJCObjectTest {
         for (int i = 0; i < align.alignments.size(); ++i) {
             VDJCAlignments al = align.alignments.get(i);
             NSequenceWithQuality cdr3 = al.getFeature(CDR3);
-            VDJCObject.CaseSensitiveNucleotideSequence seq = al.getIncompleteFeature(VDJRegion);
+            CaseSensitiveNucleotideSequence seq = al.getIncompleteFeature(VDJRegion);
             if (cdr3 != null && seq == null) {
                 assertTrue(
                         al.getBestHit(GeneType.Variable).getAlignment(0).getSequence2Range().getFrom() != 0
@@ -194,7 +194,7 @@ public class VDJCObjectTest {
         for (int i = 0; i < assemble.cloneSet.size(); i++) {
 
             VDJCObject cl = assemble.cloneSet.get(i);
-            VDJCObject.CaseSensitiveNucleotideSequence f = cl.getIncompleteFeature(L2);
+            CaseSensitiveNucleotideSequence f = cl.getIncompleteFeature(L2);
 
             NucleotideSequence lSeq = f.getSeq()[0];
             NucleotideSequence germ = cl.getBestHit(GeneType.Variable).getGene().getFeature(L2);
