@@ -290,7 +290,7 @@ align-long-read:
     #     tagType: Sample
     parameters:
       longReadsParameters:
-        windowSize: 1000
+        windowSize: 1500
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
         minSumScore: 150
