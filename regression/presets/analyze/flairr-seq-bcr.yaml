@@ -159,7 +159,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
     longReadsParameters:
-      windowSize: 1000
+      windowSize: 1500
 refineTagsAndSort:
   whitelists: {}
   runCorrection: true
