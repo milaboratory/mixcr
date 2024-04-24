@@ -37,6 +37,7 @@ import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
+import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import org.apache.commons.math3.random.RandomDataGenerator
 import org.apache.commons.math3.random.Well19937c
@@ -208,7 +209,10 @@ class FullSeqAssemblerTest {
             DEFAULT_PARAMETERS,
             align.parameters.cloneAssemblerParameters.assemblingFeatures,
             assemble.cloneSet[0],
-            align.parameters.alignerParameters
+            align.parameters.alignerParameters,
+            assemble.cloneSet[0].getBestHit(Variable),
+            assemble.cloneSet[0].getBestHit(Joining),
+            1 shl 14
         )
         val prep = agg.calculateRawData {
             CUtils.asOutputPort(
@@ -282,7 +286,10 @@ class FullSeqAssemblerTest {
             DEFAULT_PARAMETERS,
             align.parameters.cloneAssemblerParameters.assemblingFeatures,
             assemble.cloneSet[0],
-            align.parameters.alignerParameters
+            align.parameters.alignerParameters,
+            assemble.cloneSet[0].getBestHit(Variable),
+            assemble.cloneSet[0].getBestHit(Joining),
+            1 shl 14
         )
         val r2s = agg.toPointSequences(align.alignments[1])
         val p2 = TIntHashSet(Arrays.stream(r2s).mapToInt { s: PointSequence -> s.point }
@@ -426,7 +433,10 @@ class FullSeqAssemblerTest {
             DEFAULT_PARAMETERS,
             align.parameters.cloneAssemblerParameters.assemblingFeatures,
             initialClone,
-            align.parameters.alignerParameters
+            align.parameters.alignerParameters,
+            initialClone.getBestHit(Variable),
+            initialClone.getBestHit(Joining),
+            1 shl 14
         )
         val prep = agg.calculateRawData { alignments.asOutputPort() }
         val clones = listOf(*agg.callVariants(prep))
