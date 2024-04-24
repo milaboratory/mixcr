@@ -245,10 +245,10 @@ object CommandAssembleContigs {
                                             }
                                         }
                                         alignments.getHits(Variable).forEach { hit ->
-                                            val shift = (0 until alignments.numberOfTargets()).minOf { i ->
-                                                hit.getAlignment(i)?.sequence2Range?.from ?: Int.MAX_VALUE
+                                            val shift = (0 until alignments.numberOfTargets()).maxOf { i ->
+                                                hit.getAlignment(i)?.sequence2Range?.from ?: Int.MIN_VALUE
                                             }
-                                            check(shift != Int.MAX_VALUE)
+                                            check(shift != Int.MIN_VALUE)
                                             maxShiftForVGene = max(shift, maxShiftForVGene)
                                         }
                                     }
