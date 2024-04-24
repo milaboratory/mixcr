@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -66,7 +66,7 @@ public class VDJCAlignerPVFirstTest {
 
             for (PairedRead read : CUtils.it(reader)) {
                 ++total;
-                VDJCAlignments result = aligner.process(read.toTuple(), read);
+                VDJCAlignments result = aligner.process(read.toTuple(1), read);
                 if (result != null) {
                     alignemntsList.add(result);
                     for (VDJCHit hit : result.getHits(GeneType.Variable))

@@ -373,7 +373,7 @@ object CommandRefineTagsAndSort {
                                         assert(updatedTags[tIdx] == newTagValues[tIdx])
                                 }
                                 // Applying updated tags values and returning updated alignments object
-                                al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
+                                al.withTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
                             },
                             secondaryReader,
                             corrector.report.outputRecords

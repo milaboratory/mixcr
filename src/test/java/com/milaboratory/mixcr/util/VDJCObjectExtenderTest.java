@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -62,11 +62,11 @@ public class VDJCObjectExtenderTest {
                 SequenceHistory[] histories = new SequenceHistory[read.numberOfReads()];
                 for (int i = 0; i < histories.length; i++)
                     histories[i] = new SequenceHistory.RawSequence(read.getId(), (byte) i,
-                            false, read.getRead(i).getData().size());
+                            false, read.getRead(i).getData().size(), 1);
 
-                NSQTuple data = read.toTuple();
+                NSQTuple data = read.toTuple(1);
                 VDJCAlignments al = aligner.process(data, read);
-                al = al.setHistory(histories, new NSQTuple[]{data});
+                al = al.withHistory(histories, new NSQTuple[]{data});
                 Assert.assertNotNull(al);
 
                 VDJCObjectExtender<VDJCAlignments> extender = new VDJCObjectExtender<>(Chains.TCR, (byte) 35,

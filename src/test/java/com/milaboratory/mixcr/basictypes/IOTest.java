@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -66,7 +66,7 @@ public class IOTest {
                 header = writer.getPosition();
 
                 for (SingleRead read : CUtils.it(reader)) {
-                    VDJCAlignments alignments = aligner.process(read.toTuple(), read);
+                    VDJCAlignments alignments = aligner.process(read.toTuple(1), read);
                     if (alignments != null) {
                         numberOfAlignments++;
                         writer.write(alignments);
