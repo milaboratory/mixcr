@@ -86,7 +86,7 @@ public class MiXCRTestUtils {
                             TagCount.NO_TAGS,
                             new NSequenceWithQuality[]{new NSequenceWithQuality(sequence)},
                             new SequenceHistory[]{new SequenceHistory.RawSequence(0L, (byte) i, false, sequences.length, 1)},
-                            new NSQTuple[]{new NSQTuple(0L, new NSequenceWithQuality(sequence))}
+                            new NSQTuple[]{new NSQTuple(0L, new NSequenceWithQuality[]{new NSequenceWithQuality(sequence)}, 1)}
                     ),
                     0
             ));
