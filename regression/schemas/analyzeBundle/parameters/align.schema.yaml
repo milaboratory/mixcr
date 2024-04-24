@@ -431,5 +431,7 @@ properties:
     type: string
   trimmingWindowSize:
     type: string
+  weightPatternInReadDescription:
+    type: object
   writeFailedAlignments:
     type: boolean
