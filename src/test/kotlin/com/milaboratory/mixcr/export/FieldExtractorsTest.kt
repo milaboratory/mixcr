@@ -79,7 +79,7 @@ class FieldExtractorsTest {
                     offset2 == -1 -> MiXCRTestUtils.createMultiRead(seq1)
                     else -> MiXCRTestUtils.createMultiRead(seq1, seq2)
                 }
-                val al = aligner.process(read.toTuple(1), read)!!
+                val al = aligner.process(read)
                 Assert.assertNotNull(al)
                 if (print) {
                     MiXCRTestUtils.printAlignment(al)
