@@ -1031,7 +1031,7 @@ object CommandAlign {
                     ValidationException.require(matcher.find()) {
                         "Can't find weight in read description $description"
                     }
-                    matcher.group().toInt()
+                    matcher.group(1).toInt()
                 }
             }
 
