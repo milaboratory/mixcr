@@ -64,6 +64,7 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.nio.file.Path
 import java.util.*
+import kotlin.math.max
 
 object CommandAssembleContigs {
     const val COMMAND_NAME = AnalyzeCommandDescriptor.assembleContigs.name
@@ -236,25 +237,35 @@ object CommandAssembleContigs {
                                         reportBuilder.onAssemblyCanceled(clone)
                                         return@mapInParallelOrdered arrayOf(clone)
                                     }
+                                    var maxShiftForVGene = 0
                                     cloneAlignments.alignments().forEach { alignments ->
-                                        for ((key, value) in alignments.hitsMap) {
-                                            for (hit in value) {
-                                                coverages[key]?.let { it[hit.gene.id]?.accumulate(hit) }
+                                        for ((geneType, hits) in alignments.hitsMap) {
+                                            for (hit in hits) {
+                                                coverages[geneType]?.let { it[hit.gene.id]?.accumulate(hit) }
                                             }
+                                        }
+                                        alignments.getHits(Variable).forEach { hit ->
+                                            val shift = (0 until alignments.numberOfTargets()).maxOf { i ->
+                                                hit.getAlignment(i)?.sequence2Range?.from ?: Int.MIN_VALUE
+                                            }
+                                            check(shift != Int.MIN_VALUE)
+                                            maxShiftForVGene = max(shift, maxShiftForVGene)
                                         }
                                     }
 
                                     // Selecting best hits for clonal sequence assembly based in the coverage information
-                                    val bestGenes = coverages.mapValuesTo(EnumMap(GeneType::class.java)) { (_, value) ->
-                                        value.values.maxByOrNull { it.getNumberOfCoveredPoints(1) }?.hit
-                                    }
+                                    val bestGenes =
+                                        coverages.mapValuesTo(EnumMap(GeneType::class.java)) { (_, value) ->
+                                            value.values.maxByOrNull { it.getNumberOfCoveredPoints(1) }?.hit
+                                        }
 
                                     // Performing contig assembly
                                     val fullSeqAssembler = FullSeqAssembler(
                                         cloneFactory, cmdParams.parameters,
                                         header.assemblerParameters!!.assemblingFeatures,
                                         clone, header.alignerParameters,
-                                        bestGenes[Variable], bestGenes[Joining]
+                                        bestGenes[Variable], bestGenes[Joining],
+                                        maxShiftForVGene
                                     )
                                     fullSeqAssembler.report = reportBuilder
                                     val rawVariantsData =
