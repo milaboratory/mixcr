@@ -170,6 +170,8 @@ properties:
               type: integer
             coreDiversity:
               type: integer
+            correctionRan:
+              type: boolean
             directlyCorrectedCount:
               type: integer
             directlyCorrectedDiversity:
