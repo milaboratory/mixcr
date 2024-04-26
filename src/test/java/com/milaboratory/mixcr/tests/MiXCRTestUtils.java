@@ -12,20 +12,24 @@
 package com.milaboratory.mixcr.tests;
 
 import com.milaboratory.core.alignment.Alignment;
-import com.milaboratory.core.io.sequence.SingleRead;
-import com.milaboratory.core.io.sequence.SingleReadImpl;
+import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.core.sequence.SequenceQuality;
 import com.milaboratory.mitool.data.CriticalThresholdCollection;
 import com.milaboratory.mixcr.basictypes.*;
+import com.milaboratory.mixcr.basictypes.tag.TagCount;
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mixcr.partialassembler.AlignedTarget;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec;
 import com.milaboratory.mixcr.presets.MiXCRStepParams;
 import com.milaboratory.mixcr.presets.MiXCRStepReports;
 import com.milaboratory.mixcr.presets.Presets;
 import io.repseq.core.GeneType;
+
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
 
 import static com.milaboratory.core.alignment.AlignmentTestUtils.assertAlignment;
 
@@ -72,12 +76,22 @@ public class MiXCRTestUtils {
         }
     }
 
-    public static VDJCMultiRead createMultiRead(NucleotideSequence... seq) {
-        SingleRead[] sr = new SingleRead[seq.length];
+    public static VDJCMultiRead createMultiRead(NucleotideSequence... sequences) {
+        List<AlignedTarget> result = new ArrayList<>(sequences.length);
+        for (int i = 0; i < sequences.length; i++) {
+            NucleotideSequence sequence = sequences[i];
+            result.add(new AlignedTarget(
+                    new VDJCAlignments(
+                            new EnumMap<>(GeneType.class),
+                            TagCount.NO_TAGS,
+                            new NSequenceWithQuality[]{new NSequenceWithQuality(sequence)},
+                            new SequenceHistory[]{new SequenceHistory.RawSequence(0L, (byte) i, false, sequences.length, 1)},
+                            new NSQTuple[]{new NSQTuple(0L, new NSequenceWithQuality[]{new NSequenceWithQuality(sequence)}, 1)}
+                    ),
+                    0
+            ));
+        }
 
-        for (int i = 0; i < sr.length; i++)
-            sr[i] = new SingleReadImpl(0, new NSequenceWithQuality(seq[i], SequenceQuality.getUniformQuality((byte) 35, seq[i].size())), "");
-
-        return new VDJCMultiRead(sr);
+        return new VDJCMultiRead(result);
     }
 }

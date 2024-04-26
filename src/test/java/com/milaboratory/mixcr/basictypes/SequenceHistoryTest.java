@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -26,8 +26,8 @@ public class SequenceHistoryTest {
     @Test
     public void testIO1() throws Exception {
         List<SequenceHistory> entries = new ArrayList<>();
-        SequenceHistory.RawSequence r1 = new SequenceHistory.RawSequence(123151243L, (byte) 1, false, 100);
-        SequenceHistory.RawSequence r2 = new SequenceHistory.RawSequence(0L, (byte) 0, true, 100);
+        SequenceHistory.RawSequence r1 = new SequenceHistory.RawSequence(123151243L, (byte) 1, false, 100, 1);
+        SequenceHistory.RawSequence r2 = new SequenceHistory.RawSequence(0L, (byte) 0, true, 100, 1);
         entries.add(r1);
         entries.add(r2);
         entries.add(new SequenceHistory.Extend(r1, 10, 20));
@@ -50,9 +50,9 @@ public class SequenceHistoryTest {
 
     @Test
     public void testPositions1() throws Exception {
-        SequenceHistory.RawSequence r1 = new SequenceHistory.RawSequence(100, (byte) 0, false, 100);
+        SequenceHistory.RawSequence r1 = new SequenceHistory.RawSequence(100, (byte) 0, false, 100, 1);
         SequenceHistory.Extend e1 = new SequenceHistory.Extend(r1, 3, 4);
-        SequenceHistory.RawSequence r2 = new SequenceHistory.RawSequence(100, (byte) 1, true, 100);
+        SequenceHistory.RawSequence r2 = new SequenceHistory.RawSequence(100, (byte) 1, true, 100, 1);
 
         SequenceHistory.Merge m1 = new SequenceHistory.Merge(SequenceHistory.OverlapType.CDR3Overlap, e1, r2, 97, 1);
         SequenceHistory.Merge m2 = new SequenceHistory.Merge(SequenceHistory.OverlapType.CDR3Overlap, e1, r2, -91, 1);
@@ -60,17 +60,17 @@ public class SequenceHistoryTest {
         Assert.assertEquals(10, m1.overlap());
         Assert.assertEquals(9, m2.overlap());
 
-        Assert.assertEquals(197, m1.length());
-        Assert.assertEquals(198, m2.length());
+        Assert.assertEquals(197, m1.getLength());
+        Assert.assertEquals(198, m2.getLength());
 
         Assert.assertNull(m1.offset(new SequenceHistory.FullReadIndex(100, (byte) 0, true)));
         Assert.assertNull(m1.offset(new SequenceHistory.FullReadIndex(99, (byte) 0, false)));
 
-        Assert.assertEquals((Object) 3, m1.offset(r1.index));
-        Assert.assertEquals((Object) 97, m1.offset(r2.index));
+        Assert.assertEquals((Object) 3, m1.offset(r1.getIndex()));
+        Assert.assertEquals((Object) 97, m1.offset(r2.getIndex()));
 
-        Assert.assertEquals((Object) 94, m2.offset(r1.index));
-        Assert.assertEquals((Object) 0, m2.offset(r2.index));
+        Assert.assertEquals((Object) 94, m2.offset(r1.getIndex()));
+        Assert.assertEquals((Object) 0, m2.offset(r2.getIndex()));
 
         System.out.println(m1);
         System.out.println(m2);

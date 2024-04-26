@@ -392,7 +392,7 @@ object CommandRefineTagsAndSort {
                                         SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
                             }
                             // Applying updated tags values and returning updated alignments object
-                            al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
+                            al.withTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
                         }
                             .reportProgress("Applying correction & sorting alignments by ${tagNames.last()}")
                     }

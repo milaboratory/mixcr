@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -62,7 +62,7 @@ public class VDJCAlignerWithMergeTest {
 
             for (PairedRead read : CUtils.it(reader)) {
                 ++total;
-                VDJCAlignments alignment = aligner.process(read.toTuple(), read);
+                VDJCAlignments alignment = aligner.process(read.toTuple(1), read);
                 if (alignment != null) {
                     alignemntsList.add(alignment);
                     for (VDJCHit hit : alignment.getHits(GeneType.Variable))

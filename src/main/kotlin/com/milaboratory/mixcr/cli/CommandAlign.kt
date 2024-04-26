@@ -978,7 +978,7 @@ object CommandAlign {
                         cmdParams.replaceWildcards,
                         tempDest,
                         referenceForCram
-                    ).map { ProcessingBundle(it) }
+                    ).map { ProcessingBundle.fromRead(it, it.originalReadsCount()) }
                     when (pairedPatternPayload) {
                         null -> reader
                         true -> reader.onEach { record ->
@@ -1002,16 +1002,39 @@ object CommandAlign {
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.unzippedInputStream(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
-                    ).map { ProcessingBundle(it) }
+                    ).map { ProcessingBundle.fromRead(it, it.originalReadsCount()) }
                 }
 
                 else -> { // All fastq file types
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
-                        .map { ProcessingBundle(it.read, it.fileTags, it.originalReadId) }
+                        .map {
+                            ProcessingBundle.fromRead(
+                                it.read,
+                                it.read.originalReadsCount(),
+                                fileTags = it.fileTags,
+                                originalReadId = it.originalReadId
+                            )
+                        }
                 }
             }
         }
+
+        private fun SequenceRead.originalReadsCount(): Int =
+            when (val pattern = cmdParams.weightPatternInReadDescription) {
+                null -> 1
+                else -> {
+                    val description = ValidationException.requireTheSame(map { it.description }) {
+                        "Read descriptions should be the same for parsing weight from it"
+                    }
+                    val matcher = pattern.matcher(description)
+                    ValidationException.require(matcher.find()) {
+                        "Can't find weight in read description $description"
+                    }
+                    matcher.group(1).toInt()
+                }
+            }
+
 
         override fun validate() {
             checkInputTemplates(inputTemplates)
@@ -1231,19 +1254,18 @@ object CommandAlign {
                 val step2 = step1.mapChunksInParallel(
                     bufferSize = max(16, threads.value),
                     threads = threads.value
-                ) {
-                    if (it.ok) {
-                        var alignment =
-                            aligner.process(it.sequence, it.read)?.setTagCount(TagCount(it.tags))
+                ) { bundle ->
+                    if (bundle.ok) {
+                        var alignment = aligner.process(bundle.sequence, bundle.read)
+                            ?: return@mapChunksInParallel bundle.copy(status = NotAligned)
+                        alignment = alignment
+                            .withTagCount(TagCount(bundle.tags))
+                            .shiftIndelsAtHomopolymers(gtRequiringIndelShifts)
                         if (cmdParams.parameters.isSaveOriginalReads)
-                            alignment = alignment?.setOriginalReads(arrayOf(it.read))
-                        alignment = alignment?.shiftIndelsAtHomopolymers(gtRequiringIndelShifts)
-                        it.copy(
-                            alignment = alignment,
-                            status = if (alignment == null) NotAligned else Good
-                        )
+                            alignment = alignment.withOriginalReads(arrayOf(bundle.read))
+                        bundle.copy(alignment = alignment, status = Good)
                     } else
-                        it
+                        bundle
                 }
 
                 step2
@@ -1259,19 +1281,21 @@ object CommandAlign {
                             bundle.alignment != null -> bundle.alignment!!
 
                             cmdParams.writeFailedAlignments && bundle.status == NotAligned -> {
-                                // Creating empty alignment object if alignment for current read failed
+                                // Creating an empty alignment object if alignment for current read failed
                                 val target = readsLayout.createTargets(bundle.sequence)[0]
-                                var a = VDJCAlignments(
-                                    emptyHits,
-                                    if (bundle.tags == TagTuple.NO_TAGS)
+                                VDJCAlignments(
+                                    hits = emptyHits,
+                                    tagCount = if (bundle.tags == TagTuple.NO_TAGS)
                                         TagCount.NO_TAGS else TagCount(bundle.tags),
-                                    target.targets,
-                                    SequenceHistory.RawSequence.of(bundle.read.id, target),
-                                    if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.sequence) else null
+                                    targets = target.targets,
+                                    history = SequenceHistory.RawSequence.of(
+                                        bundle.read.id,
+                                        target,
+                                        bundle.sequence.originalReadsCount
+                                    ),
+                                    originalSequences = if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.sequence) else null,
+                                    originalReads = if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.read) else null
                                 )
-                                if (alignerParameters.isSaveOriginalReads)
-                                    a = a.setOriginalReads(arrayOf(bundle.read))
-                                a
                             }
 
                             else -> return@forEach

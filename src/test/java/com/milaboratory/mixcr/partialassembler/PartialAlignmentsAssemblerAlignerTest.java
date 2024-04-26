@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class PartialAlignmentsAssemblerAlignerTest {
     @Test
-    public void basicTest1() throws Exception {
+    public void basicTest1() {
         Well44497b rg = new Well44497b(12312);
 
         VDJCAlignerParameters rnaSeqParams = VDJCParametersPresets.getByName("rna-seq");
@@ -53,7 +53,7 @@ public class PartialAlignmentsAssemblerAlignerTest {
         NucleotideSequence seq3 = baseSeq.getRange(319, 319 + len);
 
         VDJCMultiRead read = MiXCRTestUtils.createMultiRead(seq1, seq2, seq3);
-        VDJCAlignments al = aligner.process(read.toTuple(), read);
+        VDJCAlignments al = aligner.process(read);
         Assert.assertNotNull(al);
         assertInHits(genes.v, al);
         assertInHits(genes.d, al);
