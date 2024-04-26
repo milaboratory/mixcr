@@ -1069,6 +1069,7 @@ upstreams:
             diversityFilteredByWhitelist: 0
             outputDiversity: 4406
             outputCount: 49573
+            correctionRan: true
         filterReport:
           type: filter_groups_report
           groupingKeys:
@@ -1981,6 +1982,7 @@ upstreams:
             diversityFilteredByWhitelist: 0
             outputDiversity: 469
             outputCount: 29276
+            correctionRan: true
         filterReport:
           type: filter_groups_report
           groupingKeys:
