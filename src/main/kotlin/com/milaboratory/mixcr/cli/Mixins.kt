@@ -12,6 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
+import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.clonegrouping.CellType
@@ -47,6 +48,8 @@ import com.milaboratory.mixcr.presets.GenericMixin
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.presets.QcMixins
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.DontCorrectTagName
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.DontCorrectTagType
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
 import io.repseq.core.GeneFeatures
 import io.repseq.core.GeneType
@@ -122,11 +125,31 @@ class RefineTagsAndSortMiXCRMixins : MiXCRMixinCollector() {
     @Option(
         description = [SetWhitelist.DESCRIPTION_RESET],
         names = [SetWhitelist.CMD_OPTION_RESET],
-        paramLabel = "tag",
+        paramLabel = Labels.TAG_NAME,
         order = OptionsOrder.mixins.refineTagsAndSort + 200
     )
     fun resetWhitelist(tag: String) {
         mixIn(SetWhitelist(tag, null))
+    }
+
+    @Option(
+        description = ["Don't correct alignments for tag"],
+        names = [DontCorrectTagName.CMD_OPTION],
+        paramLabel = Labels.TAG_NAME,
+        order = OptionsOrder.mixins.refineTagsAndSort + 300
+    )
+    fun dontCorrectTag(tag: String) {
+        mixIn(DontCorrectTagName(tag))
+    }
+
+    @Option(
+        description = ["Don't correct alignments for tag type"],
+        names = [DontCorrectTagType.CMD_OPTION],
+        paramLabel = Labels.TAG_TYPE,
+        order = OptionsOrder.mixins.refineTagsAndSort + 301
+    )
+    fun dontCorrectTagType(tagType: TagType) {
+        mixIn(DontCorrectTagType(tagType))
     }
 
     companion object {
