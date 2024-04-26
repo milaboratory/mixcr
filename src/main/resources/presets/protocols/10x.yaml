@@ -97,7 +97,7 @@
                   lower: 150.0
                   acceptNaN: true
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
