@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -83,7 +83,8 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
                 if (cellLevel) TagType.Cell else TagType.Molecule, arrayOf(GeneFeature.CDR3),
                 params,
                 files[1],
-                tmp
+                tmp,
+                alignmentsReader.header.alignerParameters
             )
             SmartProgressReporter.startProgressReport(assemblerRunner)
             assemblerRunner.run()

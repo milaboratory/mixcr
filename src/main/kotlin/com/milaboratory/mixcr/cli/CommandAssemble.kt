@@ -330,7 +330,8 @@ object CommandAssemble {
                                 groupingLevel,
                                 cloneAssemblerParameters.assemblingFeatures,
                                 cmdParam.consensusAssemblerParameters, preClonesFile,
-                                tempDest.addSuffix("pc.tmp")
+                                tempDest.addSuffix("pc.tmp"),
+                                cloneAssemblerParameters.cloneFactoryParameters
                             )
                             assemblerRunner.setExtractionListener(reportBuilder)
                             SmartProgressReporter.startProgressReport(assemblerRunner)
