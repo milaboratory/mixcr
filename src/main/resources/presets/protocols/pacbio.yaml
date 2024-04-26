@@ -1,5 +1,5 @@
 generic-pacbio:
-  label: "Generic PacBio data"
+  label: "PacBio data"
   category: generic
   inheritFrom: bundle-base
   flags:
@@ -30,7 +30,7 @@ generic-pacbio:
         upper: 0.85
 
 generic-pacbio-with-umi:
-  label: "Generic PacBio data with UMIs"
+  label: "PacBio data with UMIs"
   category: generic
   inheritFrom: bundle-base
   flags:

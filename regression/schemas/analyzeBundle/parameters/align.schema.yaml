@@ -217,6 +217,11 @@ properties:
         enum:
           - Unknown
           - R1V
+      longReadsParameters:
+        type: object
+        properties:
+          windowSize:
+            type: integer
       mergerParameters:
         type: object
         properties:

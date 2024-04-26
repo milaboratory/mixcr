@@ -13,12 +13,18 @@ Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observ
                                       <gene_feature> [(germline|mrca|parent)]]... [-allNFeatures
                                       [(germline|mrca|parent)]]... [-aaFeature <gene_feature>
                                       [(germline|mrca|parent)]]... [-allAAFeatures
-                                      [(germline|mrca|parent)]]... [-nLength <gene_feature[,
-                                      gene_feature]...> [(germline|mrca|parent)]]... [-allNLength
-                                      [(germline|mrca|parent)]]... [-aaLength <gene_feature[,
-                                      gene_feature]...> [(germline|mrca|parent)]]... [-allAALength
-                                      [(germline|mrca|parent)]]... [-nMutations <gene_feature>
-                                      [(germline|mrca|parent)]
+                                      [(germline|mrca|parent)]]... [-nFeatureImputed <gene_feature>
+                                      [(germline|mrca|parent)]]... [-allNFeaturesImputed
+                                      [<from_reference_point> <to_reference_point>]
+                                      [(germline|mrca|parent)]]... [-aaFeatureImputed
+                                      <gene_feature> [(germline|mrca|parent)]]...
+                                      [-allAAFeaturesImputed [<from_reference_point>
+                                      <to_reference_point>] [(germline|mrca|parent)]]... [-nLength
+                                      <gene_feature[,gene_feature]...> [(germline|mrca|parent)]]...
+                                      [-allNLength [(germline|mrca|parent)]]... [-aaLength
+                                      <gene_feature[,gene_feature]...> [(germline|mrca|parent)]]...
+                                      [-allAALength [(germline|mrca|parent)]]... [-nMutations
+                                      <gene_feature> [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
                                       [-allNMutations [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
@@ -150,6 +156,18 @@ Possible fields to export
                              Export amino acid sequences for all covered gene features.
                              If first arg is omitted, then feature will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
+      -nFeatureImputed <gene_feature> [(germline|mrca|parent)]
+                             Export nucleotide sequence using letters from germline (marked
+                               lowercase) for uncovered regions.
+      -allNFeaturesImputed [<from_reference_point> <to_reference_point>] [(germline|mrca|parent)]
+                             Export nucleotide sequences for all covered gene features. By default,
+                               boundaries will be `FR1Begin FR4End`.
+      -aaFeatureImputed <gene_feature> [(germline|mrca|parent)]
+                             Export amino acid sequence using letters from germline (marked
+                               lowercase) for uncovered regions.
+      -allAAFeaturesImputed [<from_reference_point> <to_reference_point>] [(germline|mrca|parent)]
+                             Export amino acid sequences for all covered gene features. By default,
+                               boundaries will be `FR1Begin FR4End`.
       -nLength <gene_feature[,gene_feature]...> [(germline|mrca|parent)]
                              Export count of nucleotides of specified gene feature.
                              If second arg is omitted, then length will be printed for current
