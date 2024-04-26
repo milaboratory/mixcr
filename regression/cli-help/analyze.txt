@@ -8,12 +8,13 @@ Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--add-step <step>
                      [--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)]]
                      [--tag-pattern <pattern>] [--keep-non-CDR3-alignments]
                      [--drop-non-CDR3-alignments] [--limit-input <n>] [--set-whitelist <key=value>]
-                     [--reset-whitelist tag] [--assemble-clonotypes-by <gene_features>]
-                     [--split-clones-by <gene_type>]... [--dont-split-clones-by <gene_type>]...
-                     [--assemble-contigs-by <gene_features>] [--assemble-contigs-by-cells]
-                     [--assemble-longest-contigs] [--impute-germline-on-export]
-                     [--dont-impute-germline-on-export] [--prepend-export-clones-field <field>
-                     [<param>...]]... [--append-export-clones-field <field> [<param>...]]...
+                     [--reset-whitelist <tag_name>] [--dont-correct-tag-with-name <tag_name>]
+                     [--dont-correct-tag-type (Molecule|Cell|Sample)] [--assemble-clonotypes-by
+                     <gene_features>] [--split-clones-by <gene_type>]... [--dont-split-clones-by
+                     <gene_type>]... [--assemble-contigs-by <gene_features>]
+                     [--impute-germline-on-export] [--dont-impute-germline-on-export]
+                     [--prepend-export-clones-field <field> [<param>...]]...
+                     [--append-export-clones-field <field> [<param>...]]...
                      [--prepend-export-clone-groups-field <field> [<param>...]]...
                      [--append-export-clone-groups-field <field> [<param>...]]...
                      [--prepend-export-alignments-field <field> [<param>...]]...
@@ -69,9 +70,6 @@ Run full MiXCR pipeline for specific input.
 Params to change pipeline steps:
       --add-step <step>      Add a step to pipeline
       --remove-step <step>   Remove a step from pipeline
-      --assemble-contigs-by-cells
-                             Assemble contigs separately by cells. It will cancel `assembleCells`
-                               step.
 Params for align command:
   -s, --species <species>    Species (organism). Possible values: `hsa` (or HomoSapiens), `mmu` (or
                                MusMusculus), `rat`, `spalax`, `alpaca`, `lamaGlama`, `mulatta`
@@ -132,8 +130,13 @@ Params for refineTagsAndSort command:
                                procedure.
                              Usage: --set-whitelist CELL=preset:737K-august-2016 or --set-whitelist
                                UMI=file:my_umi_whitelist.txt .
-      --reset-whitelist tag  Resets the whitelist for a specific tag so that unguided refinement
+      --reset-whitelist <tag_name>
+                             Resets the whitelist for a specific tag so that unguided refinement
                                procedure will be applied for it
+      --dont-correct-tag-with-name <tag_name>
+                             Don't correct alignments for tag
+      --dont-correct-tag-type (Molecule|Cell|Sample)
+                             Don't correct alignments for tag type
 Params for assemble command:
       --assemble-clonotypes-by <gene_features>
                              Specify gene features used to assemble clonotypes. One may specify any
@@ -152,8 +155,6 @@ Params for assembleContigs command:
                                region, assembling procedure will be limited to the region, and only
                                clonotypes that fully cover the region will be outputted, others
                                will be filtered out.
-      --assemble-longest-contigs
-                             Contigs with maximum possible length will be assembled.
 Params for export commands:
       --impute-germline-on-export
                              Export nucleotide sequences using letters from germline (marked

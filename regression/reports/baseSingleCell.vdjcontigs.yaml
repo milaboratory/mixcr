@@ -325,6 +325,7 @@ refineTagsAndSort:
         diversityFilteredByWhitelist: 0
         outputDiversity: 3
         outputCount: 40525
+        correctionRan: true
       - tagName: UMI
         inputGroups: 3
         inputDiversity: 424
@@ -339,6 +340,7 @@ refineTagsAndSort:
         diversityFilteredByWhitelist: 0
         outputDiversity: 108
         outputCount: 40524
+        correctionRan: true
     filterReport:
       type: and_report
       nestedReports:
