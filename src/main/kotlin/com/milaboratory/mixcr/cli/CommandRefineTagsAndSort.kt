@@ -366,7 +366,13 @@ object CommandRefineTagsAndSort {
 
                         // Running correction, results are temporarily persisted in temp file, so the object can be used
                         // multiple time to perform the correction and stream corrected and filtered results
-                        corrector.calculate()
+                        try {
+                            corrector.calculate()
+                        } catch (e: Throwable) {
+                            throw TagCorrectionError(
+                                correctionEnabled.mapIndexedNotNull { i, b -> tagNames[i].takeIf { b } }, e
+                            )
+                        }
 
                         // Available after calculation finishes
                         mitoolReport = corrector.report
@@ -464,3 +470,6 @@ object CommandRefineTagsAndSort {
         }
     }
 }
+
+class TagCorrectionError(val tags: List<String>, cause: Throwable) :
+    RuntimeException("Error on tag correction of $tags", cause)
