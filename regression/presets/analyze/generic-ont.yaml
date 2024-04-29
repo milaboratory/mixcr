@@ -263,7 +263,7 @@ assembleContigs:
       averageQualityThreshold: 10.0
       windowSize: 8
     minimalContigLength: 20
-    alignedRegionsOnly: false
+    alignedRegionsOnly: true
     discardAmbiguousNucleotideCalls: false
 exportAlignments:
   chains: ALL
