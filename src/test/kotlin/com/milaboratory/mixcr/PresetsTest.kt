@@ -29,8 +29,11 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAnyOf
+import io.kotest.matchers.floats.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.floats.shouldBeLessThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.repseq.core.GeneType.Variable
 import org.junit.Assert
 import org.junit.Test
 import java.nio.file.Paths
@@ -305,6 +308,49 @@ class PresetsTest {
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                     Flags.AssembleContigsByOrByCell in bundle.flags
                 } shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `ranges of min relative scores`() = assertSoftly {
+        val lowerBond = 0.8f
+        val upperBond = 0.9f
+        "Presets with `assembleContigs` should have lowered minRelativeScore for `assemble` step".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    assembleContigs in bundle.pipeline!!.steps
+                }.forEach { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val alignParams = bundle.align!!.parameters
+                    val assembleParams =
+                        bundle.assemble!!.cloneAssemblerParameters.updateFrom(alignParams).cloneFactoryParameters
+                    val assembleContigsParams = bundle.assembleContigs!!.cloneFactoryParameters?.clone()?.also {
+                        // set defaults from align params
+                        it.update(alignParams)
+                    } ?: assembleParams
+
+                    presetName.asClue {
+                        assembleParams.getRelativeMinScore(Variable) shouldBeLessThanOrEqual lowerBond
+                        assembleContigsParams.getRelativeMinScore(Variable) shouldBeGreaterThanOrEqual upperBond
+                    }
+                }
+        }
+        "Presets without `assembleContigs` should have high minRelativeScore for `assemble` step".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    assembleContigs !in bundle.pipeline!!.steps
+                }.forEach { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val alignParams = bundle.align!!.parameters
+                    val assembleParams =
+                        bundle.assemble!!.cloneAssemblerParameters.updateFrom(alignParams).cloneFactoryParameters
+
+                    presetName.asClue {
+                        assembleParams.getRelativeMinScore(Variable) shouldBeGreaterThanOrEqual upperBond
+                    }
+                }
         }
     }
 }
