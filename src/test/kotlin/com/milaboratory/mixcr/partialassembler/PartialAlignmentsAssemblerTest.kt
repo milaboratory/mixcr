@@ -265,13 +265,15 @@ class PartialAlignmentsAssemblerTest {
                 val pParameters = PartialAlignmentsAssemblerParameters.default.let {
                     it.copy(mergerParameters = it.mergerParameters.overrideMinimalIdentity(0.0))
                 }
-                val assembler = PartialAlignmentsAssembler(pParameters,
+                val assembler = PartialAlignmentsAssembler(
+                    pParameters,
                     inputAlignments.parameters.alignerParameters,
                     inputAlignments.usedGenes,
                     true,
                     false,
-                    -1,
-                    InputPort { alignment: VDJCAlignments? -> writer.write(alignment) })
+                    0,
+                    InputPort { alignment -> writer.write(alignment) }
+                )
                 inputAlignments.resultReader().use { reader ->
                     writer.inheritHeaderAndFooterFrom(reader)
                     assembler.buildLeftPartsIndex(reader)
