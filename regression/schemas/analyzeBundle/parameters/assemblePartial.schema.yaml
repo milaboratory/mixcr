@@ -58,3 +58,5 @@ properties:
         type: integer
       minimalNOverlapShare:
         type: number
+      splitResultByTags:
+        type: boolean
