@@ -510,7 +510,8 @@ object CommandAnalyze {
 
             fun addExportStep(cmd: AnalyzeCommandDescriptor.ExportCommandDescriptor<*>) {
                 val runAfter = cmd.runAfterLastOf()
-                val inputsForExport = outputsForCommands.findLast { (cmd) -> cmd in runAfter }!!.second
+                // if there is nothing to run on (production command is removed), don't run it
+                val (_, inputsForExport) = outputsForCommands.findLast { (cmd) -> cmd in runAfter } ?: return
                 for (input in inputsForExport) {
                     check(input.fileNames.size == 1)
                     val round = 0
