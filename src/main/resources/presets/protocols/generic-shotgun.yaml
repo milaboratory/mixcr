@@ -34,6 +34,38 @@ rna-seq:
   mixins:
     - type: MaterialTypeRNA
 
+rna-seq-with-umi:
+  label: "RNA-Seq data with UMI barcodes"
+  category: generic
+  mixins:
+    - type: AddTagsValidation
+      validation:
+        type: MustContainTagType
+        tagType: Molecule
+  inheritFrom: bundle-base
+  flags:
+    - species
+    - tagPattern
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemblePartial
+    - assemblePartial
+    - extend
+    - assemble
+    - assembleContigs
+    - exportClones
+  align:
+    inheritFrom: align-single-cell
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+  exportClones:
+    inheritFrom: exportClones-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-umi-base
+
 exome-seq:
   label: "Exome-Seq data"
   category: generic
