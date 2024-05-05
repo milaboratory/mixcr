@@ -7,6 +7,12 @@ generic-ont (Oxford Nanopore data)
   Required args:
     --species <name>
 
+rna-seq-with-umi (RNA-Seq data with UMI barcodes)
+  Required args:
+    --species <name>
+    --tag-pattern <pattern>
+    (--dna|--rna)
+
 generic-pacbio-with-umi (PacBio data with UMIs)
   Required args:
     --species <name>
