@@ -31,6 +31,9 @@
             backgroundIndelRate: 0.01
   assembleContigs:
     inheritFrom: assembleContigs-base
+    overrides:
+      parameters:
+        alignedRegionsOnly: true
   exportClones:
     inheritFrom: exportClones-base
   qc:
@@ -80,6 +83,9 @@
             backgroundIndelRate: 0.01
   assembleContigs:
     inheritFrom: assembleContigs-base
+    overrides:
+      parameters:
+        alignedRegionsOnly: true
   exportClones:
     inheritFrom: exportClones-umi-base
   qc:
