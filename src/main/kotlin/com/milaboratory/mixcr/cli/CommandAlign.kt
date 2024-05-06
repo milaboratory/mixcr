@@ -1233,8 +1233,8 @@ object CommandAlign {
                     .buffered(max(16, threads.value))
 
                 val step0 =
-                    mainInputReads.mapUnchunked {
-                        val parsed = tagsExtractor.parse(it)
+                    mainInputReads.mapUnchunked { bundle ->
+                        val parsed = tagsExtractor.parse(bundle)
                         if (parsed.status == NotParsed)
                             reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode)
                         if (parsed.status == NotMatched)
