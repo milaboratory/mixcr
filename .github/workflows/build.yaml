@@ -70,6 +70,9 @@ jobs:
       dist-archive-s3: true
       dist-archive-s3-add-sha: true
 
+      # Distribution sign
+      sign-dist-archive: ${{ github.event_name != 'schedule' }}
+
       # CDN redirect
       cdn-redirect-s3: true
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
@@ -95,3 +98,9 @@ jobs:
 
       TELEGRAM_NOTIFICATION_TARGET: ${{ secrets.TG_CHANNEL_MIBUILDS }}
       TELEGRAM_API_TOKEN: ${{ secrets.TG_CI_BOT_TOKEN }}
+      SIGN_DIST_ARCHIVE_S3_IAM_ROLE_TO_ASSUME: ${{ secrets.REGISTRY_IAM_ROLE }}
+      SIGN_DIST_ARCHIVE_S3_BUCKET: ${{ secrets.REGISTRY_S3_BUCKET }}
+      SIGN_GCLOUD_KMS_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCLOUD_KMS_WORKLOAD_IDENTITY_PROVIDER }}
+      SIGN_GCLOUD_KMS_SERVICE_ACCOUNT: ${{ secrets.GCLOUD_KMS_SERVICE_ACCOUNT }}
+      SIGN_GCLOUD_KMS_KEYRING: ${{ secrets.GCLOUD_KMS_KEYRING }}
+      SIGN_GCLOUD_KMS_KEY_NAME: ${{ secrets.GCLOUD_KMS_KEY_NAME }}

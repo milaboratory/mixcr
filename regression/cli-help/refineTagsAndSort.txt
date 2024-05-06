@@ -1,16 +1,15 @@
-Usage: mixcr refineTagsAndSort [--dont-correct] [--power <d>] [--substitution-rate <d>]
-                               [--indel-rate <d>] [--min-quality <n>] [--max-substitutions <n>]
-                               [--max-indels <n>] [--max-errors <n>] [--memory-budget <n>]
-                               [--set-whitelist <key=value>] [--reset-whitelist tag] [--report
-                               <path>] [--json-report <path>] [--use-local-temp]
-                               [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
-                               vdjca alignments.corrected.vdjca
+Usage: mixcr refineTagsAndSort [--power <d>] [--substitution-rate <d>] [--indel-rate <d>]
+                               [--min-quality <n>] [--max-substitutions <n>] [--max-indels <n>]
+                               [--max-errors <n>] [--memory-budget <n>] [--set-whitelist
+                               <key=value>] [--reset-whitelist <tag_name>]
+                               [--dont-correct-tag-with-name <tag_name>] [--dont-correct-tag-type
+                               (Molecule|Cell|Sample)] [--report <path>] [--json-report <path>]
+                               [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
+                               [--help] alignments.vdjca alignments.corrected.vdjca
 Applies error correction algorithm for tag sequences and sorts resulting file by tags.
       alignments.vdjca       Path to input alignments
       alignments.corrected.vdjca
                              Path where to write corrected alignments
-      --dont-correct         Don't correct barcodes, only sort alignments by tags.
-                               Default value determined by the preset.
   -p, --power <d>            This parameter determines how thorough the procedure should eliminate
                                variants looking like errors.
                              Smaller value leave less erroneous variants at the cost of
@@ -40,8 +39,13 @@ Applies error correction algorithm for tag sequences and sorts resulting file by
                                procedure.
                              Usage: --set-whitelist CELL=preset:737K-august-2016 or --set-whitelist
                                UMI=file:my_umi_whitelist.txt .
-      --reset-whitelist tag  Resets the whitelist for a specific tag so that unguided refinement
+      --reset-whitelist <tag_name>
+                             Resets the whitelist for a specific tag so that unguided refinement
                                procedure will be applied for it
+      --dont-correct-tag-with-name <tag_name>
+                             Don't correct alignments for tag
+      --dont-correct-tag-type (Molecule|Cell|Sample)
+                             Don't correct alignments for tag type
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.

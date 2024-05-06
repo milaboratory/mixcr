@@ -702,7 +702,11 @@ object CommandAlign {
         )
         private var strictMatching = false
 
-        @Mixin
+        @ArgGroup(
+            validate = false,
+            multiplicity = "0..*",
+            order = OptionsOrder.mixins.pipeline
+        )
         var pipelineMixins: PipelineMiXCRMixinsHidden? = null
 
         @Mixin

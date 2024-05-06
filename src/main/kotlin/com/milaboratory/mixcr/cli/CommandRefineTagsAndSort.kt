@@ -13,12 +13,13 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
-import cc.redberry.pipe.util.withCounting
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.NSequenceWithQuality
+import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.refinement.TagCorrectionPlan
@@ -32,19 +33,22 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
+import com.milaboratory.mixcr.basictypes.tag.SequenceTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.tag.TagValue
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
+import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
-import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.DontCorrectTagName
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.DontCorrectTagType
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.SetWhitelist
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.primitivio.PrimitivIOStateBuilder
-import com.milaboratory.util.CanReportProgress
 import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportHelper
@@ -70,9 +74,15 @@ object CommandRefineTagsAndSort {
                 DEFAULT_VALUE_FROM_PRESET
             ],
             names = ["--dont-correct"],
+            hidden = true,
             order = OptionsOrder.main + 10_000
         )
-        private var dontCorrect = false
+        private var dontCorrect: Boolean = false
+            set(value) {
+                if (value)
+                    logger.warn { "`--dont-correct` is deprecated, use `${DontCorrectTagName.CMD_OPTION} ${Labels.TAG_NAME}` or `${DontCorrectTagType.CMD_OPTION} ${Labels.TAG_TYPE}`" }
+                field = value
+            }
 
         @Option(
             description = [
@@ -162,7 +172,7 @@ object CommandRefineTagsAndSort {
             hidden = true
         )
         fun whitelist(map: Map<String, String>) {
-            throw ValidationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${RefineTagsAndSortMixins.SetWhitelist.CMD_OPTION_SET} instead.")
+            throw ValidationException("\"-w\" and \"--whitelist\" options are deprecated, please use ${SetWhitelist.CMD_OPTION_SET} instead.")
         }
 
         override val paramsResolver =
@@ -260,33 +270,32 @@ object CommandRefineTagsAndSort {
                 val cmdParams = paramsResolver.resolve(paramsSpec).second
 
                 // These tags will be corrected, other used as grouping keys
-                val correctionEnabled = tagsInfo.map { it.valueType == TagValueType.SequenceAndQuality }
+                val correctionEnabled = if (!cmdParams.runCorrection) {
+                    tagsInfo.map { false }
+                } else {
+                    tagsInfo.map { tag ->
+                        tag.valueType == TagValueType.SequenceAndQuality
+                                && tag.name !in cmdParams.dontCorrectTagsNames
+                                && tag.type !in cmdParams.dontCorrectTagsTypes
+                    }
+                }
 
                 // All tag names
                 val tagNames = tagsInfo.map { it.name }
 
-                // // Indices to be corrected
-                // TODO: allow to turn off refinement
-                // val correctionIndicesBuilder = TIntArrayList()
-                // for (ti in tagsInfo.indices) {
-                //     val tag = tagsInfo[ti]
-                //     assert(ti == tag.index) /* just in case */
-                //     if (tag.valueType == TagValueType.SequenceAndQuality) correctionIndicesBuilder.add(ti)
-                // }
-                // // Indices of tags to be corrected
-                // val correctionTagIndices = correctionIndicesBuilder.toArray()
+                if (cmdParams.runCorrection && correctionEnabled.isNotEmpty())
+                    logger.log {
+                        "Correction will be applied to the following tags: " +
+                                correctionEnabled
+                                    .mapIndexedNotNull { i, b -> tagNames[i].takeIf { b } }
+                                    .joinToString(", ")
+                    }
+                logger.log { "Sorting will be applied to the following tags: ${tagNames.joinToString(", ")}" }
 
-                if (cmdParams.runCorrection)
-                    println("Correction will be applied to the following tags: " +
-                            correctionEnabled
-                                .mapIndexedNotNull { i, b -> tagNames[i].takeIf { b } }
-                                .joinToString(", "))
-                println("Sorting will be applied to the following tags: ${tagNames.joinToString(", ")}")
-
-                val (corrected, progress: CanReportProgress, numberOfAlignments) = when {
-                    !cmdParams.runCorrection -> {
+                val corrected = when {
+                    correctionEnabled.none { true } && cmdParams.whitelists.isEmpty() && cmdParams.parameters?.postFilter == null -> {
                         mitoolReport = null
-                        Triple(mainReader, mainReader, mainReader.numberOfAlignments)
+                        mainReader.reportProgress("Sorting alignments by ${tagNames.last()}")
                     }
 
                     else -> {
@@ -295,7 +304,7 @@ object CommandRefineTagsAndSort {
                         tagNames.forEachIndexed { i, tn ->
                             val t = cmdParams.whitelists[tn]
                             if (t != null) {
-                                println("The following whitelist will be used for $tn: $t")
+                                logger.log { "The following whitelist will be used for $tn: $t" }
                                 whitelists[i] = t.load()
                             }
                         }
@@ -305,20 +314,21 @@ object CommandRefineTagsAndSort {
 
                         val correctionPlan = TagCorrectionPlan(
                             tagNames,
-                            correctionEnabled.map { en ->
-                                if (en)
-                                // Sequence&quality tags will be unwrapped for correction
-                                    NSequenceWithQuality::class.java
-                                else
-                                // Other tags will be left unchanged to be used as grouping keys
-                                    TagValue::class.java
+                            tagNames.indices.map { i ->
+                                when {
+                                    correctionEnabled[i] -> NSequenceWithQuality::class.java// Sequence&quality tags will be unwrapped for correction
+                                    tagsInfo[i].valueType == TagValueType.NonSequence -> TagValue::class.java // Other tags will be left unchanged to be used as grouping keys
+                                    // for usage of a whitelist nucleotide sequence is needed
+                                    else -> NucleotideSequence::class.java
+                                }
                             },
                             whitelists,
                             // For now all sequence&quality tags are corrected,
                             // more flexibility will be added in the future
                             correctionEnabled,
-                            // Tag aliases for each specific tag type and alike
-                            tagsInfo.tagAliases, caseInsensitiveTagAliases = true
+                            // Tag aliases for each specified tag type and alike
+                            tagsInfo.tagAliases,
+                            caseInsensitiveTagAliases = true
                         )
 
                         val corrector = TagCorrector(
@@ -335,7 +345,8 @@ object CommandRefineTagsAndSort {
                         corrector.initialize(
                             mainReader,
                             AlignmentSequenceExtractor,
-                            { al -> al.alignmentsIndex }) { als ->
+                            { al -> al.alignmentsIndex }
+                        ) { als ->
                             if (als.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
@@ -343,41 +354,47 @@ object CommandRefineTagsAndSort {
                             val tagTuple = als.tagCount.singletonTuple
                             Array(tagNames.size) { tIdx -> // <- local index for the procedure
                                 val tagValue = tagTuple[tIdx]
-                                if (correctionEnabled[tIdx]) (tagValue as SequenceAndQualityTagValue).data
-                                else tagValue.extractKey() // converting any tag type to a key tag
+                                when {
+                                    correctionEnabled[tIdx] -> (tagValue as SequenceAndQualityTagValue).data
+                                    else -> when (val key = tagValue.extractKey()) {
+                                        is SequenceTagValue -> key.value // actual sequence
+                                        else -> key// converting any tag type to a key tag
+                                    }
+                                }
                             }
                         }
 
                         // Running correction, results are temporarily persisted in temp file, so the object can be used
                         // multiple time to perform the correction and stream corrected and filtered results
-                        corrector.calculate()
+                        try {
+                            corrector.calculate()
+                        } catch (e: Throwable) {
+                            throw TagCorrectionError(
+                                correctionEnabled.mapIndexedNotNull { i, b -> tagNames[i].takeIf { b } }, e
+                            )
+                        }
 
                         // Available after calculation finishes
                         mitoolReport = corrector.report
                         thresholds = corrector.criticalThresholds
 
                         // Creating another alignment stream from the same container file to apply correction
-                        val secondaryReader = mainReader.readAlignments()
 
-                        Triple(
-                            corrector.applyCorrection(
-                                secondaryReader,
-                                { al -> al.alignmentsIndex }) { al, newTagValues ->
-                                // starting off the copy of original alignment tags array
-                                val updatedTags = al.tagCount.singletonTuple.asArray()
-                                tagNames.indices.forEach { tIdx ->
-                                    if (correctionEnabled[tIdx])
-                                        updatedTags[tIdx] =
-                                            SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
-                                    else
-                                        assert(updatedTags[tIdx] == newTagValues[tIdx])
-                                }
-                                // Applying updated tags values and returning updated alignments object
-                                al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
-                            },
-                            secondaryReader,
-                            corrector.report.outputRecords
-                        )
+                        corrector.applyCorrection(
+                            mainReader.readAlignments(),
+                            { al -> al.alignmentsIndex }
+                        ) { al, newTagValues ->
+                            // starting off the copy of original alignment tags array
+                            val updatedTags = al.tagCount.singletonTuple.asArray()
+                            tagNames.indices.forEach { tIdx ->
+                                if (correctionEnabled[tIdx])
+                                    updatedTags[tIdx] =
+                                        SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
+                            }
+                            // Applying updated tags values and returning updated alignments object
+                            al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
+                        }
+                            .reportProgress("Applying correction & sorting alignments by ${tagNames.last()}")
                     }
                 }
 
@@ -405,32 +422,14 @@ object CommandRefineTagsAndSort {
                             )
                         }
 
-                    // Progress reporter for the first sorting step
-                    SmartProgressReporter.startProgressReport(
-                        when {
-                            cmdParams.runCorrection -> "Applying correction & sorting alignments by ${tagNames.last()}"
-                            else -> "Sorting alignments by ${tagNames.last()}"
-                        },
-                        progress
-                    )
-
                     // Running initial hash sorter
-                    var sorted = corrected.hashSort(tagNames.size - 1).withCounting()
+                    var sorted = corrected.hashSort(tagNames.size - 1)
                     corrected.close()
 
                     // Sorting by other tags
                     for (tIdx in tagNames.size - 2 downTo 0) {
-                        // TODO used that sortByHashOnDisk returns OutputPortWithProgress
-                        SmartProgressReporter.startProgressReport(
-                            "Sorting alignments by " + tagNames[tIdx],
-                            SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
-                        )
-                        sorted = sorted.hashSort(tIdx).withCounting()
+                        sorted = sorted.reportProgress("Sorting alignments by " + tagNames[tIdx]).hashSort(tIdx)
                     }
-                    SmartProgressReporter.startProgressReport(
-                        "Writing result",
-                        SmartProgressReporter.extractProgress(sorted, numberOfAlignments)
-                    )
 
                     // Initializing and writing results to the output file
                     writer.writeHeader(
@@ -441,7 +440,7 @@ object CommandRefineTagsAndSort {
                         mainReader.usedGenes
                     )
                     writer.setNumberOfProcessedReads(mainReader.numberOfReads)
-                    sorted.forEach { al ->
+                    sorted.reportProgress("Writing result").forEach { al ->
                         writer.write(al)
                     }
                     refineTagsAndSortReport = RefineTagsAndSortReport(
@@ -471,3 +470,6 @@ object CommandRefineTagsAndSort {
         }
     }
 }
+
+class TagCorrectionError(val tags: List<String>, cause: Throwable) :
+    RuntimeException("Error on tag correction of $tags", cause)
