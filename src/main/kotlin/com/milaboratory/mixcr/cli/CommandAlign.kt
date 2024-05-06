@@ -982,7 +982,7 @@ object CommandAlign {
                         cmdParams.replaceWildcards,
                         tempDest,
                         referenceForCram
-                    ).map { ProcessingBundle.fromRead(it, it.originalReadsCount()) }
+                    ).map { ProcessingBundle.fromRead(it, it.weight()) }
                     when (pairedPatternPayload) {
                         null -> reader
                         true -> reader.onEach { record ->
@@ -1006,7 +1006,7 @@ object CommandAlign {
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.unzippedInputStream(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
-                    ).map { ProcessingBundle.fromRead(it, it.originalReadsCount()) }
+                    ).map { ProcessingBundle.fromRead(it, it.weight()) }
                 }
 
                 else -> { // All fastq file types
@@ -1015,7 +1015,7 @@ object CommandAlign {
                         .map {
                             ProcessingBundle.fromRead(
                                 it.read,
-                                it.read.originalReadsCount(),
+                                it.read.weight(),
                                 fileTags = it.fileTags,
                                 originalReadId = it.originalReadId
                             )
@@ -1024,9 +1024,9 @@ object CommandAlign {
             }
         }
 
-        private fun SequenceRead.originalReadsCount(): Int =
+        private fun SequenceRead.weight(): Double =
             when (val pattern = cmdParams.weightPatternInReadDescription) {
-                null -> 1
+                null -> 1.0
                 else -> {
                     val description = ValidationException.requireTheSame(map { it.description }) {
                         "Read descriptions should be the same for parsing weight from it"
@@ -1035,7 +1035,7 @@ object CommandAlign {
                     ValidationException.require(matcher.find()) {
                         "Can't find weight in read description $description"
                     }
-                    matcher.group(1).toInt()
+                    matcher.group(1).toDouble()
                 }
             }
 
@@ -1295,7 +1295,7 @@ object CommandAlign {
                                     history = SequenceHistory.RawSequence.of(
                                         bundle.read.id,
                                         target,
-                                        bundle.sequence.originalReadsCount
+                                        bundle.sequence.weight
                                     ),
                                     originalSequences = if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.sequence) else null,
                                     originalReads = if (alignerParameters.isSaveOriginalSequence) arrayOf(bundle.read) else null

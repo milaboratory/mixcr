@@ -346,7 +346,7 @@ object CommandRefineTagsAndSort {
                             mainReader,
                             AlignmentSequenceExtractor,
                             { al -> al.alignmentsIndex },
-                            weightExtractor = { al -> al.originalReadsCount.toDouble() }
+                            weightExtractor = { al -> al.weight }
                         ) { als ->
                             if (als.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
