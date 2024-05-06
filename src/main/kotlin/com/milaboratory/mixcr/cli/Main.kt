@@ -39,6 +39,7 @@ import com.milaboratory.mixcr.cli.qc.CommandExportQcCoverage
 import com.milaboratory.mixcr.cli.qc.CommandExportQcTags
 import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.presets.Presets
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
 import com.milaboratory.mixcr.util.MiXCRVersionInfo
 import com.milaboratory.util.NoSpaceOnDiskException
 import com.milaboratory.util.TempFileManager
@@ -100,24 +101,33 @@ object Main {
         exitProcess(execute(*args))
     }
 
-    fun execute(vararg args: String): Int {
-        val commandLine = mkCmd(args)
-        try {
-            return commandLine.execute(*args)
-        } catch (e: OutOfMemoryError) {
-            if (logger.verbose) {
-                e.printStackTrace()
-            }
-            val memoryInOSMessage = memoryInOS()?.let { "${it / FileUtils.ONE_MB} Mb" }
-            System.err.println("Not enough memory for run command, try to increase -Xmx. Available memory: ${memoryInOSMessage ?: "unknown"}")
-            System.err.println("Example: `mixcr -Xmx40g ${args.joinToString(" ")}`")
-            val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
-            System.err.println("This run used approximately ${mb}m of memory")
-            return 2
-        } catch (e: Error) {
-            System.err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
-            throw e
+    fun execute(vararg args: String): Int = try {
+        mkCmd(args).execute(*args)
+    } catch (e: OutOfMemoryError) {
+        if (logger.verbose) {
+            e.printStackTrace()
         }
+        val memoryInOSMessage = memoryInOS()?.let { "${it / FileUtils.ONE_MB} Mb" }
+        val mb = Runtime.getRuntime().maxMemory() / FileUtils.ONE_MB
+        System.err.println("Not enough memory for run command. This run used approximately ${mb}m of memory, this machine has ${memoryInOSMessage ?: "unknown"} in total")
+        System.err.println()
+        System.err.println("Try to increase -Xmx. For example:")
+        System.err.println("mixcr -Xmx40g ${args.joinToString(" ")}")
+        val tagCorrectionError = e.suppressed.filterIsInstance<TagCorrectionError>().firstOrNull()
+        if (tagCorrectionError != null && tagCorrectionError.tags.isNotEmpty()) {
+            System.err.println()
+            System.err.println("Or try to disable correction for some tags. It will degrade the overall quality of analysis, but also will lover memory consumption. For example:")
+            (1..tagCorrectionError.tags.size).forEach { size ->
+                val tagOptions = tagCorrectionError.tags.take(size)
+                    .flatMap { tag -> listOf(RefineTagsAndSortMixins.DontCorrectTagName.CMD_OPTION, tag) }
+                val optionsLeft = args.drop(1)
+                System.err.println("mixcr ${args.first()} ${(tagOptions + optionsLeft).joinToString(" ")}")
+            }
+        }
+        2
+    } catch (e: Error) {
+        System.err.println("App version: " + MiXCRVersionInfo.get().shortestVersionString)
+        throw e
     }
 
     private fun assertionsDisabled(): Boolean = System.getProperty("noAssertions") != null

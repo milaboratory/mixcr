@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+  - type: object
+    properties:
+      cmdArgs:
+        type: array
+        items:
+          type: string
+      tag:
+        type: string
+  - type: object
+    properties:
+      type:
+        const: DontCorrectTagName
+    required:
+      - type

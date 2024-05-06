@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+allOf:
+  - type: object
+    properties:
+      cmdArgs:
+        type: array
+        items:
+          type: string
+      tagType:
+        type: string
+        enum:
+          - Sample
+          - Cell
+          - Molecule
+          - Technical
+  - type: object
+    properties:
+      type:
+        const: DontCorrectTagType
+    required:
+      - type

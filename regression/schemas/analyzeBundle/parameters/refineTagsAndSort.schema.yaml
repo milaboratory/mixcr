@@ -465,6 +465,19 @@ $defs:
           - type
 type: object
 properties:
+  dontCorrectTagsNames:
+    type: array
+    items:
+      type: string
+  dontCorrectTagsTypes:
+    type: array
+    items:
+      type: string
+      enum:
+        - Sample
+        - Cell
+        - Molecule
+        - Technical
   parameters:
     type: object
     properties:
