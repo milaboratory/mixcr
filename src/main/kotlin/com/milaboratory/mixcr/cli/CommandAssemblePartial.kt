@@ -143,7 +143,9 @@ object CommandAssemblePartial {
                     header.tagsInfo.getDepthFor(if (cmdParams.cellLevel) TagType.Cell else TagType.Molecule)
                 writer.writeHeader(
                     header
-                        .updateTagInfo { ti -> ti.setSorted(groupingDepth) } // output data will be grouped only up to a groupingDepth
+                        // output data will be grouped only up to a groupingDepth
+                        // all tags will be written as key types, see `map { it.ensureKeyTags() }` below
+                        .updateTagInfo { ti -> ti.setSorted(groupingDepth).withKeyValueTypes() }
                         .addStepParams(AnalyzeCommandDescriptor.assemblePartial, cmdParams)
                         .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                     reader.usedGenes
@@ -152,7 +154,7 @@ object CommandAssemblePartial {
                     cmdParams.parameters, reader.header.alignerParameters,
                     reader.usedGenes, !cmdParams.dropPartial, cmdParams.overlappedOnly,
                     groupingDepth,
-                    InputPort { alignment -> writer.write(alignment) }
+                    InputPort { alignment -> writer.write(alignment!!) }
                 )
 
                 @Suppress("UnnecessaryVariable")

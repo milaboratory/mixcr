@@ -388,6 +388,8 @@ object CommandAssemble {
                     // Getting results
                     val resultHeader = inputHeader
                         .withAssemblerParameters(cloneAssemblerParameters)
+                        // PreCloneAssembler will be run on alignments with ensureKeyTags
+                        .updateTagInfo { it.withKeyValueTypes() }
                         .addStepParams(
                             AnalyzeCommandDescriptor.assemble,
                             paramsResolver.resolve(paramSpec).second
