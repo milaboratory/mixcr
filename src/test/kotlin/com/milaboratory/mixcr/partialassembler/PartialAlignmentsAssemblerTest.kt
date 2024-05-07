@@ -272,7 +272,7 @@ class PartialAlignmentsAssemblerTest {
                     true,
                     false,
                     0,
-                    InputPort { alignment -> writer.write(alignment) }
+                    InputPort { alignment -> writer.write(alignment!!) }
                 )
                 inputAlignments.resultReader().use { reader ->
                     writer.inheritHeaderAndFooterFrom(reader)
