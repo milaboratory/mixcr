@@ -13,17 +13,16 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mitool.cli.main
 import picocli.CommandLine.Command
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.Unmatched
 
 @Command(
     hidden = true,
     description = ["MiTool"]
 )
 class CommandMiToolDelegate : Runnable {
-    @Parameters(
-        paramLabel = "<param>"
-    )
+    @Unmatched
     val allParameters: List<String> = mutableListOf()
+
 
     override fun run() = main(allParameters.toTypedArray())
 }

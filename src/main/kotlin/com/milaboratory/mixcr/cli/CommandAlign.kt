@@ -18,6 +18,7 @@ import cc.redberry.pipe.util.forEach
 import cc.redberry.pipe.util.mapChunksInParallel
 import cc.redberry.pipe.util.mapUnchunked
 import cc.redberry.pipe.util.ordered
+import cc.redberry.pipe.util.synchronized
 import cc.redberry.pipe.util.unchunked
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
@@ -26,10 +27,12 @@ import com.milaboratory.app.logger
 import com.milaboratory.app.matches
 import com.milaboratory.cli.FastqGroupReader
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.core.io.sequence.MultiRead
 import com.milaboratory.core.io.sequence.PairedRead
 import com.milaboratory.core.io.sequence.SequenceRead
 import com.milaboratory.core.io.sequence.SequenceWriter
 import com.milaboratory.core.io.sequence.SingleRead
+import com.milaboratory.core.io.sequence.SingleReadImpl
 import com.milaboratory.core.io.sequence.fasta.FastaReader
 import com.milaboratory.core.io.sequence.fasta.FastaSequenceReaderWrapper
 import com.milaboratory.core.io.sequence.fastq.MultiFastqWriter
@@ -40,6 +43,7 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.mitool.container.MicReader
 import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
@@ -52,11 +56,16 @@ import com.milaboratory.mixcr.basictypes.SequenceHistory
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCHit
+import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
+import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
+import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TechnicalTag.TAG_INPUT_IDX
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
+import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.MIC
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.PairedEndFastq
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.QuadEndFastq
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
@@ -93,6 +102,7 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
+import com.milaboratory.util.delegateProgress
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.util.unzippedInputStream
@@ -118,6 +128,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.set
@@ -158,6 +169,12 @@ object CommandAlign {
                     f0.matches(InputFileType.FASTQ) -> SingleEndFastq
                     f0.matches(InputFileType.FASTA) || f0.matches(InputFileType.FASTA_GZ) -> Fasta
                     f0.matches(InputFileType.BAM_SAM_CRAM) -> BAM
+                    f0.matches(InputFileType.MIC) -> {
+                        val (readTags, barcodes) = MicReader(f0).header.allTags
+                            .partition { tag -> tag.startsWith("R") || tag.startsWith("I") }
+                        MIC(readTags, barcodes)
+                    }
+
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
             } else if (first.size <= 4) {
@@ -357,6 +374,10 @@ object CommandAlign {
                     fill("R2")
                 }
 
+                is MIC -> inputType.readTags.forEach { tag ->
+                    fill(tag)
+                }
+
                 Fasta -> throw ValidationException("Can't write not aligned and not parsed reads for fasta input")
                 BAM -> throw ValidationException("Can't write not aligned and not parsed reads for bam input")
             }
@@ -434,7 +455,8 @@ object CommandAlign {
                 InputFileType.FASTA,
                 InputFileType.FASTA_GZ,
                 InputFileType.BAM_SAM_CRAM,
-                InputFileType.TSV
+                InputFileType.TSV,
+                InputFileType.MIC
             )
 
             2 -> {
@@ -903,7 +925,7 @@ object CommandAlign {
 
         private val allInputFiles
             get() = when (inputFileGroups.inputType) {
-                BAM -> inputFileGroups.fileGroups.first().files
+                BAM, is MIC -> inputFileGroups.fileGroups.first().files
                 Fasta -> listOf(inputFileGroups.fileGroups.first().files.first())
                 else -> inputFileGroups.allFiles
             }
@@ -953,13 +975,14 @@ object CommandAlign {
         }
 
         /** pairedRecords == null - means input files can't be directly used in analysis */
-        enum class InputType(val numberOfReads: Int, val isFastq: Boolean) {
-            SingleEndFastq(1, true),
-            PairedEndFastq(2, true),
-            TripleEndFastq(3, true),
-            QuadEndFastq(4, true),
-            Fasta(1, false),
-            BAM(-1 /* 1 or 2*/, false);
+        sealed class InputType(val numberOfReads: Int, val isFastq: Boolean) {
+            object SingleEndFastq : InputType(1, true)
+            object PairedEndFastq : InputType(2, true)
+            object TripleEndFastq : InputType(3, true)
+            object QuadEndFastq : InputType(4, true)
+            object Fasta : InputType(1, false)
+            object BAM : InputType(-1 /* 1 or 2*/, false)
+            data class MIC(val readTags: List<String>, val barcoders: List<String>) : InputType(readTags.size, false)
         }
 
         private fun createReader(pairedPatternPayload: Boolean?): OutputPortWithProgress<ProcessingBundle> {
@@ -1009,7 +1032,40 @@ object CommandAlign {
                     ).map { ProcessingBundle.fromRead(it, it.weight()) }
                 }
 
+                is MIC -> {
+                    if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
+                        throw ValidationException("File concatenation supported only for fastq files.")
+                    val inputFile = inputFileGroups.fileGroups.first().files.first()
+                    val idGenerator = AtomicLong()
+                    val reader = MicReader(inputFile)
+                    val (readTags, barcodes) = reader.header.allTags
+                        .partition { it.startsWith("R") || it.startsWith("I") }
+                    val readTagsShortcuts = readTags.sorted().map { reader.tagShortcut(it) }
+                    val barcodeShortcuts = barcodes.map { reader.tagShortcut(it) }
+                    val result = reader
+                        .map { record ->
+                            val readId = idGenerator.getAndIncrement()
+                            ProcessingBundle.fromRead(
+                                MultiRead(
+                                    readTagsShortcuts
+                                        .map { record.getTagValue(it) }
+                                        .map { SingleReadImpl(readId, it.value, "$readId") }
+                                        .toTypedArray()
+                                ),
+                                record.weight.toDouble(),
+                                tags = TagTuple(
+                                    *barcodeShortcuts.map {
+                                        SequenceAndQualityTagValue(record.getTagValue(it).value)
+                                    }.toTypedArray()
+                                ),
+                                originalReadId = readId
+                            )
+                        }
+                    result.synchronized().delegateProgress(result)
+                }
+
                 else -> { // All fastq file types
+                    assert(inputFileGroups.inputType.isFastq)
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
                         .map {
@@ -1095,7 +1151,30 @@ object CommandAlign {
             }
 
             // Tags
-            val tagsExtractor = getTagsExtractor(cmdParams, inputFileGroups.tags)
+            val tagsExtractor = when (val inputType = inputFileGroups.inputType) {
+                is MIC -> {
+                    val barcodeTags = inputType.barcoders
+                        .filterNot { it.startsWith("R") || it.startsWith("I") }
+                        .mapIndexed { index, tag ->
+                            TagInfo(
+                                TagType.detectByTagName(tag)!!,
+                                TagValueType.SequenceAndQuality,
+                                tag,
+                                index
+                            )
+                        }
+
+                    getTagsExtractor(
+                        cmdParams.copy(tagPattern = null),
+                        inputFileGroups.tags,
+                        barcodeTags
+                    )
+                }
+
+                else -> {
+                    getTagsExtractor(cmdParams, inputFileGroups.tags)
+                }
+            }
 
             // Validating output tags if required
             for (tagsValidation in cmdParams.tagsValidations)

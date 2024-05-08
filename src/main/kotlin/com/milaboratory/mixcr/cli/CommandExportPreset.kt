@@ -194,9 +194,9 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     pipeline = originalPreset.pipeline,
                     validation = originalPreset.validation,
                     mitool = MiToolParamsBundle(
-                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.ParseCmd)?.params,
-                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.RefineTagsCmd)?.params,
-                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.ConsensusCmd)?.params,
+                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse)?.params,
+                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.refineTags)?.params,
+                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.consensus)?.params,
                     ).nullIfEmpty(),
                     align = paramsWithOverride(AnalyzeCommandDescriptor.align),
                     refineTagsAndSort = paramsWithOverride(AnalyzeCommandDescriptor.refineTagsAndSort),
