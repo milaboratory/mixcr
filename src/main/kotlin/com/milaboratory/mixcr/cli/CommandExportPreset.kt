@@ -18,6 +18,7 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
 import com.milaboratory.cli.ParamsResolver
+import com.milaboratory.mitool.MiToolParamsBundle
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -192,6 +193,11 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                     flags = originalPreset.flags,
                     pipeline = originalPreset.pipeline,
                     validation = originalPreset.validation,
+                    mitool = MiToolParamsBundle(
+                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.ParseCmd)?.params,
+                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.RefineTagsCmd)?.params,
+                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.ConsensusCmd)?.params,
+                    ).nullIfEmpty(),
                     align = paramsWithOverride(AnalyzeCommandDescriptor.align),
                     refineTagsAndSort = paramsWithOverride(AnalyzeCommandDescriptor.refineTagsAndSort),
                     assemblePartial = paramsWithOverride(AnalyzeCommandDescriptor.assemblePartial),

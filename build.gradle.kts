@@ -178,8 +178,8 @@ dependencies {
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
-    // proguard require classes that were inherited
-    obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
+    // required for call mitool
+    implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
 
     // required for buildLibrary (to call repseqio)
     implementation("com.beust:jcommander:$jcommanderVersion")

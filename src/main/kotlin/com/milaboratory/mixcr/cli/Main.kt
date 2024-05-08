@@ -254,6 +254,7 @@ object Main {
             )
 
             // hidden
+            .addSubcommand("mitool", CommandMiToolDelegate::class.java)
             .addSubcommand("alignmentsStat", CommandAlignmentsStats::class.java)
             .addSubcommand("bam2fastq", CommandBAM2fastq::class.java)
             .addSubcommand("itestAssemblePreClones", ITestCommandAssemblePreClones::class.java)
