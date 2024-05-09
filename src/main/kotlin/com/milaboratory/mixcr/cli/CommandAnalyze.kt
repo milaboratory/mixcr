@@ -22,6 +22,7 @@ import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
 import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AllowedMultipleRounds
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.Companion.dotAfterIfNotBlank
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor
@@ -339,6 +340,9 @@ object CommandAnalyze {
             // (it must already be sorted, but just in case)
             val (bundle, pipeline) = paramsResolver.resolve(paramsSpec, printParameters = false)
                 .let { (first, second) -> first to second.steps.sortedBy { it.order } }
+            ValidationException.requireDistinct(pipeline) {
+                "There should not be repeatable steps"
+            }
 
             // Creating execution plan
             if (pipeline.first() !in arrayOf(align, parse))
@@ -470,7 +474,6 @@ object CommandAnalyze {
             private val forceOverride: Boolean
         ) {
             private val executionPlan = mutableListOf<ExecutionStep>()
-            private val rounds = mutableMapOf<AnalyzeCommandDescriptor<*, *>, Int>()
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
             private val outputsForCommands = mutableListOf<Pair<AnalyzeCommandDescriptor<*, *>, List<InputFileSet>>>()
 
@@ -563,60 +566,57 @@ object CommandAnalyze {
                 cmd: AnalyzeCommandDescriptor<*, *>,
                 extraArgs: (outputFolder: Path, prefix: String, sampleName: String) -> List<String> = { _, _, _ -> emptyList() }
             ) {
-                val round = rounds.compute(cmd) { c, p ->
-                    when {
-                        p == null -> 0
-                        !c.allowMultipleRounds -> throw IllegalArgumentException("${c.command} don't allow multiple rounds of execution")
-                        else -> p + 1
-                    }
-                }!!
+                val roundsCount = (cmd as? AllowedMultipleRounds)?.roundsCount(paramsBundle) ?: 1
 
-                val nextInputsBuilder = mutableListOf<InputFileSet>()
+                repeat(roundsCount) { round ->
 
-                nextInputs.forEach { inputs ->
-                    val arguments = mutableListOf<String>()
+                    val nextInputsBuilder = mutableListOf<InputFileSet>()
 
-                    if (forceOverride && cmd !is MiToolCommandDelegationDescriptor<*, *>)
-                        arguments += "-f"
+                    nextInputs.forEach { inputs ->
+                        val arguments = mutableListOf<String>()
 
-                    if (outputReports)
-                        cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
-                            arguments += listOf("--report", outputFolder.resolve(it).toString())
+                        if (forceOverride && cmd !is MiToolCommandDelegationDescriptor<*, *>)
+                            arguments += "-f"
+
+                        if (outputReports)
+                            cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
+                                arguments += listOf("--report", outputFolder.resolve(it).toString())
+                            }
+
+                        if (outputJsonReports)
+                            cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
+                                arguments += listOf("--json-report", outputFolder.resolve(it).toString())
+                            }
+
+                        if (cmd.hasThreadsOption && threadsOption.isSet) {
+                            arguments += listOf("--threads", threadsOption.value.toString())
                         }
 
-                    if (outputJsonReports)
-                        cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
-                            arguments += listOf("--json-report", outputFolder.resolve(it).toString())
+                        if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
+                            arguments += "--use-local-temp"
                         }
 
-                    if (cmd.hasThreadsOption && threadsOption.isSet) {
-                        arguments += listOf("--threads", threadsOption.value.toString())
+                        val outputName = cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
+                        val output = listOf(outputFolder.resolve(outputName).toString())
+
+                        executionPlan += ExecutionStep(
+                            when (cmd) {
+                                is MiToolCommandDelegationDescriptor<*, *> -> "mitool ${cmd.mitoolCommand.command}"
+                                else -> cmd.command
+                            },
+                            round,
+                            arguments,
+                            extraArgs(outputFolder, outputNamePrefix, inputs.sampleName),
+                            inputs.fileNames,
+                            output,
+                        )
+
+                        nextInputsBuilder += InputFileSet(inputs.sampleName, output)
                     }
 
-                    if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
-                        arguments += "--use-local-temp"
-                    }
-
-                    val outputName = cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
-                    val output = listOf(outputFolder.resolve(outputName).toString())
-
-                    executionPlan += ExecutionStep(
-                        when (cmd) {
-                            is MiToolCommandDelegationDescriptor<*, *> -> "mitool ${cmd.mitoolCommand.command}"
-                            else -> cmd.command
-                        },
-                        round,
-                        arguments,
-                        extraArgs(outputFolder, outputNamePrefix, inputs.sampleName),
-                        inputs.fileNames,
-                        output,
-                    )
-
-                    nextInputsBuilder += InputFileSet(inputs.sampleName, output)
+                    outputsForCommands += cmd to nextInputsBuilder
+                    nextInputs = nextInputsBuilder
                 }
-
-                outputsForCommands += cmd to nextInputsBuilder
-                nextInputs = nextInputsBuilder
             }
 
         }

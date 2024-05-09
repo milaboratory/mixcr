@@ -33,8 +33,10 @@ import io.repseq.core.GeneFeature.VDJRegion
 import kotlin.reflect.KProperty1
 
 abstract class MiXCRParamsResolver<P : Any>(
-    paramsProperty: KProperty1<MiXCRParamsBundle, P?>
-) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsProperty) {
+    paramsName: String, paramsProperty: MiXCRParamsBundle.() -> P?
+) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsName, paramsProperty) {
+    constructor(paramsProperty: KProperty1<MiXCRParamsBundle, P?>) : this(paramsProperty.name, paramsProperty)
+
     override fun validateBundle(bundle: MiXCRParamsBundle) {
         if (bundle.flags.isNotEmpty()) {
             println("Preset errors: ")

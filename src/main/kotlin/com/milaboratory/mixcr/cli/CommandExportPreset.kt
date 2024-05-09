@@ -29,6 +29,7 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor
 import com.milaboratory.mixcr.presets.MiXCRParams
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
@@ -186,17 +187,20 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
                 )
 
                 fun <P : MiXCRParams, T : AnalyzeCommandDescriptor<P, *>> paramsWithOverride(
-                    descriptor: T
-                ): P? = header.stepParams[descriptor].firstOrNull() ?: descriptor.extractFromBundle(originalPreset)
+                    descriptor: T, round: Int = 0
+                ): P? = header.stepParams[descriptor].getOrNull(round)
+                    ?: descriptor.extractFromBundle(originalPreset, round)
 
                 val bundle = MiXCRParamsBundle(
                     flags = originalPreset.flags,
                     pipeline = originalPreset.pipeline,
                     validation = originalPreset.validation,
                     mitool = MiToolParamsBundle(
-                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse)?.params,
-                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.refineTags)?.params,
-                        paramsWithOverride(AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.consensus)?.params,
+                        parse = paramsWithOverride(MiToolCommandDelegationDescriptor.parse)?.params,
+                        refineTags = paramsWithOverride(MiToolCommandDelegationDescriptor.refineTags)?.params,
+                        consensus = originalPreset.mitool?.consensus?.indices?.map { round ->
+                            paramsWithOverride(MiToolCommandDelegationDescriptor.consensus, round)?.params!!
+                        } ?: emptyList()
                     ).nullIfEmpty(),
                     align = paramsWithOverride(AnalyzeCommandDescriptor.align),
                     refineTagsAndSort = paramsWithOverride(AnalyzeCommandDescriptor.refineTagsAndSort),

@@ -33,6 +33,7 @@ import io.kotest.matchers.floats.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.floats.shouldBeLessThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.repseq.core.GeneType.Variable
 import org.junit.Assert
 import org.junit.Test
@@ -43,22 +44,26 @@ import kotlin.io.path.listDirectoryEntries
 
 class PresetsTest {
     @Test
-    fun test1() {
+    fun `check there are params for every step`() {
         for (presetName in Presets.nonAbstractPresetNames) {
-            println(presetName)
             val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             assertJson(K_OM, bundle, false)
-            println(bundle.flags)
-            println()
-            Assert.assertNotNull("pipeline must be set for all non-abstract presets ($presetName)", bundle.pipeline)
-            for (step in bundle.pipeline!!.steps) {
-                Assert.assertNotNull(
-                    "params for all pipeline steps must be set in non-abstract bundle ($step)",
-                    step.extractFromBundle(bundle)
-                )
-            }
-            bundle.flags.forEach {
-                Assert.assertTrue("Flag = $it", presetFlagsMessages.containsKey(it))
+            assertSoftly(presetName) {
+                "pipeline must be set for all non-abstract presets".asClue {
+                    bundle.pipeline shouldNotBe null
+                }
+                for (step in bundle.pipeline!!.steps) {
+                    step.asClue {
+                        "params for all pipeline steps must be set in non-abstract bundle".asClue {
+                            step.extractFromBundle(bundle, 0) shouldNotBe null
+                        }
+                    }
+                }
+                bundle.flags.forEach { flag ->
+                    flag.asClue {
+                        presetFlagsMessages.containsKey(flag) shouldBe true
+                    }
+                }
             }
         }
     }
