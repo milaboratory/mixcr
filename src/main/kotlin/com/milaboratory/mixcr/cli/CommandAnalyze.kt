@@ -14,12 +14,12 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.matches
+import com.milaboratory.cli.MultiSampleRun.SAVE_OUTPUT_FILE_NAMES_OPTION
+import com.milaboratory.cli.MultiSampleRun.listToSampleName
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
-import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AllowedMultipleRounds
@@ -35,7 +35,6 @@ import com.milaboratory.mixcr.presets.MiXCRPipeline
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.util.requireSingleton
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -49,7 +48,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteExisting
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.name
 import kotlin.io.path.readLines
@@ -360,11 +359,21 @@ object CommandAnalyze {
                 mitoolPresetPath.deleteOnExit()
                 K_YAML_OM.writeValue(mitoolPresetPath, mitoolPreset)
 
+                // Adding an option to save output files by parse
+                val sampleFileList = outputFolder
+                    .resolve("${outputNamePrefix.dotAfterIfNotBlank()}parse.list.tsv")
+                    .also { it.deleteIfExists() }
+                    .toFile().also { it.deleteOnExit() }
+
                 planBuilder.addStep(parse) { _, _, _ ->
                     buildList {
                         this += listOf("--preset", "local:${mitoolPresetPath.name.removeSuffix(".yaml")}")
+                        this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
                     }
                 }
+
+                planBuilder.executeSteps(dryRun)
+                planBuilder.setActualOutputs(sampleFileList.toPath())
 
                 pipeline
                     .drop(1) // without parse
@@ -372,9 +381,16 @@ object CommandAnalyze {
                     .forEach { step -> planBuilder.addStep(step) }
             }
 
-            // Adding an option to save output files by align
-            val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
-                .takeIf { bundle.align!!.splitBySample && !dryRun }
+            // TODO when MiTool will support sample tags from reads, recombine all mitool inputs in one align command
+            val sampleFileList = if (pipeline.first() != parse && bundle.align!!.splitBySample && !dryRun) {
+                // Adding an option to save output files by align
+                outputFolder
+                    .resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list.tsv")
+                    .also { it.deleteIfExists() }
+                    .toFile().also { it.deleteOnExit() }
+            } else {
+                null
+            }
             val extraAlignArgs: List<String> = buildList {
                 sampleFileList?.let { sampleFileList ->
                     this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
@@ -396,8 +412,6 @@ object CommandAnalyze {
                     this += extraAlignArgs
                     this += mixins.flatMap { it.cmdArgs }
                     this += pathsForNotAligned.argsForAlign()
-                    if (outputNamePrefix.isBlank())
-                        this += listOf("--output-name-suffix", "alignments")
                 }
             }
 
@@ -405,8 +419,7 @@ object CommandAnalyze {
 
             // Taking into account that there are multiple outputs from the align command
             if (sampleFileList != null) {
-                planBuilder.setActualAlignOutputs(sampleFileList.readLines())
-                sampleFileList.deleteExisting()
+                planBuilder.setActualOutputs(sampleFileList.toPath())
             }
 
             // Adding all steps with calculations
@@ -477,15 +490,13 @@ object CommandAnalyze {
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
             private val outputsForCommands = mutableListOf<Pair<AnalyzeCommandDescriptor<*, *>, List<InputFileSet>>>()
 
-            fun setActualAlignOutputs(fileNames: List<String>) {
-                val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
-                val samples = listSamplesForSeedFileName(
-                    if (outputNamePrefix.isBlank()) "alignments" else "",
-                    outputSeed,
-                    fileNames
-                )
-                nextInputs = samples.map {
-                    InputFileSet(it.sample, listOf(outputFolder.resolve(it.fileName).toString()))
+            fun setActualOutputs(fileNamesList: Path) {
+                val lines = fileNamesList.readLines().drop(1).map { it.split("\t") }
+                nextInputs = when {
+                    lines.isEmpty() -> emptyList()
+                    else -> lines.map { line ->
+                        InputFileSet(listToSampleName(line.drop(2)), listOf(outputFolder.resolve(line[0]).toString()))
+                    }
                 }
             }
 
