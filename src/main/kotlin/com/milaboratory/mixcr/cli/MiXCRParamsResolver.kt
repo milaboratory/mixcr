@@ -12,11 +12,13 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assemble
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
@@ -69,6 +71,40 @@ abstract class MiXCRParamsResolver<P : Any>(
 
         bundle.validation?.items?.forEach { validation ->
             validation.validate(bundle)
+        }
+
+        if (parse in steps) {
+            val parseParams = bundle.mitool!!.parse!!
+            val mitoolPattern = ValidationException.requireNotNull(parseParams.pattern) {
+                "Tag pattern should be set in `mitool.parse.pattern`"
+            }
+            val alignParams = ValidationException.requireNotNull(bundle.align) {
+                "Align parameters are not set"
+            }
+            val alignPattern = ValidationException.requireNotNull(alignParams.tagPattern) {
+                "Tag pattern should be set in `align.tagPattern`"
+            }
+            ValidationException.require(mitoolPattern == alignPattern) {
+                "Tag patterns are different in `mitool.parse.pattern` and `align.tagPattern`: $mitoolPattern and $alignPattern"
+            }
+            ValidationException.require(!alignParams.readIdAsCellTag) {
+                "`readIdAsCellTag` is not supported with mitool commands in pipeline"
+            }
+            ValidationException.require(alignParams.headerExtractors.isEmpty()) {
+                "`headerExtractors` are not supported with mitool commands in pipeline"
+            }
+            ValidationException.require(alignParams.tagTransformationSteps.isEmpty()) {
+                "`tagTransformationSteps` are not supported with mitool commands in pipeline"
+            }
+            ValidationException.require(alignParams.splitBySample) {
+                "With mitool commands in pipeline samples will always be split, so `align.splitBySample` should be true"
+            }
+            if (alignParams.parameters.isSaveOriginalReads) {
+                logger.warn { "Saving original reads with mitool commands in pipeline will lead to saving reads after mitool processing, not original ones" }
+            }
+            if (alignParams.parameters.isSaveOriginalSequence) {
+                logger.warn { "Saving original sequences with mitool commands in pipeline will lead to saving sequences after mitool processing, not original ones" }
+            }
         }
     }
 }

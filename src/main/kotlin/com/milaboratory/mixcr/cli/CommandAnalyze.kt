@@ -17,6 +17,7 @@ import com.milaboratory.app.matches
 import com.milaboratory.cli.MultiSampleRun.SAVE_OUTPUT_FILE_NAMES_OPTION
 import com.milaboratory.cli.MultiSampleRun.listToSampleName
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mitool.cli.Parse.readSearchPlan
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
@@ -355,6 +356,26 @@ object CommandAnalyze {
 
             if (pipeline.first() == parse) {
                 val mitoolPreset = bundle.mitool ?: throw ValidationException("No mitool params")
+                val parseParams = mitoolPreset.parse ?: throw ValidationException("No mitool parse params")
+                val plan = parseParams.readSearchPlan()
+                if (outputNoUsedReads) {
+                    // fill up args of not parsed reads in symmetry of input files
+                    pathsForNotAligned.fillWithDefaults(
+                        inputFileGroups.inputType,
+                        outputFolder,
+                        outputNamePrefix,
+                        addNotAligned = false,
+                        addNotParsed = true
+                    )
+                    // fill up args for not aligned reads according to payload tags count that will be in mitool results
+                    pathsForNotAligned.fillWithDefaults(
+                        CommandAlign.Cmd.InputType.MIC(plan.allTags),
+                        outputFolder,
+                        outputNamePrefix,
+                        addNotAligned = true,
+                        addNotParsed = false
+                    )
+                }
                 val mitoolPresetPath = Paths.get("MiTool.preset.yaml").toFile()
                 mitoolPresetPath.deleteOnExit()
                 K_YAML_OM.writeValue(mitoolPresetPath, mitoolPreset)
@@ -369,6 +390,7 @@ object CommandAnalyze {
                     buildList {
                         this += listOf("--preset", "local:${mitoolPresetPath.name.removeSuffix(".yaml")}")
                         this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
+                        this += pathsForNotAligned.argsOfNotParsedForMiToolParse()
                     }
                 }
 
@@ -379,6 +401,11 @@ object CommandAnalyze {
                     .drop(1) // without parse
                     .filterIsInstance<MiToolCommandDelegationDescriptor<*, *>>()
                     .forEach { step -> planBuilder.addStep(step) }
+            } else {
+                // fill up args of not aligned and not parsed reads in symmetry of input files
+                if (outputNoUsedReads) {
+                    pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
+                }
             }
 
             // TODO when MiTool will support sample tags from reads, recombine all mitool inputs in one align command
@@ -403,15 +430,14 @@ object CommandAnalyze {
                 }
             }
 
-            // Adding "align" step
-            if (outputNoUsedReads)
-                pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
             planBuilder.addStep(align) { _, _, _ ->
                 buildList {
                     this += listOf("--preset", presetName)
                     this += extraAlignArgs
                     this += mixins.flatMap { it.cmdArgs }
-                    this += pathsForNotAligned.argsForAlign()
+                    this += pathsForNotAligned.argsOfNotAlignedForAlign()
+                    if (pipeline.first() != parse)
+                        this += pathsForNotAligned.argsOfNotParsedForAlign()
                 }
             }
 
@@ -424,8 +450,11 @@ object CommandAnalyze {
 
             // Adding all steps with calculations
             pipeline
+                // already added
                 .filterNot { it is MiToolCommandDelegationDescriptor<*, *> }
+                // it's align, already added
                 .drop(1)
+                // exports will be added separately
                 .filterNot { cmd -> cmd is AnalyzeCommandDescriptor.ExportCommandDescriptor }
                 .forEach { cmd ->
                     planBuilder.addStep(cmd) { outputFolder, prefix, sampleName ->
