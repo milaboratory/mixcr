@@ -1,5 +1,5 @@
-Usage: mixcr exportPlots cdr3metrics [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
-                                     (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,
+Usage: mixcr exportPlots cdr3metrics [--metadata <path.tsv>] [--filter <meta(|>|>=|=|<=|<)value>[,
+                                     <meta(|>|>=|=|<=|<)value>...]]... [--chains <chain>[,
                                      <chain>...]]... [--metric <metric>[,<metric>...]]...
                                      [--plot-type <plotType>] [--primary-group <meta>]
                                      [--primary-group-values <value>[,<value>...]]...
@@ -15,7 +15,7 @@ Export CDR3 metrics
       pa.json[.gz]          Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
                             Output PDF/EPS/PNG/JPEG file name.
-      --metadata <path>     Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
+      --metadata <path.tsv> Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
                               Must contain `sample` column which matches names of input files.
       --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
                             Filter samples to put on a plot by their metadata values. Filter allows
