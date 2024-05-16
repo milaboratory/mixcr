@@ -124,7 +124,7 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
         }.use { o ->
             when (format) {
                 TXT -> {
-                    val helper = ReportHelper(o, outputPath != null)
+                    val helper = ReportHelper(o, outputPath == null)
                     val steps = when {
                         step != null -> listOf(step!!)
                         else -> footer.reports.collection.steps

@@ -45,6 +45,11 @@ import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
 import com.milaboratory.core.sequence.quality.ReadTrimmerProcessor
 import com.milaboratory.milm.MiXCRMain
+import com.milaboratory.mitool.MiTollStepReports
+import com.milaboratory.mitool.MiToolCommandDescriptor
+import com.milaboratory.mitool.MiToolParams
+import com.milaboratory.mitool.MiToolReport
+import com.milaboratory.mitool.MiToolStepParams
 import com.milaboratory.mitool.container.MicReader
 import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
@@ -86,10 +91,12 @@ import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.mixcr.presets.AlignMixins.LimitInput
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.Companion.dotAfterIfNotBlank
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRStepParams
+import com.milaboratory.mixcr.presets.MiXCRStepReports
 import com.milaboratory.mixcr.util.toHexString
 import com.milaboratory.mixcr.vdjaligners.VDJCAligner
 import com.milaboratory.mixcr.vdjaligners.VDJCAlignerParameters
@@ -103,11 +110,11 @@ import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.delegateProgress
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.util.unzippedInputStream
 import com.milaboratory.util.use
+import com.milaboratory.util.withExpectedSize
 import io.repseq.core.Chains
 import io.repseq.core.GeneFeature.VRegion
 import io.repseq.core.GeneFeature.VRegionWithP
@@ -164,7 +171,7 @@ object CommandAlign {
                     f0.matches(InputFileType.FASTQ) -> SingleEndFastq
                     f0.matches(InputFileType.FASTA) || f0.matches(InputFileType.FASTA_GZ) -> Fasta
                     f0.matches(InputFileType.BAM_SAM_CRAM) -> BAM
-                    f0.matches(InputFileType.MIC) -> MIC(MicReader(f0).header.allTags)
+                    f0.matches(InputFileType.MIC) -> MIC(allTags = MicReader(f0).header.allTags)
 
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
@@ -994,7 +1001,7 @@ object CommandAlign {
             object QuadEndFastq : InputType(4, true)
             object Fasta : InputType(1, false)
             object BAM : InputType(-1 /* 1 or 2*/, false)
-            data class MIC private constructor(
+            data class MIC(
                 val readTags: List<String>,
                 val barcodes: List<String>,
             ) : InputType(readTags.size, false) {
@@ -1017,7 +1024,7 @@ object CommandAlign {
                 emptyList()
             )
 
-            return when (inputFileGroups.inputType) {
+            return when (val inputType = inputFileGroups.inputType) {
                 BAM -> {
                     if (inputFileGroups.fileGroups.size != 1)
                         throw ValidationException("File concatenation supported only for fastq files.")
@@ -1047,7 +1054,7 @@ object CommandAlign {
 
                 Fasta -> {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
-                        throw ValidationException("File concatenation supported only for fastq files.")
+                        throw ValidationException("File concatenation not supported for fasta files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.unzippedInputStream(), NucleotideSequence.ALPHABET),
@@ -1057,33 +1064,33 @@ object CommandAlign {
 
                 is MIC -> {
                     if (inputFileGroups.fileGroups.size != 1 || inputFileGroups.fileGroups.first().files.size != 1)
-                        throw ValidationException("File concatenation supported only for fastq files.")
+                        throw ValidationException("File concatenation not supported for MIC files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
                     val idGenerator = AtomicLong()
                     val reader = MicReader(inputFile)
-                    val (readTags, barcodes) = reader.header.allTags
-                        .partition { it.startsWith("R") || it.startsWith("I") }
-                    val readTagsShortcuts = readTags.sorted().map { reader.tagShortcut(it) }
-                    val barcodeShortcuts = barcodes.map { reader.tagShortcut(it) }
-                    val result = reader.map { record ->
-                        val readId = idGenerator.getAndIncrement()
-                        ProcessingBundle.fromRead(
-                            MultiRead(
-                                readTagsShortcuts
-                                    .map { record.getTagValue(it) }
-                                    .map { SingleReadImpl(readId, it.value, "$readId") }
-                                    .toTypedArray()
-                            ),
-                            record.weight.toDouble(),
-                            tags = TagTuple(
-                                *barcodeShortcuts.map {
-                                    SequenceAndQualityTagValue(record.getTagValue(it).value)
-                                }.toTypedArray()
-                            ),
-                            originalReadId = readId
-                        )
-                    }
-                    result.synchronized().delegateProgress(result)
+                    val readTagsShortcuts = inputType.readTags.sorted().map { reader.tagShortcut(it) }
+                    val barcodeShortcuts = inputType.barcodes.map { reader.tagShortcut(it) }
+                    reader
+                        .map { record ->
+                            val readId = idGenerator.getAndIncrement()
+                            ProcessingBundle.fromRead(
+                                MultiRead(
+                                    readTagsShortcuts
+                                        .map { record.getTagValue(it) }
+                                        .map { SingleReadImpl(readId, it.value, "$readId") }
+                                        .toTypedArray()
+                                ),
+                                record.weight.toDouble(),
+                                tags = TagTuple(
+                                    *barcodeShortcuts.map {
+                                        SequenceAndQualityTagValue(record.getTagValue(it).value)
+                                    }.toTypedArray()
+                                ),
+                                originalReadId = readId
+                            )
+                        }
+                        .synchronized()
+                        .withExpectedSize(reader.recordCount)
                 }
 
                 else -> { // All fastq file types
@@ -1307,23 +1314,42 @@ object CommandAlign {
                     pathsForNotAligned.notParsedR2
                 )
             ) { reader, writers, notAlignedWriter, notParsedWriter ->
+                var paramsBefore = MiXCRStepParams()
+                if (inputFileGroups.inputType is MIC) {
+                    check(inputFileGroups.fileGroups.size == 1)
+                    val inputFile = inputFileGroups.fileGroups.first().files.first()
+                    val upstream = MicReader(inputFile).use { it.header.stepParams }
+
+                    fun <P : MiToolParams> MiXCRStepParams.withMiToolParams(
+                        source: MiToolStepParams, miToolCommand: MiToolCommandDescriptor<P, *>
+                    ): MiXCRStepParams {
+                        val mixcrCommand = MiToolCommandDelegationDescriptor.byMitoolCommand(miToolCommand)
+                        var result = this
+                        for (params in source[miToolCommand]) {
+                            result = result.add(mixcrCommand, MiToolParamsDelegate(params))
+                        }
+                        return result
+                    }
+
+                    upstream.steps.forEach { step ->
+                        paramsBefore = paramsBefore.withMiToolParams(upstream, MiToolCommandDescriptor.fromString(step))
+                    }
+                }
+                val header = MiXCRHeader(
+                    inputHash,
+                    dontSavePresetOption.presetToSave(paramsSpecPacked),
+                    paramsBefore.add(AnalyzeCommandDescriptor.align, cmdParams),
+                    tagsExtractor.tagsInfo,
+                    aligner.parameters,
+                    aligner.parameters.featuresToAlignMap,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null
+                )
                 writers?.writeHeader { writer ->
-                    writer.writeHeader(
-                        MiXCRHeader(
-                            inputHash,
-                            dontSavePresetOption.presetToSave(paramsSpecPacked),
-                            MiXCRStepParams().add(AnalyzeCommandDescriptor.align, cmdParams),
-                            tagsExtractor.tagsInfo,
-                            aligner.parameters,
-                            aligner.parameters.featuresToAlignMap,
-                            null,
-                            null,
-                            null,
-                            false,
-                            null
-                        ),
-                        aligner.usedGenes
-                    )
+                    writer.writeHeader(header, aligner.usedGenes)
                 }
                 val sReads = when {
                     cmdParams.limit != null -> reader.limit(cmdParams.limit!!)
@@ -1456,7 +1482,32 @@ object CommandAlign {
                 reportBuilder.setTransformerReports(tagsExtractor.transformerReports)
 
                 val report = reportBuilder.buildReport()
-                writers?.setFooter { it.setFooter(MiXCRFooter().addStepReport(AnalyzeCommandDescriptor.align, report)) }
+                var reportsBefore = MiXCRStepReports()
+                if (inputFileGroups.inputType is MIC) {
+                    check(inputFileGroups.fileGroups.size == 1)
+                    val inputFile = inputFileGroups.fileGroups.first().files.first()
+                    val upstream = MicReader(inputFile).use { it.footer.reports }
+
+                    fun <R : MiToolReport> MiXCRStepReports.withMiToolReports(
+                        source: MiTollStepReports, miToolCommand: MiToolCommandDescriptor<*, R>
+                    ): MiXCRStepReports {
+                        val mixcrCommand = MiToolCommandDelegationDescriptor.byMitoolCommand(miToolCommand)
+                        var result = this
+                        for (params in source[miToolCommand]) {
+                            result = result.add(mixcrCommand, MiToolReportsDelegate(params))
+                        }
+                        return result
+                    }
+
+                    upstream.steps.forEach { step ->
+                        reportsBefore = reportsBefore.withMiToolReports(
+                            upstream, MiToolCommandDescriptor.fromString(step)
+                        )
+                    }
+                }
+
+                val footer = MiXCRFooter(reportsBefore).addStepReport(AnalyzeCommandDescriptor.align, report)
+                writers?.setFooter { it.setFooter(footer) }
 
                 // Writing report to stout
                 ReportUtil.writeReportToStdout(report)

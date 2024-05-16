@@ -369,7 +369,7 @@ object CommandAnalyze {
                     )
                     // fill up args for not aligned reads according to payload tags count that will be in mitool results
                     pathsForNotAligned.fillWithDefaults(
-                        CommandAlign.Cmd.InputType.MIC(plan.allTags),
+                        CommandAlign.Cmd.InputType.MIC(allTags = plan.allTags),
                         outputFolder,
                         outputNamePrefix,
                         addNotAligned = true,
