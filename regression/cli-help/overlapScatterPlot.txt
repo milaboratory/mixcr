@@ -11,9 +11,9 @@ Plot overlap scatter-plot.
 
       --downsampling (<type>|none)
                            Choose downsampling applied to normalize the clonesets. Possible values:
-                           count-[reads|TAG]-[auto|min|fixed][-<number>]
-                            top-[reads|TAG]-[<number>]
-                            cumtop-[reads|TAG]-[percent]
+                           count-[reads|TAG|molecule]-[auto|min|fixed-<number>]
+                            top-[reads|TAG|molecule]-[<number>]
+                            cumtop-[reads|TAG|molecule]-[percent]
       --chains <chain>[,<chain>...]
                            Chains to export.
       --only-productive    Filter out-of-frame sequences and sequences with stop-codons.
