@@ -51,6 +51,7 @@ import com.milaboratory.mitool.MiToolParams
 import com.milaboratory.mitool.MiToolReport
 import com.milaboratory.mitool.MiToolStepParams
 import com.milaboratory.mitool.container.MicReader
+import com.milaboratory.mitool.data.CriticalThresholdCollection
 import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
@@ -1481,10 +1482,11 @@ object CommandAlign {
 
                 val report = reportBuilder.buildReport()
                 var reportsBefore = MiXCRStepReports()
+                val thresholds: CriticalThresholdCollection
                 if (inputFileGroups.inputType is MIC) {
                     check(inputFileGroups.fileGroups.size == 1)
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
-                    val upstream = MicReader(inputFile).use { it.footer.reports }
+                    val footer = MicReader(inputFile).use { it.footer }
 
                     fun <R : MiToolReport> MiXCRStepReports.withMiToolReports(
                         source: MiTollStepReports, miToolCommand: MiToolCommandDescriptor<*, R>
@@ -1497,14 +1499,18 @@ object CommandAlign {
                         return result
                     }
 
-                    upstream.steps.forEach { step ->
+                    footer.reports.steps.forEach { step ->
                         reportsBefore = reportsBefore.withMiToolReports(
-                            upstream, MiToolCommandDescriptor.fromString(step)
+                            footer.reports, MiToolCommandDescriptor.fromString(step)
                         )
                     }
+                    thresholds = footer.thresholds
+                } else {
+                    thresholds = CriticalThresholdCollection()
                 }
 
-                val footer = MiXCRFooter(reportsBefore).addStepReport(AnalyzeCommandDescriptor.align, report)
+                val footer =
+                    MiXCRFooter(reportsBefore, thresholds).addStepReport(AnalyzeCommandDescriptor.align, report)
                 writers?.setFooter { it.setFooter(footer) }
 
                 // Writing report to stout
