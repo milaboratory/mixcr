@@ -1199,9 +1199,7 @@ object CommandAlign {
                     )
                 }
 
-                else -> {
-                    getTagsExtractor(cmdParams, inputFileGroups.tags)
-                }
+                else -> getTagsExtractor(cmdParams, inputFileGroups.tags)
             }
 
             // Validating output tags if required
