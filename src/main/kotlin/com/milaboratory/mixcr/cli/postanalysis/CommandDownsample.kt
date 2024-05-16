@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -103,12 +103,12 @@ class CommandDownsample : MiXCRCommandWithOutputs() {
         val fileNameWithoutExtension = input.fileName.toString()
             .replace(".clna", "")
             .replace(".clns", "")
-        val suffix = when {
-            chains == null || chains!!.isEmpty() -> ""
-            chains!!.size == 1 -> "${chains!!.first()}."
-            else -> "$chains."
+        val secondSuffix = when {
+            chains == null || chains!!.isEmpty() -> null
+            chains!!.size == 1 -> "${chains!!.first()}"
+            else -> "$chains"
         }
-        val outName = "$fileNameWithoutExtension.$suffix$suffix.clns"
+        val outName = listOfNotNull(fileNameWithoutExtension, suffix, secondSuffix, "clns").joinToString(".")
         return (outPath?.resolve(outName) ?: Paths.get(outName)).toAbsolutePath()
     }
 

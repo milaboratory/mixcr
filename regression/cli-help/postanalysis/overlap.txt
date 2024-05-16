@@ -14,9 +14,9 @@ Overlap analysis
       --default-downsampling (<type>|none)
                            Default downsampling applied to normalize the clonesets. Possible
                              values:
-                           count-[reads|TAG]-[auto|min|fixed][-<number>]
-                            top-[reads|TAG]-[<number>]
-                            cumtop-[reads|TAG]-[percent]
+                           count-[reads|TAG|molecule]-[auto|min|fixed-<number>]
+                            top-[reads|TAG|molecule]-[<number>]
+                            cumtop-[reads|TAG|molecule]-[percent]
       --default-weight-function (<read>|<Tag>|none)
                            Default clonotype weight function
       --criteria <s>       Overlap criteria. Defines the rules to treat clones as equal. It allows
