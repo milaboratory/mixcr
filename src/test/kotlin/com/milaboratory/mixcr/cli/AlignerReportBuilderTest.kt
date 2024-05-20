@@ -39,7 +39,7 @@ class AlignerReportBuilderTest {
             .setInputFiles(Paths.get("file1"))
             .buildReport()
         val asJson = K_PRETTY_OM.writeValueAsString(rep)
-        Assert.assertArrayEquals(arrayOf("file1"), K_PRETTY_OM.readValue(asJson, AlignerReport::class.java).inputFiles)
+        Assert.assertEquals(listOf("file1"), K_PRETTY_OM.readValue(asJson, AlignerReport::class.java).inputFiles)
     }
 
     @Test

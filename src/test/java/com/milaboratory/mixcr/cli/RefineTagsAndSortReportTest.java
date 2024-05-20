@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,15 +13,11 @@ package com.milaboratory.mixcr.cli;
 
 import com.milaboratory.mixcr.util.MiXCRVersionInfo;
 import com.milaboratory.test.TestUtil;
-import com.milaboratory.util.GlobalObjectMappers;
-import kotlin.Unit;
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Date;
-
-import static com.fasterxml.jackson.module.kotlin.ExtensionsKt.kotlinModule;
 
 public class RefineTagsAndSortReportTest {
     // @Before
@@ -35,8 +31,8 @@ public class RefineTagsAndSortReportTest {
         RefineTagsAndSortReport r = new RefineTagsAndSortReport(
                 new Date(),
                 "",
-                new String[0],
-                new String[0],
+                Collections.emptyList(),
+                Collections.emptyList(),
                 0L,
                 MiXCRVersionInfo.get().getShortestVersionString(),
                 null

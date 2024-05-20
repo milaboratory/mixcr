@@ -446,7 +446,7 @@ object CommandRefineTagsAndSort {
                     }
                     refineTagsAndSortReport = RefineTagsAndSortReport(
                         Date(),
-                        commandLineArguments, arrayOf(inputFile.toString()), arrayOf(outputFile.toString()),
+                        commandLineArguments, listOf(inputFile.toString()), listOf(outputFile.toString()),
                         System.currentTimeMillis() - startTimeMillis,
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport
