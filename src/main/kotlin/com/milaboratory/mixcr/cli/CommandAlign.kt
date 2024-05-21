@@ -1372,18 +1372,21 @@ object CommandAlign {
                     mainInputReads.mapUnchunked { bundle ->
                         val parsed = tagsExtractor.parse(bundle)
                         if (parsed.status == NotParsed)
-                            reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode)
+                            reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.NoBarcode, bundle.weight)
                         if (parsed.status == NotMatched)
-                            reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.SampleNotMatched)
+                            reportBuilder.onFailedAlignment(VDJCAlignmentFailCause.SampleNotMatched, bundle.weight)
                         parsed
                     }
 
                 val step1 = if (cmdParams.trimmingQualityThreshold > 0) {
                     val rep = ReadTrimmerReportBuilder()
-                    val trimmerProcessor =
-                        ReadTrimmerProcessor(qualityTrimmerParameters, rep) { read: NSQTuple, mapper ->
-                            read.mapWithIndex(mapper)
-                        }
+                    val trimmerProcessor = ReadTrimmerProcessor(
+                        qualityTrimmerParameters,
+                        rep,
+                        weightSupplier = { record -> record.weight }
+                    ) { read: NSQTuple, mapper ->
+                        read.mapWithIndex(mapper)
+                    }
                     reportBuilder.setTrimmingReportBuilder(rep)
                     step0.mapUnchunked {
                         it.mapSequence(trimmerProcessor::process)
@@ -1442,7 +1445,7 @@ object CommandAlign {
                         }
 
                         if (alignment.isChimera)
-                            reportBuilder.onChimera()
+                            reportBuilder.onChimera(alignment.weight)
 
                         writers?.get(if (cmdParams.splitBySample) bundle.sample else emptyList())?.write(alignment)
                     }
