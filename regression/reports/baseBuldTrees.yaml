@@ -10,66 +10,66 @@ findShmTrees:
     - trees/result.shmt
   stepResults:
     - stepName: BuildingInitialTrees
-      clonesWasAdded: 270
-      cloneNodesWasAdded: 270
-      treesCountDelta: 103
+      clonesWasAdded: 285
+      cloneNodesWasAdded: 284
+      treesCountDelta: 108
       commonVJMutationsCounts:
-        size: 103
-        sum: 1666.0
+        size: 108
+        sum: 1678.0
         min: 5.0
         max: 53.0
-        avg: 16.17475
-        quadraticMean: 18.38636
-        stdDeviation: 8.78549
-        percentile25: 10.0
+        avg: 15.53703
+        quadraticMean: 17.82268
+        stdDeviation: 8.77275
+        percentile25: 9.0
         percentile50: 14.0
-        percentile75: 21.0
+        percentile75: 20.0
       clonesCountInTrees:
-        size: 103
-        sum: 270.0
+        size: 108
+        sum: 285.0
         min: 2.0
         max: 10.0
-        avg: 2.62135
-        quadraticMean: 2.98540
-        stdDeviation: 1.43565
+        avg: 2.63888
+        quadraticMean: 2.98917
+        stdDeviation: 1.41062
         percentile25: 2.0
         percentile50: 2.0
         percentile75: 3.0
       wildcardsScore:
-        size: 103
-        sum: 9.76969
+        size: 108
+        sum: 15.31731
         min: 0.0
-        max: 1.33333
-        avg: 0.09485
-        quadraticMean: 0.25499
-        stdDeviation: 0.23785
+        max: 1.66666
+        avg: 0.14182
+        quadraticMean: 0.35542
+        stdDeviation: 0.32742
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       wildcardsScoreForRoots:
-        size: 103
-        sum: 30.58496
+        size: 108
+        sum: 48.58496
         min: 0.0
-        max: 4.0
-        avg: 0.29694
-        quadraticMean: 0.78010
-        stdDeviation: 0.72490
+        max: 5.0
+        avg: 0.44986
+        quadraticMean: 1.10839
+        stdDeviation: 1.01771
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       maxNDNsWildcardsScoreInTree:
-        size: 103
-        sum: 30.58496
+        size: 108
+        sum: 48.58496
         min: 0.0
-        max: 4.0
-        avg: 0.29694
-        quadraticMean: 0.78010
-        stdDeviation: 0.72490
+        max: 5.0
+        avg: 0.44986
+        quadraticMean: 1.10839
+        stdDeviation: 1.01771
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       surenessOfDecisions:
-        size: 21
+        size: 22
         sum: NaN
         min: 0.0
         max: 0.0
@@ -84,57 +84,57 @@ findShmTrees:
       cloneNodesWasAdded: 6
       treesCountDelta: 0
       commonVJMutationsCounts:
-        size: 103
-        sum: 1666.0
+        size: 108
+        sum: 1678.0
         min: 5.0
         max: 53.0
-        avg: 16.17475
-        quadraticMean: 18.38636
-        stdDeviation: 8.78549
-        percentile25: 10.0
+        avg: 15.53703
+        quadraticMean: 17.82268
+        stdDeviation: 8.77275
+        percentile25: 9.0
         percentile50: 14.0
-        percentile75: 21.0
+        percentile75: 20.0
       clonesCountInTrees:
-        size: 103
-        sum: 276.0
+        size: 108
+        sum: 291.0
         min: 2.0
-        max: 13.0
-        avg: 2.67961
-        quadraticMean: 3.18674
-        stdDeviation: 1.73325
+        max: 12.0
+        avg: 2.69444
+        quadraticMean: 3.15494
+        stdDeviation: 1.64889
         percentile25: 2.0
         percentile50: 2.0
         percentile75: 3.0
       wildcardsScore:
-        size: 103
-        sum: 9.76969
+        size: 108
+        sum: 15.48398
         min: 0.0
-        max: 1.33333
-        avg: 0.09485
-        quadraticMean: 0.25499
-        stdDeviation: 0.23785
+        max: 1.66666
+        avg: 0.14337
+        quadraticMean: 0.35579
+        stdDeviation: 0.32714
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       wildcardsScoreForRoots:
-        size: 103
-        sum: 30.58496
+        size: 108
+        sum: 49.58496
         min: 0.0
-        max: 4.0
-        avg: 0.29694
-        quadraticMean: 0.78010
-        stdDeviation: 0.72490
+        max: 5.0
+        avg: 0.45912
+        quadraticMean: 1.11256
+        stdDeviation: 1.01813
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       maxNDNsWildcardsScoreInTree:
-        size: 103
-        sum: 30.58496
+        size: 108
+        sum: 49.58496
         min: 0.0
-        max: 4.0
-        avg: 0.29694
-        quadraticMean: 0.78010
-        stdDeviation: 0.72490
+        max: 5.0
+        avg: 0.45912
+        quadraticMean: 1.11256
+        stdDeviation: 1.01813
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
@@ -154,57 +154,57 @@ findShmTrees:
       cloneNodesWasAdded: 0
       treesCountDelta: -4
       commonVJMutationsCounts:
-        size: 99
-        sum: 1620.0
+        size: 104
+        sum: 1632.0
         min: 0.0
         max: 53.0
-        avg: 16.36363
-        quadraticMean: 18.63959
-        stdDeviation: 8.97099
-        percentile25: 10.0
-        percentile50: 15.0
-        percentile75: 21.0
+        avg: 15.69230
+        quadraticMean: 18.04961
+        stdDeviation: 8.96170
+        percentile25: 9.0
+        percentile50: 14.0
+        percentile75: 20.7
       clonesCountInTrees:
-        size: 99
-        sum: 276.0
+        size: 104
+        sum: 291.0
         min: 2.0
-        max: 13.0
-        avg: 2.78787
-        quadraticMean: 3.40528
-        stdDeviation: 1.96537
+        max: 12.0
+        avg: 2.79807
+        quadraticMean: 3.36412
+        stdDeviation: 1.87668
         percentile25: 2.0
         percentile50: 2.0
         percentile75: 3.0
       wildcardsScore:
-        size: 99
-        sum: 9.43636
+        size: 104
+        sum: 15.15065
         min: 0.0
-        max: 1.33333
-        avg: 0.09531
-        quadraticMean: 0.25793
-        stdDeviation: 0.24089
+        max: 1.66666
+        avg: 0.14567
+        quadraticMean: 0.36109
+        stdDeviation: 0.33200
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       wildcardsScoreForRoots:
-        size: 99
-        sum: 29.58496
+        size: 104
+        sum: 48.58496
         min: 0.0
-        max: 4.0
-        avg: 0.29883
-        quadraticMean: 0.78933
-        stdDeviation: 0.73429
+        max: 5.0
+        avg: 0.46716
+        quadraticMean: 1.12950
+        stdDeviation: 1.03335
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
       maxNDNsWildcardsScoreInTree:
-        size: 99
-        sum: 29.58496
+        size: 104
+        sum: 48.58496
         min: 0.0
-        max: 4.0
-        avg: 0.29883
-        quadraticMean: 0.78933
-        stdDeviation: 0.73429
+        max: 5.0
+        avg: 0.46716
+        quadraticMean: 1.12950
+        stdDeviation: 1.03335
         percentile25: 0.0
         percentile50: 0.0
         percentile75: 0.0
@@ -221,8 +221,8 @@ findShmTrees:
         percentile75: NaN
   totalClonesProcessed: 1342
   cellCombination: null
-  totalTreesCount: 99
-  totalClonesCountInTrees: 276
+  totalTreesCount: 104
+  totalClonesCountInTrees: 291
 upstreams:
   alleles/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.with_alleles.clns:
     align:
