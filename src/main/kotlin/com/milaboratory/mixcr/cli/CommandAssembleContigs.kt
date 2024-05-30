@@ -406,12 +406,32 @@ private class Assembler(
             return arrayOf(originalClone)
         }
         var maxShiftForVGene = 0
-        alignmentsPort.createPort().forEach { alignments ->
+        var hasAlignmentCoveredTargetFeature = false
+        if (!parameters.useOnlyFullAlignmentsIfPossible) {
+            alignmentsPort.createPort().forEach { alignments ->
+                if (parameters.assemblingRegions != null && !hasAlignmentCoveredTargetFeature) {
+                    hasAlignmentCoveredTargetFeature = alignments.coverFeatures(parameters.assemblingRegions!!) &&
+                            alignments.coverFeatures(GeneFeatures(*header.assemblingFeatures!!))
+                }
+            }
+        }
+
+        fun filteredSource() = when {
+            hasAlignmentCoveredTargetFeature -> alignmentsPort.createPort().filter { alignments ->
+                alignments.coverFeatures(parameters.assemblingRegions!!) &&
+                        alignments.coverFeatures(GeneFeatures(*header.assemblingFeatures!!))
+            }
+
+            else -> alignmentsPort.createPort()
+        }
+
+        filteredSource().forEach { alignments ->
             for ((geneType, hits) in alignments.hitsMap) {
                 for (hit in hits) {
                     coverages[geneType]?.let { it[hit.gene.id]?.accumulate(hit) }
                 }
             }
+
             alignments.getHits(Variable).forEach { hit ->
                 val shift = (0 until alignments.numberOfTargets()).maxOf { i ->
                     hit.getAlignment(i)?.sequence2Range?.from ?: Int.MIN_VALUE
@@ -434,7 +454,9 @@ private class Assembler(
             maxShiftForVGene
         )
         fullSeqAssembler.report = reportBuilder
-        val rawVariantsData = fullSeqAssembler.calculateRawData { alignmentsPort.createPort() }
+        val rawVariantsData = fullSeqAssembler.calculateRawData {
+            filteredSource()
+        }
 
         if (debugReport != null) {
             synchronized(debugReport) {
@@ -455,4 +477,7 @@ private class Assembler(
 
         return fullSeqAssembler.callVariants(rawVariantsData)
     }
+
+    private fun VDJCAlignments.coverFeatures(geneFeatures: GeneFeatures) =
+        geneFeatures.features.all { getNFeature(it) != null }
 }
