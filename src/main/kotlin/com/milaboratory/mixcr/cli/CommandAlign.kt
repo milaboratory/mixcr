@@ -1385,7 +1385,7 @@ object CommandAlign {
                         rep,
                         weightSupplier = { record -> record.weight }
                     ) { read: NSQTuple, mapper ->
-                        read.mapWithIndex(mapper)
+                        read.map(mapper)
                     }
                     reportBuilder.setTrimmingReportBuilder(rep)
                     step0.mapUnchunked {
