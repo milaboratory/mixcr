@@ -398,7 +398,10 @@ object CommandAlign {
                 }
 
                 Fasta -> throw ValidationException("Can't write not aligned and not parsed reads for fasta input")
-                BAM -> throw ValidationException("Can't write not aligned and not parsed reads for bam input")
+                BAM -> {
+                    fill("R1")
+                    fill("R2")
+                }
             }
         }
 
@@ -454,7 +457,7 @@ object CommandAlign {
                                 "Option ${optionPrefix}-R2 is not specified but paired-end input data provided."
                             }
 
-                        else -> ValidationException.require(inputType.isFastq) {
+                        else -> ValidationException.require(inputType.isFastq || inputType == BAM) {
                             "Option ${optionPrefix}-* options are supported for fastq data input only."
                         }
                     }
@@ -1537,8 +1540,9 @@ object CommandAlign {
                 else -> when (val inputType = inputFileGroups.inputType) {
                     SingleEndFastq -> SingleFastqWriter(r1.toFile())
                     PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile())
-                    TripleEndFastq -> MultiFastqWriter(i1!!, r1, r2!!)
-                    QuadEndFastq -> MultiFastqWriter(i1!!, i2!!, r1, r2!!)
+                    TripleEndFastq -> MultiFastqWriter(false, i1!!, r1, r2!!)
+                    QuadEndFastq -> MultiFastqWriter(false, i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    BAM -> MultiFastqWriter(true, r1, r2!!)
                     is MIC -> when (inputType.readTags.size) {
                         1 -> MultiFastqWriter(r1.toFile())
                         2 -> MultiFastqWriter(r1.toFile(), r2!!.toFile())

@@ -13,9 +13,9 @@ Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype m
       --default-downsampling (<type>|none)
                            Default downsampling applied to normalize the clonesets. Possible
                              values:
-                           count-[reads|TAG]-[auto|min|fixed][-<number>]
-                            top-[reads|TAG]-[<number>]
-                            cumtop-[reads|TAG]-[percent]
+                           count-[reads|TAG|molecule]-[auto|min|fixed-<number>]
+                            top-[reads|TAG|molecule]-[<number>]
+                            cumtop-[reads|TAG|molecule]-[percent]
       --default-weight-function (<read>|<Tag>|none)
                            Default clonotype weight function
       --only-productive    Filter out-of-frame sequences and sequences with stop-codons.

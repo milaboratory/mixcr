@@ -1,4 +1,4 @@
-Usage: mixcr exportPlots vUsage [--metadata <path>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
+Usage: mixcr exportPlots vUsage [--metadata <path.tsv>] [--filter <meta(|>|>=|=|<=|<)value>[,<meta
                                 (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,<chain>...]]...
                                 [--family-usage] [--no-samples-dendro] [--no-genes-dendro]
                                 [--color-key <key>]... [--bar-plot] [--bar-plot-by-sample]
@@ -9,7 +9,7 @@ Export V gene usage
       pa.json[.gz]           Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
                              Output PDF/EPS/PNG/JPEG file name.
-      --metadata <path>      Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
+      --metadata <path.tsv>  Metadata file in a tab- (`.tsv`) or comma- (`.csv`) separated form.
                                Must contain `sample` column which matches names of input files.
       --filter <meta(|>|>=|=|<=|<)value>[,<meta(|>|>=|=|<=|<)value>...]
                              Filter samples to put on a plot by their metadata values. Filter

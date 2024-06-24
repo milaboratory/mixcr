@@ -213,6 +213,11 @@ milab-human-dna-tcr-multiplex (Human TCR DNA Multiplex)
 
 milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
 
+-----Integrated DNA Technologies-----
+idt-human-rna-tcr-umi-archer (Archer IMMUNOVerse TCR panel)
+
+idt-human-rna-bcr-umi-archer (Archer IMMUNOVerse BCR panel)
+
 -----Illumina-----
 illumina-human-rna-trb-ampliseq-plus (Human TCR Beta Ampliseq Plus)
 

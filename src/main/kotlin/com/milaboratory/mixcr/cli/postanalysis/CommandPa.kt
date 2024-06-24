@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -202,8 +202,9 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         if (duplicates.isNotEmpty())
             throw ValidationException("Duplicated samples detected: ${duplicates.joinToString(",")}")
         metadata?.let { metadata ->
-            if (!metadata.containsKey("sample"))
-                throw ValidationException("Metadata must contain 'sample' column")
+            ValidationException.requireContains("sample", metadata.keys) {
+                "Metadata columns"
+            }
             val samples = inputClnsFiles.map { it.toString() }
             val mapping = StringUtil.matchLists(samples, metadata["sample"]!!.map { it as String })
             if (mapping.size < samples.size || mapping.values.any { it == null }) {
@@ -274,7 +275,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         val qSamples = inputClnsFiles
         val sample2meta = StringUtil.matchLists(qSamples.map { it.toString() }, mSamples)
         for ((key, value) in sample2meta) {
-            requireNotNull(value) { "Malformed metadata: can't find metadata row for sample $key" }
+            ValidationException.requireNotNull(value) { "Malformed metadata: can't find metadata row for sample $key" }
         }
         val meta2sample = sample2meta.entries
             .associate { (key, value) -> value to key }
@@ -282,8 +283,12 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
         val samplesByGroup = mutableMapOf<Map<String, Any>, MutableList<String>>()
         for (i in 0 until nRows) {
             val group: MutableMap<String, Any> = HashMap()
-            for (igr in isolationGroups + listOfNotNull(chainsColumn)) {
-                group[igr] = metadata[igr]!![i]
+            for (igr in isolationGroups.map { it.lowercase() } + listOfNotNull(chainsColumn)) {
+                ValidationException.requireContains(igr, metadata.keys) {
+                    "Metadata columns"
+                }
+                val metadataForKey = requireNotNull(metadata[igr])
+                group[igr] = metadataForKey[i]
             }
             val sample = metadata["sample"]!![i]
             val value = meta2sample[sample] ?: continue
@@ -314,7 +319,7 @@ abstract class CommandPa : MiXCRCommandWithOutputs() {
                 run0(IsolationGroup(it, group.group), group.samples)
             }
         }
-        val result = PaResult(metadata, isolationGroups, results)
+        val result = PaResult(metadata, isolationGroups.map { it.lowercase() }, results)
         Files.createDirectories(output.toAbsolutePath().parent)
         result.writeJson(output)
 
