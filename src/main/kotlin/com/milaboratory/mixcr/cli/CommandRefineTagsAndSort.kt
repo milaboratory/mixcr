@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.onEach
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -63,6 +64,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 object CommandRefineTagsAndSort {
     const val COMMAND_NAME = AnalyzeCommandDescriptor.refineTagsAndSort.name
@@ -423,8 +425,12 @@ object CommandRefineTagsAndSort {
                             )
                         }
 
+                    // reads count after filtering
+                    val resultReadsCount = AtomicLong()
                     // Running initial hash sorter
-                    var sorted = corrected.hashSort(tagNames.size - 1)
+                    var sorted = corrected
+                        .onEach { al -> resultReadsCount.addAndGet(al.weight.toLong()) }
+                        .hashSort(tagNames.size - 1)
                     corrected.close()
 
                     // Sorting by other tags
@@ -440,7 +446,7 @@ object CommandRefineTagsAndSort {
                             .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                         mainReader.usedGenes
                     )
-                    writer.setNumberOfProcessedReads(mainReader.numberOfReads)
+                    writer.setNumberOfProcessedReads(resultReadsCount.get())
                     sorted.reportProgress("Writing result").forEach { al ->
                         writer.write(al)
                     }

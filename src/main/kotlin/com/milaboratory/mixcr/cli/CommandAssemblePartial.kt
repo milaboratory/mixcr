@@ -205,7 +205,7 @@ object CommandAssemblePartial {
                     logger.warn("too many partial alignments detected, consider skipping assemblePartial (enriched library?). /maxRightMatchesLimitReached/")
                 }
                 reportOptions.appendToFiles(report)
-                writer.setNumberOfProcessedReads(reader.numberOfReads - assembler.overlapped.get())
+                writer.setNumberOfProcessedReads(reader.numberOfReads - assembler.overlappedReadsCount.get())
                 writer.setFooter(reader.footer.addStepReport(AnalyzeCommandDescriptor.assemblePartial, report))
             }
         }

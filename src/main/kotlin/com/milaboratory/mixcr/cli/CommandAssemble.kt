@@ -38,7 +38,8 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mixcr.basictypes.tag.TagType.Cell
+import com.milaboratory.mixcr.basictypes.tag.TagType.Molecule
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -258,7 +259,7 @@ object CommandAssemble {
 
                     // Here we search specifically for "reads per UMI" threshold, even if we do cell-level assembly,
                     // as the most meaningful estimation for the minRecordsPerConsensus parameter
-                    val groupingTags = (0 until inputHeader.tagsInfo.getDepthFor(TagType.Molecule))
+                    val groupingTags = (0 until inputHeader.tagsInfo.getDepthFor(Molecule))
                         .map { i -> inputHeader.tagsInfo[i].name }
                     val threshold = inputFooter.thresholds[MinGroupsPerGroup(groupingTags, null)]
                     if (threshold == null) {
@@ -316,62 +317,56 @@ object CommandAssemble {
                     reportBuilder.setOutputFiles(outputFile)
                     reportBuilder.commandLine = commandLineArguments
                     assembler.setListener(reportBuilder)
-                    val preClones: PreCloneReader =
-                        if (
-                            (inputHeader.tagsInfo.hasTagsWithType(TagType.Cell) ||
-                                    inputHeader.tagsInfo.hasTagsWithType(TagType.Molecule)) &&
-                            cmdParam.consensusAssemblerParameters != null
-                        ) {
-                            val preClonesFile = tempDest.resolvePath("preclones.pc")
+                    val hasBarcodes =
+                        inputHeader.tagsInfo.hasTagsWithType(Cell) || inputHeader.tagsInfo.hasTagsWithType(Molecule)
+                    val preClones: PreCloneReader = if (hasBarcodes && cmdParam.consensusAssemblerParameters != null) {
+                        val preClonesFile = tempDest.resolvePath("preclones.pc")
 
-                            val groupingLevel = if (cmdParam.cellLevel) TagType.Cell else TagType.Molecule
-                            val assemblerRunner = PreCloneAssemblerRunner(
-                                alignmentsReader,
-                                groupingLevel,
-                                cloneAssemblerParameters.assemblingFeatures,
-                                cmdParam.consensusAssemblerParameters, preClonesFile,
-                                tempDest.addSuffix("pc.tmp"),
-                                cloneAssemblerParameters.cloneFactoryParameters
-                            )
-                            assemblerRunner.setExtractionListener(reportBuilder)
-                            SmartProgressReporter.startProgressReport(assemblerRunner)
+                        val groupingLevel = if (cmdParam.cellLevel) Cell else Molecule
+                        val assemblerRunner = PreCloneAssemblerRunner(
+                            alignmentsReader,
+                            groupingLevel,
+                            cloneAssemblerParameters.assemblingFeatures,
+                            cmdParam.consensusAssemblerParameters, preClonesFile,
+                            tempDest.addSuffix("pc.tmp"),
+                            cloneAssemblerParameters.cloneFactoryParameters
+                        )
+                        assemblerRunner.setExtractionListener(reportBuilder)
+                        SmartProgressReporter.startProgressReport(assemblerRunner)
 
-                            // Optionally writing additional information about consensus assembly process
-                            use(
-                                consensusAlignments?.bufferedWriter(bufferSize = 1048576),
-                                consensusStateStats?.bufferedWriter(bufferSize = 1048576)
-                            ) { cAlignmentsWriter, cStateStatsWriter ->
+                        // Optionally writing additional information about consensus assembly process
+                        use(
+                            consensusAlignments?.bufferedWriter(bufferSize = 1048576),
+                            consensusStateStats?.bufferedWriter(bufferSize = 1048576)
+                        ) { cAlignmentsWriter, cStateStatsWriter ->
 
-                                // If any auxiliary output was requested, adding raw consensus listener to pre-clone assembler
-                                if (cAlignmentsWriter != null || cStateStatsWriter != null) {
-                                    val formatter = ConsensusAlignmentDataFormatter(
-                                        cAlignmentsWriter,
-                                        cStateStatsWriter,
-                                        consensusStateStatsDownsampling
-                                    )
-                                    formatter.writeHeaders()
-                                    assemblerRunner.setRawConsensusListener(true, formatter)
-                                }
-
-                                // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
-                                assemblerRunner.run()
+                            // If any auxiliary output was requested, adding raw consensus listener to pre-clone assembler
+                            if (cAlignmentsWriter != null || cStateStatsWriter != null) {
+                                val formatter = ConsensusAlignmentDataFormatter(
+                                    cAlignmentsWriter,
+                                    cStateStatsWriter,
+                                    consensusStateStatsDownsampling
+                                )
+                                formatter.writeHeaders()
+                                assemblerRunner.setRawConsensusListener(true, formatter)
                             }
 
-                            // Setting report into a big report object
-                            reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.report)
-                            assemblerRunner.createReader()
-                        } else  // If there are no tags in the data, alignments are just wrapped into pre-clones
-                            PreCloneReader.fromAlignments(
-                                alignmentsReader,
-                                cloneAssemblerParameters.assemblingFeatures,
-                                reportBuilder
-                            )
+                            // Pre-clone assembly happens here (file with pre-clones and alignments written as a result)
+                            assemblerRunner.run()
+                        }
+
+                        // Setting report into a big report object
+                        reportBuilder.setPreCloneAssemblerReportBuilder(assemblerRunner.report)
+                        assemblerRunner.createReader()
+                    } else  // If there are no tags in the data, alignments are just wrapped into pre-clones
+                        PreCloneReader.fromAlignments(
+                            alignmentsReader,
+                            cloneAssemblerParameters.assemblingFeatures,
+                            reportBuilder
+                        )
 
                     // Running assembler
-                    val assemblerRunner = CloneAssemblerRunner(
-                        preClones,
-                        assembler
-                    )
+                    val assemblerRunner = CloneAssemblerRunner(preClones, assembler)
                     SmartProgressReporter.startProgressReport(assemblerRunner)
                     if (reportBuffers) {
                         val reporter = StatusReporter()
