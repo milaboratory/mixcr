@@ -136,7 +136,7 @@ val obfuscationLibs: Configuration by configurations.creating
 
 val mixcrAlgoVersion = "4.6.0-111-fix-tree-export"
 // may be blank (will be inherited from mixcr-algo)
-val milibVersion = ""
+val milibVersion = "3.4.0-10-not-used-reads-for-bam"
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)

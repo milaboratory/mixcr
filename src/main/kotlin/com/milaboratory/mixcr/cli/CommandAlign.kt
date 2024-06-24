@@ -358,7 +358,10 @@ object CommandAlign {
                 }
 
                 Fasta -> throw ValidationException("Can't write not aligned and not parsed reads for fasta input")
-                BAM -> throw ValidationException("Can't write not aligned and not parsed reads for bam input")
+                BAM -> {
+                    fill("R1")
+                    fill("R2")
+                }
             }
         }
 
@@ -403,7 +406,7 @@ object CommandAlign {
                             "Option ${optionPrefix}-R2 is specified but single-end input data provided."
                         )
 
-                        !inputType.isFastq -> throw ValidationException(
+                        inputType != BAM && !inputType.isFastq -> throw ValidationException(
                             "Option ${optionPrefix}-* options are supported for fastq data input only."
                         )
                     }
@@ -1343,8 +1346,9 @@ object CommandAlign {
                 else -> when (inputFileGroups.inputType) {
                     PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile()) as SequenceWriter<SequenceRead>
                     SingleEndFastq -> SingleFastqWriter(r1.toFile()) as SequenceWriter<SequenceRead>
-                    TripleEndFastq -> MultiFastqWriter(i1!!, r1, r2!!) as SequenceWriter<SequenceRead>
-                    QuadEndFastq -> MultiFastqWriter(i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    TripleEndFastq -> MultiFastqWriter(false, i1!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    QuadEndFastq -> MultiFastqWriter(false, i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    BAM -> MultiFastqWriter(true, r1, r2!!) as SequenceWriter<SequenceRead>
                     else -> throw ApplicationException(
                         "Export of reads for which alignment / parsing failed allowed only for fastq inputs."
                     ) // must never happen because of parameters validation
