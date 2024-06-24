@@ -1541,11 +1541,11 @@ object CommandAlign {
                     SingleEndFastq -> SingleFastqWriter(r1.toFile())
                     PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile())
                     TripleEndFastq -> MultiFastqWriter(false, i1!!, r1, r2!!)
-                    QuadEndFastq -> MultiFastqWriter(false, i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    QuadEndFastq -> MultiFastqWriter(false, i1!!, i2!!, r1, r2!!)
                     BAM -> MultiFastqWriter(true, r1, r2!!)
                     is MIC -> when (inputType.readTags.size) {
-                        1 -> MultiFastqWriter(r1.toFile())
-                        2 -> MultiFastqWriter(r1.toFile(), r2!!.toFile())
+                        1 -> MultiFastqWriter(false, r1.toFile())
+                        2 -> MultiFastqWriter(false, r1.toFile(), r2!!.toFile())
                         else -> throw IllegalArgumentException("Can't create writer for more than 2 fastq files")
                     }
 
