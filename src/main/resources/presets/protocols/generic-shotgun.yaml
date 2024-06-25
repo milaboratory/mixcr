@@ -9,7 +9,6 @@ shotgun-base:
   pipeline:
     - align
     - assemblePartial
-    - assemblePartial
     - extend
     - assemble
     - assembleContigs
@@ -21,6 +20,9 @@ shotgun-base:
         upper: 0.2
   align:
     inheritFrom: align-shotgun
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    repeats: 2
   assemble:
     inheritFrom: assemble-base
     overrides:

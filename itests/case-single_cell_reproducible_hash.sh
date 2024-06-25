@@ -46,8 +46,8 @@ if ! cmp result_1/result_report.yaml result_2/result_report.yaml; then
   diff result_1/result_report.yaml result_2/result_report.yaml
 fi
 
-first_sha=$(shasum result_1/result.vdjca | awk '{print $1}')
-assert "shasum result_2/result.vdjca | awk '{print \$1}'" "$first_sha"
+first_sha=$(shasum result_1/result.alignments.vdjca | awk '{print $1}')
+assert "shasum result_2/result.alignments.vdjca | awk '{print \$1}'" "$first_sha"
 
 first_sha=$(shasum result_1/result.refined.vdjca | awk '{print $1}')
 assert "shasum result_2/result.refined.vdjca | awk '{print \$1}'" "$first_sha"
