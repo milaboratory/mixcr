@@ -174,7 +174,8 @@
       features: [ "CDR3" ]
   assemblePartial:
     inheritFrom: assemblePartial-base
-    repeats: 2
+    overrides:
+      repeats: 2
   align:
     inheritFrom: align-shotgun
     overrides:

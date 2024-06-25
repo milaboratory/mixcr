@@ -22,7 +22,8 @@ shotgun-base:
     inheritFrom: align-shotgun
   assemblePartial:
     inheritFrom: assemblePartial-base
-    repeats: 2
+    overrides:
+      repeats: 2
   assemble:
     inheritFrom: assemble-base
     overrides:
