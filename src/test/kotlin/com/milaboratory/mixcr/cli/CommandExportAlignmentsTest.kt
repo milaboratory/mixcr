@@ -85,7 +85,7 @@ class CommandExportAlignmentsTest {
     @Test
     fun `don't get features from allCoveredBy for vdjca`() {
         val input =
-            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.vdjca").file)
+            Paths.get(DummyIntegrationTest::class.java.getResource("/sequences/big/yf_sample_data/Ig1_S1.alignments.vdjca").file)
         val output = TempFileManager.newTempDir().toPath().resolve("output0.tsv").toFile()
         output.delete()
         TestMain.execute("${CommandExportAlignments.COMMAND_NAME} --drop-default-fields -allNFeatures $input ${output.path}")

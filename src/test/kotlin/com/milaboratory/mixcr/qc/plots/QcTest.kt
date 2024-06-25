@@ -21,15 +21,15 @@ import java.nio.file.Paths
 @Category(IntegrationTest::class)
 class QcTest {
     val align = listOf(
-        "Ig-2_S2.vdjca",
-        "Ig-3_S3.vdjca",
-        "Ig-4_S4.vdjca",
-        "Ig-5_S5.vdjca",
-        "Ig1_S1.vdjca",
-        "Ig2_S2.vdjca",
-        "Ig3_S3.vdjca",
-        "Ig4_S4.vdjca",
-        "Ig5_S5.vdjca"
+        "Ig-2_S2.alignments.vdjca",
+        "Ig-3_S3.alignments.vdjca",
+        "Ig-4_S4.alignments.vdjca",
+        "Ig-5_S5.alignments.vdjca",
+        "Ig1_S1.alignments.vdjca",
+        "Ig2_S2.alignments.vdjca",
+        "Ig3_S3.alignments.vdjca",
+        "Ig4_S4.alignments.vdjca",
+        "Ig5_S5.alignments.vdjca"
     ).map {
         Paths.get(javaClass.getResource("/sequences/big/yf_sample_data/$it")!!.file)
     }
