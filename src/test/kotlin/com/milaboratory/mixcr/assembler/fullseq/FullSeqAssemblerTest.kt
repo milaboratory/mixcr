@@ -452,10 +452,23 @@ class FullSeqAssemblerTest {
 
     companion object {
         val DEFAULT_PARAMETERS = FullSeqAssemblerParameters(
-            0.1, 80, 120,
-            3, 7, 0.25, 3.0,
-            0.5, 50, GeneFeatures(GeneFeature.VDJRegion), null, PostFiltering.NoFiltering,
-            QualityTrimmerParameters(20.0f, 8), 20, false, false
+            branchingMinimalQualityShare = 0.1,
+            branchingMinimalSumQuality = 80,
+            decisiveBranchingSumQualityThreshold = 120,
+            alignedSequenceEdgeDelta = 3,
+            alignmentEdgeRegionSize = 7,
+            minimalNonEdgePointsFraction = 0.25,
+            minimalMeanNormalizedQuality = 3.0,
+            outputMinimalQualityShare = 0.5,
+            outputMinimalSumQuality = 50,
+            subCloningRegions = GeneFeatures(GeneFeature.VDJRegion),
+            assemblingRegions = null,
+            postFiltering = PostFiltering.NoFiltering,
+            trimmingParameters = QualityTrimmerParameters(20.0f, 8),
+            minimalContigLength = 20,
+            isAlignedRegionsOnly = false,
+            discardAmbiguousNucleotideCalls = false,
+            useOnlyFullAlignmentsIfPossible = false
         )
         val masterSeq1WT = MasterSequence(
             "CTGAAGAAAACCAGCCCTGCAGCTCTGGGAGAGGAGCCCCAGCCCTGGGATTCCCAGCTGTTTCTGCTTGCTGATCAGGACTGCACACAGAGAACTCACC" +
