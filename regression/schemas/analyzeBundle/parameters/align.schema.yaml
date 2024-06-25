@@ -315,6 +315,10 @@ properties:
               properties:
                 destinationTag:
                   type: string
+                keepTags:
+                  type: array
+                  items:
+                    type: string
                 name:
                   type: string
                 transformation:
