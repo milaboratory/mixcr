@@ -1,0 +1,407 @@
+mitool-consensus-1-steps:
+  mitool:
+    consensus:
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+
+mitool-consensus-2-steps:
+  mitool:
+    consensus:
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+
+mitool-consensus-3-steps:
+  mitool:
+    consensus:
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+
+mitool-consensus-4-steps:
+  mitool:
+    consensus:
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+      - parameters:
+          aAssemblerParameters:
+            bandWidth: 4
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -4)"
+              gapPenalty: -19
+            minAlignmentScore: 300
+            maxNormalizedAlignmentPenalty: 0.30
+            trimMinimalSumQuality: 0
+            trimReferenceRegion: true
+            maxQuality: 45
+          kMapParameters:
+            k: 9
+            useQ1Score: true
+            coreSequenceKMers: 20
+            coreSequenceRecordScore: 20
+            neighbourhoodSize: 2
+          positiveMinQualityShare: 0.2
+          positiveMinIntersectionQuality: 300
+          minAlignmentScoreForDiscardRecord: 0
+          maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+          minRecordSharePerConsensus: 0.001
+          minRecordsPerConsensus: 3
+          useWeightsForRecordsPerConsensus: true
+          minRecordWeightForUse: 0
+          maxIterationsPerConsensus: 8
+          maxConsensuses: 0
+        safeUnusedReads: true
+        safeDiscardedReads: true
+        inferMinRecordsPerConsensus: true
+
+mitool-parse-default:
+  mitool:
+    parse:
+      pattern: ""
+      unstranded: no
+      maxErrorBudget: 10
+
+
+mitool-refineTags-default:
+  mitool:
+    refineTags:
+      parameters:
+        correctionPower: 1E-3
+        backgroundSubstitutionRate: 1E-3
+        backgroundIndelRate: 1E-5
+        minQuality: 12
+        maxSubstitutions: 2
+        maxIndels: 2
+        maxTotalErrors: 3
+
+mitool-refineTags-sc:
+  mitool:
+    refineTags:
+      parameters:
+        correctionPower: 0.001
+        backgroundSubstitutionRate: 0.001
+        backgroundIndelRate: 1.0E-5
+        minQuality: 12
+        maxSubstitutions: 2
+        maxIndels: 2
+        maxTotalErrors: 3
+        postFilter:
+          type: filter_and
+          operands:
+            - type: filter_groups
+              groupingKeys:
+                - CELL
+                - UMI
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.2
+                        multiplyWeightByKey: false
+                  operator:
+                    type: group_operator_lowest_threshold
+                    operators:
+                      - type: group_operator_advanced_thresholding
+                        algo:
+                          type: otsu
+                        logX: true
+                        minimalSample: 20
+                        fallbackThreshold: 1.0
+                        accept: High
+                      - type: group_operator_cumtop
+                        share: 0.85
+                        round: Down
+                        accept: High
+                    accept: High
+                  expectedSorting: [ ]
+                  requiredSequences: [ ]
+              expectedSorting:
+                - CELL
+                - UMI
+              requiredSequences: [ ]
+          expectedSorting:
+            - CELL
+            - UMI
+          requiredSequences: [ ]
