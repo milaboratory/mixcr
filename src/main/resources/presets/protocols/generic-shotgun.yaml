@@ -40,6 +40,7 @@ rna-seq:
     - species
   mixins:
     - type: MaterialTypeRNA
+    - type: AssembleContigsWithMaxLength
 
 exome-seq:
   label: "Exome-Seq data"
@@ -49,3 +50,4 @@ exome-seq:
     - species
   mixins:
     - type: MaterialTypeDNA
+    - type: AssembleContigsWithMaxLength
