@@ -986,11 +986,8 @@ generic-single-cell-gex-base:
     - extend
     - assemble
     - assembleContigs
-    - assembleCells
     - exportClones
     - exportCloneGroups
-  mixins:
-    - type: AssembleContigsWithMaxLength
   qc:
     checks:
       - type: AlignmentsDroppedLowQuality
