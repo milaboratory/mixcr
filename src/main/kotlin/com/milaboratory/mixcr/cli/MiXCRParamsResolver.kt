@@ -97,9 +97,6 @@ abstract class MiXCRParamsResolver<P : Any>(
             ValidationException.require(alignParams.tagTransformationSteps.isEmpty()) {
                 "`tagTransformationSteps` are not supported with mitool commands in pipeline"
             }
-            ValidationException.require(alignParams.splitBySample) {
-                "With mitool commands in pipeline samples will always be split, so `align.splitBySample` should be true"
-            }
             if (alignParams.parameters.isSaveOriginalReads) {
                 logger.warn { "Saving original reads with mitool commands in pipeline will lead to saving reads after mitool processing, not original ones" }
             }
