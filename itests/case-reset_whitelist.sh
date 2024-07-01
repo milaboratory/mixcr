@@ -26,4 +26,4 @@ mixcr analyze --verbose 10x-vdj-tcr \
   single_cell_vdj_t_subset_R2.fastq.gz \
   base_single_cell
 
-assert "cat base_single_cell.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
+assert "cat base_single_cell.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "7"
