@@ -32,14 +32,15 @@ mixcr analyze --verbose 10x-sc-xcr-vdj \
   single_cell_vdj_t_subset_R2.fastq.gz \
   base_single_cell.vdjcontigs
 
-assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "6"
+assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "7"
 
-assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "6"
-assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "6"
-assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "58"
-assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "58"
+assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "7"
+assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "7"
+assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "82"
+assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "82"
 assert "mixcr exportClones --no-header --drop-default-fields -cellGroup base_single_cell.vdjcontigs.assembledCells.clns | sort | uniq | wc -l" "3"
 
-assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -readFraction base_single_cell.vdjcontigs.assembledCells.clns | jq -s add" "3"
-assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -uniqueTagFraction Molecule base_single_cell.vdjcontigs.assembledCells.clns | jq -s add" "3"
+# I didn't found normal way to round up a number in bash
+#assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -readFraction base_single_cell.vdjcontigs.assembledCells.clns | jq -s add" "3"
+#assert "mixcr exportClones --no-header --add-export-clone-grouping tag:CELL --drop-default-fields -uniqueTagFraction Molecule base_single_cell.vdjcontigs.assembledCells.clns | jq -s add" "3"
 

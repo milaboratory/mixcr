@@ -5,7 +5,7 @@
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   mixins:
     - type: SetTagPattern
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R1:*)
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
     - type: AddPipelineStep
       step: mitool-parse
     - type: AddPipelineStep
@@ -34,7 +34,7 @@
             - CELL
             - UMI
           payloadTags:
-            - R1
+            - R2
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 499
@@ -46,7 +46,7 @@
             - CELL
             - UMI
           payloadTags:
-            - R1
+            - R2
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 51
@@ -57,7 +57,7 @@
         - groupingTags:
             - CELL
           payloadTags:
-            - R1
+            - R2
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 41
@@ -69,7 +69,7 @@
         - groupingTags:
             - CELL
           payloadTags:
-            - R1
+            - R2
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 181
@@ -192,7 +192,7 @@
   inheritFrom: generic-single-cell-gex-with-umi
   mixins:
     - type: SetTagPattern
-      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R1:*)
+      tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
   align:
     inheritFrom: generic-single-cell-gex-with-umi
     overrides:
