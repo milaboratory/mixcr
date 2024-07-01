@@ -1,4 +1,5 @@
 mitool-consensus-1-steps:
+  abstract: true
   mitool:
     consensus:
       - parameters:
@@ -35,6 +36,7 @@ mitool-consensus-1-steps:
         inferMinRecordsPerConsensus: true
 
 mitool-consensus-2-steps:
+  abstract: true
   mitool:
     consensus:
       - parameters:
@@ -103,6 +105,7 @@ mitool-consensus-2-steps:
         inferMinRecordsPerConsensus: true
 
 mitool-consensus-3-steps:
+  abstract: true
   mitool:
     consensus:
       - parameters:
@@ -203,6 +206,7 @@ mitool-consensus-3-steps:
         inferMinRecordsPerConsensus: true
 
 mitool-consensus-4-steps:
+  abstract: true
   mitool:
     consensus:
       - parameters:
@@ -335,6 +339,7 @@ mitool-consensus-4-steps:
         inferMinRecordsPerConsensus: true
 
 mitool-parse-default:
+  abstract: true
   mitool:
     parse:
       pattern: ""
@@ -343,6 +348,7 @@ mitool-parse-default:
 
 
 mitool-refineTags-default:
+  abstract: true
   mitool:
     refineTags:
       parameters:
@@ -355,6 +361,7 @@ mitool-refineTags-default:
         maxTotalErrors: 3
 
 mitool-refineTags-sc:
+  abstract: true
   mitool:
     refineTags:
       parameters:
