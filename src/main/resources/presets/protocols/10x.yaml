@@ -153,8 +153,6 @@
     inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
-      consensusAssemblerParameters:
-        skipAlignmentsIfFR4PresentButCNotAligned: 10
       cloneAssemblerParameters:
         assemblingFeatures:
           - CDR3
