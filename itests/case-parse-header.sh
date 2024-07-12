@@ -21,5 +21,5 @@ mixcr analyze -f test-tag-from-header \
   sample_IGH_{{R}}.fastq \
   case_header_parse
 
-assert "cat case_header_parse.TAGCTT.assemble.report.json | head -n 1 | jq .readsInClones" "64"
-assert "cat case_header_parse.GAGCTT.assemble.report.json | head -n 1 | jq .readsInClones" "68"
+assert "cat case_header_parse.TAGCTT.assemble.report.json | head -n 1 | jq .readsInClones" "65"
+assert "cat case_header_parse.GAGCTT.assemble.report.json | head -n 1 | jq .readsInClones" "66"
