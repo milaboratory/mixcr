@@ -181,7 +181,9 @@
     inheritFrom: assembleContigs-sc-fr
     overrides:
       parameters:
-        useOnlyFullAlignmentsIfPossible: true
+        useOnlyFullAlignments:
+          cumtop: 0.95
+          fallbackToTopAlignment: true
 
 "10x-sc-5gex":
   vendor: "10x Genomics"

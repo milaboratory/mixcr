@@ -14,6 +14,7 @@
 package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPortFactory
+import cc.redberry.pipe.util.asOutputPort
 import cc.redberry.pipe.util.filter
 import cc.redberry.pipe.util.flatten
 import cc.redberry.pipe.util.forEach
@@ -61,6 +62,7 @@ import io.repseq.core.GeneType
 import io.repseq.core.GeneType.Joining
 import io.repseq.core.GeneType.Variable
 import io.repseq.core.VDJCGene
+import io.repseq.core.VDJCGeneId
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -335,6 +337,9 @@ private class Assembler(
         reader.header.featuresToAlignMap
     )
 
+    // in cases that I saw, the difference was much more profound in reads
+    private val compareAlignmentsBy: VDJCAlignments.() -> Double = { weight }
+
     private val header get() = reader.header
 
     fun assembleContigs(originalClone: Clone, alignmentsPort: OutputPortFactory<VDJCAlignments>): List<Clone> =
@@ -405,86 +410,115 @@ private class Assembler(
             reportBuilder.onAssemblyCanceled(originalClone)
             return emptyList()
         }
-        var maxShiftForVGene = 0
-        val fullyCoveredVariants = mutableSetOf<List<NucleotideSequence>>()
-        if (parameters.useOnlyFullAlignmentsIfPossible) {
+        val fullyCoveredVariants = mutableMapOf<List<NucleotideSequence>, MutableList<VDJCAlignments>>()
+        if (parameters.useOnlyFullAlignments != null) {
             check(parameters.assemblingRegions != null) {
-                "Can't use `useOnlyFullAlignmentsIfPossible` param in absense of `assemblingRegions`"
+                "Can't use `useOnlyFullAlignments` param in absence of `assemblingRegions`"
             }
             alignmentsPort.createPort().forEach { alignments ->
                 if (alignments.coverFeatures(parameters.assemblingRegions!!) &&
                     alignments.coverFeatures(GeneFeatures(*header.assemblingFeatures!!))
                 ) {
-                    fullyCoveredVariants += parameters.assemblingRegions!!.features.map { alignments.getNFeature(it)!! }
+                    val features = parameters.assemblingRegions!!.features.map { alignments.getNFeature(it)!! }
+                    fullyCoveredVariants.computeIfAbsent(features) { mutableListOf() } += alignments
                 }
             }
         }
 
-        val alignmentsSplit = if (fullyCoveredVariants.isNotEmpty()) {
-            fullyCoveredVariants.map { filterBy ->
-                OutputPortFactory {
-                    alignmentsPort.createPort().filter { alignments ->
-                        parameters.assemblingRegions!!.features.map { alignments.getNFeature(it) } == filterBy
+        return if (fullyCoveredVariants.isNotEmpty()) {
+            val firstRun = if (parameters.useOnlyFullAlignments!!.cumtop != null) {
+                val sum = fullyCoveredVariants.values.sumOf { it.sumOf(compareAlignmentsBy) }
+                val threshold = parameters.useOnlyFullAlignments!!.cumtop!! * sum
+                var currentSum = 0.0
+                val result = fullyCoveredVariants.values.sortedByDescending { it.sumOf(compareAlignmentsBy) }
+                    .takeWhile { alignments ->
+                        val take = currentSum <= threshold
+                        currentSum += alignments.sumOf(compareAlignmentsBy)
+                        take
                     }
-                }
+                    .flatten()
+                assembleContigs1(coverages, originalClone, OutputPortFactory { result.asOutputPort() })
+            } else {
+                assembleContigs1(
+                    coverages,
+                    originalClone,
+                    OutputPortFactory { fullyCoveredVariants.values.flatten().asOutputPort() }
+                )
+            }
+            if (firstRun.isNotEmpty() || !parameters.useOnlyFullAlignments!!.fallbackToTopAlignment) {
+                firstRun
+            } else {
+                assembleContigs1(
+                    coverages,
+                    originalClone,
+                    OutputPortFactory {
+                        val mostRepresented = fullyCoveredVariants.values.maxBy { it.sumOf(compareAlignmentsBy) }
+                        mostRepresented.asOutputPort()
+                    }
+                )
             }
         } else {
-            listOf(alignmentsPort)
+            assembleContigs1(coverages, originalClone, alignmentsPort)
+        }
+    }
+
+    private fun assembleContigs1(
+        coverages: EnumMap<GeneType, Map<VDJCGeneId, CoverageAccumulator>>,
+        originalClone: Clone,
+        alignmentsPort: OutputPortFactory<VDJCAlignments>
+    ): List<Clone> {
+        var maxShiftForVGene = 0
+        alignmentsPort.createPort().forEach { alignments ->
+            for ((geneType, hits) in alignments.hitsMap) {
+                for (hit in hits) {
+                    coverages[geneType]?.let { it[hit.gene.id]?.accumulate(hit) }
+                }
+            }
+
+            alignments.getHits(Variable).forEach { hit ->
+                val shift = (0 until alignments.numberOfTargets()).maxOf { i ->
+                    hit.getAlignment(i)?.sequence2Range?.from ?: Int.MIN_VALUE
+                }
+                check(shift != Int.MIN_VALUE)
+                maxShiftForVGene = max(shift, maxShiftForVGene)
+            }
+        }
+        // Selecting best hits for clonal sequence assembly based in the coverage information
+        val bestGenes = coverages.mapValuesTo(EnumMap(GeneType::class.java)) { (_, value) ->
+            value.values.maxByOrNull { it.getNumberOfCoveredPoints(1) }?.hit
         }
 
-        return alignmentsSplit.flatMap { alignmentsSubsetPort ->
-            alignmentsSubsetPort.createPort().forEach { alignments ->
-                for ((geneType, hits) in alignments.hitsMap) {
-                    for (hit in hits) {
-                        coverages[geneType]?.let { it[hit.gene.id]?.accumulate(hit) }
-                    }
-                }
-
-                alignments.getHits(Variable).forEach { hit ->
-                    val shift = (0 until alignments.numberOfTargets()).maxOf { i ->
-                        hit.getAlignment(i)?.sequence2Range?.from ?: Int.MIN_VALUE
-                    }
-                    check(shift != Int.MIN_VALUE)
-                    maxShiftForVGene = max(shift, maxShiftForVGene)
-                }
-            }
-            // Selecting best hits for clonal sequence assembly based in the coverage information
-            val bestGenes = coverages.mapValuesTo(EnumMap(GeneType::class.java)) { (_, value) ->
-                value.values.maxByOrNull { it.getNumberOfCoveredPoints(1) }?.hit
-            }
-
-            // Performing contig assembly
-            val fullSeqAssembler = FullSeqAssembler(
-                cloneFactory, parameters,
-                header.assemblingFeatures,
-                originalClone, header.alignerParameters,
-                bestGenes[Variable], bestGenes[Joining],
-                maxShiftForVGene
-            )
-            fullSeqAssembler.report = reportBuilder
-            val rawVariantsData = fullSeqAssembler.calculateRawData {
-                alignmentsSubsetPort.createPort()
-            }
-
-            if (debugReport != null) {
-                synchronized(debugReport) {
-                    FileOutputStream(debugReportFile!!.toString() + "." + originalClone.id).use { fos ->
-                        val content = rawVariantsData.toCsv(10.toByte())
-                        fos.write(content.toByteArray())
-                    }
-                    debugReport.write("Clone: " + originalClone.id)
-                    debugReport.newLine()
-                    debugReport.write(rawVariantsData.toString())
-                    debugReport.newLine()
-                    debugReport.newLine()
-                    debugReport.write("==========================================")
-                    debugReport.newLine()
-                    debugReport.newLine()
-                }
-            }
-
-            fullSeqAssembler.callVariants(rawVariantsData).toList()
+        // Performing contig assembly
+        val fullSeqAssembler = FullSeqAssembler(
+            cloneFactory, parameters,
+            header.assemblingFeatures,
+            originalClone, header.alignerParameters,
+            bestGenes[Variable], bestGenes[Joining],
+            maxShiftForVGene
+        )
+        fullSeqAssembler.report = reportBuilder
+        val rawVariantsData = fullSeqAssembler.calculateRawData {
+            alignmentsPort.createPort()
         }
+
+        if (debugReport != null) {
+            synchronized(debugReport) {
+                FileOutputStream(debugReportFile!!.toString() + "." + originalClone.id).use { fos ->
+                    val content = rawVariantsData.toCsv(10.toByte())
+                    fos.write(content.toByteArray())
+                }
+                debugReport.write("Clone: " + originalClone.id)
+                debugReport.newLine()
+                debugReport.write(rawVariantsData.toString())
+                debugReport.newLine()
+                debugReport.newLine()
+                debugReport.write("==========================================")
+                debugReport.newLine()
+                debugReport.newLine()
+            }
+        }
+
+        return fullSeqAssembler.callVariants(rawVariantsData).toList()
     }
 
     private fun VDJCAlignments.coverFeatures(geneFeatures: GeneFeatures) =

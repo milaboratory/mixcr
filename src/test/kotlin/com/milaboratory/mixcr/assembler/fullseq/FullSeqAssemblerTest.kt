@@ -468,7 +468,7 @@ class FullSeqAssemblerTest {
             minimalContigLength = 20,
             isAlignedRegionsOnly = false,
             discardAmbiguousNucleotideCalls = false,
-            useOnlyFullAlignmentsIfPossible = false
+            useOnlyFullAlignments = null
         )
         val masterSeq1WT = MasterSequence(
             "CTGAAGAAAACCAGCCCTGCAGCTCTGGGAGAGGAGCCCCAGCCCTGGGATTCCCAGCTGTTTCTGCTTGCTGATCAGGACTGCACACAGAGAACTCACC" +
