@@ -1343,8 +1343,8 @@ object CommandAlign {
                 else -> when (inputFileGroups.inputType) {
                     PairedEndFastq -> PairedFastqWriter(r1.toFile(), r2!!.toFile()) as SequenceWriter<SequenceRead>
                     SingleEndFastq -> SingleFastqWriter(r1.toFile()) as SequenceWriter<SequenceRead>
-                    TripleEndFastq -> MultiFastqWriter(i1!!, r1, r2!!) as SequenceWriter<SequenceRead>
-                    QuadEndFastq -> MultiFastqWriter(i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    TripleEndFastq -> MultiFastqWriter(false, i1!!, r1, r2!!) as SequenceWriter<SequenceRead>
+                    QuadEndFastq -> MultiFastqWriter(false, i1!!, i2!!, r1, r2!!) as SequenceWriter<SequenceRead>
                     else -> throw ApplicationException(
                         "Export of reads for which alignment / parsing failed allowed only for fastq inputs."
                     ) // must never happen because of parameters validation
