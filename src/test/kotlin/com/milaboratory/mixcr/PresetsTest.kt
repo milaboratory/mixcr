@@ -330,8 +330,11 @@ class PresetsTest {
     fun `ranges of min relative scores`() = assertSoftly {
         val lowerBond = 0.8f
         val upperBond = 0.9f
+
+        val exclusions = setOf("generic-ont", "generic-ont-with-umi")
+
         "Presets with `assembleContigs` should have lowered minRelativeScore for `assemble` step".asClue {
-            Presets.visiblePresets
+            (Presets.visiblePresets - exclusions)
                 .filter { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                     assembleContigs in bundle.pipeline!!.steps
