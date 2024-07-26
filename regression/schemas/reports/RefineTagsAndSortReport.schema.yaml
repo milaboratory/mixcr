@@ -170,8 +170,6 @@ properties:
               type: integer
             coreDiversity:
               type: integer
-            correctionRan:
-              type: boolean
             directlyCorrectedCount:
               type: integer
             directlyCorrectedDiversity:
@@ -194,6 +192,8 @@ properties:
               type: integer
             recursivelyCorrected:
               type: integer
+            sequenceCorrectionWasPerformed:
+              type: boolean
             tagName:
               type: string
   date:

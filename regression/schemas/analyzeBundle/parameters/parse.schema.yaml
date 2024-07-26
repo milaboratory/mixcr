@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+properties:
+  params:
+    type: object
+    properties:
+      limit:
+        type: integer
+      maxErrorBudget:
+        type: number
+      pattern:
+        type: string
+      replaceWildcards:
+        type: boolean
+      trimTags:
+        type: array
+        items:
+          type: string
+      trimmingQualityThreshold:
+        type: integer
+      trimmingWindowSize:
+        type: integer
+      unstranded:
+        type: boolean

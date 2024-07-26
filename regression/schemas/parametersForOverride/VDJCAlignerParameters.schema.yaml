@@ -68,6 +68,8 @@ properties:
     $ref: '#/$defs/PairedEndReadsLayout'
   relativeMinVFR3CDR3Score:
     type: number
+  retriesForPartialAlignments:
+    type: integer
   saveOriginalReads:
     type: boolean
   saveOriginalSequence:

@@ -1,0 +1,53 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  Map(Integer,Long):
+    type: object
+type: object
+properties:
+  report:
+    type: object
+    properties:
+      assembledTags:
+        type: array
+        items:
+          type: string
+      commandLine:
+        type: string
+      consensuses:
+        type: integer
+      contigLength:
+        type: array
+        items:
+          $ref: "#/$defs/Map(Integer,Long)"
+      contigsPerGroup:
+        $ref: "#/$defs/Map(Integer,Long)"
+      groups:
+        type: integer
+      groupsFilteredByCount:
+        type: integer
+      inputFiles:
+        type: array
+        items:
+          type: string
+      inputReads:
+        type: integer
+      outputFiles:
+        type: array
+        items:
+          type: string
+      primaryRead:
+        $ref: "#/$defs/Map(Integer,Long)"
+      readsFilteredByCount:
+        type: integer
+      readsFilteredNotInConsensus:
+        type: integer
+      readsInContigLength:
+        type: array
+        items:
+          $ref: "#/$defs/Map(Integer,Long)"
+      readsInContigs:
+        $ref: "#/$defs/Map(Integer,Long)"
+      readsInContigsTotal:
+        type: integer
+      version:
+        type: string

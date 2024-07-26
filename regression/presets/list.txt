@@ -9,16 +9,19 @@ generic-ont (Oxford Nanopore data)
 
 generic-pacbio-with-umi (PacBio data with UMIs)
   Required args:
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     --tag-pattern <pattern>
 
 generic-lt-single-cell-fragmented (Generic low throughput shotgun single-cell)
   Required args:
     --species <name>
+    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
 
 generic-amplicon (Generic amplicon)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     (--dna|--rna)
@@ -36,6 +39,7 @@ generic-single-cell-gex-with-umi (Generic single-cell gene expression with UMIs)
 generic-ht-single-cell-fragmented-with-umi (Generic high throughput shotgun single-cell with UMIs)
   Required args:
     --species <name>
+    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
     --tag-pattern <pattern>
 
 smart-seq2-vdj (Smart-Seq2)
@@ -45,12 +49,14 @@ smart-seq2-vdj (Smart-Seq2)
 generic-lt-single-cell-amplicon-with-umi (Generic low throughput amplicon single-cell with UMIs)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
 
 generic-amplicon-with-umi (Generic amplicon with UMI barcodes)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     (--dna|--rna)
@@ -59,23 +65,27 @@ generic-amplicon-with-umi (Generic amplicon with UMI barcodes)
 generic-ht-single-cell-fragmented (Generic high throughput shotgun single-cell)
   Required args:
     --species <name>
+    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
     --tag-pattern <pattern>
 
 generic-lt-single-cell-amplicon (Generic low throughput amplicon single-cell)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
 
 generic-ht-single-cell-amplicon-with-umi (Generic high throughput amplicon single-cell with UMIs)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     --tag-pattern <pattern>
 
 generic-pacbio (PacBio data)
   Required args:
+    --assemble-clonotypes-by <gene_features>
     --species <name>
 
 rna-seq (RNA-Seq data)
@@ -89,6 +99,7 @@ exome-seq (Exome-Seq data)
 generic-ht-single-cell-amplicon (Generic high throughput amplicon single-cell)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     --tag-pattern <pattern>
@@ -96,6 +107,7 @@ generic-ht-single-cell-amplicon (Generic high throughput amplicon single-cell)
 generic-lt-single-cell-fragmented-with-umi (Generic low throughput shotgun single-cell with UMIs)
   Required args:
     --species <name>
+    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
 
 -----Invivoscribe-----
 invivoscribe-human-dna-igk-lymphotrack (LymphoTrack IGK Assay Panel)
@@ -215,6 +227,8 @@ milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
 
 -----Integrated DNA Technologies-----
 idt-human-rna-tcr-umi-archer (Archer IMMUNOVerse TCR panel)
+  Required args:
+    --assemble-clonotypes-by <gene_features>
 
 idt-human-rna-bcr-umi-archer (Archer IMMUNOVerse BCR panel)
 
@@ -229,6 +243,7 @@ vergani-et-al-2017-full-length (Vergani et al., 2017)
 seq-well-vdj (Seq-well VDJ)
   Required args:
     --species <name>
+    --assemble-clonotypes-by <gene_features>
 
 mikelov-et-al-2021 (Mikelov et al., 2021)
 
@@ -300,4 +315,6 @@ abhelix-human-rna-xcr (Human immunoglobulin repertoire)
 
 -----Singleron Biotechnologies-----
 singleron-human-sc-xcr-gexscope-vdj (GEXSCOPE Human Single Cell V(D)J Kit )
+  Required args:
+    --assemble-clonotypes-by <gene_features>
 
