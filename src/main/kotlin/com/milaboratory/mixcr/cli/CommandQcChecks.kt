@@ -26,6 +26,7 @@ import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.ALERT
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.OK
 import com.milaboratory.mixcr.qc.checks.QcChecker.QualityStatus.WARN
 import com.milaboratory.util.K_PRETTY_OM
+import com.milaboratory.util.K_YAML_OM
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
@@ -120,7 +121,7 @@ object CommandQcChecks {
             val results = params.checks
                 .map { it.checker() }
                 .filter { it.supports(fileInfo) }
-                .flatMap { it.check(fileInfo) }
+                .flatMap { it.check(fileInfo, input) }
 
             if (outputFiles.isNotEmpty() && printToStdout)
                 results.print(System.out, Ansi.AUTO)
