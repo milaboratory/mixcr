@@ -197,6 +197,11 @@ allOf:
             - allOf:
                 - type: object
                   properties:
+                    abundanceMeasure:
+                      type: string
+                      enum:
+                        - Read
+                        - Molecule
                     alphabet:
                       type: string
                       enum:
