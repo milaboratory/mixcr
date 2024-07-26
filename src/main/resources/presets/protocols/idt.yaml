@@ -40,3 +40,5 @@ idt-human-rna-bcr-umi-archer:
       insertIndex: -1
       args:
         - auto
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]

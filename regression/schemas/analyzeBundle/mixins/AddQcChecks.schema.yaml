@@ -202,6 +202,42 @@ allOf:
                   type: number
                 upper:
                   type: number
+            - allOf:
+                - type: object
+                  properties:
+                    abundanceMeasure:
+                      type: string
+                      enum:
+                        - Read
+                        - Molecule
+                    alphabet:
+                      type: string
+                      enum:
+                        - AminoAcid
+                        - Nucleotide
+                    error:
+                      type: number
+                    geneFeature:
+                      type: string
+                    label:
+                      type: string
+                    spikeIns:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          label:
+                            type: string
+                          portion:
+                            type: number
+                          seq:
+                            type: string
+                - type: object
+                  properties:
+                    type:
+                      const: SpikeInControls
+                  required:
+                    - type
   - type: object
     properties:
       type:

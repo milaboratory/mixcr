@@ -261,7 +261,7 @@ assemble:
     isolateChains: false
   cloneAssemblerParameters:
     assemblingFeatures:
-      - CDR3
+      - VDJRegion
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
