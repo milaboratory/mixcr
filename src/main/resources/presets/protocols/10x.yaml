@@ -20,7 +20,7 @@
     parse:
       inheritFrom: mitool-parse-default
     refineTags:
-      inheritFrom: mitool-refineTags-sc
+      inheritFrom: mitool-refineTags-default
       overrides:
         tags:
           - CELL
