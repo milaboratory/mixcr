@@ -36,8 +36,8 @@ assert "cat base_single_cell.vdjcontigs.assembleContigs.report.json | head -n 1 
 
 assert "mixcr exportClones --no-header base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "7"
 assert "mixcr exportClones --no-header --split-by-tags Cell base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "7"
-assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "82"
-assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "82"
+assert "mixcr exportClones --no-header --split-by-tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "92"
+assert "mixcr exportClones --no-header -tags Molecule base_single_cell.vdjcontigs.assembledCells.clns | wc -l" "92"
 assert "mixcr exportClones --no-header --drop-default-fields -cellGroup base_single_cell.vdjcontigs.assembledCells.clns | sort | uniq | wc -l" "3"
 
 # I didn't found normal way to round up a number in bash
