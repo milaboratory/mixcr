@@ -29,7 +29,7 @@ align:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
       minSumScore: 60
-      relativeMinScore: 0.97
+      relativeMinScore: 0.7
       maxHits: 5
       edgeRealignmentMinScoreOverride: 35
       parameters:
@@ -146,6 +146,7 @@ align:
     saveOriginalSequence: false
     saveOriginalReads: false
     smartForceEdgeAlignments: true
+    retriesForPartialAlignments: 3
 refineTagsAndSort:
   whitelists: {}
   runCorrection: true
@@ -231,9 +232,16 @@ assemble:
       maxConsensuses: 1
     minTagSuffixShare: 0.0
     isolateChains: false
+    empiricalAlignmentAssignment:
+      uniqGeneOccurrenceWithinTag:
+        - V
+        - J
+      uniqGeneOccurrenceWithinCluster:
+        - V
+        - J
+      matchAlignmentsWithoutVJHitsByTags: true
   cloneAssemblerParameters:
-    assemblingFeatures:
-      - CDR3
+    assemblingFeatures: null
     minimalClonalSequenceLength: 12
     qualityAggregationType: BetaScore
     cloneClusteringParameters:
@@ -295,6 +303,22 @@ assembleContigs:
     minimalContigLength: 20
     alignedRegionsOnly: false
     discardAmbiguousNucleotideCalls: false
+  cloneFactoryParameters:
+    vParameters:
+      relativeMinScore: 0.97
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    jParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    cParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    dParameters:
+      relativeMinScore: null
+      absoluteMinScore: null
+      maxHits: null
+      scoring: null
 exportAlignments:
   chains: ALL
   noHeader: false

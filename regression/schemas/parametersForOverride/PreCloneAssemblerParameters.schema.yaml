@@ -1,4 +1,12 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  GeneType:
+    type: string
+    enum:
+      - Variable
+      - Diversity
+      - Joining
+      - Constant
 type: object
 properties:
   assembler:
@@ -58,7 +66,20 @@ properties:
         type: integer
       minRecursiveRecordShare:
         type: number
-  isolateChains:
+  empiricalAlignmentAssignment:
+    type: object
+    properties:
+      matchAlignmentsWithoutVJHitsByTags:
+        type: boolean
+      uniqGeneOccurrenceWithinCluster:
+        type: array
+        items:
+          $ref: '#/$defs/GeneType'
+      uniqGeneOccurrenceWithinTag:
+        type: array
+        items:
+          $ref: '#/$defs/GeneType'
+  isIsolateChains:
     type: boolean
   minTagSuffixShare:
     type: number

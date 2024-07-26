@@ -144,8 +144,6 @@ $defs:
           - type
 type: object
 properties:
-  alignmentsFilteredByTagPrefix:
-    type: integer
   clonalChainUsage:
     allOf:
       - type: object
@@ -269,6 +267,8 @@ properties:
   readsDroppedTooShortClonalSequence:
     type: integer
   readsDroppedWithLowQualityClones:
+    type: integer
+  readsFilteredByTagPrefix:
     type: integer
   readsFilteredInFineFiltering:
     type: number

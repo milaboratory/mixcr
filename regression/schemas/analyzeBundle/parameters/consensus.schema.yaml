@@ -1,0 +1,92 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+properties:
+  params:
+    type: object
+    properties:
+      groupingTags:
+        type: array
+        items:
+          type: string
+      inferMinRecordsPerConsensus:
+        type: boolean
+      parameters:
+        type: object
+        properties:
+          aAssemblerParameters:
+            type: object
+            properties:
+              bandWidth:
+                type: integer
+              maxNormalizedAlignmentPenalty:
+                type: number
+              maxQuality:
+                type: string
+              minAlignmentScore:
+                type: integer
+              scoring:
+                allOf:
+                  - type: object
+                    properties:
+                      alphabet:
+                        type: string
+                      gapPenalty:
+                        type: integer
+                      subsMatrix:
+                        type: object
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              type: integer
+                  - type: object
+                    properties:
+                      type:
+                        const: linear
+                    required:
+                      - type
+              trimMinimalSumQuality:
+                type: integer
+              trimReferenceRegion:
+                type: boolean
+          kMapParameters:
+            type: object
+            properties:
+              coreSequenceKMers:
+                type: integer
+              coreSequenceRecordScore:
+                type: integer
+              k:
+                type: integer
+              neighbourhoodSize:
+                type: integer
+              useQ1Score:
+                type: boolean
+          maxConsensuses:
+            type: integer
+          maxIterationsPerConsensus:
+            type: integer
+          maxNormalizedAlignmentPenaltyForDiscardRecord:
+            type: number
+          minAlignmentScoreForDiscardRecord:
+            type: integer
+          minRecordSharePerConsensus:
+            type: number
+          minRecordWeightForUse:
+            type: integer
+          minRecordsPerConsensus:
+            type: integer
+          positiveMinIntersectionQuality:
+            type: integer
+          positiveMinQualityShare:
+            type: number
+          useWeightsForRecordsPerConsensus:
+            type: boolean
+      payloadTags:
+        type: array
+        items:
+          type: string
+      safeDiscardedReads:
+        type: boolean
+      safeUnusedReads:
+        type: boolean
