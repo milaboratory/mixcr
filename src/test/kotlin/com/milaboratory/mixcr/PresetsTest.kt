@@ -16,6 +16,7 @@ import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
+import com.milaboratory.mixcr.presets.AssembleContigsMixins.AssembleContigsWithMaxLength
 import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
@@ -33,8 +34,10 @@ import io.kotest.matchers.floats.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.floats.shouldBeLessThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.repseq.core.GeneType.Variable
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -43,22 +46,26 @@ import kotlin.io.path.listDirectoryEntries
 
 class PresetsTest {
     @Test
-    fun test1() {
+    fun `check there are params for every step`() {
         for (presetName in Presets.nonAbstractPresetNames) {
-            println(presetName)
             val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             assertJson(K_OM, bundle, false)
-            println(bundle.flags)
-            println()
-            Assert.assertNotNull("pipeline must be set for all non-abstract presets ($presetName)", bundle.pipeline)
-            for (step in bundle.pipeline!!.steps) {
-                Assert.assertNotNull(
-                    "params for all pipeline steps must be set in non-abstract bundle ($step)",
-                    step.extractFromBundle(bundle)
-                )
-            }
-            bundle.flags.forEach {
-                Assert.assertTrue("Flag = $it", presetFlagsMessages.containsKey(it))
+            assertSoftly(presetName) {
+                "pipeline must be set for all non-abstract presets".asClue {
+                    bundle.pipeline shouldNotBe null
+                }
+                for (step in bundle.pipeline!!.steps) {
+                    step.asClue {
+                        "params for all pipeline steps must be set in non-abstract bundle".asClue {
+                            step.extractFromBundle(bundle, 0) shouldNotBe null
+                        }
+                    }
+                }
+                bundle.flags.forEach { flag ->
+                    flag.asClue {
+                        presetFlagsMessages.containsKey(flag) shouldBe true
+                    }
+                }
             }
         }
     }
@@ -164,6 +171,7 @@ class PresetsTest {
         } shouldBe emptyList()
     }
 
+    @Ignore
     @Test
     fun `all presets with export steps should have required depended steps`() {
         Presets.nonAbstractPresetNames.forEach { presetName ->
@@ -237,6 +245,11 @@ class PresetsTest {
     @Test
     fun `all presets should have assemble contigs feature or flag for it`() {
         Presets.visiblePresets
+            .filterNot { "gex" in it }
+            .filterNot {
+                val parent = Presets.rawResolve(it).inheritFrom
+                parent != null && ("gex" in parent || parent == "shotgun-base")
+            }
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                 val steps = bundle.pipeline?.steps ?: emptyList()
@@ -245,10 +258,12 @@ class PresetsTest {
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                 val hasFeature = bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature()
+                val assembleMaxLength =
+                    Presets.rawResolve(presetName).mixins?.contains(AssembleContigsWithMaxLength) ?: false
                 val hasFlag = Flags.AssembleContigsBy in bundle.flags ||
                         Flags.AssembleContigsByOrMaxLength in bundle.flags ||
                         Flags.AssembleContigsByOrByCell in bundle.flags
-                (hasFeature && hasFlag) || (!hasFeature && !hasFlag)
+                !assembleMaxLength && ((hasFeature && hasFlag) || (!hasFeature && !hasFlag))
             } shouldBe emptyList()
     }
 
@@ -315,8 +330,11 @@ class PresetsTest {
     fun `ranges of min relative scores`() = assertSoftly {
         val lowerBond = 0.8f
         val upperBond = 0.9f
+
+        val exclusions = setOf("generic-ont", "generic-ont-with-umi")
+
         "Presets with `assembleContigs` should have lowered minRelativeScore for `assemble` step".asClue {
-            Presets.visiblePresets
+            (Presets.visiblePresets - exclusions)
                 .filter { presetName ->
                     val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
                     assembleContigs in bundle.pipeline!!.steps

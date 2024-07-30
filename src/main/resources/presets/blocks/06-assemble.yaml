@@ -136,7 +136,7 @@ assemble-with-consensus-sc-cell-level-fr:
           vParameters:
             maxAlignmentWidthLinear: 5
             maxAlignmentWidthAffine: 500
-            relativeMinScore: 0.7
+            relativeMinScore: 0.8
             scoring: null
           jParameters:
             maxAlignmentWidthLinear: 5

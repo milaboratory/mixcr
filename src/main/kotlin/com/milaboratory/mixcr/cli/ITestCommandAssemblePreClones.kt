@@ -93,7 +93,7 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
             var prevTagKey: TagTuple? = null
             for (al in CUtils.it(alignmentsReader.readAlignments())) {
                 cdr3Hash += Objects.hashCode(al.getFeature(GeneFeature.CDR3))
-                val tagKey = al.tagCount.asKeyPrefixOrError(alignmentsReader.header.tagsInfo.getSortingLevel())
+                val tagKey = al.tagCount.asKeyPrefixOrError(alignmentsReader.header.tagsInfo.sortingLevel)
                 if (tagKey != prevTagKey) {
                     if (!tagTuples.add(tagKey)) throw ApplicationException("broken sorting: $tagKey")
                     prevTagKey = tagKey

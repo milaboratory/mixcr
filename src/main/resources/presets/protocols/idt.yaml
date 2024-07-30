@@ -1,0 +1,44 @@
+idt-human-rna-tcr-umi-archer:
+  vendor: "Integrated DNA Technologies"
+  label: "Archer IMMUNOVerse TCR panel"
+  category: non-generic
+  inheritFrom: generic-amplicon-with-umi
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{8})N{13}(R1:*)\^(R2:*)
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+
+
+idt-human-rna-bcr-umi-archer:
+  vendor: "Integrated DNA Technologies"
+  label: "Archer IMMUNOVerse BCR panel"
+  category: non-generic
+  inheritFrom: idt-human-rna-tcr-umi-archer
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+    - type: AddExportClonesField
+      field: -isotype
+      insertIndex: -1
+      args:
+        - auto
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]

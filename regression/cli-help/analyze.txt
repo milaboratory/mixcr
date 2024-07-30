@@ -12,8 +12,8 @@ Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--add-step <step>
                      [--dont-correct-tag-type (Molecule|Cell|Sample)] [--assemble-clonotypes-by
                      <gene_features>] [--split-clones-by <gene_type>]... [--dont-split-clones-by
                      <gene_type>]... [--assemble-contigs-by <gene_features>]
-                     [--assemble-contigs-by-cells]
-                     [--assemble-longest-contigs] [--impute-germline-on-export] [--dont-impute-germline-on-export]
+                     [--assemble-contigs-by-cells] [--assemble-longest-contigs]
+                     [--impute-germline-on-export] [--dont-impute-germline-on-export]
                      [--prepend-export-clones-field <field> [<param>...]]...
                      [--append-export-clones-field <field> [<param>...]]...
                      [--prepend-export-clone-groups-field <field> [<param>...]]...

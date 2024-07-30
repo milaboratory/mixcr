@@ -16,6 +16,8 @@ assert() {
 
 set -euxo pipefail
 
+# need to introduce tag types into mitool for this
+
 mixcr analyze --verbose -f 10x-vdj-tcr-alias-multi-barcode-test \
   --species hs \
   --assemble-clonotypes-by CDR3 \

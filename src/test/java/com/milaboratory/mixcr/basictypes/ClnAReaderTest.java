@@ -51,7 +51,7 @@ public class ClnAReaderTest {
                 }, als ->
                         CUtils.wrap(als, vdjcAlignments ->
                                 vdjcAlignments.getCloneIndex() == 2
-                                        ? vdjcAlignments.setMapping(new ReadToCloneMapping(vdjcAlignments.getAlignmentsIndex(), -1, false, false, false, false))
+                                        ? vdjcAlignments.withMapping(new ReadToCloneMapping(vdjcAlignments.getAlignmentsIndex(), -1, false, false, false, false))
                                         : vdjcAlignments)
         );
     }

@@ -81,7 +81,7 @@ public class CloneAssemblerRunnerTest {
         try (VDJCAlignmentsWriter writer = new VDJCAlignmentsWriter(vdjcaFile)) {
             writer.writeHeader(dummyHeader(), aligner.getUsedGenes());
             for (Object read : CUtils.it(reader)) {
-                VDJCAlignments result = aligner.process(((SequenceRead) read).toTuple(), ((SequenceRead) read));
+                VDJCAlignments result = aligner.process(((SequenceRead) read).toTuple(1), ((SequenceRead) read));
                 if (result != null)
                     writer.write(result);
             }

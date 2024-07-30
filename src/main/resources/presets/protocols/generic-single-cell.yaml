@@ -978,8 +978,6 @@ generic-ht-single-cell-fragmented-with-umi:
 generic-single-cell-gex-base:
   category: generic
   inheritFrom: bundle-base
-  flags:
-    - assembleContigsByOrByCell
   abstract: true
   pipeline:
     - align
@@ -988,7 +986,6 @@ generic-single-cell-gex-base:
     - extend
     - assemble
     - assembleContigs
-    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:

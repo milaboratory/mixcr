@@ -134,15 +134,15 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.6.0-130-contigs-per-cell"
+val mixcrAlgoVersion = "4.6.0-205-4-7-0-RC-plus-mitool-integration"
 // may be blank (will be inherited from mixcr-algo)
 val milibVersion = ""
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val mitoolVersion = "2.2.0-26-optional-correction-of-tags"
+val mitoolVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val repseqioVersion = "2.4.0-5-ver5"
+val repseqioVersion = ""
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.16.0"
@@ -178,8 +178,8 @@ dependencies {
     toObfuscate("io.repseq:repseqio") { exclude("*", "*") }
     toObfuscate("com.milaboratory:milm2-jvm") { exclude("*", "*") }
 
-    // proguard require classes that were inherited
-    obfuscationLibs("com.github.ajalt.clikt:clikt:$cliktVersion") { exclude("*", "*") }
+    // required for call mitool
+    implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
 
     // required for buildLibrary (to call repseqio)
     implementation("com.beust:jcommander:$jcommanderVersion")

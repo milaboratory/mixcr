@@ -255,6 +255,8 @@ properties:
         $ref: '#/$defs/PairedEndReadsLayout'
       relativeMinVFR3CDR3Score:
         type: number
+      retriesForPartialAlignments:
+        type: integer
       saveOriginalReads:
         type: boolean
       saveOriginalSequence:
@@ -315,6 +317,10 @@ properties:
               properties:
                 destinationTag:
                   type: string
+                keepTags:
+                  type: array
+                  items:
+                    type: string
                 name:
                   type: string
                 transformation:
@@ -431,5 +437,7 @@ properties:
     type: string
   trimmingWindowSize:
     type: string
+  weightPatternInReadDescription:
+    type: object
   writeFailedAlignments:
     type: boolean

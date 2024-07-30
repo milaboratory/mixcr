@@ -1,0 +1,211 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  AndTaggedFilterReport-1:
+    type: object
+    properties:
+      nestedReports:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/$defs/AndTaggedFilterReport-2'
+            - $ref: '#/$defs/DummyKeyedFilterReport'
+            - $ref: '#/$defs/GenericHistOpReport'
+            - $ref: '#/$defs/GroupFilterReport-2'
+            - $ref: '#/$defs/InGroupsFilterReport-2'
+            - $ref: '#/$defs/MultiHistOpReport'
+  AndTaggedFilterReport-2:
+    $ref: '#/$defs/AndTaggedFilterReport-1'
+    type: object
+    properties:
+      type:
+        const: and_report
+    required:
+      - type
+  DummyKeyedFilterReport:
+    type: object
+    properties:
+      type:
+        const: dummy_report
+    required:
+      - type
+  GenericHistOpReport:
+    allOf:
+      - type: object
+        properties:
+          threshold:
+            type: number
+      - type: object
+        properties:
+          type:
+            const: generic_hist_report
+        required:
+          - type
+  GroupFilterReport-1:
+    type: object
+    properties:
+      groupingKeys:
+        type: array
+        items:
+          type: string
+      numberOfGroups:
+        type: integer
+      numberOfGroupsAccepted:
+        type: integer
+      operatorReports:
+        type: array
+        items:
+          type: object
+          properties:
+            hist:
+              type: array
+              items:
+                type: object
+                properties:
+                  bins:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        from:
+                          type: number
+                        to:
+                          type: number
+                        weight:
+                          type: number
+                  collectionSpec:
+                    type: object
+                    properties:
+                      binNumber:
+                        type: integer
+                      log:
+                        type: boolean
+                      minBinWidth:
+                        type: number
+                      multiplyWeightByKey:
+                        type: boolean
+            operatorReport:
+              anyOf:
+                - $ref: '#/$defs/AndTaggedFilterReport-2'
+                - $ref: '#/$defs/DummyKeyedFilterReport'
+                - $ref: '#/$defs/GenericHistOpReport'
+                - $ref: '#/$defs/GroupFilterReport-2'
+                - $ref: '#/$defs/InGroupsFilterReport-2'
+                - $ref: '#/$defs/MultiHistOpReport'
+      totalWeight:
+        type: number
+      totalWeightAccepted:
+        type: number
+  GroupFilterReport-2:
+    $ref: '#/$defs/GroupFilterReport-1'
+    type: object
+    properties:
+      type:
+        const: filter_groups_report
+    required:
+      - type
+  InGroupsFilterReport-1:
+    type: object
+    properties:
+      nestedAggregatedReport:
+        anyOf:
+          - $ref: '#/$defs/AndTaggedFilterReport-2'
+          - $ref: '#/$defs/DummyKeyedFilterReport'
+          - $ref: '#/$defs/GenericHistOpReport'
+          - $ref: '#/$defs/GroupFilterReport-2'
+          - $ref: '#/$defs/InGroupsFilterReport-2'
+          - $ref: '#/$defs/MultiHistOpReport'
+      nestedPerGroupReports:
+        type: object
+      numberOfGroups:
+        type: integer
+  InGroupsFilterReport-2:
+    $ref: '#/$defs/InGroupsFilterReport-1'
+    type: object
+    properties:
+      type:
+        const: filter_in_groups_report
+    required:
+      - type
+  MultiHistOpReport:
+    allOf:
+      - type: object
+        properties:
+          nestedThresholds:
+            type: array
+            items:
+              type: number
+          threshold:
+            type: number
+      - type: object
+        properties:
+          type:
+            const: multi_operator_hist_report
+        required:
+          - type
+type: object
+properties:
+  report:
+    type: object
+    properties:
+      commandLine:
+        type: string
+      correction:
+        type: object
+        properties:
+          filterReport:
+            anyOf:
+              - $ref: '#/$defs/AndTaggedFilterReport-2'
+              - $ref: '#/$defs/DummyKeyedFilterReport'
+              - $ref: '#/$defs/GenericHistOpReport'
+              - $ref: '#/$defs/GroupFilterReport-2'
+              - $ref: '#/$defs/InGroupsFilterReport-2'
+              - $ref: '#/$defs/MultiHistOpReport'
+          inputRecords:
+            type: integer
+          outputRecords:
+            type: integer
+          steps:
+            type: array
+            items:
+              type: object
+              properties:
+                coreCount:
+                  type: integer
+                coreDiversity:
+                  type: integer
+                directlyCorrectedCount:
+                  type: integer
+                directlyCorrectedDiversity:
+                  type: integer
+                diversityFilteredByWhitelist:
+                  type: integer
+                filteredCount:
+                  type: integer
+                filteredDiversity:
+                  type: integer
+                inputCount:
+                  type: integer
+                inputDiversity:
+                  type: integer
+                inputGroups:
+                  type: integer
+                outputCount:
+                  type: integer
+                outputDiversity:
+                  type: integer
+                recursivelyCorrected:
+                  type: integer
+                sequenceCorrectionWasPerformed:
+                  type: boolean
+                tagName:
+                  type: string
+      inputFiles:
+        type: array
+        items:
+          type: string
+      outputFiles:
+        type: array
+        items:
+          type: string
+      version:
+        type: string

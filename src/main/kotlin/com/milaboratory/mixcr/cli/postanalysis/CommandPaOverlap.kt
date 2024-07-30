@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -97,7 +97,13 @@ class CommandPaOverlap : CommandPa() {
             val group2samples = mutableMapOf<String, MutableList<String>>()
             for (i in mSamples.indices) {
                 val sample = meta2sample[mSamples[i]] ?: continue
-                val aggGroup = factoryBy.joinToString(",") { metadata[it.lowercase()]!![i].toString() }
+                val aggGroup = factoryBy.joinToString(",") { key ->
+                    ValidationException.requireContains(key, metadata.keys) {
+                        "Metadata columns"
+                    }
+                    val metadataForKey = requireNotNull(metadata[key])
+                    metadataForKey[i].toString()
+                }
                 group2samples.computeIfAbsent(aggGroup) { mutableListOf() }
                     .add(sample)
             }

@@ -97,3 +97,10 @@ properties:
         type: number
       windowSize:
         type: integer
+  useOnlyFullAlignments:
+    type: object
+    properties:
+      cumtop:
+        type: number
+      fallbackToTopAlignment:
+        type: boolean

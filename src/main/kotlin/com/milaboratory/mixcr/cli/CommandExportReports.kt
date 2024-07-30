@@ -17,9 +17,9 @@ import com.milaboratory.app.InputFileType.TXT
 import com.milaboratory.app.InputFileType.YAML
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
+import com.milaboratory.cli.getReportSafe
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
-import com.milaboratory.mixcr.presets.getReportSafe
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.ReportHelper
@@ -124,7 +124,7 @@ class CommandExportReports : MiXCRCommandWithOutputs() {
         }.use { o ->
             when (format) {
                 TXT -> {
-                    val helper = ReportHelper(o, outputPath != null)
+                    val helper = ReportHelper(o, outputPath == null)
                     val steps = when {
                         step != null -> listOf(step!!)
                         else -> footer.reports.collection.steps

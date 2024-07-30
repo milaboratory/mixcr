@@ -167,12 +167,15 @@
   pipeline:
     - align
     - assemblePartial
-    - assemblePartial
     - assemble
     - exportClones
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    overrides:
+      repeats: 2
   align:
     inheritFrom: align-shotgun
     overrides:

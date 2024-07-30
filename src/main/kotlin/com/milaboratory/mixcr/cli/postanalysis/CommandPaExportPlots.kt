@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -37,12 +37,12 @@ abstract class CommandPaExportPlots : CommandPaExport() {
     @set:Option(
         description = [CommonDescriptions.METADATA],
         names = ["--metadata"],
-        paramLabel = "<path>",
+        paramLabel = "<path.tsv>",
         order = OptionsOrder.main + 4_000
     )
     var metadata: Path? = null
         set(value) {
-            ValidationException.requireFileType(value, InputFileType.XSV)
+            ValidationException.requireFileType(value, InputFileType.TSV)
             ValidationException.requireFileExists(value)
             field = value
         }

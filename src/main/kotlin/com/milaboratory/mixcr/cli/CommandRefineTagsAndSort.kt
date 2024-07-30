@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.OutputPort
 import cc.redberry.pipe.util.forEach
+import cc.redberry.pipe.util.onEach
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
@@ -63,6 +64,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 object CommandRefineTagsAndSort {
     const val COMMAND_NAME = AnalyzeCommandDescriptor.refineTagsAndSort.name
@@ -345,7 +347,8 @@ object CommandRefineTagsAndSort {
                         corrector.initialize(
                             mainReader,
                             AlignmentSequenceExtractor,
-                            { al -> al.alignmentsIndex }
+                            { al -> al.alignmentsIndex },
+                            weightExtractor = { al -> al.weight }
                         ) { als ->
                             if (als.tagCount.size() != 1) throw ApplicationException(
                                 "This procedure don't support aggregated tags. " +
@@ -392,7 +395,7 @@ object CommandRefineTagsAndSort {
                                         SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
                             }
                             // Applying updated tags values and returning updated alignments object
-                            al.setTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
+                            al.withTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
                         }
                             .reportProgress("Applying correction & sorting alignments by ${tagNames.last()}")
                     }
@@ -422,8 +425,12 @@ object CommandRefineTagsAndSort {
                             )
                         }
 
+                    // reads count after filtering
+                    val resultReadsCount = AtomicLong()
                     // Running initial hash sorter
-                    var sorted = corrected.hashSort(tagNames.size - 1)
+                    var sorted = corrected
+                        .onEach { al -> resultReadsCount.addAndGet(al.weight.toLong()) }
+                        .hashSort(tagNames.size - 1)
                     corrected.close()
 
                     // Sorting by other tags
@@ -439,13 +446,13 @@ object CommandRefineTagsAndSort {
                             .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec)),
                         mainReader.usedGenes
                     )
-                    writer.setNumberOfProcessedReads(mainReader.numberOfReads)
+                    writer.setNumberOfProcessedReads(resultReadsCount.get())
                     sorted.reportProgress("Writing result").forEach { al ->
                         writer.write(al)
                     }
                     refineTagsAndSortReport = RefineTagsAndSortReport(
                         Date(),
-                        commandLineArguments, arrayOf(inputFile.toString()), arrayOf(outputFile.toString()),
+                        commandLineArguments, listOf(inputFile.toString()), listOf(outputFile.toString()),
                         System.currentTimeMillis() - startTimeMillis,
                         MiXCRVersionInfo.get().shortestVersionString,
                         mitoolReport
