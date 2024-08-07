@@ -78,3 +78,577 @@
     - type: SetSplitClonesBy
       geneType: C
       value: true
+
+"cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-1-1-1":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 1:1:1"
+  mixins:
+    - type: AddQcChecks
+      args:
+        - type: SpikeInControls
+          alphabet: Nucleotide
+          geneFeature: CDR3
+          error: 0.15
+          abundanceMeasure: Molecule
+          spikeIns:
+            - label: BCR spike-in-1a
+              seq: TGTGCGAGATGCGCGATGGAACTGCTGATTGCGACCCGCGAAGAATGG
+              portion: 1
+            - label: BCR spike-in-1b
+              seq: TGTGCGAGATGCGCCATGGATCTGCTCATTGCGACCCGCGAAGAATGG
+              portion: 1
+            - label: BCR spike-in-1c
+              seq: TGTGCGAGATGCGCTATGGACCTGCTAATTGCGACCCGCGAAGAATGG
+              portion: 1
+            - label: BCR spike-in-2a
+              seq: TGTGCGAGAGGCCGCGCCCCGGAAAGCGCCCTGGCCGATTGG
+              portion: 1
+            - label: BCR spike-in-2b
+              seq: TGTGCGAGAGGCCGGGCCCCCGAAAGGGCCCTGGCCGATTGG
+              portion: 1
+            - label: BCR spike-in-2c
+              seq: TGTGCGAGAGGCCGAGCCCCTGAAAGAGCCCTGGCCGATTGG
+              portion: 1
+            - label: BCR spike-in-3a
+              seq: TGTGCGAGAGCTCCTCCTCTTGAAACTATTAATATTTCTTGG
+              portion: 1
+            - label: BCR spike-in-3b
+              seq: TGTGCGAGAGCTCCACCTCTAGAAACGATTAATATTTCTTGG
+              portion: 1
+            - label: BCR spike-in-3c
+              seq: TGTGCGAGAGCTCCGCCTCTCGAAACAATTAATATTTCTTGG
+              portion: 1
+            - label: BCR spike-in-4a
+              seq: TGTGCGAGATATGCGAACGATCGCGAAGCGAGCTATTGG
+              portion: 1
+            - label: BCR spike-in-4b
+              seq: TGTGCGAGATATGCCAACGAACGCGATGCGAGCTATTGG
+              portion: 1
+            - label: BCR spike-in-4c
+              seq: TGTGCGAGATATGCAAACGAGCGCGACGCGAGCTATTGG
+              portion: 1
+            - label: BCR spike-in-5a
+              seq: TGTGCGAGACGCGAAATCAACGACGAAGAACGCTGG
+              portion: 1
+            - label: BCR spike-in-5b
+              seq: TGTGCGAGACGCGATATCAAGGACGATGAACGCTGG
+              portion: 1
+            - label: BCR spike-in-5c
+              seq: TGTGCGAGACGCGAGATCAAAGACGACGAACGCTGG
+              portion: 1
+            - label: BCR spike-in-6a
+              seq: TGTGCGAGAAACGAGTGGTGGCACATCAGCAAGGAGTACTGG
+              portion: 1
+            - label: BCR spike-in-6b
+              seq: TGTGCGAGAAACGACTGGTGGCAGATCAGGAAGGAGTACTGG
+              portion: 1
+            - label: BCR spike-in-6c
+              seq: TGTGCGAGAAACGAATGGTGGCATATCAGAAAGGAGTACTGG
+              portion: 1
+            - label: BCR spike-in-7a
+              seq: TGTGCGAGATTTGCGACCTGCCATATTTGCAAAGAAAACTGG
+              portion: 1
+            - label: BCR spike-in-7b
+              seq: TGTGCGAGATTTGCCACCTGCCAAATTTGCAATGAAAACTGG
+              portion: 1
+            - label: BCR spike-in-7c
+              seq: TGTGCGAGATTTGCAACCTGCCAGATTTGCAACGAAAACTGG
+              portion: 1
+            - label: BCR spike-in-8a
+              seq: TGTGCGAGAAGCGAGCTGTTCATCGAGAGCACCATCTGCAAGTGG
+              portion: 1
+            - label: BCR spike-in-8b
+              seq: TGTGCGAGAAGCGACCTGTTCATGGAGAGCAGCATCTGCAAGTGG
+              portion: 1
+            - label: BCR spike-in-8c
+              seq: TGTGCGAGAAGCGAACTGTTCATTGAGAGCATCATCTGCAAGTGG
+              portion: 1
+            - label: BCR spike-in-9a
+              seq: TGTGCGAGAAGCAGCCAGATCAGGAGGGAGCTGTGG
+              portion: 1
+            - label: BCR spike-in-9b
+              seq: TGTGCGAGAAGCAGGCAGATGAGGAGCGAGCTGTGG
+              portion: 1
+            - label: BCR spike-in-9c
+              seq: TGTGCGAGAAGCAGACAGATTAGGAGTGAGCTGTGG
+              portion: 1
+            - label: BCR spike-in-10a
+              seq: TGTGCGAGAGCCAACGGCGAGCTGTTCGCCCTGCTGAGCTGG
+              portion: 1
+            - label: BCR spike-in-10b
+              seq: TGTGCGAGAGCCAAGGGCGACCTGTTCGCGCTGCTGAGCTGG
+              portion: 1
+            - label: BCR spike-in-10c
+              seq: TGTGCGAGAGCCAAAGGCGATCTGTTCGCACTGCTGAGCTGG
+              portion: 1
+            - label: BCR spike-in-11a
+              seq: TGTGCGAGAGGCAGGGCCTACGCCCTGGACGAGAGGTGG
+              portion: 1
+            - label: BCR spike-in-11b
+              seq: TGTGCGAGAGGCAGCGCCTACGCGCTGGATGAGAGGTGG
+              portion: 1
+            - label: BCR spike-in-11c
+              seq: TGTGCGAGAGGCAGAGCCTACGCACTGGAGGAGAGGTGG
+              portion: 1
+            - label: BCR spike-in-12a
+              seq: TGTGCGAGAAGCTGGATCAGCAGCTGCCATGCCCGCGATTGG
+              portion: 1
+            - label: BCR spike-in-12b
+              seq: TGTGCGAGAAGCTGGATGAGCAGATGCCATCCCCGCGATTGG
+              portion: 1
+            - label: BCR spike-in-12c
+              seq: TGTGCGAGAAGCTGGATGAGCAGATGCCATTCCCGCGATTGG
+              portion: 1
+            - label: BCR spike-in-13a
+              seq: TGTGCGAGAATCATGCCGGCCTTGGCCCCGGCCTTGGCCTGG
+              portion: 1
+            - label: BCR spike-in-13b
+              seq: TGTGCGAGAATCATCCCGGCGTTGGCCCCAGCCTTGGCCTGG
+              portion: 1
+            - label: BCR spike-in-13c
+              seq: TGTGCGAGAATCATACCGGCATTGGCCCCCGCCTTGGCCTGG
+              portion: 1
+            - label: BCR spike-in-14a
+              seq: TGTGCGAGAGATCGCAGCGCGATTCGCGAAGATGATTATTGG
+              portion: 1
+            - label: BCR spike-in-14b
+              seq: TGTGCGAGAGATCGGAGCGCAATTCGCGAGGATGATTATTGG
+              portion: 1
+            - label: BCR spike-in-14c
+              seq: TGTGCGAGAGATCGTAGCGCCATTCGCGATGATGATTATTGG
+              portion: 1
+            - label: BCR spike-in-15a
+              seq: TGTATGCAACTAGGTAATAGTTGGATCACTTTT
+              portion: 1
+            - label: BCR spike-in-15b
+              seq: TGTATGCAACTAGGAAATAGGTGCATCACTTTT
+              portion: 1
+            - label: BCR spike-in-15c
+              seq: TGTATGCAACTAGGGAATAGATGTATCACTTTT
+              portion: 1
+            - label: BCR spike-in-16a
+              seq: TGCGGGTCTTCCCTGTCAGGCTCATGCGTCTTC
+              portion: 1
+            - label: BCR spike-in-16b
+              seq: TGCGGGTCTTCCCTCTCAGGATCATGGGTCTTC
+              portion: 1
+            - label: BCR spike-in-16c
+              seq: TGCGGGTCTTCCCTATCAGGGTCATGTGTCTTC
+              portion: 1
+
+"cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-16-4-1":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 16:4:1"
+  mixins:
+    - type: AddQcChecks
+      args:
+        - type: SpikeInControls
+          alphabet: Nucleotide
+          geneFeature: CDR3
+          error: 0.15
+          abundanceMeasure: Molecule
+          spikeIns:
+            - label: BCR Spike-in-1a
+              seq: tgtgcgagatgcgcgatggaactgctgattgcgacccgcgaagaatgg
+              portion: 16
+            - label: BCR Spike-in-1b
+              seq: tgtgcgagatgcgccatggatctgctcattgcgacccgcgaagaatgg
+              portion: 4
+            - label: BCR Spike-in-1c
+              seq: tgtgcgagatgcgctatggacctgctaattgcgacccgcgaagaatgg
+              portion: 1
+            - label: BCR Spike-in-2a
+              seq: tgtgcgagaggccgcgccccggaaagcgccctggccgattgg
+              portion: 16
+            - label: BCR Spike-in-2b
+              seq: tgtgcgagaggccgggcccccgaaagggccctggccgattgg
+              portion: 4
+            - label: BCR Spike-in-2c
+              seq: tgtgcgagaggccgagccccctgaaagagccctggccgattgg
+              portion: 1
+            - label: BCR Spike-in-3a
+              seq: tgtgcgagagctcctcctcttgaaactattaatatttcttgg
+              portion: 16
+            - label: BCR Spike-in-3b
+              seq: tgtgcgagagctccacctctagaaacgattaatatttcttgg
+              portion: 4
+            - label: BCR Spike-in-3c
+              seq: tgtgcgagagctccgcctctcgaaacaattaatatttcttgg
+              portion: 1
+            - label: BCR Spike-in-4a
+              seq: tgtgcgagatatgcgaacgatcgcgaagcgagctattgg
+              portion: 16
+            - label: BCR Spike-in-4b
+              seq: tgtgcgagatatgccaacgaacgcgatgcgagctattgg
+              portion: 4
+            - label: BCR Spike-in-4c
+              seq: tgtgcgagatatgcaaacgagcgcgacgcgagctattgg
+              portion: 1
+            - label: BCR Spike-in-5a
+              seq: tgtgcgagacgcgaaatcaacgacgaagaacgctgg
+              portion: 16
+            - label: BCR Spike-in-5b
+              seq: tgtgcgagacgcgatatcaaggacgatgaacgctgg
+              portion: 4
+            - label: BCR Spike-in-5c
+              seq: tgtgcgagacgcgagatcaaagacgacgaacgctgg
+              portion: 1
+            - label: BCR Spike-in-6a
+              seq: tgtgcgagaaacgagtggtggcacatcagcaaggagtactgg
+              portion: 16
+            - label: BCR Spike-in-6b
+              seq: tgtgcgagaaacgactggtggcagatcaggaaggagtactgg
+              portion: 4
+            - label: BCR Spike-in-6c
+              seq: tgtgcgagaaacgactggtggcagatcaggaaggagtactgg
+              portion: 1
+            - label: BCR Spike-in-7a
+              seq: tgtgcgagatttgcgacctgccatatttgcaaagaaaactgg
+              portion: 16
+            - label: BCR Spike-in-7b
+              seq: tgtgcgagatttgccacctgccaaatttgcaatgaaaactgg
+              portion: 4
+            - label: BCR Spike-in-7c
+              seq: tgtgcgagatttgcaacctgccagatttgcaacgaaaactgg
+              portion: 1
+            - label: BCR Spike-in-8a
+              seq: tgtgcgagaagcgagctgttcatcgagagcaccatctgcaagtgg
+              portion: 16
+            - label: BCR Spike-in-8b
+              seq: tgtgcgagaagcgacctgttcatggagagcagcatctgcaagtgg
+              portion: 4
+            - label: BCR Spike-in-8c
+              seq: tgtgcgagaagcgaactgttcattgagagcatcatctgcaagtgg
+              portion: 1
+            - label: BCR Spike-in-9a
+              seq: tgtgcgagaagcagccagatcaggagggagctgtgg
+              portion: 16
+            - label: BCR Spike-in-9b
+              seq: tgtgcgagaagcaggcagatgaggagcgagctgtgg
+              portion: 4
+            - label: BCR Spike-in-9c
+              seq: tgtgcgagaagcagacagattaggagtgagctgtgg
+              portion: 1
+            - label: BCR Spike-in-10a
+              seq: tgtgcgagagccaacggcgagctgttcgccctgctgagctgg
+              portion: 16
+            - label: BCR Spike-in-10b
+              seq: tgtgcgagagccaagggcgacctgttcgcgctgctgagctgg
+              portion: 4
+            - label: BCR Spike-in-10c
+              seq: tgtgcgagagccaaaggcgatctgttcgcactgctgagctgg
+              portion: 1
+            - label: BCR Spike-in-11a
+              seq: tgtgcgagaggcagggcctacgccctggacgagaggtgg
+              portion: 16
+            - label: BCR Spike-in-11b
+              seq: tgtgcgagaggcagcgcctacgcgctggatgagaggtgg
+              portion: 4
+            - label: BCR Spike-in-11c
+              seq: tgtgcgagaggcagagcctacgcactggaggagaggtgg
+              portion: 1
+            - label: BCR Spike-in-12a
+              seq: tgtgcgagaagctggatcagcagctgccatgcccgcgattgg
+              portion: 16
+            - label: BCR Spike-in-12b
+              seq: tgtgcgagaagctggatgagcagatgccatccccgcgattgg
+              portion: 4
+            - label: BCR Spike-in-12c
+              seq: tgtgcgagaagctggatgagcagatgccattcccgcgattgg
+              portion: 1
+            - label: BCR Spike-in-13a
+              seq: tgtgcgagaatcatgccggccttggccccggccttggcctgg
+              portion: 16
+            - label: BCR Spike-in-13b
+              seq: tgtgcgagaatcatcccggcgttggccccagccttggcctgg
+              portion: 4
+            - label: BCR Spike-in-13c
+              seq: tgtgcgagaatcataccggcattggcccccgccttggcctgg
+              portion: 1
+            - label: BCR Spike-in-14a
+              seq: tgtgcgagagatcgcagcgcgattcgcgaagatgattattgg
+              portion: 16
+            - label: BCR Spike-in-14b
+              seq: tgtgcgagagatcggagcgcaattcgcgaggatgattattgg
+              portion: 4
+            - label: BCR Spike-in-14c
+              seq: tgtgcgagagatcgtagcgccattcgcgatgatgattattgg
+              portion: 1
+            - label: BCR Spike-in-15a
+              seq: TGTATGCAACTAGGTAATAGTTGGATCACTTTT
+              portion: 16
+            - label: BCR Spike-in-15b
+              seq: TGTATGCAACTAGGAAATAGGTGCATCACTTTT
+              portion: 4
+            - label: BCR Spike-in-15c
+              seq: TGTATGCAACTAGGGAATAGATGTATCACTTTT
+              portion: 1
+            - label: BCR Spike-in-16a
+              seq: TGCGGGTCTTCCCTGTCAGGCTCATGCGTCTTC
+              portion: 16
+            - label: BCR Spike-in-16b
+              seq: TGCGGGTCTTCCCTCTCAGGATCATGGGTCTTC
+              portion: 4
+            - label: BCR Spike-in-16c
+              seq: TGCGGGTCTTCCCTATCAGGGTCATGTGTCTTC
+              portion: 1
+
+"cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-1-1-1":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 1:1:1"
+  mixins:
+    - type: AddQcChecks
+      args:
+        - type: SpikeInControls
+          alphabet: Nucleotide
+          geneFeature: CDR3
+          error: 0.15
+          abundanceMeasure: Molecule
+          spikeIns:
+            - label: TCR Spike-in-1a
+              seq: TGCAGCGCAGAGCACACCGCCAACAATGAGCAGTTCTTC
+              portion: 1
+            - label: TCR Spike-in-1b
+              seq: TGCAGCGCAGAGCAGACCGCGAACAACGAGCAGTTCTTC
+              portion: 1
+            - label: TCR Spike-in-1c
+              seq: TGCAGCGCAGAGCAAACCGCTAACAAGGAGCAGTTCTTC
+              portion: 1
+            - label: TCR Spike-in-2a
+              seq: TGTGCCTGGGAACGCGAAAGCGCTGACACTGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-2b
+              seq: TGTGCCTGGGAACGGGAAAGAGCTGAGACTGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-2c
+              seq: TGTGCCTGGGAACGAGAAAGGGCTGAAACTGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-3a
+              seq: TGTGCCAGCGAGAGGCAGATCATGCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-3b
+              seq: TGTGCCAGCGAGAGCCAGATGATACTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-3c
+              seq: TGTGCCAGCGAGAGACAGATTATCCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-4a
+              seq: TGCAGTGCTAGTGCCAAGATCAAGAGTGAAAAACTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-4b
+              seq: TGCAGTGCTAGTGCGAAGATGAAGAGTGAGAAACTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-4c
+              seq: TGCAGTGCTAGTGCAAAGATAAAGAGTGACAAACTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-5a
+              seq: TGTGCCAGCAACACCATCAGCTACGAGCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-5b
+              seq: TGTGCCAGCAACACGATCAGATACGATCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-5c
+              seq: TGTGCCAGCAACACAATCAGGTACGACCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-6a
+              seq: TGCAGTGCTAACCTGTATTGCGGGAACACTGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-6b
+              seq: TGCAGTGCTAACCTCTATTGCGGAAACACGGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-6c
+              seq: TGCAGTGCTAACCTATATTGCGGTAACACAGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-7a
+              seq: TGCGCCAGCAGCGACGCCACCCCGTACGAGCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-7b
+              seq: TGCGCCAGCAGCGAGGCCACACCGTACGATCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-7c
+              seq: TGCGCCAGCAGCGAAGCCACGCCGTACGACCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-8a
+              seq: TGTGCCAGCTTCGCCTTCGAAGCCGGGGAGCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-8b
+              seq: TGTGCCAGCTTCGCGTTCGATGCCGGGGACCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-8c
+              seq: TGTGCCAGCTTCGCATTCGACGCCGGGGATCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-9a
+              seq: TGTGCCTGGAGTTTGCCGTTGGCCGGTAATTCACCCCTCCACTTT
+              portion: 1
+            - label: TCR Spike-in-9b
+              seq: TGTGCCTGGAGTTTCCCGTTGGCGGGTAATTCTCCCCTCCACTTT
+              portion: 1
+            - label: TCR Spike-in-9c
+              seq: TGTGCCTGGAGTTTACCGTTGGCTGGTAATTCGCCCCTCCACTTT
+              portion: 1
+            - label: TCR Spike-in-10a
+              seq: TGTGCCAGCTGCATGGCCACCGGAAACACCATATATTTT
+              portion: 1
+            - label: TCR Spike-in-10b
+              seq: TGTGCCAGCTGCATCGCCACGGGAAATACCATATATTTT
+              portion: 1
+            - label: TCR Spike-in-10c
+              seq: TGTGCCAGCTGCATAGCCACTGGAAAGACCATATATTTT
+              portion: 1
+            - label: TCR Spike-in-11a
+              seq: TGCGGCACCGAGGAGAGGCCGAACACAGGCTTTCAGAAACTTGTATTT
+              portion: 1
+            - label: TCR Spike-in-11b
+              seq: TGCGGCACCGAGGACAGGCCAAACACAGGGTTTCAGAAACTTGTATTT
+              portion: 1
+            - label: TCR Spike-in-11c
+              seq: TGCGGCACCGAGGAAAGGCCCAACACAGGTTTTCAGAAACTTGTATTT
+              portion: 1
+            - label: TCR Spike-in-12a
+              seq: TGTGCCACCGAGGAGAGCCACTATTATAAGAAACTCTTT
+              portion: 1
+            - label: TCR Spike-in-12b
+              seq: TGTGCCACCGAGGACAGCCAGTATTATAATAAACTCTTT
+              portion: 1
+            - label: TCR Spike-in-12c
+              seq: TGTGCCACCGAGGAAAGCCAATATTATAACAAACTCTTT
+              portion: 1
+            - label: TCR Spike-in-13a
+              seq: TGTGCTCTTCACGCCACCACCGTAACCGATAAACTCATCTTT
+              portion: 1
+            - label: TCR Spike-in-13b
+              seq: TGTGCTCTTCACGCGACCACAGTAACGGATAAACTCATCTTT
+              portion: 1
+            - label: TCR Spike-in-13c
+              seq: TGTGCTCTTCACGCAACCACGGTAACAGATAAACTCATCTTT
+              portion: 1
+
+"cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-16-4-1":
+  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 16:4:1"
+  mixins:
+    - type: AddQcChecks
+      args:
+        - type: SpikeInControls
+          alphabet: Nucleotide
+          geneFeature: CDR3
+          error: 0.15
+          abundanceMeasure: Molecule
+          spikeIns:
+            - label: TCR Spike-in-1a
+              seq: TGCAGCGCAGAGCACACCGCCAACAATGAGCAGTTCTTC
+              portion: 16
+            - label: TCR Spike-in-1b
+              seq: TGCAGCGCAGAGCAGACCGCGAACAACGAGCAGTTCTTC
+              portion: 4
+            - label: TCR Spike-in-1c
+              seq: TGCAGCGCAGAGCAAACCGCTAACAAGGAGCAGTTCTTC
+              portion: 1
+            - label: TCR Spike-in-2a
+              seq: TGTGCCTGGGAACGCGAAAGCGCTGACACTGAAGCTTTCTTT
+              portion: 16
+            - label: TCR Spike-in-2b
+              seq: TGTGCCTGGGAACGGGAAAGAGCTGAGACTGAAGCTTTCTTT
+              portion: 4
+            - label: TCR Spike-in-2c
+              seq: TGTGCCTGGGAACGAGAAAGGGCTGAAACTGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-3a
+              seq: TGTGCCAGCGAGAGGCAGATCATGCTGTTTTTT
+              portion: 16
+            - label: TCR Spike-in-3b
+              seq: TGTGCCAGCGAGAGCCAGATGATACTGTTTTTT
+              portion: 4
+            - label: TCR Spike-in-3c
+              seq: TGTGCCAGCGAGAGACAGATTATCCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-4a
+              seq: TGCAGTGCTAGTGCCAAGATCAAGAGTGAAAAACTGTTTTTT
+              portion: 16
+            - label: TCR Spike-in-4b
+              seq: TGCAGTGCTAGTGCGAAGATGAAGAGTGAGAAACTGTTTTTT
+              portion: 4
+            - label: TCR Spike-in-4c
+              seq: TGCAGTGCTAGTGCAAAGATAAAGAGTGACAAACTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-5a
+              seq: TGTGCCAGCAACACCATCAGCTACGAGCAGTACTTC
+              portion: 16
+            - label: TCR Spike-in-5b
+              seq: TGTGCCAGCAACACGATCAGATACGATCAGTACTTC
+              portion: 4
+            - label: TCR Spike-in-5c
+              seq: TGTGCCAGCAACACAATCAGGTACGACCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-6a
+              seq: TGCAGTGCTAACCTGTATTGCGGGAACACTGAAGCTTTCTTT
+              portion: 16
+            - label: TCR Spike-in-6b
+              seq: TGCAGTGCTAACCTCTATTGCGGAAACACGGAAGCTTTCTTT
+              portion: 4
+            - label: TCR Spike-in-6c
+              seq: TGCAGTGCTAACCTATATTGCGGTAACACAGAAGCTTTCTTT
+              portion: 1
+            - label: TCR Spike-in-7a
+              seq: TGCGCCAGCAGCGACGCCACCCCGTACGAGCAGTACTTC
+              portion: 16
+            - label: TCR Spike-in-7b
+              seq: TGCGCCAGCAGCGAGGCCACACCGTACGATCAGTACTTC
+              portion: 4
+            - label: TCR Spike-in-7c
+              seq: TGCGCCAGCAGCGAAGCCACGCCGTACGACCAGTACTTC
+              portion: 1
+            - label: TCR Spike-in-8a
+              seq: TGTGCCAGCTTCGCCTTCGAAGCCGGGGAGCTGTTTTTT
+              portion: 16
+            - label: TCR Spike-in-8b
+              seq: TGTGCCAGCTTCGCGTTCGATGCCGGGGACCTGTTTTTT
+              portion: 4
+            - label: TCR Spike-in-8c
+              seq: TGTGCCAGCTTCGCATTCGACGCCGGGGATCTGTTTTTT
+              portion: 1
+            - label: TCR Spike-in-9a
+              seq: TGTGCCTGGAGTTTGCCGTTGGCCGGTAATTCACCCCTCCACTTT
+              portion: 16
+            - label: TCR Spike-in-9b
+              seq: TGTGCCTGGAGTTTCCCGTTGGCGGGTAATTCTCCCCTCCACTTT
+              portion: 4
+            - label: TCR Spike-in-9c
+              seq: TGTGCCTGGAGTTTACCGTTGGCTGGTAATTCGCCCCTCCACTTT
+              portion: 1
+            - label: TCR Spike-in-10a
+              seq: TGTGCCAGCTGCATGGCCACCGGAAACACCATATATTTT
+              portion: 16
+            - label: TCR Spike-in-10b
+              seq: TGTGCCAGCTGCATCGCCACGGGAAATACCATATATTTT
+              portion: 4
+            - label: TCR Spike-in-10c
+              seq: TGTGCCAGCTGCATAGCCACTGGAAAGACCATATATTTT
+              portion: 1
+            - label: TCR Spike-in-11a
+              seq: TGCGGCACCGAGGAGAGGCCGAACACAGGCTTTCAGAAACTTGTATTT
+              portion: 16
+            - label: TCR Spike-in-11b
+              seq: TGCGGCACCGAGGACAGGCCAAACACAGGGTTTCAGAAACTTGTATTT
+              portion: 4
+            - label: TCR Spike-in-11c
+              seq: TGCGGCACCGAGGAAAGGCCCAACACAGGTTTTCAGAAACTTGTATTT
+              portion: 1
+            - label: TCR Spike-in-12a
+              seq: TGTGCCACCGAGGAGAGCCACTATTATAAGAAACTCTTT
+              portion: 16
+            - label: TCR Spike-in-12b
+              seq: TGTGCCACCGAGGACAGCCAGTATTATAATAAACTCTTT
+              portion: 4
+            - label: TCR Spike-in-12c
+              seq: TGTGCCACCGAGGAAAGCCAATATTATAACAAACTCTTT
+              portion: 1
+            - label: TCR Spike-in-13a
+              seq: TGTGCTCTTCACGCCACCACCGTAACCGATAAACTCATCTTT
+              portion: 16
+            - label: TCR Spike-in-13b
+              seq: TGTGCTCTTCACGCGACCACAGTAACGGATAAACTCATCTTT
+              portion: 4
+            - label: TCR Spike-in-13c
+              seq: TGTGCTCTTCACGCAACCACGGTAACAGATAAACTCATCTTT
+              portion: 1
