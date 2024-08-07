@@ -17,6 +17,7 @@ assert() {
 set -euxo pipefail
 
 mixcr analyze --verbose generic-tcr-amplicon \
+  --assemble-clonotypes-by CDR3 \
   --species hs \
   --rna \
   --floating-left-alignment-boundary \

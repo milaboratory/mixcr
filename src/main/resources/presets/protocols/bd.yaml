@@ -12,6 +12,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-amplicon
     overrides:
@@ -710,6 +712,8 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^<<acagN{16}(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -1416,6 +1420,8 @@
     - type: RightAlignmentBoundaryNoPoint
       floating: false
       geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
   align:
     inheritFrom: align-amplicon
     overrides:
@@ -3842,6 +3848,8 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^acaggaaactcatggtgcgt(CELL1:N{9})aatg(CELL2:N{9})ccac(CELL3:N{9})(UMI:N{8})\^(R2:*)
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align-single-cell
     overrides:
@@ -6340,7 +6348,6 @@
   inheritFrom: bd-rhapsody-full-length-single-cell-B384-base
   flags:
     - species
-
 
 
 

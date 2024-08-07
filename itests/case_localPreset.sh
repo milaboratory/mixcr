@@ -8,6 +8,7 @@ mixcr exportPreset --preset-name generic-amplicon \
   --floating-left-alignment-boundary \
   --floating-right-alignment-boundary J \
   --add-step assembleContigs \
+  --assemble-clonotypes-by CDR3 \
   preset.yaml
 
 mixcr analyze --verbose local:preset test_R1.fastq test_R2.fastq with_dot

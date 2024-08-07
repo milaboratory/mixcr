@@ -140,6 +140,7 @@ align-amplicon:
       readsLayout: Opposite
       saveOriginalReads: false
       smartForceEdgeAlignments: true
+      retriesForPartialAlignments: 3
 
 align-shotgun:
   abstract: true
@@ -165,7 +166,7 @@ align-shotgun:
         geneFeatureToAlign: VTranscriptWithP
         minSumScore: 60
         edgeRealignmentMinScoreOverride: 35
-        relativeMinScore: 0.97
+        relativeMinScore: 0.7
         parameters:
           type: kaligner
           mapperKValue: 5
@@ -270,6 +271,7 @@ align-shotgun:
       readsLayout: Opposite
       saveOriginalReads: false
       smartForceEdgeAlignments: true
+      retriesForPartialAlignments: 3
 
 align-long-read:
   abstract: true
@@ -442,9 +444,10 @@ align-single-cell:
     parameters:
       vParameters:
         geneFeatureToAlign: VTranscriptWithP
+        rightForceRealignmentTrigger: CDR3Begin(-6)
         minSumScore: 60
         edgeRealignmentMinScoreOverride: 35
-        relativeMinScore: 0.97
+        relativeMinScore: 0.7
         parameters:
           type: kaligner2
           mapperNValue: 9
@@ -461,7 +464,7 @@ align-single-cell:
           mapperMaxClusterIndels: 4
           mapperKMersPerPosition: 4
           mapperAbsoluteMinScore: 250
-          mapperRelativeMinScore: 0.75
+          mapperRelativeMinScore: 0.9
           mapperMinSeedsDistance: 6
           mapperMaxSeedsDistance: 6
           alignmentStopPenalty: 0
@@ -569,3 +572,4 @@ align-single-cell:
       vjOverlapWindow: 3
       saveOriginalReads: false
       smartForceEdgeAlignments: true
+      retriesForPartialAlignments: 3

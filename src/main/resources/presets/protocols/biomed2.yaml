@@ -44,6 +44,8 @@
       floating: true
       geneType: J
     - type: MaterialTypeRNA
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
 
 "biomed2-human-rna-trbdg":
   vendor: "Public"
@@ -63,5 +65,7 @@
       floating: true
       geneType: J
     - type: MaterialTypeRNA
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
 
 

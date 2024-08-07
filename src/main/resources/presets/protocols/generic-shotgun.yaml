@@ -5,9 +5,9 @@ shotgun-base:
   flags:
     - species
     - materialType
+    - assembleContigsByOrMaxLength
   pipeline:
     - align
-    - assemblePartial
     - assemblePartial
     - extend
     - assemble
@@ -20,10 +20,59 @@ shotgun-base:
         upper: 0.2
   align:
     inheritFrom: align-shotgun
+  assemblePartial:
+    inheritFrom: assemblePartial-base
+    overrides:
+      repeats: 2
   assemble:
     inheritFrom: assemble-base
     overrides:
       clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
+        cloneFactoryParameters:
+          vParameters:
+            relativeMinScore: 0.8
+            maxHits: 5
+            scoring:
+              type: affine
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 10, mismatch = -19)"
+              gapOpenPenalty: -62
+              gapExtensionPenalty: -11
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+          jParameters:
+            relativeMinScore: 0.97
+            maxHits: 5
+            scoring:
+              type: affine
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 10, mismatch = -19)"
+              gapOpenPenalty: -62
+              gapExtensionPenalty: -11
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+          cParameters:
+            relativeMinScore: 0.97
+            maxHits: 5
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -9)"
+              gapPenalty: -12
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+          dParameters:
+            relativeMinScore: 0.85
+            absoluteMinScore: 25.0
+            maxHits: 3
+            scoring:
+              type: linear
+              alphabet: nucleotide
+              subsMatrix: "simple(match = 5, mismatch = -9)"
+              gapPenalty: -12
 
 rna-seq:
   label: "RNA-Seq data"
@@ -33,6 +82,7 @@ rna-seq:
     - species
   mixins:
     - type: MaterialTypeRNA
+    - type: AssembleContigsWithMaxLength
 
 exome-seq:
   label: "Exome-Seq data"
@@ -42,3 +92,4 @@ exome-seq:
     - species
   mixins:
     - type: MaterialTypeDNA
+    - type: AssembleContigsWithMaxLength

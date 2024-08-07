@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -35,6 +35,7 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import java.io.PrintStream
 import java.nio.file.Path
+import kotlin.math.max
 
 @Command(
     description = ["Calculates the difference between two .vdjca files."]
@@ -179,7 +180,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         var onlyIn1: Long = 0
         var onlyIn2: Long = 0
         var diffFeature: Long = 0
-        var justDiff: Long = 0
+        var justDiff1: Long = 0
+        var justDiff2: Long = 0
         val diffHits = LongArray(GeneType.NUMBER_OF_TYPES)
         input1.only.inheritHeaderAndFooterFrom(input1.reader)
         input1.diff.inheritHeaderAndFooterFrom(input1.reader)
@@ -193,17 +195,18 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
             when (diff.status!!) {
                 AlignmentsAreSame -> ++same
                 AlignmentPresentOnlyInFirst -> {
-                    ++onlyIn1
+                    onlyIn1 += diff.first.weight.toLong()
                     input1.only.write(diff.first)
                 }
 
                 AlignmentPresentOnlyInSecond -> {
-                    ++onlyIn2
+                    onlyIn2 += diff.second.weight.toLong()
                     input2.only.write(diff.second)
                 }
 
                 AlignmentsAreDifferent -> {
-                    ++justDiff
+                    justDiff1 += diff.first.weight.toLong()
+                    justDiff2 += diff.second.weight.toLong()
                     if (diff.reason.diffGeneFeature) ++diffFeature
                     for ((key, value) in diff.reason.diffHits) if (value) ++diffHits[key.ordinal]
                     if (!onlyDifferentFeature || diff.reason.diffGeneFeature) {
@@ -215,8 +218,8 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
         }
         input1.only.setNumberOfProcessedReads(onlyIn1)
         input2.only.setNumberOfProcessedReads(onlyIn2)
-        input1.diff.setNumberOfProcessedReads(justDiff)
-        input2.diff.setNumberOfProcessedReads(justDiff)
+        input1.diff.setNumberOfProcessedReads(justDiff1)
+        input2.diff.setNumberOfProcessedReads(justDiff2)
         report.println("First  file: $in1")
         report.println("Second file: $in2")
         report.println("Completely same reads: $same")
@@ -228,7 +231,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
             "Aligned reads present only in the SECOND file: $onlyIn2 " +
                     "(${ReportHelper.PERCENT_FORMAT.format(100.0 * onlyIn2 / input2.reader.numberOfReads)})%"
         )
-        report.println("Total number of different reads: $justDiff")
+        report.println("Total number of different reads: ${max(justDiff1, justDiff2)}")
         report.println("Reads with not same $geneFeatureToMatch: $diffFeature")
         for (geneType in GeneType.VDJC_REFERENCE) {
             report.println("Reads with not same ${geneType.name} hits: ${diffHits[geneType.ordinal]}")

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -60,7 +60,7 @@ public class VDJCAlignerSTest {
                 writer.writeHeader(dummyHeader(), aligner.getUsedGenes());
                 header = writer.getPosition();
                 for (SingleRead read : CUtils.it(reader)) {
-                    VDJCAlignments result = aligner.process(read.toTuple(), read);
+                    VDJCAlignments result = aligner.process(read.toTuple(1), read);
                     if (result != null) {
                         writer.write(result);
                         alignemntsList.add(result);
@@ -96,6 +96,6 @@ public class VDJCAlignerSTest {
                 aligner.addGene(gene);
         SingleReadImpl read = new SingleReadImpl(0, new NSequenceWithQuality(new NucleotideSequence("GCTGTGTATTACTGTGCAAGAGGGCCCCAAGAAAATAGTGGTTATTACTACGGGTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCAGCCTCCACCAAGGGCCCATCGGTCTTCCCCCTGGCGCC"), SequenceQuality.GOOD_QUALITY_VALUE), "");
         RandomUtil.getThreadLocalRandom().setSeed(29);
-        aligner.process0(read.toTuple());
+        aligner.process0(read.toTuple(1));
     }
 }

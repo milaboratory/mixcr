@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -83,7 +83,8 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
                 if (cellLevel) TagType.Cell else TagType.Molecule, arrayOf(GeneFeature.CDR3),
                 params,
                 files[1],
-                tmp
+                tmp,
+                alignmentsReader.header.alignerParameters
             )
             SmartProgressReporter.startProgressReport(assemblerRunner)
             assemblerRunner.run()
@@ -92,7 +93,7 @@ class ITestCommandAssemblePreClones : MiXCRCommandWithOutputs() {
             var prevTagKey: TagTuple? = null
             for (al in CUtils.it(alignmentsReader.readAlignments())) {
                 cdr3Hash += Objects.hashCode(al.getFeature(GeneFeature.CDR3))
-                val tagKey = al.tagCount.asKeyPrefixOrError(alignmentsReader.header.tagsInfo.getSortingLevel())
+                val tagKey = al.tagCount.asKeyPrefixOrError(alignmentsReader.header.tagsInfo.sortingLevel)
                 if (tagKey != prevTagKey) {
                     if (!tagTuples.add(tagKey)) throw ApplicationException("broken sorting: $tagKey")
                     prevTagKey = tagKey

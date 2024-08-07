@@ -24,6 +24,7 @@ import cc.redberry.pipe.util.toList
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
+import com.milaboratory.mixcr.assembler.CloneFactoryParameters
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.CloneRanks
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
@@ -284,15 +285,15 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
         for (geneType in GeneType.VJ_REFERENCE) {
             val scores = datasets
-                .map { it.assemblerParameters.cloneFactoryParameters.getVJCParameters(geneType).scoring }
+                .map { it.cloneFactoryParameters.getVJCParameters(geneType).scoring }
             ValidationException.requireTheSame(scores) {
                 "Input files must have the same $geneType scoring"
             }
         }
         val scoringSet = ScoringSet(
-            datasets.first().assemblerParameters.cloneFactoryParameters.vParameters.scoring,
+            datasets.first().cloneFactoryParameters.vParameters.scoring,
             MutationsUtils.NDNScoring(),
-            datasets.first().assemblerParameters.cloneFactoryParameters.jParameters.scoring,
+            datasets.first().cloneFactoryParameters.jParameters.scoring,
             shmTreeBuilderParameters.topologyBuilder.multiplierForNDNScore
         )
 
@@ -494,7 +495,12 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
         val headers = cloneReaders.map { it.cloneSetInfo }
         writeHeader(
             headers
-                .foldIndexed(MiXCRHeaderMerger(singleCell)) { index, m, cloneSetInfo ->
+                .foldIndexed(
+                    MiXCRHeaderMerger(
+                        singleCell,
+                        cloneReaders.first().cloneFactoryParameters
+                    )
+                ) { index, m, cloneSetInfo ->
                     m.add(inputFiles[index].toString(), cloneSetInfo.header)
                 }
                 .build()
@@ -508,7 +514,8 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 }
 
 private class MiXCRHeaderMerger(
-    private val singleCell: Boolean
+    private val singleCell: Boolean,
+    private val cloneFactoryParameters: CloneFactoryParameters
 ) {
     private var inputHashAccumulator: MessageDigest? = MessageDigest.getInstance("MD5")
     private var upstreamParams = mutableListOf<Pair<String, MiXCRStepParams>>()
@@ -545,6 +552,7 @@ private class MiXCRHeaderMerger(
             null,
             foundAlleles,
             allFullyCoveredBy,
-            singleCell
+            singleCell,
+            cloneFactoryParameters
         )
 }

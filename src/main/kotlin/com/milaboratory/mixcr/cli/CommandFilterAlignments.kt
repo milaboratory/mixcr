@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -149,14 +149,16 @@ class CommandFilterAlignments : MiXCRCommandWithOutputs() {
                 SmartProgressReporter.startProgressReport("Filtering", sReads)
                 var total = 0
                 var passed = 0
+                var resultReadsCount = 0L
                 sReads.buffered(2048).forEach { vdjcAlignments ->
                     ++total
                     if (filter.accept(vdjcAlignments)) {
                         writer.write(vdjcAlignments)
                         ++passed
+                        resultReadsCount += vdjcAlignments.weight.toLong()
                     }
                 }
-                writer.setNumberOfProcessedReads(reader.numberOfReads)
+                writer.setNumberOfProcessedReads(resultReadsCount)
                 writer.setFooter(reader.footer)
                 System.out.printf("%s alignments analysed\n", total)
                 System.out.printf("%s alignments written (%.1f%%)\n", passed, 100.0 * passed / total)

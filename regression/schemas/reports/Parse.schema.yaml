@@ -1,0 +1,57 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+type: object
+properties:
+  report:
+    type: object
+    properties:
+      commandLine:
+        type: string
+      inputFiles:
+        type: array
+        items:
+          type: string
+      outputFiles:
+        type: array
+        items:
+          type: string
+      parseReport:
+        type: object
+        properties:
+          detailedReport:
+            type: array
+            items:
+              type: object
+              properties:
+                nested:
+                  type: object
+          matchedReads:
+            type: integer
+          projections:
+            type: object
+          totalBitCost:
+            type: number
+          totalReads:
+            type: integer
+      trimmerReport:
+        type: object
+        properties:
+          r1LeftTrimmedEvents:
+            type: integer
+          r1LeftTrimmedNucleotides:
+            type: integer
+          r1RightTrimmedEvents:
+            type: integer
+          r1RightTrimmedNucleotides:
+            type: integer
+          r2LeftTrimmedEvents:
+            type: integer
+          r2LeftTrimmedNucleotides:
+            type: integer
+          r2RightTrimmedEvents:
+            type: integer
+          r2RightTrimmedNucleotides:
+            type: integer
+          total:
+            type: integer
+      version:
+        type: string

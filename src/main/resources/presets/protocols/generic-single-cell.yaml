@@ -7,6 +7,7 @@ generic-lt-single-cell-amplicon:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -92,6 +93,7 @@ generic-lt-single-cell-amplicon-with-umi:
     - species
     - leftAlignmentMode
     - rightAlignmentMode
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -237,6 +239,7 @@ generic-lt-single-cell-fragmented:
   inheritFrom: bundle-base
   flags:
     - species
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -271,10 +274,12 @@ generic-lt-single-cell-fragmented:
   align:
     inheritFrom: align-single-cell
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -290,6 +295,8 @@ generic-lt-single-cell-fragmented:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
@@ -306,6 +313,7 @@ generic-lt-single-cell-fragmented-with-umi:
   inheritFrom: bundle-base
   flags:
     - species
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -384,10 +392,12 @@ generic-lt-single-cell-fragmented-with-umi:
                         share: 0.85
                         round: Down
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -405,6 +415,8 @@ generic-lt-single-cell-fragmented-with-umi:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
@@ -425,6 +437,7 @@ generic-ht-single-cell-amplicon:
     - leftAlignmentMode
     - rightAlignmentMode
     - tagPattern
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -538,6 +551,7 @@ generic-ht-single-cell-amplicon-with-umi:
     - leftAlignmentMode
     - rightAlignmentMode
     - tagPattern
+    - assembleClonesBy
   pipeline:
     - align
     - refineTagsAndSort
@@ -712,6 +726,7 @@ generic-ht-single-cell-fragmented:
   flags:
     - species
     - tagPattern
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -783,10 +798,12 @@ generic-ht-single-cell-fragmented:
                 minimalSample: 20
                 fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -802,6 +819,8 @@ generic-ht-single-cell-fragmented:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
   exportAlignments:
@@ -819,6 +838,7 @@ generic-ht-single-cell-fragmented-with-umi:
   flags:
     - species
     - tagPattern
+    - assembleContigsByOrByCell
   pipeline:
     - align
     - refineTagsAndSort
@@ -921,10 +941,12 @@ generic-ht-single-cell-fragmented-with-umi:
                     minimalSample: 20
                     fallbackThreshold: 1.0
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -942,6 +964,8 @@ generic-ht-single-cell-fragmented-with-umi:
                   operator:
                     type: group_operator_cumtop
                     share: 0.95
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   exportClones:
     inheritFrom: exportClones-single-cell-with-umi-base
   exportAlignments:
@@ -962,7 +986,6 @@ generic-single-cell-gex-base:
     - extend
     - assemble
     - assembleContigs
-    - assembleCells
     - exportClones
     - exportCloneGroups
   qc:
@@ -980,9 +1003,14 @@ generic-single-cell-gex-base:
     overrides:
       cellLevel: true
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
   assembleCells:
     inheritFrom: assembleCells-base
 

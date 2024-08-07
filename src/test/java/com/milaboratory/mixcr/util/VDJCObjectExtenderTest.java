@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -11,9 +11,7 @@
  */
 package com.milaboratory.mixcr.util;
 
-import com.milaboratory.core.sequence.NSQTuple;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mixcr.basictypes.SequenceHistory;
 import com.milaboratory.mixcr.basictypes.VDJCAlignments;
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner;
 import com.milaboratory.mixcr.partialassembler.VDJCMultiRead;
@@ -28,7 +26,7 @@ import org.junit.Test;
 
 public class VDJCObjectExtenderTest {
     @Test
-    public void testTripleRead() throws Exception {
+    public void testTripleRead() {
         final boolean print = true;
         Well44497b rg = new Well44497b(12312);
 
@@ -59,14 +57,7 @@ public class VDJCObjectExtenderTest {
                         MiXCRTestUtils.createMultiRead(seq1, seq2) :
                         MiXCRTestUtils.createMultiRead(seq1, seq2, seq3);
 
-                SequenceHistory[] histories = new SequenceHistory[read.numberOfReads()];
-                for (int i = 0; i < histories.length; i++)
-                    histories[i] = new SequenceHistory.RawSequence(read.getId(), (byte) i,
-                            false, read.getRead(i).getData().size());
-
-                NSQTuple data = read.toTuple();
-                VDJCAlignments al = aligner.process(data, read);
-                al = al.setHistory(histories, new NSQTuple[]{data});
+                VDJCAlignments al = aligner.process(read);
                 Assert.assertNotNull(al);
 
                 VDJCObjectExtender<VDJCAlignments> extender = new VDJCObjectExtender<>(Chains.TCR, (byte) 35,

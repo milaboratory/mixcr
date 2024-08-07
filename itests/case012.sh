@@ -24,6 +24,7 @@ mixcr analyze --verbose test-mikelov-et-al-2021-without-contigs \
       case12-without-contigs
 
 mixcr analyze --verbose test-mikelov-et-al-2021-with-contigs \
+      --assemble-clonotypes-by CDR3 \
       umi_single_read_R1.fastq \
       umi_single_read_R2.fastq \
       case12-with-contigs

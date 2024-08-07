@@ -1,33 +1,31 @@
 align:
   type: alignerReport
   commandLine: align -f --report baseSingleCell.vdjcontigs.align.report.txt --json-report
-    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --save-output-file-names
-    baseSingleCell.vdjcontigs.align.list --species hs --assemble-contigs-by VDJRegion
-    single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.vdjca
+    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species hs
+    --assemble-contigs-by VDJRegion baseSingleCell.vdjcontigs.consensus.4.mic baseSingleCell.vdjcontigs.alignments.vdjca
   inputFiles:
-    - single_cell_vdj_t_subset_R1.fastq.gz
-    - single_cell_vdj_t_subset_R2.fastq.gz
+    - baseSingleCell.vdjcontigs.consensus.4.mic
   outputFiles:
-    - baseSingleCell.vdjcontigs.vdjca
+    - baseSingleCell.vdjcontigs.alignments.vdjca
   totalReadsProcessed: 46879
-  aligned: 40525
-  notAligned: 6354
+  aligned: 44588
+  notAligned: 2291
   notAlignedReasons:
-    NoHits: 5776
+    NoHits: 2277
     FailedAfterAOverlap: 0
     NoCDR3Parts: 0
     NoVHits: 0
     NoJHits: 0
     VAndJOnDifferentTargets: 0
-    LowTotalScore: 578
+    LowTotalScore: 14
     NoBarcode: 0
     SampleNotMatched: 0
   overlapped: 0
   overlappedAligned: 0
   overlappedNotAligned: 0
   alignmentAidedOverlaps: 0
-  noCDR3PartsAlignments: 17724
-  partialAlignments: 22009
+  noCDR3PartsAlignments: 54
+  partialAlignments: 14624
   chimeras: 0
   vChimeras: 0
   jChimeras: 0
@@ -38,54 +36,846 @@ align:
   chainUsage:
     type: chainUsage
     chimeras: 0
-    total: 40525
+    total: 44588
     chains:
-      IGH:
-        total: 21
-        nonFunctional: 0
-        isOOF: 0
-        hasStops: 0
       IGK:
-        total: 17
-        nonFunctional: 0
-        isOOF: 0
-        hasStops: 0
-      IGL:
-        total: 15
+        total: 1
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
       TRA:
-        total: 2589
-        nonFunctional: 27
-        isOOF: 27
+        total: 6188
+        nonFunctional: 1688
+        isOOF: 1688
         hasStops: 0
       TRAD:
-        total: 2980
+        total: 7
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
       TRB:
-        total: 34901
-        nonFunctional: 3
+        total: 38392
+        nonFunctional: 2
         isOOF: 1
-        hasStops: 2
-      TRG:
-        total: 2
+        hasStops: 1
+  trimmingReport: null
+  tagParsingReport: null
+  notMatchedByHeader: 0
+  transformerReports: []
+  coverage:
+    VDJRegion: 28880
+    CDR1_TO_FR4: 29696
+    FR2_TO_FR4: 29696
+    CDR2_TO_FR4: 29710
+    FR3_TO_FR4: 29713
+    CDR3: 29910
+assemble:
+  type: assemblerReport
+  commandLine: assemble -f --report baseSingleCell.vdjcontigs.assemble.report.txt
+    --json-report baseSingleCell.vdjcontigs.assemble.report.json baseSingleCell.vdjcontigs.extended.vdjca
+    baseSingleCell.vdjcontigs.clna
+  inputFiles:
+    - baseSingleCell.vdjcontigs.extended.vdjca
+  outputFiles:
+    - baseSingleCell.vdjcontigs.clna
+  preCloneAssemblerReport:
+    type: preCloneAssemblerReport
+    inputGroups: 3
+    groupsWithNoAssemblingFeature: 0
+    inputAlignments: 498
+    inputAlignmentsWithAssemblingFeature: 226
+    coreAlignmentsDroppedByUncertainChain: 0
+    corePreClonesDroppedByTagSuffix: 0
+    coreAlignmentsDroppedByTagSuffix: 0
+    preClones: 12
+    preClonesPerGroup:
+      "4": 3
+    assemblingFeatureSequencesInZeroPreClones: 0
+    coreAlignments: 121
+    tagConflicts: 26
+    geneAndTagConflicts: 40
+    geneConflicts:
+      Variable: 4
+    discardedCoreAlignments: 105
+    empiricallyAssignedAlignments: 23
+    vjEmpiricallyAssignedAlignments: 0
+    tagEmpiricallyAssignedAlignments: 0
+    geneAndTagEmpiricallyAssignedAlignments: 23
+    empiricalAssignmentConflicts: 0
+    ignoredAlignments: 0
+    unassignedAlignments: 354
+  totalReadsProcessed: 44588
+  totalAlignmentsProcessed: 12
+  totalAlignedReadsProcessed: 29826
+  initialClonesCreated: 12
+  readsDroppedNoTargetSequence: 14677
+  readsDroppedTooShortClonalSequence: 0
+  readsDroppedLowQuality: 0
+  coreReads: 29826
+  readsDroppedFailedMapping: 0
+  lowQualityRescued: 0
+  clonesClustered: 0
+  readsClustered: 0
+  clones: 12
+  clonesDroppedAsLowQuality: 0
+  clonesPreClustered: 0
+  readsPreClustered: 0
+  readsInClones: 29826
+  readsInClonesBeforeClustering: 29826
+  readsDroppedWithLowQualityClones: 0
+  clonalChainUsage:
+    type: chainUsage
+    chimeras: 0
+    total: 12
+    chains:
+      TRA:
+        total: 6
+        nonFunctional: 3
+        isOOF: 3
+        hasStops: 0
+      TRB:
+        total: 6
         nonFunctional: 0
         isOOF: 0
         hasStops: 0
-  trimmingReport:
-    total: 46879
-    r1LeftTrimmedEvents: 78
-    r1RightTrimmedEvents: 2
-    r2LeftTrimmedEvents: 0
-    r2RightTrimmedEvents: 0
-    r1LeftTrimmedNucleotides: 100
-    r1RightTrimmedNucleotides: 2
-    r2LeftTrimmedNucleotides: 0
-    r2RightTrimmedNucleotides: 0
-  tagParsingReport:
+  clonesFilteredInFineFiltering: 0
+  readsFilteredInFineFiltering: 0.0
+  clonesFilteredInPostFiltering: 0
+  readsFilteredInPostFiltering: 0.0
+  postFilteringReports:
+    - type: filter_in_groups_report
+      numberOfGroups: 12
+      nestedAggregatedReport:
+        type: filter_groups_report
+        groupingKeys:
+          - allTags:Cell
+        numberOfGroups: 12
+        numberOfGroupsAccepted: 12
+        totalWeight: 29826.0
+        totalWeightAccepted: 29826.0
+        operatorReports:
+          - operatorReport:
+              type: generic_hist_report
+              threshold: NaN
+            metricHists:
+              - null
+      nestedPerGroupReports: {}
+  readsFilteredByTagPrefix: 0
+assembleContigs:
+  type: fullSeqAssemblerReport
+  commandLine: assembleContigs -f --report baseSingleCell.vdjcontigs.assembleContigs.report.txt
+    --json-report baseSingleCell.vdjcontigs.assembleContigs.report.json baseSingleCell.vdjcontigs.clna
+    baseSingleCell.vdjcontigs.contigs.clns
+  inputFiles:
+    - baseSingleCell.vdjcontigs.clna
+  outputFiles:
+    - baseSingleCell.vdjcontigs.contigs.clns
+  clonesWithAmbiguousLetters: 0
+  clonesWithAmbiguousLettersInSplittingRegion: 0
+  readsWithAmbiguousLetters: 0.0
+  readsWithAmbiguousLettersInSplittingRegion: 0.0
+  totalAmbiguousLetters: 0
+  totalAmbiguousLettersInSplittingRegion: 0
+  initialCloneCount: 12
+  canceledAssemblies: 0
+  cloneBeforeFilteringCount: 12
+  finalCloneCount: 7
+  combinedCloneCount: 0
+  totalReadsProcessed: 29826.0
+  clonesClustered: 0
+  readsClustered: 0.0
+  longestContigLength: 349
+  totalDividedVariantReads: 0.0
+  assemblePrematureTerminationEvents: 0.0
+extend:
+  type: extenderReport
+  commandLine: extend -f --report baseSingleCell.vdjcontigs.extend.report.txt --json-report
+    baseSingleCell.vdjcontigs.extend.report.json baseSingleCell.vdjcontigs.refined.vdjca
+    baseSingleCell.vdjcontigs.extended.vdjca
+  inputFiles:
+    - baseSingleCell.vdjcontigs.refined.vdjca
+  outputFiles:
+    - baseSingleCell.vdjcontigs.extended.vdjca
+  totalProcessed: 498
+  totalExtended: 1
+  vExtended: 0
+  vExtendedMerged: 0
+  jExtended: 1
+  jExtendedMerged: 0
+  vjExtended: 0
+  meanVExtensionLength: NaN
+  meanJExtensionLength: 1.0
+mitool-consensus:
+  - type: MiTool.Consensus
+    assembledTags:
+      - R2
+    primaryRead: {}
+    contigsPerGroup:
+      "0": 228
+    contigLength:
+      - {}
+    readsInContigLength:
+      - {}
+    readsInContigsTotal: 0
+    readsInContigs: {}
+    inputReads: 46879
+    groups: 1234
+    groupsFilteredByCount: 1006
+    readsFilteredByCount: 1240
+    readsFilteredNotInConsensus: 45639
+    consensuses: 0
+    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.1.report.txt
+      baseSingleCell.vdjcontigs.refined.mic baseSingleCell.vdjcontigs.consensus.1.mic
+    inputFiles:
+      - baseSingleCell.vdjcontigs.refined.mic
+    outputFiles:
+      - baseSingleCell.vdjcontigs.consensus.1.mic
+  - type: MiTool.Consensus
+    assembledTags:
+      - R2
+    primaryRead:
+      "0": 146
+    contigsPerGroup:
+      "0": 85
+      "1": 140
+      "2": 3
+    contigLength:
+      - "90": 1
+        "91": 2
+        "92": 1
+        "93": 1
+        "95": 1
+        "96": 2
+        "99": 1
+        "111": 2
+        "114": 1
+        "115": 1
+        "117": 1
+        "121": 1
+        "122": 1
+        "128": 1
+        "133": 1
+        "137": 1
+        "138": 1
+        "139": 2
+        "141": 1
+        "144": 1
+        "145": 1
+        "146": 1
+        "147": 2
+        "150": 1
+        "151": 1
+        "153": 1
+        "155": 1
+        "156": 1
+        "162": 2
+        "166": 1
+        "168": 1
+        "172": 2
+        "174": 1
+        "176": 1
+        "177": 1
+        "179": 1
+        "189": 1
+        "197": 2
+        "200": 1
+        "205": 1
+        "207": 1
+        "216": 1
+        "218": 1
+        "219": 1
+        "225": 1
+        "235": 1
+        "246": 1
+        "261": 1
+        "284": 1
+        "287": 1
+        "288": 1
+        "289": 1
+        "299": 1
+        "303": 1
+        "313": 1
+        "329": 1
+        "350": 1
+        "354": 1
+        "362": 1
+        "368": 2
+        "371": 1
+        "379": 1
+        "395": 1
+        "400": 1
+        "413": 1
+        "416": 1
+        "420": 1
+        "428": 1
+        "431": 1
+        "432": 1
+        "452": 1
+        "454": 1
+        "473": 1
+        "486": 1
+        "500": 1
+        "522": 1
+        "525": 1
+        "535": 1
+        "540": 1
+        "541": 1
+        "543": 1
+        "545": 1
+        "546": 1
+        "547": 2
+        "552": 1
+        "553": 3
+        "557": 1
+        "561": 1
+        "562": 1
+        "563": 2
+        "566": 1
+        "567": 2
+        "568": 3
+        "570": 1
+        "571": 2
+        "572": 2
+        "573": 1
+        "575": 1
+        "576": 1
+        "577": 3
+        "578": 1
+        "579": 4
+        "580": 1
+        "581": 1
+        "583": 2
+        "585": 1
+        "587": 1
+        "588": 2
+        "590": 1
+        "596": 1
+        "598": 1
+        "600": 1
+        "601": 1
+        "603": 1
+        "605": 1
+        "618": 1
+        "628": 1
+        "640": 1
+        "711": 1
+        "715": 1
+        "738": 1
+    readsInContigLength:
+      - "90": 3
+        "91": 8
+        "92": 5
+        "93": 25
+        "95": 3
+        "96": 22
+        "99": 29
+        "111": 6
+        "114": 3
+        "115": 45
+        "117": 3
+        "121": 24
+        "122": 3
+        "128": 3
+        "133": 40
+        "137": 3
+        "138": 70
+        "139": 6
+        "141": 3
+        "144": 3
+        "145": 3
+        "146": 3
+        "147": 6
+        "150": 3
+        "151": 3
+        "153": 3
+        "155": 3
+        "156": 3
+        "162": 6
+        "166": 3
+        "168": 4
+        "172": 6
+        "174": 3
+        "176": 3
+        "177": 3
+        "179": 5
+        "189": 3
+        "197": 8
+        "200": 4
+        "205": 3
+        "207": 49
+        "216": 6
+        "218": 3
+        "219": 6
+        "225": 4
+        "235": 5
+        "246": 117
+        "261": 7
+        "284": 7
+        "287": 4
+        "288": 503
+        "289": 10
+        "299": 5
+        "303": 361
+        "313": 92
+        "329": 506
+        "350": 24
+        "354": 8
+        "362": 816
+        "368": 1148
+        "371": 946
+        "379": 649
+        "395": 714
+        "400": 969
+        "413": 28
+        "416": 718
+        "420": 639
+        "428": 921
+        "431": 663
+        "432": 596
+        "452": 924
+        "454": 682
+        "473": 45
+        "486": 714
+        "500": 846
+        "522": 344
+        "525": 117
+        "535": 692
+        "540": 605
+        "541": 778
+        "543": 352
+        "545": 525
+        "546": 606
+        "547": 1460
+        "552": 184
+        "553": 1176
+        "557": 530
+        "561": 509
+        "562": 513
+        "563": 1349
+        "566": 633
+        "567": 739
+        "568": 1456
+        "570": 591
+        "571": 921
+        "572": 886
+        "573": 313
+        "575": 573
+        "576": 342
+        "577": 1803
+        "578": 490
+        "579": 1974
+        "580": 590
+        "581": 485
+        "583": 986
+        "585": 534
+        "587": 411
+        "588": 1006
+        "590": 532
+        "596": 250
+        "598": 350
+        "600": 510
+        "601": 627
+        "603": 734
+        "605": 472
+        "618": 444
+        "628": 356
+        "640": 562
+        "711": 287
+        "715": 426
+        "738": 272
+    readsInContigsTotal: 44415
+    readsInContigs:
+      "3": 102
+      "4": 24
+      "5": 25
+      "6": 12
+      "7": 14
+      "8": 8
+      "10": 10
+      "11": 22
+      "24": 48
+      "25": 25
+      "28": 28
+      "29": 29
+      "37": 37
+      "40": 40
+      "45": 90
+      "49": 49
+      "70": 70
+      "92": 92
+      "117": 234
+      "184": 184
+      "250": 250
+      "272": 272
+      "287": 287
+      "294": 294
+      "313": 313
+      "342": 342
+      "344": 688
+      "350": 350
+      "352": 352
+      "356": 356
+      "361": 361
+      "364": 364
+      "411": 411
+      "412": 412
+      "424": 424
+      "426": 426
+      "427": 427
+      "436": 436
+      "440": 440
+      "444": 444
+      "445": 445
+      "450": 450
+      "472": 944
+      "480": 480
+      "481": 481
+      "483": 483
+      "485": 485
+      "490": 490
+      "497": 497
+      "503": 503
+      "506": 506
+      "509": 509
+      "510": 510
+      "513": 513
+      "525": 1050
+      "530": 530
+      "532": 532
+      "534": 534
+      "546": 546
+      "550": 550
+      "562": 562
+      "565": 565
+      "573": 573
+      "579": 579
+      "589": 589
+      "590": 590
+      "591": 591
+      "596": 596
+      "605": 605
+      "606": 606
+      "607": 607
+      "627": 627
+      "632": 632
+      "633": 633
+      "639": 639
+      "649": 649
+      "659": 659
+      "663": 663
+      "682": 682
+      "692": 692
+      "699": 699
+      "714": 1428
+      "718": 718
+      "721": 721
+      "734": 734
+      "761": 761
+      "778": 778
+      "816": 816
+      "846": 846
+      "921": 921
+      "924": 924
+      "946": 946
+      "969": 969
+      "985": 985
+    inputReads: 46879
+    groups: 1234
+    groupsFilteredByCount: 1006
+    readsFilteredByCount: 1240
+    readsFilteredNotInConsensus: 1224
+    consensuses: 146
+    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.2.report.txt
+      baseSingleCell.vdjcontigs.consensus.1.mic baseSingleCell.vdjcontigs.consensus.2.mic
+    inputFiles:
+      - baseSingleCell.vdjcontigs.consensus.1.mic
+    outputFiles:
+      - baseSingleCell.vdjcontigs.consensus.2.mic
+  - type: MiTool.Consensus
+    assembledTags:
+      - R2
+    primaryRead:
+      "0": 79
+    contigsPerGroup:
+      "22": 1
+      "23": 1
+      "34": 1
+    contigLength:
+      - "91": 1
+        "92": 2
+        "93": 1
+        "94": 1
+        "97": 1
+        "99": 1
+        "103": 1
+        "106": 1
+        "109": 1
+        "112": 1
+        "120": 1
+        "122": 2
+        "132": 1
+        "138": 1
+        "140": 1
+        "141": 1
+        "146": 1
+        "147": 1
+        "155": 2
+        "156": 1
+        "159": 2
+        "160": 1
+        "167": 1
+        "171": 1
+        "179": 1
+        "180": 1
+        "181": 1
+        "185": 1
+        "188": 1
+        "189": 1
+        "191": 2
+        "192": 1
+        "194": 1
+        "197": 1
+        "201": 1
+        "209": 1
+        "210": 1
+        "215": 2
+        "216": 1
+        "224": 1
+        "229": 1
+        "251": 1
+        "257": 1
+        "261": 1
+        "262": 2
+        "307": 1
+        "332": 1
+        "350": 1
+        "354": 1
+        "372": 1
+        "385": 1
+        "387": 1
+        "390": 1
+        "413": 1
+        "420": 1
+        "424": 1
+        "446": 1
+        "479": 1
+        "533": 1
+        "541": 1
+        "544": 1
+        "562": 1
+        "588": 1
+        "597": 1
+        "598": 1
+        "599": 1
+        "623": 1
+        "661": 1
+        "717": 1
+        "735": 1
+        "852": 1
+        "1006": 1
+    readsInContigLength:
+      - "91": 7
+        "92": 7
+        "93": 3
+        "94": 4
+        "97": 5
+        "99": 30
+        "103": 3
+        "106": 3
+        "109": 3
+        "112": 3
+        "120": 4
+        "122": 7
+        "132": 4
+        "138": 5
+        "140": 3
+        "141": 23
+        "146": 3
+        "147": 3
+        "155": 8
+        "156": 8
+        "159": 36
+        "160": 12
+        "167": 3
+        "171": 6
+        "179": 5
+        "180": 4
+        "181": 7
+        "185": 5
+        "188": 3
+        "189": 6
+        "191": 11
+        "192": 13
+        "194": 5
+        "197": 5
+        "201": 3
+        "209": 4
+        "210": 14
+        "215": 7
+        "216": 9
+        "224": 4
+        "229": 4
+        "251": 4
+        "257": 9
+        "261": 4
+        "262": 28
+        "307": 5
+        "332": 24
+        "350": 22
+        "354": 15
+        "372": 8
+        "385": 10
+        "387": 11
+        "390": 35
+        "413": 11
+        "420": 24
+        "424": 22
+        "446": 5
+        "479": 33
+        "533": 19
+        "541": 22
+        "544": 3
+        "562": 3
+        "588": 21
+        "597": 75
+        "598": 45
+        "599": 33
+        "623": 5
+        "661": 6
+        "717": 16
+        "735": 4
+        "852": 122
+        "1006": 121
+    readsInContigsTotal: 1067
+    readsInContigs:
+      "3": 48
+      "4": 64
+      "5": 45
+      "6": 18
+      "7": 28
+      "8": 16
+      "9": 27
+      "10": 10
+      "11": 22
+      "12": 12
+      "13": 13
+      "14": 14
+      "15": 15
+      "16": 16
+      "19": 38
+      "21": 21
+      "22": 66
+      "23": 23
+      "24": 48
+      "29": 29
+      "30": 30
+      "33": 66
+      "35": 35
+      "45": 45
+      "75": 75
+      "121": 121
+      "122": 122
+    inputReads: 2610
+    groups: 3
+    groupsFilteredByCount: 0
+    readsFilteredByCount: 0
+    readsFilteredNotInConsensus: 1543
+    consensuses: 79
+    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.3.report.txt
+      baseSingleCell.vdjcontigs.consensus.2.mic baseSingleCell.vdjcontigs.consensus.3.mic
+    inputFiles:
+      - baseSingleCell.vdjcontigs.consensus.2.mic
+    outputFiles:
+      - baseSingleCell.vdjcontigs.consensus.3.mic
+  - type: MiTool.Consensus
+    assembledTags:
+      - R2
+    primaryRead:
+      "0": 27
+    contigsPerGroup:
+      "5": 1
+      "8": 1
+      "14": 1
+    contigLength:
+      - "99": 1
+        "145": 1
+        "159": 2
+        "257": 1
+        "262": 2
+        "332": 1
+        "354": 1
+        "367": 1
+        "390": 1
+        "408": 1
+        "420": 1
+        "424": 1
+        "479": 1
+        "562": 1
+        "588": 1
+        "597": 1
+        "598": 1
+        "599": 1
+        "623": 1
+        "640": 1
+        "670": 1
+        "722": 1
+        "735": 1
+        "851": 1
+        "1006": 1
+    readsInContigLength:
+      - "99": 4
+        "145": 5
+        "159": 9
+        "257": 4
+        "262": 6
+        "332": 6
+        "354": 3
+        "367": 3
+        "390": 12
+        "408": 8
+        "420": 4
+        "424": 8
+        "479": 8
+        "562": 3
+        "588": 8
+        "597": 26
+        "598": 5
+        "599": 12
+        "623": 5
+        "640": 3
+        "670": 18
+        "722": 7
+        "735": 4
+        "851": 58
+        "1006": 32
+    readsInContigsTotal: 261
+    readsInContigs:
+      "3": 21
+      "4": 16
+      "5": 15
+      "6": 12
+      "7": 7
+      "8": 32
+      "12": 24
+      "18": 18
+      "26": 26
+      "32": 32
+      "58": 58
+    inputReads: 325
+    groups: 3
+    groupsFilteredByCount: 0
+    readsFilteredByCount: 0
+    readsFilteredNotInConsensus: 64
+    consensuses: 27
+    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.4.report.txt
+      baseSingleCell.vdjcontigs.consensus.3.mic baseSingleCell.vdjcontigs.consensus.4.mic
+    inputFiles:
+      - baseSingleCell.vdjcontigs.consensus.3.mic
+    outputFiles:
+      - baseSingleCell.vdjcontigs.consensus.4.mic
+mitool-parse:
+  type: MiTool.Parse
+  parseReport:
     total: 46879
     matched: 46879
     totalBitCost: 0.0
@@ -128,314 +918,130 @@ align:
                       "0": 46879
             costDistributions:
               "0": 46879
-  notMatchedByHeader: 0
-  transformerReports: []
-  coverage:
-    VDJRegion: 0
-    CDR1_TO_FR4: 0
-    FR2_TO_FR4: 0
-    CDR2_TO_FR4: 0
-    FR3_TO_FR4: 0
-    CDR3: 792
-assemble:
-  type: assemblerReport
-  commandLine: assemble -f --report baseSingleCell.vdjcontigs.assemble.report.txt
-    --json-report baseSingleCell.vdjcontigs.assemble.report.json baseSingleCell.vdjcontigs.extended.vdjca
-    baseSingleCell.vdjcontigs.clna
+  trimmerReport: null
+  commandLine: parse --report baseSingleCell.vdjcontigs.parse.report.txt --preset
+    local:MiTool.preset --save-output-file-names baseSingleCell.vdjcontigs.parse.list.tsv
+    single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.parsed.mic
   inputFiles:
-    - baseSingleCell.vdjcontigs.extended.vdjca
+    - single_cell_vdj_t_subset_R1.fastq.gz
+    - single_cell_vdj_t_subset_R2.fastq.gz
   outputFiles:
-    - baseSingleCell.vdjcontigs.clna
-  preCloneAssemblerReport:
-    type: preCloneAssemblerReport
-    inputGroups: 3
-    groupsWithNoAssemblingFeature: 0
-    inputAlignments: 28024
-    inputAlignmentsWithAssemblingFeature: 936
-    coreAlignmentsDroppedByUncertainChain: 0
-    corePreClonesDroppedByTagSuffix: 0
-    coreAlignmentsDroppedByTagSuffix: 0
-    preClones: 8
-    preClonesPerGroup:
-      "2": 1
-      "3": 2
-    assemblingFeatureSequencesInZeroPreClones: 0
-    coreAlignments: 857
-    tagConflicts: 1
-    geneAndTagConflicts: 1
-    geneConflicts:
-      Variable: 1
-    discardedCoreAlignments: 79
-    empiricallyAssignedAlignments: 13109
-    vjEmpiricallyAssignedAlignments: 8
-    tagEmpiricallyAssignedAlignments: 0
-    geneAndTagEmpiricallyAssignedAlignments: 13101
-    empiricalAssignmentConflicts: 0
-    ignoredAlignments: 0
-    unassignedAlignments: 14058
-  totalReadsProcessed: 46737
-  totalAlignmentsProcessed: 8
-  totalAlignedReadsProcessed: 14108
-  initialClonesCreated: 7
-  readsDroppedNoTargetSequence: 27088
-  readsDroppedTooShortClonalSequence: 0
-  readsDroppedLowQuality: 0
-  coreReads: 14107
-  readsDroppedFailedMapping: 1
-  lowQualityRescued: 0
-  clonesClustered: 0
-  readsClustered: 0
-  clones: 7
-  clonesDroppedAsLowQuality: 0
-  clonesPreClustered: 0
-  readsPreClustered: 0
-  readsInClones: 14107
-  readsInClonesBeforeClustering: 14107
-  readsDroppedWithLowQualityClones: 0
-  clonalChainUsage:
-    type: chainUsage
-    chimeras: 0
-    total: 7
-    chains:
-      TRA:
-        total: 4
-        nonFunctional: 2
-        isOOF: 2
-        hasStops: 0
-      TRB:
-        total: 3
-        nonFunctional: 0
-        isOOF: 0
-        hasStops: 0
-  clonesFilteredInFineFiltering: 0
-  readsFilteredInFineFiltering: 0.0
-  clonesFilteredInPostFiltering: 0
-  readsFilteredInPostFiltering: 0.0
-  postFilteringReports:
-    - type: filter_in_groups_report
-      numberOfGroups: 7
-      nestedAggregatedReport:
-        type: filter_groups_report
-        groupingKeys:
-          - allTags:Cell
-        numberOfGroups: 7
-        numberOfGroupsAccepted: 7
-        totalWeight: 14107.0
-        totalWeightAccepted: 14107.0
-        operatorReports:
-          - operatorReport:
-              type: generic_hist_report
-              threshold: NaN
-            metricHists:
-              - null
-      nestedPerGroupReports: {}
-  alignmentsFilteredByTagPrefix: 0
-assembleContigs:
-  type: fullSeqAssemblerReport
-  commandLine: assembleContigs -f --report baseSingleCell.vdjcontigs.assembleContigs.report.txt
-    --json-report baseSingleCell.vdjcontigs.assembleContigs.report.json baseSingleCell.vdjcontigs.clna
-    baseSingleCell.vdjcontigs.contigs.clns
+    - baseSingleCell.vdjcontigs.parsed.mic
+mitool-refine-tags:
+  type: MiTool.RefineTags
+  commandLine: refine-tags --report baseSingleCell.vdjcontigs.refineTags.report.txt
+    baseSingleCell.vdjcontigs.parsed.mic baseSingleCell.vdjcontigs.refined.mic
   inputFiles:
-    - baseSingleCell.vdjcontigs.clna
+    - baseSingleCell.vdjcontigs.parsed.mic
   outputFiles:
-    - baseSingleCell.vdjcontigs.contigs.clns
-  clonesWithAmbiguousLetters: 0
-  clonesWithAmbiguousLettersInSplittingRegion: 0
-  readsWithAmbiguousLetters: 0.0
-  readsWithAmbiguousLettersInSplittingRegion: 0.0
-  totalAmbiguousLetters: 0
-  totalAmbiguousLettersInSplittingRegion: 0
-  initialCloneCount: 7
-  canceledAssemblies: 0
-  finalCloneCount: 6
-  totalReadsProcessed: 14107.0
-  clonesClustered: 0
-  readsClustered: 0.0
-  longestContigLength: 349
-  totalDividedVariantReads: 0.0
-  assemblePrematureTerminationEvents: 0.0
-assemblePartial:
-  type: partialAlignmentsAssemblerReport
-  commandLine: assemblePartial -f --report baseSingleCell.vdjcontigs.assemblePartial.report.txt
-    --json-report baseSingleCell.vdjcontigs.assemblePartial.report.json baseSingleCell.vdjcontigs.refined.vdjca
-    baseSingleCell.vdjcontigs.passembled.1.vdjca
-  inputFiles:
-    - baseSingleCell.vdjcontigs.refined.vdjca
-  outputFiles:
-    - baseSingleCell.vdjcontigs.passembled.1.vdjca
-  independentRuns: 62
-  totalProcessed: 28166
-  outputAlignments: 28024
-  withCDR3: 794
-  overlapped: 142
-  leftTooShortNRegion: 538
-  kMerDiversity: 2270
-  droppedWildcardsInKMer: 0
-  droppedSmallOverlapNRegion: 125
-  droppedNoNRegion: 0
-  leftParts: 399
-  rightParts: 9043
-  complexOverlaps: 0
-  overOverlaps: 0
-  partialAlignmentsAsIs: 27088
-extend:
-  type: extenderReport
-  commandLine: extend -f --report baseSingleCell.vdjcontigs.extend.report.txt --json-report
-    baseSingleCell.vdjcontigs.extend.report.json baseSingleCell.vdjcontigs.passembled.1.vdjca
-    baseSingleCell.vdjcontigs.extended.vdjca
-  inputFiles:
-    - baseSingleCell.vdjcontigs.passembled.1.vdjca
-  outputFiles:
-    - baseSingleCell.vdjcontigs.extended.vdjca
-  totalProcessed: 28024
-  totalExtended: 26
-  vExtended: 8
-  vExtendedMerged: 0
-  jExtended: 18
-  jExtendedMerged: 0
-  vjExtended: 0
-  meanVExtensionLength: 1.0
-  meanJExtensionLength: 3.111111111111111
+    - baseSingleCell.vdjcontigs.refined.mic
+  inputRecords: 46879
+  outputRecords: 46879
+  steps:
+    - tagName: CELL
+      inputGroups: 1
+      inputDiversity: 173
+      inputCount: 46879
+      coreDiversity: 94
+      coreCount: 46800
+      directlyCorrectedDiversity: 170
+      directlyCorrectedCount: 941
+      filteredDiversity: 0
+      filteredCount: 0
+      recursivelyCorrected: 107
+      diversityFilteredByWhitelist: 0
+      outputDiversity: 3
+      outputCount: 46879
+      sequenceCorrectionWasPerformed: true
+    - tagName: UMI
+      inputGroups: 3
+      inputDiversity: 1601
+      inputCount: 46879
+      coreDiversity: 1354
+      coreCount: 46632
+      directlyCorrectedDiversity: 367
+      directlyCorrectedCount: 447
+      filteredDiversity: 0
+      filteredCount: 0
+      recursivelyCorrected: 24
+      diversityFilteredByWhitelist: 0
+      outputDiversity: 1234
+      outputCount: 46879
+      sequenceCorrectionWasPerformed: true
+  filterReport: null
 refineTagsAndSort:
   type: refineTagsAndSort
   commandLine: refineTagsAndSort -f --report baseSingleCell.vdjcontigs.refine.report.txt
-    --json-report baseSingleCell.vdjcontigs.refine.report.json baseSingleCell.vdjcontigs.vdjca
+    --json-report baseSingleCell.vdjcontigs.refine.report.json baseSingleCell.vdjcontigs.alignments.vdjca
     baseSingleCell.vdjcontigs.refined.vdjca
   inputFiles:
-    - baseSingleCell.vdjcontigs.vdjca
+    - baseSingleCell.vdjcontigs.alignments.vdjca
   outputFiles:
     - baseSingleCell.vdjcontigs.refined.vdjca
   correctionReport:
-    inputRecords: 40525
-    outputRecords: 28166
+    inputRecords: 498
+    outputRecords: 498
     steps:
       - tagName: CELL
         inputGroups: 1
-        inputDiversity: 164
-        inputCount: 40525
-        coreDiversity: 84
-        coreCount: 40443
-        directlyCorrectedDiversity: 161
-        directlyCorrectedCount: 795
+        inputDiversity: 3
+        inputCount: 498
+        coreDiversity: 0
+        coreCount: 0
+        directlyCorrectedDiversity: 0
+        directlyCorrectedCount: 0
         filteredDiversity: 0
         filteredCount: 0
-        recursivelyCorrected: 98
+        recursivelyCorrected: 0
         diversityFilteredByWhitelist: 0
         outputDiversity: 3
-        outputCount: 40525
-        correctionRan: true
+        outputCount: 498
+        sequenceCorrectionWasPerformed: false
       - tagName: UMI
         inputGroups: 3
-        inputDiversity: 424
-        inputCount: 40525
-        coreDiversity: 202
-        coreCount: 40303
-        directlyCorrectedDiversity: 315
-        directlyCorrectedCount: 371
-        filteredDiversity: 1
-        filteredCount: 1
-        recursivelyCorrected: 15
+        inputDiversity: 114
+        inputCount: 498
+        coreDiversity: 0
+        coreCount: 0
+        directlyCorrectedDiversity: 0
+        directlyCorrectedCount: 0
+        filteredDiversity: 0
+        filteredCount: 0
+        recursivelyCorrected: 0
         diversityFilteredByWhitelist: 0
-        outputDiversity: 108
-        outputCount: 40524
-        correctionRan: true
+        outputDiversity: 114
+        outputCount: 498
+        sequenceCorrectionWasPerformed: false
     filterReport:
       type: and_report
       nestedReports:
         - type: filter_groups_report
           groupingKeys:
             - allTags:Cell
-            - allTags:Molecule
-          numberOfGroups: 108
-          numberOfGroupsAccepted: 89
-          totalWeight: 40524.0
-          totalWeightAccepted: 40465.0
-          operatorReports:
-            - operatorReport:
-                type: multi_operator_hist_report
-                threshold: 25.0
-                nestedThresholds:
-                  - 25.0
-                  - 413.0
-              metricHists:
-                - bins:
-                    - from: 1.0
-                      to: 1.5848931924611136
-                      weight: 12.0
-                    - from: 1.5848931924611136
-                      to: 2.51188643150958
-                      weight: 1.0
-                    - from: 2.51188643150958
-                      to: 3.981071705534973
-                      weight: 1.0
-                    - from: 3.981071705534973
-                      to: 6.309573444801933
-                      weight: 2.0
-                    - from: 6.309573444801933
-                      to: 10.0
-                      weight: 1.0
-                    - from: 10.0
-                      to: 15.848931924611142
-                      weight: 2.0
-                    - from: 15.848931924611142
-                      to: 25.11886431509581
-                      weight: 1.0
-                    - from: 25.11886431509581
-                      to: 39.810717055349734
-                      weight: 3.0
-                    - from: 39.810717055349734
-                      to: 63.09573444801933
-                      weight: 3.0
-                    - from: 63.09573444801933
-                      to: 100.0
-                      weight: 2.0
-                    - from: 100.0
-                      to: 158.48931924611142
-                      weight: 1.0
-                    - from: 158.48931924611142
-                      to: 251.18864315095823
-                      weight: 4.0
-                    - from: 251.18864315095823
-                      to: 398.1071705534973
-                      weight: 12.0
-                    - from: 398.1071705534973
-                      to: 630.9573444801937
-                      weight: 49.0
-                    - from: 630.9573444801937
-                      to: 1000.0
-                      weight: 14.0
-                  collectionSpec:
-                    log: true
-                    binNumber: 0
-                    minBinWidth: 0.2
-                    multiplyWeightByKey: false
-        - type: filter_groups_report
-          groupingKeys:
-            - allTags:Cell
           numberOfGroups: 3
           numberOfGroupsAccepted: 3
-          totalWeight: 40465.0
-          totalWeightAccepted: 40465.0
+          totalWeight: 44588.0
+          totalWeightAccepted: 44588.0
           operatorReports:
             - operatorReport:
                 type: generic_hist_report
                 threshold: 1.0
               metricHists:
                 - bins:
-                    - from: 10.0
-                      to: 15.848931924611133
+                    - from: 12.999999999999998
+                      to: 20.60361150199447
                       weight: 2.0
-                    - from: 15.848931924611133
-                      to: 25.118864315095795
+                    - from: 20.60361150199447
+                      to: 32.65452360962455
                       weight: 0.0
-                    - from: 25.118864315095795
-                      to: 39.810717055349734
+                    - from: 32.65452360962455
+                      to: 51.753932171954645
                       weight: 0.0
-                    - from: 39.810717055349734
-                      to: 63.09573444801933
+                    - from: 51.753932171954645
+                      to: 82.02445478242512
                       weight: 0.0
-                    - from: 63.09573444801933
-                      to: 100.0
+                    - from: 82.02445478242512
+                      to: 130.00000000000006
                       weight: 1.0
                   collectionSpec:
                     log: true
@@ -446,134 +1052,254 @@ refineTagsAndSort:
           groupingKeys:
             - allTags:Cell
             - allTags:Molecule
-          numberOfGroups: 89
-          numberOfGroupsAccepted: 62
-          totalWeight: 40465.0
-          totalWeightAccepted: 28166.0
+          numberOfGroups: 114
+          numberOfGroupsAccepted: 114
+          totalWeight: 44588.0
+          totalWeightAccepted: 44588.0
           operatorReports:
             - operatorReport:
                 type: dummy_report
               metricHists:
                 - bins:
-                    - from: 56.0
-                      to: 62.0
-                      weight: 25.0
-                    - from: 62.0
-                      to: 68.0
+                    - from: 180.0
+                      to: 186.0
                       weight: 1.0
-                    - from: 68.0
-                      to: 74.0
+                    - from: 186.0
+                      to: 192.0
+                      weight: 0.0
+                    - from: 192.0
+                      to: 198.0
+                      weight: 0.0
+                    - from: 198.0
+                      to: 204.0
+                      weight: 0.0
+                    - from: 204.0
+                      to: 210.0
+                      weight: 0.0
+                    - from: 210.0
+                      to: 216.0
                       weight: 1.0
-                    - from: 74.0
-                      to: 80.0
+                    - from: 216.0
+                      to: 222.0
                       weight: 0.0
-                    - from: 80.0
-                      to: 86.0
+                    - from: 222.0
+                      to: 228.0
                       weight: 0.0
-                    - from: 86.0
-                      to: 92.0
+                    - from: 228.0
+                      to: 234.0
                       weight: 0.0
-                    - from: 92.0
-                      to: 98.0
-                      weight: 0.0
-                    - from: 98.0
-                      to: 104.0
-                      weight: 0.0
-                    - from: 104.0
-                      to: 110.0
-                      weight: 0.0
-                    - from: 110.0
-                      to: 116.0
-                      weight: 0.0
-                    - from: 116.0
-                      to: 122.0
-                      weight: 0.0
-                    - from: 122.0
-                      to: 128.0
-                      weight: 0.0
-                    - from: 128.0
-                      to: 134.0
-                      weight: 0.0
-                    - from: 134.0
-                      to: 140.0
-                      weight: 0.0
-                    - from: 140.0
-                      to: 146.0
-                      weight: 0.0
-                    - from: 146.0
-                      to: 152.0
-                      weight: 0.0
-                    - from: 152.0
-                      to: 158.0
+                    - from: 234.0
+                      to: 240.0
                       weight: 1.0
-                    - from: 158.0
-                      to: 164.0
-                      weight: 0.0
-                    - from: 164.0
-                      to: 170.0
-                      weight: 0.0
-                    - from: 170.0
-                      to: 176.0
-                      weight: 0.0
-                    - from: 176.0
-                      to: 182.0
+                    - from: 240.0
+                      to: 246.0
                       weight: 1.0
-                    - from: 182.0
-                      to: 188.0
+                    - from: 246.0
+                      to: 252.0
                       weight: 0.0
-                    - from: 188.0
-                      to: 194.0
+                    - from: 252.0
+                      to: 258.0
                       weight: 0.0
-                    - from: 194.0
-                      to: 200.0
+                    - from: 258.0
+                      to: 264.0
+                      weight: 1.0
+                    - from: 264.0
+                      to: 270.0
                       weight: 0.0
-                    - from: 200.0
-                      to: 206.0
+                    - from: 270.0
+                      to: 276.0
+                      weight: 1.0
+                    - from: 276.0
+                      to: 282.0
+                      weight: 1.0
+                    - from: 282.0
+                      to: 288.0
                       weight: 0.0
-                    - from: 206.0
-                      to: 212.0
+                    - from: 288.0
+                      to: 294.0
                       weight: 0.0
-                    - from: 212.0
-                      to: 218.0
+                    - from: 294.0
+                      to: 300.0
+                      weight: 0.0
+                    - from: 300.0
+                      to: 306.0
+                      weight: 1.0
+                    - from: 306.0
+                      to: 312.0
+                      weight: 1.0
+                    - from: 312.0
+                      to: 318.0
+                      weight: 0.0
+                    - from: 318.0
+                      to: 324.0
+                      weight: 1.0
+                    - from: 324.0
+                      to: 330.0
+                      weight: 0.0
+                    - from: 330.0
+                      to: 336.0
+                      weight: 1.0
+                    - from: 336.0
+                      to: 342.0
+                      weight: 0.0
+                    - from: 342.0
+                      to: 348.0
+                      weight: 0.0
+                    - from: 348.0
+                      to: 354.0
+                      weight: 1.0
+                    - from: 354.0
+                      to: 360.0
+                      weight: 1.0
+                    - from: 360.0
+                      to: 366.0
+                      weight: 0.0
+                    - from: 366.0
+                      to: 372.0
+                      weight: 0.0
+                    - from: 372.0
+                      to: 378.0
+                      weight: 0.0
+                    - from: 378.0
+                      to: 384.0
+                      weight: 1.0
+                    - from: 384.0
+                      to: 390.0
+                      weight: 1.0
+                    - from: 390.0
+                      to: 396.0
+                      weight: 1.0
+                    - from: 396.0
+                      to: 402.0
+                      weight: 1.0
+                    - from: 402.0
+                      to: 408.0
+                      weight: 2.0
+                    - from: 408.0
+                      to: 414.0
+                      weight: 0.0
+                    - from: 414.0
+                      to: 420.0
+                      weight: 2.0
+                    - from: 420.0
+                      to: 426.0
                       weight: 3.0
-                    - from: 218.0
-                      to: 224.0
+                    - from: 426.0
+                      to: 432.0
                       weight: 2.0
-                    - from: 224.0
-                      to: 230.0
-                      weight: 2.0
-                    - from: 230.0
-                      to: 236.0
-                      weight: 8.0
-                    - from: 236.0
-                      to: 242.0
-                      weight: 10.0
-                    - from: 242.0
-                      to: 248.0
-                      weight: 8.0
-                    - from: 248.0
-                      to: 254.0
-                      weight: 12.0
-                    - from: 254.0
-                      to: 260.0
-                      weight: 7.0
-                    - from: 260.0
-                      to: 266.0
-                      weight: 6.0
-                    - from: 266.0
-                      to: 272.0
+                    - from: 432.0
+                      to: 438.0
                       weight: 1.0
-                    - from: 272.0
-                      to: 278.0
+                    - from: 438.0
+                      to: 444.0
+                      weight: 2.0
+                    - from: 444.0
+                      to: 450.0
                       weight: 0.0
-                    - from: 278.0
-                      to: 284.0
+                    - from: 450.0
+                      to: 456.0
+                      weight: 1.0
+                    - from: 456.0
+                      to: 462.0
+                      weight: 2.0
+                    - from: 462.0
+                      to: 468.0
+                      weight: 3.0
+                    - from: 468.0
+                      to: 474.0
                       weight: 0.0
-                    - from: 284.0
-                      to: 290.0
+                    - from: 474.0
+                      to: 480.0
+                      weight: 1.0
+                    - from: 480.0
+                      to: 486.0
+                      weight: 1.0
+                    - from: 486.0
+                      to: 492.0
+                      weight: 1.0
+                    - from: 492.0
+                      to: 498.0
+                      weight: 4.0
+                    - from: 498.0
+                      to: 504.0
                       weight: 0.0
-                    - from: 290.0
-                      to: 296.0
+                    - from: 504.0
+                      to: 510.0
+                      weight: 1.0
+                    - from: 510.0
+                      to: 516.0
+                      weight: 1.0
+                    - from: 516.0
+                      to: 522.0
+                      weight: 1.0
+                    - from: 522.0
+                      to: 528.0
+                      weight: 0.0
+                    - from: 528.0
+                      to: 534.0
+                      weight: 2.0
+                    - from: 534.0
+                      to: 540.0
+                      weight: 2.0
+                    - from: 540.0
+                      to: 546.0
+                      weight: 0.0
+                    - from: 546.0
+                      to: 552.0
+                      weight: 2.0
+                    - from: 552.0
+                      to: 558.0
+                      weight: 0.0
+                    - from: 558.0
+                      to: 564.0
+                      weight: 0.0
+                    - from: 564.0
+                      to: 570.0
+                      weight: 0.0
+                    - from: 570.0
+                      to: 576.0
+                      weight: 2.0
+                    - from: 576.0
+                      to: 582.0
+                      weight: 0.0
+                    - from: 582.0
+                      to: 588.0
+                      weight: 1.0
+                    - from: 588.0
+                      to: 594.0
+                      weight: 2.0
+                    - from: 594.0
+                      to: 600.0
+                      weight: 2.0
+                    - from: 600.0
+                      to: 606.0
+                      weight: 0.0
+                    - from: 606.0
+                      to: 612.0
+                      weight: 4.0
+                    - from: 612.0
+                      to: 618.0
+                      weight: 1.0
+                    - from: 618.0
+                      to: 624.0
+                      weight: 0.0
+                    - from: 624.0
+                      to: 630.0
+                      weight: 1.0
+                    - from: 630.0
+                      to: 636.0
+                      weight: 0.0
+                    - from: 636.0
+                      to: 642.0
+                      weight: 2.0
+                    - from: 642.0
+                      to: 648.0
+                      weight: 1.0
+                    - from: 648.0
+                      to: 654.0
+                      weight: 0.0
+                    - from: 654.0
+                      to: 660.0
                       weight: 1.0
                   collectionSpec:
                     log: false

@@ -28,6 +28,7 @@ class MetaInfoTest {
             AnalyzeCommandDescriptor.align
         )
         (mixcrCommandDescriptions() - exclusions)
+            .filterNot { it.command.startsWith("mitool") }
             .map { it.command }
             .filter { commandName ->
                 val command = cmd.allSubCommands().first { it.commandName == commandName }
@@ -48,6 +49,7 @@ class MetaInfoTest {
             AnalyzeCommandDescriptor.qc,
         )
         (mixcrCommandDescriptions() - exclusions)
+            .filterNot { it.command.startsWith("mitool") }
             .map { it.command }
             .filter { commandName ->
                 val command = cmd.allSubCommands().first { it.commandName == commandName }

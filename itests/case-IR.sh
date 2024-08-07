@@ -19,19 +19,21 @@ assert() {
 set -eux
 
 mixcr analyze generic-lt-single-cell-amplicon \
-    --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)\^(CELL2:*)" \
+    --assemble-clonotypes-by CDR3 \
+    --tag-pattern "^(CELL1:*)\^(CELL2:*)\^(R1:*)\^(R2:*)" \
     --species hsa \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
-    subset_B004-7_S247_L001_R1_001.fastq.gz \
-    subset_B004-7_S247_L001_R2_001.fastq.gz \
     subset_B004-7_S247_L001_I1_001.fastq.gz \
     subset_B004-7_S247_L001_I2_001.fastq.gz \
+    subset_B004-7_S247_L001_R1_001.fastq.gz \
+    subset_B004-7_S247_L001_R2_001.fastq.gz \
     output_normal
 
 mixcr analyze generic-lt-single-cell-amplicon \
-    --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)\^(CELL2:*)" \
+    --assemble-clonotypes-by CDR3 \
+    --tag-pattern "^(CELL1:*)\^(CELL2:*)\^(R1:*)\^(R2:*)" \
     --species hsa \
     --rna \
     --floating-left-alignment-boundary \
@@ -41,38 +43,41 @@ mixcr analyze generic-lt-single-cell-amplicon \
 
 ## R2 as UMI
 mixcr analyze generic-lt-single-cell-amplicon-with-umi \
-    --tag-pattern "^(R1:*)\^(UMI:*)\^(CELL1:*)\^(CELL2:*)" \
+    --assemble-clonotypes-by CDR3 \
+    --tag-pattern "^(CELL1:*)\^(CELL2:*)\^(R1:*)\^(UMI:*)" \
     --species hsa \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
-    subset_B004-7_S247_L001_R1_001.fastq.gz \
-    subset_B004-7_S247_L001_R2_001.fastq.gz \
     subset_B004-7_S247_L001_I1_001.fastq.gz \
     subset_B004-7_S247_L001_I2_001.fastq.gz \
+    subset_B004-7_S247_L001_R1_001.fastq.gz \
+    subset_B004-7_S247_L001_R2_001.fastq.gz \
     output_UMI1
 
 # R1 as UMI and payload
 mixcr analyze generic-lt-single-cell-amplicon-with-umi \
-    --tag-pattern "^N{16}(UMI:N{10})(R1:*)\^(R2:*)\^(CELL1:*)\^(CELL2:*)" \
+    --assemble-clonotypes-by CDR3 \
+    --tag-pattern "^(CELL1:*)\^(CELL2:*)\^N{16}(UMI:N{10})(R1:*)\^(R2:*)" \
     --species hsa \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
-    subset_B004-7_S247_L001_R1_001.fastq.gz \
-    subset_B004-7_S247_L001_R2_001.fastq.gz \
     subset_B004-7_S247_L001_I1_001.fastq.gz \
     subset_B004-7_S247_L001_I2_001.fastq.gz \
+    subset_B004-7_S247_L001_R1_001.fastq.gz \
+    subset_B004-7_S247_L001_R2_001.fastq.gz \
     output_UMI2
 
 # R1+R2+I1
 mixcr analyze generic-lt-single-cell-amplicon \
-    --tag-pattern "^(R1:*)\^(R2:*)\^(CELL1:*)" \
+    --assemble-clonotypes-by CDR3 \
+    --tag-pattern "^(CELL1:*)\^(R1:*)\^(R2:*)" \
     --species hsa \
     --rna \
     --floating-left-alignment-boundary \
     --floating-right-alignment-boundary C \
+    subset_B004-7_S247_L001_I1_001.fastq.gz \
     subset_B004-7_S247_L001_R1_001.fastq.gz \
     subset_B004-7_S247_L001_R2_001.fastq.gz \
-    subset_B004-7_S247_L001_I1_001.fastq.gz \
     output_R1_R2_I1

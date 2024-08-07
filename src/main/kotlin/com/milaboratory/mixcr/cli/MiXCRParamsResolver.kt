@@ -12,21 +12,34 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
+import com.milaboratory.app.logger
 import com.milaboratory.cli.ParamsResolver
 import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
-import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assemble
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
+import com.milaboratory.mixcr.presets.AssembleMixins
 import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
+import com.milaboratory.mixcr.presets.PipelineMixins
 import com.milaboratory.mixcr.presets.Presets
+import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
+import io.repseq.core.GeneFeature
+import io.repseq.core.GeneFeature.CDR3
+import io.repseq.core.GeneFeature.VDJRegion
 import kotlin.reflect.KProperty1
 
 abstract class MiXCRParamsResolver<P : Any>(
-    paramsProperty: KProperty1<MiXCRParamsBundle, P?>
-) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsProperty) {
+    paramsName: String, paramsProperty: MiXCRParamsBundle.() -> P?
+) : ParamsResolver<MiXCRParamsBundle, P>(Presets.MiXCRBundleResolver, paramsName, paramsProperty) {
+    constructor(paramsProperty: KProperty1<MiXCRParamsBundle, P?>) : this(paramsProperty.name, paramsProperty)
+
     override fun validateBundle(bundle: MiXCRParamsBundle) {
         if (bundle.flags.isNotEmpty()) {
             println("Preset errors: ")
@@ -38,27 +51,65 @@ abstract class MiXCRParamsResolver<P : Any>(
 
             throw ValidationException("Error validating preset bundle.");
         }
-        if (
-            bundle.pipeline?.steps?.contains(AnalyzeCommandDescriptor.assembleContigs) == true &&
-            bundle.assemble?.clnaOutput == false
-        )
+        val steps = bundle.pipeline?.steps ?: emptyList()
+        if (assembleContigs in steps && bundle.assemble?.clnaOutput == false)
             throw ValidationException("assembleContigs step required clnaOutput=true on assemble step")
 
         bundle.align?.parameters?.featuresToAlignMap?.let { HasFeatureToAlign(it) }?.let { featuresToAlign ->
-            if (bundle.pipeline?.steps?.contains(AnalyzeCommandDescriptor.assemble) == true) {
-                bundle.assemble?.let { params ->
-                    CommandAssemble.validateParams(params, featuresToAlign)
-                }
+            if (assemble in steps) {
+                CommandAssemble.validateParams(
+                    bundle.assemble ?: throw ValidationException("no assemble params"),
+                    featuresToAlign
+                )
             }
-            if (bundle.pipeline?.steps?.contains(AnalyzeCommandDescriptor.assembleContigs) == true) {
-                bundle.assembleContigs?.let { params ->
-                    CommandAssembleContigs.validateParams(params, featuresToAlign)
-                }
+            if (assembleContigs in steps) {
+                CommandAssembleContigs.validateParams(
+                    bundle.assembleContigs ?: throw ValidationException("no assembleContigs params"),
+                    featuresToAlign
+                )
             }
         }
 
         bundle.validation?.items?.forEach { validation ->
             validation.validate(bundle)
+        }
+
+        if (parse in steps) {
+            val parseParams = bundle.mitool!!.parse!!
+            val mitoolPattern = ValidationException.requireNotNull(parseParams.pattern) {
+                "Tag pattern should be set in `mitool.parse.pattern`"
+            }
+            val alignParams = ValidationException.requireNotNull(bundle.align) {
+                "Align parameters are not set"
+            }
+            val alignPattern = ValidationException.requireNotNull(alignParams.tagPattern) {
+                "Tag pattern should be set in `align.tagPattern`"
+            }
+            ValidationException.require(mitoolPattern == alignPattern) {
+                "Tag patterns are different in `mitool.parse.pattern` and `align.tagPattern`: $mitoolPattern and $alignPattern"
+            }
+            ValidationException.require(!alignParams.readIdAsCellTag) {
+                "`readIdAsCellTag` is not supported with mitool commands in pipeline"
+            }
+            ValidationException.require(alignParams.headerExtractors.isEmpty()) {
+                "`headerExtractors` are not supported with mitool commands in pipeline"
+            }
+            ValidationException.require(alignParams.tagTransformationSteps.isEmpty()) {
+                "`tagTransformationSteps` are not supported with mitool commands in pipeline"
+            }
+            if (alignParams.parameters.isSaveOriginalReads) {
+                logger.warn { "Saving original reads with mitool commands in pipeline will lead to saving reads after mitool processing, not original ones" }
+            }
+            if (alignParams.parameters.isSaveOriginalSequence) {
+                logger.warn { "Saving original sequences with mitool commands in pipeline will lead to saving sequences after mitool processing, not original ones" }
+            }
+
+            bundle.mitool!!.refineTags?.let { refineTags ->
+                ValidationException.requireEmpty(refineTags.dontCorrectTagsTypes) {
+                    "With mitool refineTags command in pipeline, `${RefineTagsAndSortMixins.DontCorrectTagType.CMD_OPTION}` is not applicable, " +
+                            "please use `${RefineTagsAndSortMixins.DontCorrectTagName.CMD_OPTION}` instead"
+                }
+            }
         }
     }
 }
@@ -91,6 +142,24 @@ val presetFlagsMessages = mapOf(
             "This preset requires to specify sample table, \n" +
             "please use ${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} or " +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} mix-in.",
+
+    Flags.AssembleClonesBy to
+            "This preset requires to specify feature to assemble, \n" +
+            "please use `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`, \n" +
+            "for example `${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(CDR3)}`.",
+    Flags.AssembleContigsBy to
+            "This preset requires to specify feature to assemble contigs, \n" +
+            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}`, \n" +
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}`.",
+    Flags.AssembleContigsByOrMaxLength to
+            "This preset requires to specify feature to assemble contigs mode, \n" +
+            "please use `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or `${AssembleContigsMixins.AssembleContigsWithMaxLength.CMD_OPTION}`, \n" +
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}`.",
+    Flags.AssembleContigsByOrByCell to
+            "This preset requires to specify feature to assemble contigs by \n" +
+            "`${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}` or " +
+            " `${PipelineMixins.AssembleContigsByCells.CMD_OPTION}` that will cancel `${assembleCells.name}` step,\n" +
+            "for example `${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${GeneFeature.encode(VDJRegion)}`",
 )
 
 

@@ -1,5 +1,7 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 $defs:
+  Alphabet(NucleotideSequence):
+    type: string
   GeneFeatures:
     type: object
     properties:
@@ -7,8 +9,61 @@ $defs:
         type: array
         items:
           type: string
+  SubstitutionMatrix:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          type: integer
 type: object
 properties:
+  cloneFactoryParameters:
+    type: object
+    properties:
+      dParameters:
+        type: object
+        properties:
+          absoluteMinScore:
+            type: number
+          maxHits:
+            type: integer
+          relativeMinScore:
+            type: number
+          scoring:
+            anyOf:
+              - allOf:
+                  - type: object
+                    properties:
+                      alphabet:
+                        $ref: '#/$defs/Alphabet(NucleotideSequence)'
+                      gapPenalty:
+                        type: integer
+                      subsMatrix:
+                        $ref: '#/$defs/SubstitutionMatrix'
+                  - type: object
+                    properties:
+                      type:
+                        const: linear
+                    required:
+                      - type
+              - allOf:
+                  - type: object
+                    properties:
+                      alphabet:
+                        $ref: '#/$defs/Alphabet(NucleotideSequence)'
+                      gapExtensionPenalty:
+                        type: integer
+                      gapOpenPenalty:
+                        type: integer
+                      subsMatrix:
+                        $ref: '#/$defs/SubstitutionMatrix'
+                  - type: object
+                    properties:
+                      type:
+                        const: affine
+                    required:
+                      - type
   ignoreTags:
     type: boolean
   parameters:
@@ -102,3 +157,10 @@ properties:
             type: number
           windowSize:
             type: integer
+      useOnlyFullAlignments:
+        type: object
+        properties:
+          cumtop:
+            type: number
+          fallbackToTopAlignment:
+            type: boolean

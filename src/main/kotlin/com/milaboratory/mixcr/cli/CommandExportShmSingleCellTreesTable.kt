@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -142,7 +142,7 @@ class CommandExportShmSingleCellTreesTable : CommandExportShmTreesAbstract() {
     override fun run1() {
         val reader = SHMTreesReader(input, VDJCLibraryRegistry.getDefault())
         ValidationException.require(reader.header.calculatedCloneGroups) {
-            "SHM trees build without single cell data. Run `${CommandGroupClones.COMMAND_NAME}` for grouping clones on sources of trees."
+            "SHM trees build without single cell data. Run `${CommandAssembleCells.COMMAND_NAME}` on sources of trees."
         }
 
         val headerForExport = MetaForExport(

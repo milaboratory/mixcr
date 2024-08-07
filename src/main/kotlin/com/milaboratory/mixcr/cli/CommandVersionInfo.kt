@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -43,7 +43,6 @@ class CommandVersionInfo : MiXCRCommand() {
     override fun run0() {
         when (IOUtil.extractFileType(inputFile)) {
             VDJCA -> VDJCAlignmentsReader(inputFile).use { reader ->
-                reader.ensureInitialized()
                 println("MagicBytes = " + reader.magic)
                 println(reader.versionInfo)
             }

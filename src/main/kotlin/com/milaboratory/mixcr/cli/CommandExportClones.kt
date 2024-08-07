@@ -234,7 +234,7 @@ object CommandExportClones {
 
         override fun run1() {
             val fileInfo = IOUtil.extractFileInfo(inputFile)
-            val assemblingFeatures = fileInfo.header.assemblerParameters!!.assemblingFeatures
+            val assemblingFeatures = fileInfo.header.assemblingFeatures!!
             val initialSet = CloneSetIO.read(inputFile, VDJCLibraryRegistry.getDefault())
             val (_, params) = paramsResolver.resolve(
                 resetPreset.overridePreset(fileInfo.header.paramsSpec).addMixins(exportMixins.mixins)

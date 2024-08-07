@@ -351,7 +351,7 @@ def mixcr_align(fastq_file):
 
 
 def mixcr_assemble(vdjca_file):
-    mixcr_assemble_args = ['mixcr', 'assemble', '-f', vdjca_file + '.vdjca', vdjca_file + '.clns']
+    mixcr_assemble_args = ['mixcr', 'assemble', '--assemble-clonotypes-by CDR3', '-f', vdjca_file + '.vdjca', vdjca_file + '.clns']
     mixcr_assemble = subprocess.Popen(mixcr_assemble_args, stdout=None, stderr=None)
     mixcr_assemble.wait()
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -14,12 +14,10 @@ package com.milaboratory.mixcr.assembler.preclone;
 import com.milaboratory.test.TestUtil;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class PreCloneAssemblerParametersTest {
     @Test
     public void testJson() {
-        TestUtil.assertJson(PreCloneAssemblerParameters.getDefaultParameters(false), true);
-        TestUtil.assertJson(PreCloneAssemblerParameters.getDefaultParameters(true), true);
+        TestUtil.assertJson(PreCloneAssemblerParameters.Companion.getDefaultParameters(false), true);
+        TestUtil.assertJson(PreCloneAssemblerParameters.Companion.getDefaultParameters(true), true);
     }
 }

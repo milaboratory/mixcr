@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -13,8 +13,11 @@ package com.milaboratory.mixcr.cli
 
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AssembleContigsMixins
+import com.milaboratory.mixcr.presets.AssembleMixins
 import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
+import com.milaboratory.mixcr.presets.PipelineMixins
 import com.milaboratory.mixcr.presets.PresetSpecification
 import com.milaboratory.mixcr.presets.Presets
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.Help.Ansi
@@ -90,4 +93,8 @@ private val flagOptions = mapOf(
     Flags.SampleTable to
             "${AlignMixins.SetSampleSheet.CMD_OPTION_FUZZY} sample_table.tsv\n" +
             "${AlignMixins.SetSampleSheet.CMD_OPTION_STRICT} sample_table.tsv",
+    Flags.AssembleClonesBy to "${AssembleMixins.SetClonotypeAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}",
+    Flags.AssembleContigsBy to "${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}",
+    Flags.AssembleContigsByOrMaxLength to "(${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}|${AssembleContigsMixins.AssembleContigsWithMaxLength.CMD_OPTION})",
+    Flags.AssembleContigsByOrByCell to "(${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} ${Labels.GENE_FEATURES}|${PipelineMixins.AssembleContigsByCells.CMD_OPTION})",
 )

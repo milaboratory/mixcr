@@ -6,8 +6,7 @@ assemble-base:
     cellLevel: false
     inferMinRecordsPerConsensus: false
     cloneAssemblerParameters:
-      assemblingFeatures:
-        - CDR3
+      assemblingFeatures: null
       minimalClonalSequenceLength: 12
       qualityAggregationType: BetaScore
       separateByV: false
@@ -126,3 +125,32 @@ assemble-with-consensus-sc-cell-level:
           minRecursiveRecordShare: 0.1
           minQualityScore: 0
           maxConsensuses: 2
+
+assemble-with-consensus-sc-cell-level-fr:
+  abstract: true
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level
+    overrides:
+      cloneAssemblerParameters:
+        cloneFactoryParameters:
+          vParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore: 0.8
+            scoring: null
+          jParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore:
+            scoring: null
+          dParameters:
+            absoluteMinScore:
+            relativeMinScore:
+            maxHits:
+            scoring: null
+          cParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore:
+            scoring: null
+        badQualityThreshold: 10

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -82,7 +82,7 @@ class CommandExportAlignmentsForClones : MiXCRCommandWithOutputs() {
                     clna.readAllAlignments().forEach { al ->
                         if (al.cloneIndex == -1L) return@forEach
                         writer.write(al)
-                        ++count
+                        count += al.weight.toLong()
                     }
                 } else {
                     for (id in cloneIds) {

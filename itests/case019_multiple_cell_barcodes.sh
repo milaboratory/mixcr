@@ -25,6 +25,8 @@ CELL2_TAG2=CAAGGTAA
 cat single_cell_vdj_t_subset_R1.fastq.gz | gunzip | sed "s/${CELL1_TAG1}${CELL1_TAG2}T/${CELL2_TAG1}${CELL2_TAG2}T/g" | gzip > single_cell_vdj_t_subset_R1.modified.fastq.gz
 
 mixcr analyze --verbose -f 10x-vdj-tcr-multi-barcode-test \
+  --assemble-clonotypes-by CDR3 \
+  --assemble-contigs-by-cells \
   --species hs \
   single_cell_vdj_t_subset_R1.modified.fastq.gz \
   single_cell_vdj_t_subset_R2.fastq.gz \
@@ -36,7 +38,7 @@ mixcr exportReports --yaml case19.vdjcontigs.contigs.clns
 mixcr exportReports case19.vdjcontigs.contigs.clns
 
 #doesn't split by cell
-assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "8"
+assert "mixcr exportClones --no-header --drop-default-fields -cloneId case19.vdjcontigs.contigs.clns | wc -l" "10"
 #split by cell (cell tags are exported)
 assert "mixcr exportClones --no-header case19.vdjcontigs.contigs.clns | wc -l" "10"
 #cellId also split by cell

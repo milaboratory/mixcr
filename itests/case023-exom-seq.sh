@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 mixcr analyze --verbose exome-seq \
+    --assemble-longest-contigs \
     --species hs \
     single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz case023
 

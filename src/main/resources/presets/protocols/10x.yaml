@@ -6,15 +6,95 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
+    - type: AddPipelineStep
+      step: mitool-parse
+    - type: AddPipelineStep
+      step: mitool-refine-tags
+    - type: AddPipelineStep
+      step: mitool-consensus
+    - type: RemovePipelineStep
+      step: assemblePartial
+    - type: SetContigAssemblingFeatures
+      features: VDJRegion
+  mitool:
+    parse:
+      inheritFrom: mitool-parse-default
+    refineTags:
+      inheritFrom: mitool-refineTags-default
+      overrides:
+        tags:
+          - CELL
+          - UMI
+        whitelists:
+          CELL: builtin:737K-august-2016
+    consensus:
+      inheritFrom: mitool-consensus-4-steps
+      overrides:
+        - groupingTags:
+            - CELL
+            - UMI
+          payloadTags:
+            - R2
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 499
+              maxNormalizedAlignmentPenalty: 0.46
+            positiveMinQualityShare: 0.29
+            positiveMinIntersectionQuality: 379
+            minRecordSharePerConsensus: 0.001
+        - groupingTags:
+            - CELL
+            - UMI
+          payloadTags:
+            - R2
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 51
+              maxNormalizedAlignmentPenalty: 0.42
+            positiveMinQualityShare: 0.11
+            positiveMinIntersectionQuality: 101
+            minRecordSharePerConsensus: 0.3
+        - groupingTags:
+            - CELL
+          payloadTags:
+            - R2
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 41
+              maxNormalizedAlignmentPenalty: 0.35
+            positiveMinQualityShare: 0.77
+            positiveMinIntersectionQuality: 130
+            minRecordSharePerConsensus: 0.001
+            useWeightsForRecordsPerConsensus: false
+        - groupingTags:
+            - CELL
+          payloadTags:
+            - R2
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 181
+              maxNormalizedAlignmentPenalty: 0.59
+            positiveMinQualityShare: 0.51
+            positiveMinIntersectionQuality: 51
+            minRecordSharePerConsensus: 0.001
+            useWeightsForRecordsPerConsensus: false
+            minRecordWeightForUse: 2
   align:
     inheritFrom: generic-ht-single-cell-fragmented-with-umi
     overrides:
+      trimmingQualityThreshold: 0
       parameters:
         readsLayout: ReverseOnly
+        vParameters:
+          relativeMinScore: 0.7
+          parameters:
+            mapperRelativeMinScore: 0.7
+            relativeMinScore: 0.7
   refineTagsAndSort:
-    whitelists:
-      CELL: builtin:737K-august-2016
     runCorrection: true
+    dontCorrectTagsTypes:
+      - Cell
+      - Molecule
     parameters:
       correctionPower: 0.001
       backgroundSubstitutionRate: 0.001
@@ -26,33 +106,6 @@
       postFilter:
         type: filter_and
         operands:
-          - type: filter_groups
-            groupingKeys:
-              - allTags:Cell
-              - allTags:Molecule
-            predicates:
-              - metrics:
-                  - type: "group_metric_sum_weight"
-                    reportHist:
-                      log: true
-                      binNumber: 0
-                      minBinWidth: 0.2
-                operator:
-                  type: group_operator_lowest_threshold
-                  operators:
-                    - type: group_operator_advanced_thresholding
-                      algo:
-                        type: otsu
-                      histTransformers:
-                        # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
-                        - type: inflate
-                          fraction: 0.15
-                      logX: true
-                      minimalSample: 20
-                      fallbackThreshold: 1.0
-                    - type: group_operator_cumtop
-                      share: 0.85
-                      round: Down
           - type: filter_groups
             groupingKeys:
               - allTags:Cell
@@ -87,7 +140,7 @@
                       - targets
                     k: 12
                     minimalQuality: 20
-                    topShare: 0.7
+                    topShare: 0.5
                     minSequenceCount: 4
                     reportHist:
                       binNumber: 0
@@ -97,10 +150,14 @@
                   lower: 150.0
                   acceptNaN: true
   assemble:
-    inheritFrom: assemble-with-consensus-sc-cell-level
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
     overrides:
       clnaOutput: true
       cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
+        badQualityThreshold: 0
+        minimalQuality: 0
         postFilters:
           - type: filter_in_groups
             isolationKeys:
@@ -120,6 +177,13 @@
                     type: group_operator_cumtop
                     share: 0.99
             aggregateReport: true
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
+    overrides:
+      parameters:
+        useOnlyFullAlignments:
+          cumtop: 0.95
+          fallbackToTopAlignment: true
 
 "10x-sc-5gex":
   vendor: "10x Genomics"

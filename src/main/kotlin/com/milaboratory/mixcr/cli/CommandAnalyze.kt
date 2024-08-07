@@ -14,23 +14,28 @@ package com.milaboratory.mixcr.cli
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.matches
+import com.milaboratory.cli.MultiSampleRun.SAVE_OUTPUT_FILE_NAMES_OPTION
+import com.milaboratory.cli.MultiSampleRun.listToSampleName
 import com.milaboratory.cli.POverridesBuilderOps
+import com.milaboratory.mitool.cli.Parse.readSearchPlan
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.mixcr.cli.CommandAlign.SAVE_OUTPUT_FILE_NAMES_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
-import com.milaboratory.mixcr.cli.CommandAlign.listSamplesForSeedFileName
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AllowedMultipleRounds
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.Companion.dotAfterIfNotBlank
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.align
 import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRPipeline
+import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.util.requireSingleton
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -44,7 +49,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteExisting
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.name
 import kotlin.io.path.readLines
@@ -335,10 +340,13 @@ object CommandAnalyze {
             // (it must already be sorted, but just in case)
             val (bundle, pipeline) = paramsResolver.resolve(paramsSpec, printParameters = false)
                 .let { (first, second) -> first to second.steps.sortedBy { it.order } }
+            ValidationException.requireDistinct(pipeline) {
+                "There should not be repeatable steps"
+            }
 
             // Creating execution plan
-            if (pipeline[0] != AnalyzeCommandDescriptor.align)
-                throw ValidationException("Pipeline must stat from the align action.")
+            if (pipeline.first() !in arrayOf(align, parse))
+                throw ValidationException("Pipeline must stat from the `align` or `parse` action.")
 
             val planBuilder = PlanBuilder(
                 bundle, outputFolder, outputNamePrefix,
@@ -346,9 +354,70 @@ object CommandAnalyze {
                 inputTemplates, threadsOption, useLocalTemp, forceOverwrite
             )
 
-            // Adding an option to save output files by align
-            val sampleFileList = outputFolder.resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list")
-                .takeIf { bundle.align!!.splitBySample && !dryRun }
+            if (pipeline.first() == parse) {
+                val mitoolPreset = bundle.mitool ?: throw ValidationException("No mitool params")
+                val parseParams = mitoolPreset.parse ?: throw ValidationException("No mitool parse params")
+                val plan = parseParams.readSearchPlan()
+                if (outputNoUsedReads) {
+                    // fill up args of not parsed reads in symmetry of input files
+                    pathsForNotAligned.fillWithDefaults(
+                        inputFileGroups.inputType,
+                        outputFolder,
+                        outputNamePrefix,
+                        addNotAligned = false,
+                        addNotParsed = true
+                    )
+                    // fill up args for not aligned reads according to payload tags count that will be in mitool results
+                    pathsForNotAligned.fillWithDefaults(
+                        CommandAlign.Cmd.InputType.MIC(allTags = plan.allTags),
+                        outputFolder,
+                        outputNamePrefix,
+                        addNotAligned = true,
+                        addNotParsed = false
+                    )
+                }
+                val mitoolPresetPath = Paths.get("MiTool.preset.yaml").toFile()
+                mitoolPresetPath.deleteOnExit()
+                K_YAML_OM.writeValue(mitoolPresetPath, mitoolPreset)
+
+                // Adding an option to save output files by parse
+                val sampleFileList = outputFolder
+                    .resolve("${outputNamePrefix.dotAfterIfNotBlank()}parse.list.tsv")
+                    .also { it.deleteIfExists() }
+                    .toFile().also { it.deleteOnExit() }
+
+                planBuilder.addStep(parse) { _, _, _ ->
+                    buildList {
+                        this += listOf("--preset", "local:${mitoolPresetPath.name.removeSuffix(".yaml")}")
+                        this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
+                        this += pathsForNotAligned.argsOfNotParsedForMiToolParse()
+                    }
+                }
+
+                planBuilder.executeSteps(dryRun)
+                planBuilder.setActualOutputs(sampleFileList.toPath())
+
+                pipeline
+                    .drop(1) // without parse
+                    .filterIsInstance<MiToolCommandDelegationDescriptor<*, *>>()
+                    .forEach { step -> planBuilder.addStep(step) }
+            } else {
+                // fill up args of not aligned and not parsed reads in symmetry of input files
+                if (outputNoUsedReads) {
+                    pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
+                }
+            }
+
+            // TODO when MiTool will support sample tags from reads, recombine all mitool inputs in one align command
+            val sampleFileList = if (pipeline.first() != parse && bundle.align!!.splitBySample && !dryRun) {
+                // Adding an option to save output files by align
+                outputFolder
+                    .resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list.tsv")
+                    .also { it.deleteIfExists() }
+                    .toFile().also { it.deleteOnExit() }
+            } else {
+                null
+            }
             val extraAlignArgs: List<String> = buildList {
                 sampleFileList?.let { sampleFileList ->
                     this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
@@ -361,17 +430,14 @@ object CommandAnalyze {
                 }
             }
 
-            // Adding "align" step
-            if (outputNoUsedReads)
-                pathsForNotAligned.fillWithDefaults(inputFileGroups.inputType, outputFolder, outputNamePrefix)
-            planBuilder.addStep(AnalyzeCommandDescriptor.align) { _, _, _ ->
+            planBuilder.addStep(align) { _, _, _ ->
                 buildList {
                     this += listOf("--preset", presetName)
                     this += extraAlignArgs
                     this += mixins.flatMap { it.cmdArgs }
-                    this += pathsForNotAligned.argsForAlign()
-                    if (outputNamePrefix.isBlank())
-                        this += listOf("--output-name-suffix", "alignments")
+                    this += pathsForNotAligned.argsOfNotAlignedForAlign()
+                    if (pipeline.first() != parse)
+                        this += pathsForNotAligned.argsOfNotParsedForAlign()
                 }
             }
 
@@ -379,14 +445,17 @@ object CommandAnalyze {
 
             // Taking into account that there are multiple outputs from the align command
             if (sampleFileList != null) {
-                planBuilder.setActualAlignOutputs(sampleFileList.readLines())
-                sampleFileList.deleteExisting()
+                planBuilder.setActualOutputs(sampleFileList.toPath())
             }
 
             // Adding all steps with calculations
             pipeline
+                // already added
+                .filterNot { it is MiToolCommandDelegationDescriptor<*, *> }
+                // it's align, already added
                 .drop(1)
-                .filter { cmd -> cmd !is AnalyzeCommandDescriptor.ExportCommandDescriptor }
+                // exports will be added separately
+                .filterNot { cmd -> cmd is AnalyzeCommandDescriptor.ExportCommandDescriptor }
                 .forEach { cmd ->
                     planBuilder.addStep(cmd) { outputFolder, prefix, sampleName ->
                         when (cmd) {
@@ -447,15 +516,16 @@ object CommandAnalyze {
             private val forceOverride: Boolean
         ) {
             private val executionPlan = mutableListOf<ExecutionStep>()
-            private val rounds = mutableMapOf<AnalyzeCommandDescriptor<*, *>, Int>()
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
             private val outputsForCommands = mutableListOf<Pair<AnalyzeCommandDescriptor<*, *>, List<InputFileSet>>>()
 
-            fun setActualAlignOutputs(fileNames: List<String>) {
-                val outputSeed = Path(nextInputs.requireSingleton().fileNames.requireSingleton()).name
-                val samples = listSamplesForSeedFileName(if (outputNamePrefix.isBlank()) "alignments" else "", outputSeed, fileNames)
-                nextInputs = samples.map {
-                    InputFileSet(it.sample, listOf(outputFolder.resolve(it.fileName).toString()))
+            fun setActualOutputs(fileNamesList: Path) {
+                val lines = fileNamesList.readLines().drop(1).map { it.split("\t") }
+                nextInputs = when {
+                    lines.isEmpty() -> emptyList()
+                    else -> lines.map { line ->
+                        InputFileSet(listToSampleName(line.drop(2)), listOf(outputFolder.resolve(line[0]).toString()))
+                    }
                 }
             }
 
@@ -469,8 +539,8 @@ object CommandAnalyze {
                         println("\n" + Util.surround("mixcr ${executionStep.command}", ">", "<"))
                         println("Running:")
                         println(executionStep)
-                        val actualArgs = arrayOf(executionStep.command) + executionStep.args.toTypedArray()
-                        val exitCode = Main.execute(*actualArgs)
+                        val actualArgs = executionStep.command.split(" ") + executionStep.args
+                        val exitCode = Main.execute(*actualArgs.toTypedArray())
                         if (exitCode != 0)
                         // Terminating execution if one of the steps resulted in error
                             exitProcess(exitCode)
@@ -536,57 +606,57 @@ object CommandAnalyze {
                 cmd: AnalyzeCommandDescriptor<*, *>,
                 extraArgs: (outputFolder: Path, prefix: String, sampleName: String) -> List<String> = { _, _, _ -> emptyList() }
             ) {
-                val round = rounds.compute(cmd) { c, p ->
-                    when {
-                        p == null -> 0
-                        !c.allowMultipleRounds -> throw IllegalArgumentException("${c.command} don't allow multiple rounds of execution")
-                        else -> p + 1
-                    }
-                }!!
+                val roundsCount = (cmd as? AllowedMultipleRounds)?.roundsCount(paramsBundle) ?: 1
 
-                val nextInputsBuilder = mutableListOf<InputFileSet>()
+                repeat(roundsCount) { round ->
 
-                nextInputs.forEach { inputs ->
-                    val arguments = mutableListOf<String>()
+                    val nextInputsBuilder = mutableListOf<InputFileSet>()
 
-                    if (forceOverride)
-                        arguments += "-f"
+                    nextInputs.forEach { inputs ->
+                        val arguments = mutableListOf<String>()
 
-                    if (outputReports)
-                        cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
-                            arguments += listOf("--report", outputFolder.resolve(it).toString())
+                        if (forceOverride && cmd !is MiToolCommandDelegationDescriptor<*, *>)
+                            arguments += "-f"
+
+                        if (outputReports)
+                            cmd.textReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
+                                arguments += listOf("--report", outputFolder.resolve(it).toString())
+                            }
+
+                        if (outputJsonReports)
+                            cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
+                                arguments += listOf("--json-report", outputFolder.resolve(it).toString())
+                            }
+
+                        if (cmd.hasThreadsOption && threadsOption.isSet) {
+                            arguments += listOf("--threads", threadsOption.value.toString())
                         }
 
-                    if (outputJsonReports)
-                        cmd.jsonReportName(outputNamePrefix, inputs.sampleName, paramsBundle, round)?.let {
-                            arguments += listOf("--json-report", outputFolder.resolve(it).toString())
+                        if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
+                            arguments += "--use-local-temp"
                         }
 
-                    if (cmd.hasThreadsOption && threadsOption.isSet) {
-                        arguments += listOf("--threads", threadsOption.value.toString())
+                        val outputName = cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
+                        val output = listOf(outputFolder.resolve(outputName).toString())
+
+                        executionPlan += ExecutionStep(
+                            when (cmd) {
+                                is MiToolCommandDelegationDescriptor<*, *> -> "mitool ${cmd.mitoolCommand.command}"
+                                else -> cmd.command
+                            },
+                            round,
+                            arguments,
+                            extraArgs(outputFolder, outputNamePrefix, inputs.sampleName),
+                            inputs.fileNames,
+                            output,
+                        )
+
+                        nextInputsBuilder += InputFileSet(inputs.sampleName, output)
                     }
 
-                    if (cmd.hasUseLocalTempOption && useLocalTemp.value) {
-                        arguments += "--use-local-temp"
-                    }
-
-                    val outputName = cmd.outputName(outputNamePrefix, inputs.sampleName, paramsBundle, round)
-                    val output = listOf(outputFolder.resolve(outputName).toString())
-
-                    executionPlan += ExecutionStep(
-                        cmd.command,
-                        round,
-                        arguments,
-                        extraArgs(outputFolder, outputNamePrefix, inputs.sampleName),
-                        inputs.fileNames,
-                        output,
-                    )
-
-                    nextInputsBuilder += InputFileSet(inputs.sampleName, output)
+                    outputsForCommands += cmd to nextInputsBuilder
+                    nextInputs = nextInputsBuilder
                 }
-
-                outputsForCommands += cmd to nextInputsBuilder
-                nextInputs = nextInputsBuilder
             }
 
         }
@@ -600,7 +670,7 @@ object CommandAnalyze {
             val output: List<String>
         ) {
             val args get() = arguments + extraArgs + inputs + output
-            override fun toString() = (listOf("mixcr", command) + args).joinToString(" ")
+            override fun toString() = (listOf("mixcr") + command.split(" ") + args).joinToString(" ")
         }
     }
 }

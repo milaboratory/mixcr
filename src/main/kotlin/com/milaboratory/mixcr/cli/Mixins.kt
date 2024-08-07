@@ -34,7 +34,8 @@ import com.milaboratory.mixcr.presets.AlignMixins.RightAlignmentBoundaryWithPoin
 import com.milaboratory.mixcr.presets.AlignMixins.SetLibrary
 import com.milaboratory.mixcr.presets.AlignMixins.SetSpecies
 import com.milaboratory.mixcr.presets.AlignMixins.SetTagPattern
-import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
+import com.milaboratory.mixcr.presets.AssembleContigsMixins.AssembleContigsWithMaxLength
 import com.milaboratory.mixcr.presets.AssembleContigsMixins.SetContigAssemblingFeatures
 import com.milaboratory.mixcr.presets.AssembleMixins.SetClonotypeAssemblingFeatures
 import com.milaboratory.mixcr.presets.AssembleMixins.SetSplitClonesBy
@@ -46,6 +47,7 @@ import com.milaboratory.mixcr.presets.ExportMixins.DontImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.ExportMixins.ImputeGermlineOnExport
 import com.milaboratory.mixcr.presets.GenericMixin
 import com.milaboratory.mixcr.presets.PipelineMixins.AddPipelineStep
+import com.milaboratory.mixcr.presets.PipelineMixins.AssembleContigsByCells
 import com.milaboratory.mixcr.presets.PipelineMixins.RemovePipelineStep
 import com.milaboratory.mixcr.presets.QcMixins
 import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins.DontCorrectTagName
@@ -85,6 +87,16 @@ class PipelineMiXCRMixins : MiXCRMixinCollector() {
     fun removePipelineStep(step: String) =
         mixIn(RemovePipelineStep(step))
 
+    // This option PipelineMiXCRMixins because it actually doesn't change assembleClones step, but removing the next.
+    // We don't need it assembleClones command
+    @Option(
+        description = ["Assemble contigs separately by cells. It will cancel `assembleCells` step."],
+        names = [AssembleContigsByCells.CMD_OPTION],
+        order = OptionsOrder.mixins.assembleContigs + 101
+    )
+    fun assembleContigsByCells(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(AssembleContigsByCells)
+
     companion object {
         const val DESCRIPTION = "Params to change pipeline steps:%n"
     }
@@ -109,6 +121,14 @@ class PipelineMiXCRMixinsHidden : MiXCRMixinCollector() {
     )
     fun removePipelineStep(step: String) =
         mixIn(RemovePipelineStep(step))
+
+    @Option(
+        hidden = true,
+        names = [AssembleContigsByCells.CMD_OPTION]
+    )
+    fun assembleContigsByCells(@Suppress("UNUSED_PARAMETER") f: Boolean) =
+        mixIn(AssembleContigsByCells)
+
 }
 
 class RefineTagsAndSortMiXCRMixins : MiXCRMixinCollector() {
@@ -464,6 +484,15 @@ class AssembleContigsMiXCRMixins : MiXCRMixinCollector() {
     fun assembleContigsBy(gf: GeneFeatures) =
         mixIn(SetContigAssemblingFeatures(gf))
 
+    @Option(
+        description = ["Contigs with maximum possible length will be assembled."],
+        names = [AssembleContigsWithMaxLength.CMD_OPTION],
+        paramLabel = Labels.GENE_FEATURES,
+        order = OptionsOrder.mixins.assembleContigs + 102
+    )
+    fun assembleContigsWithMaxLength(ignored: Boolean) =
+        mixIn(AssembleContigsWithMaxLength)
+
     companion object {
         const val DESCRIPTION = "Params for ${CommandAssembleContigs.COMMAND_NAME} command:%n"
     }
@@ -722,9 +751,9 @@ object ExportMiXCRMixins {
         @Option(
             description = [
                 "Filter out clones from groups of particular type.",
-                "`found` - groups that were found on `${AnalyzeCommandDescriptor.assembleCells.name}`.",
-                "`undefined` - there were not enough info on `${AnalyzeCommandDescriptor.assembleCells.name}` to form a group.",
-                "`contamination` - clones that were marked as contamination on `${AnalyzeCommandDescriptor.assembleCells.name}`.",
+                "`found` - groups that were found on `${assembleCells.name}`.",
+                "`undefined` - there were not enough info on `${assembleCells.name}` to form a group.",
+                "`contamination` - clones that were marked as contamination on `${assembleCells.name}`.",
             ],
             names = [ExportMixins.FilterOutCloneGroupTypes.CMD_OPTION],
             arity = "1..*",

@@ -205,7 +205,7 @@ object CommandExtend {
                 VDJCAlignmentsWriter(outputFile).use { writer ->
                     SmartProgressReporter.startProgressReport("Extending alignments", reader)
                     val paramsSpec = resetPreset.overridePreset(reader.header.paramsSpec)
-                    val process = processWrapper(reader, paramsSpec, reader.parameters)
+                    val process = processWrapper(reader, paramsSpec, reader.header.alignerParameters!!)
                     writer.writeHeader(
                         reader.header
                             .copy(paramsSpec = dontSavePresetOption.presetToSave(paramsSpec))
@@ -217,7 +217,7 @@ object CommandExtend {
                     // Shifting indels in homopolymers is effective only for alignments build with linear gap scoring,
                     // consolidating some gaps, on the contrary, for alignments obtained with affine scoring such procedure
                     // may break the alignment (gaps there are already consolidated as much as possible)
-                    val gtRequiringIndelShifts = reader.parameters.geneTypesWithLinearScoring
+                    val gtRequiringIndelShifts = reader.header.alignerParameters!!.geneTypesWithLinearScoring
                     process.output
                         .ordered { it.alignmentsIndex }
                         .forEach { alignments ->

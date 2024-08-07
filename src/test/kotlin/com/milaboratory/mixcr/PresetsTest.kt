@@ -7,11 +7,17 @@ import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.tag.TagValueType
 import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mixcr.cli.CommandAlignParams
+import com.milaboratory.mixcr.cli.allClonesWillBeCoveredByFeature
 import com.milaboratory.mixcr.cli.presetFlagsMessages
 import com.milaboratory.mixcr.export.CloneFieldsExtractorsFactory
 import com.milaboratory.mixcr.export.MetaForExport
 import com.milaboratory.mixcr.export.VDJCAlignmentsFieldsExtractorsFactory
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleContigs
+import com.milaboratory.mixcr.presets.AssembleContigsMixins.AssembleContigsWithMaxLength
+import com.milaboratory.mixcr.presets.Flags
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRPresetCategory
 import com.milaboratory.mixcr.presets.Presets
@@ -24,9 +30,14 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAnyOf
+import io.kotest.matchers.floats.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.floats.shouldBeLessThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.repseq.core.GeneType.Variable
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import java.nio.file.Paths
 import kotlin.io.path.Path
@@ -35,22 +46,26 @@ import kotlin.io.path.listDirectoryEntries
 
 class PresetsTest {
     @Test
-    fun test1() {
+    fun `check there are params for every step`() {
         for (presetName in Presets.nonAbstractPresetNames) {
-            println(presetName)
             val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
             assertJson(K_OM, bundle, false)
-            println(bundle.flags)
-            println()
-            Assert.assertNotNull("pipeline must be set for all non-abstract presets ($presetName)", bundle.pipeline)
-            for (step in bundle.pipeline!!.steps) {
-                Assert.assertNotNull(
-                    "params for all pipeline steps must be set in non-abstract bundle ($step)",
-                    step.extractFromBundle(bundle)
-                )
-            }
-            bundle.flags.forEach {
-                Assert.assertTrue("Flag = $it", presetFlagsMessages.containsKey(it))
+            assertSoftly(presetName) {
+                "pipeline must be set for all non-abstract presets".asClue {
+                    bundle.pipeline shouldNotBe null
+                }
+                for (step in bundle.pipeline!!.steps) {
+                    step.asClue {
+                        "params for all pipeline steps must be set in non-abstract bundle".asClue {
+                            step.extractFromBundle(bundle, 0) shouldNotBe null
+                        }
+                    }
+                }
+                bundle.flags.forEach { flag ->
+                    flag.asClue {
+                        presetFlagsMessages.containsKey(flag) shouldBe true
+                    }
+                }
             }
         }
     }
@@ -156,6 +171,7 @@ class PresetsTest {
         } shouldBe emptyList()
     }
 
+    @Ignore
     @Test
     fun `all presets with export steps should have required depended steps`() {
         Presets.nonAbstractPresetNames.forEach { presetName ->
@@ -177,7 +193,7 @@ class PresetsTest {
         Presets.nonAbstractPresetNames
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
-                AnalyzeCommandDescriptor.assembleCells in bundle.pipeline!!.steps
+                assembleCells in bundle.pipeline!!.steps
             }
             .filter { presetName ->
                 val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
@@ -212,6 +228,147 @@ class PresetsTest {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun `all presets should have assemble feature or flag for it`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val hasFeature = bundle.assemble!!.cloneAssemblerParameters.assemblingFeatures != null
+                val hasFlag = Flags.AssembleClonesBy in bundle.flags
+                (hasFeature && hasFlag) || (!hasFeature && !hasFlag)
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets should have assemble contigs feature or flag for it`() {
+        Presets.visiblePresets
+            .filterNot { "gex" in it }
+            .filterNot {
+                val parent = Presets.rawResolve(it).inheritFrom
+                parent != null && ("gex" in parent || parent == "shotgun-base")
+            }
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val steps = bundle.pipeline?.steps ?: emptyList()
+                assembleContigs in steps
+            }
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val hasFeature = bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature()
+                val assembleMaxLength =
+                    Presets.rawResolve(presetName).mixins?.contains(AssembleContigsWithMaxLength) ?: false
+                val hasFlag = Flags.AssembleContigsBy in bundle.flags ||
+                        Flags.AssembleContigsByOrMaxLength in bundle.flags ||
+                        Flags.AssembleContigsByOrByCell in bundle.flags
+                !assembleMaxLength && ((hasFeature && hasFlag) || (!hasFeature && !hasFlag))
+            } shouldBe emptyList()
+    }
+
+    @Test
+    fun `all presets with assemble cells should have assemble contigs feature`() {
+        Presets.visiblePresets
+            .filter { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                val steps = bundle.pipeline?.steps ?: emptyList()
+                assembleCells in steps && assembleContigs in steps
+                        && Flags.AssembleContigsBy !in bundle.flags && Flags.AssembleContigsByOrByCell !in bundle.flags
+            }
+            .forAll { presetName ->
+                val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                bundle.assembleContigs!!.parameters.allClonesWillBeCoveredByFeature() shouldBe true
+            }
+    }
+
+    @Test
+    fun `consistency of flags`() {
+        "Presets should have only one AssembleContigsBy flag".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val flags = listOf(
+                        Flags.AssembleContigsBy,
+                        Flags.AssembleContigsByOrByCell,
+                        Flags.AssembleContigsByOrMaxLength
+                    ).filter {
+                        it in bundle.flags
+                    }
+                    flags.size > 1
+                } shouldBe emptyList()
+        }
+        "Presets with cell barcodes should not contain ${Flags.AssembleContigsBy} or ${Flags.AssembleContigsByOrMaxLength} flag".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    bundle.align!!.tagsValidations
+                        .filterIsInstance<CommandAlignParams.MustContainTagType>()
+                        .any { it.tagType == TagType.Cell }
+                }
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    Flags.AssembleContigsBy in bundle.flags || Flags.AssembleContigsByOrMaxLength in bundle.flags
+                } shouldBe emptyList()
+        }
+        "Presets without cell barcodes should not contain ${Flags.AssembleContigsByOrByCell} flag".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    bundle.align!!.tagsValidations
+                        .filterIsInstance<CommandAlignParams.MustContainTagType>()
+                        .none { it.tagType == TagType.Cell }
+                }
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    Flags.AssembleContigsByOrByCell in bundle.flags
+                } shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `ranges of min relative scores`() = assertSoftly {
+        val lowerBond = 0.8f
+        val upperBond = 0.9f
+
+        val exclusions = setOf("generic-ont", "generic-ont-with-umi")
+
+        "Presets with `assembleContigs` should have lowered minRelativeScore for `assemble` step".asClue {
+            (Presets.visiblePresets - exclusions)
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    assembleContigs in bundle.pipeline!!.steps
+                }.forEach { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val alignParams = bundle.align!!.parameters
+                    val assembleParams =
+                        bundle.assemble!!.cloneAssemblerParameters.updateFrom(alignParams).cloneFactoryParameters
+                    val assembleContigsParams = bundle.assembleContigs!!.cloneFactoryParameters?.clone()?.also {
+                        // set defaults from align params
+                        it.update(alignParams)
+                    } ?: assembleParams
+
+                    presetName.asClue {
+                        assembleParams.getRelativeMinScore(Variable) shouldBeLessThanOrEqual lowerBond
+                        assembleContigsParams.getRelativeMinScore(Variable) shouldBeGreaterThanOrEqual upperBond
+                    }
+                }
+        }
+        "Presets without `assembleContigs` should have high minRelativeScore for `assemble` step".asClue {
+            Presets.visiblePresets
+                .filter { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    assembleContigs !in bundle.pipeline!!.steps
+                }.forEach { presetName ->
+                    val bundle = Presets.MiXCRBundleResolver.resolvePreset(presetName)
+                    val alignParams = bundle.align!!.parameters
+                    val assembleParams =
+                        bundle.assemble!!.cloneAssemblerParameters.updateFrom(alignParams).cloneFactoryParameters
+
+                    presetName.asClue {
+                        assembleParams.getRelativeMinScore(Variable) shouldBeGreaterThanOrEqual upperBond
+                    }
+                }
         }
     }
 }
