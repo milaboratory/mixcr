@@ -94,9 +94,6 @@ abstract class MiXCRParamsResolver<P : Any>(
             ValidationException.require(alignParams.headerExtractors.isEmpty()) {
                 "`headerExtractors` are not supported with mitool commands in pipeline"
             }
-            ValidationException.require(alignParams.tagTransformationSteps.isEmpty()) {
-                "`tagTransformationSteps` are not supported with mitool commands in pipeline"
-            }
             if (alignParams.parameters.isSaveOriginalReads) {
                 logger.warn { "Saving original reads with mitool commands in pipeline will lead to saving reads after mitool processing, not original ones" }
             }

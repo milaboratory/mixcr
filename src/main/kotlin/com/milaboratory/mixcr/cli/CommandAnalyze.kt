@@ -395,6 +395,7 @@ object CommandAnalyze {
                 }
 
                 planBuilder.executeSteps(dryRun)
+                // Taking into account that there are multiple outputs from the mitool parse command.
                 planBuilder.setActualOutputs(sampleFileList.toPath())
 
                 pipeline
@@ -409,31 +410,29 @@ object CommandAnalyze {
             }
 
             // TODO when MiTool will support sample tags from reads, recombine all mitool inputs in one align command
-            val sampleFileList = if (pipeline.first() != parse && bundle.align!!.splitBySample && !dryRun) {
-                // Adding an option to save output files by align
-                outputFolder
-                    .resolve("${outputNamePrefix.dotAfterIfNotBlank()}align.list.tsv")
-                    .also { it.deleteIfExists() }
-                    .toFile().also { it.deleteOnExit() }
-            } else {
-                null
-            }
-            val extraAlignArgs: List<String> = buildList {
-                sampleFileList?.let { sampleFileList ->
-                    this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
-                }
-                if (strictMatching) {
-                    this += STRICT_SAMPLE_NAME_MATCHING_OPTION
-                }
-                referenceForCram?.let { referenceForCram ->
-                    this += listOf(BAMReader.referenceForCramOption, referenceForCram.toString())
-                }
-            }
 
-            planBuilder.addStep(align) { _, _, _ ->
+            val sampleFileListFiles = mutableMapOf<String, Path>()
+
+            planBuilder.addStep(align) { _, _, sampleName ->
                 buildList {
                     this += listOf("--preset", presetName)
-                    this += extraAlignArgs
+                    if (bundle.align!!.splitBySample && !dryRun) {
+                        // Adding an option to save output files by align
+                        val sampleFileList = outputFolder
+                            .resolve("${outputNamePrefix.dotAfterIfNotBlank()}${sampleName.dotAfterIfNotBlank()}align.list.tsv")
+                            .also { it.deleteIfExists() }
+                            .toFile().also { it.deleteOnExit() }
+                        sampleFileListFiles[sampleName] = sampleFileList.toPath()
+                        this += listOf(SAVE_OUTPUT_FILE_NAMES_OPTION, sampleFileList.toString())
+                    }
+
+                    if (strictMatching) {
+                        this += STRICT_SAMPLE_NAME_MATCHING_OPTION
+                    }
+                    referenceForCram?.let { referenceForCram ->
+                        this += listOf(BAMReader.referenceForCramOption, referenceForCram.toString())
+                    }
+
                     this += mixins.flatMap { it.cmdArgs }
                     this += pathsForNotAligned.argsOfNotAlignedForAlign()
                     if (pipeline.first() != parse)
@@ -443,9 +442,10 @@ object CommandAnalyze {
 
             planBuilder.executeSteps(dryRun)
 
-            // Taking into account that there are multiple outputs from the align command
-            if (sampleFileList != null) {
-                planBuilder.setActualOutputs(sampleFileList.toPath())
+            // Taking into account that there are multiple outputs from the align command.
+            // Even so, mitool could split into several files and then align could split each too
+            if (sampleFileListFiles.isNotEmpty()) {
+                planBuilder.setActualOutputs(sampleFileListFiles)
             }
 
             // Adding all steps with calculations
@@ -519,12 +519,19 @@ object CommandAnalyze {
             private var nextInputs: List<InputFileSet> = listOf(InputFileSet("", initialInputs.map { it.toString() }))
             private val outputsForCommands = mutableListOf<Pair<AnalyzeCommandDescriptor<*, *>, List<InputFileSet>>>()
 
-            fun setActualOutputs(fileNamesList: Path) {
-                val lines = fileNamesList.readLines().drop(1).map { it.split("\t") }
-                nextInputs = when {
-                    lines.isEmpty() -> emptyList()
-                    else -> lines.map { line ->
-                        InputFileSet(listToSampleName(line.drop(2)), listOf(outputFolder.resolve(line[0]).toString()))
+            fun setActualOutputs(outputFilesList: Path) {
+                setActualOutputs(mapOf("" to outputFilesList))
+            }
+
+            fun setActualOutputs(outputFilesList: Map<String, Path>) {
+                nextInputs = outputFilesList.flatMap { (prefix, file) ->
+                    val withoutHeader = file.readLines().drop(1)
+                    withoutHeader.map { it.split("\t") }.map { line ->
+                        val sampleName = listToSampleName(line.drop(2))
+                        InputFileSet(
+                            "${prefix.dotAfterIfNotBlank()}$sampleName",
+                            listOf(outputFolder.resolve(line[0]).toString())
+                        )
                     }
                 }
             }
