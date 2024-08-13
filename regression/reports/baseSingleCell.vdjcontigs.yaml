@@ -1,8 +1,9 @@
 align:
   type: alignerReport
   commandLine: align -f --report baseSingleCell.vdjcontigs.align.report.txt --json-report
-    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --species hs
-    --assemble-contigs-by VDJRegion baseSingleCell.vdjcontigs.consensus.4.mic baseSingleCell.vdjcontigs.alignments.vdjca
+    baseSingleCell.vdjcontigs.align.report.json --preset 10x-vdj-bcr --save-output-file-names
+    baseSingleCell.vdjcontigs.align.list.tsv --species hs --assemble-contigs-by VDJRegion
+    baseSingleCell.vdjcontigs.consensus.4.mic baseSingleCell.vdjcontigs.alignments.vdjca
   inputFiles:
     - baseSingleCell.vdjcontigs.consensus.4.mic
   outputFiles:

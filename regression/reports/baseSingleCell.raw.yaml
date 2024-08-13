@@ -1,8 +1,9 @@
 align:
   type: alignerReport
   commandLine: align -f --report baseSingleCell.raw.align.report.txt --json-report
-    baseSingleCell.raw.align.report.json --preset 10x-vdj-bcr --assemble-contigs-by-cells
-    --species hs baseSingleCell.raw.consensus.4.mic baseSingleCell.raw.alignments.vdjca
+    baseSingleCell.raw.align.report.json --preset 10x-vdj-bcr --save-output-file-names
+    baseSingleCell.raw.align.list.tsv --assemble-contigs-by-cells --species hs baseSingleCell.raw.consensus.4.mic
+    baseSingleCell.raw.alignments.vdjca
   inputFiles:
     - baseSingleCell.raw.consensus.4.mic
   outputFiles:
