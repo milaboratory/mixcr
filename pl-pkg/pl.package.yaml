@@ -6,6 +6,6 @@ binary:
   name: "mixcr"
   crossplatform: true
  
-  runEnv: corretto@21.0.2.13.1
+  runEnv: '@milaboratory/runenv-java-corretto:21.0.2.13.1'
   root: "./dld/mixcr/"
   entrypoint: [ "./mixcr.jar" ]
