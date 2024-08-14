@@ -1,9 +1,9 @@
 binary:
   registry:
     name: "milaboratories"
-    storageURL: s3://milab-euce1-prod-pkgs-s3-platforma-registry/pub/milaboratories/?region=eu-central-1
+    storageURL: s3://milab-euce1-prod-pkgs-s3-platforma-registry/pub/?region=eu-central-1
 
-  name: "mixcr"
+  name: "milaboratories/mixcr"
   crossplatform: true
  
   runEnv: '@milaboratory/runenv-java-corretto:21.0.2.13.1'

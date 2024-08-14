@@ -19,6 +19,6 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@milaboratory/pl-package-builder": "1.5.x",
-    "@milaboratory/runenv-java-corretto": "^0.0.4"
+    "@milaboratory/runenv-java-corretto": "^0.0.5"
   }
 }
