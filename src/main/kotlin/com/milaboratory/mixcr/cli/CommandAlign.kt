@@ -113,7 +113,6 @@ import com.milaboratory.util.SmartProgressReporter
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
-import com.milaboratory.util.unzippedInputStream
 import com.milaboratory.util.use
 import com.milaboratory.util.withExpectedSize
 import io.repseq.core.Chains
@@ -1061,7 +1060,7 @@ object CommandAlign {
                         throw ValidationException("File concatenation not supported for fasta files.")
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
                     FastaSequenceReaderWrapper(
-                        FastaReader(inputFile.unzippedInputStream(), NucleotideSequence.ALPHABET),
+                        FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
                     ).map { ProcessingBundle.fromRead(it, it.weight()) }
                 }
