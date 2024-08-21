@@ -25,14 +25,14 @@ function log() {
     printf "%s\n" "${*}"
 }
 
-if ![ -e "${ARCHIVE_PATH}" ]; then
-    log "MiXCR archive not found at '${ARCHIVE_PATH}'"
+if [ -z "$( ls -A ${ARCHIVE_PATH} )" ]; then
+    log "Artifact folder with MiXCR is empty: '${ARCHIVE_PATH}'"
     exit 1
-fi
+fi	
 
 log "Creating: ${dst_data_dir}"
 
 rm -rf "${dst_data_dir}" # make sure we have no waste to be packed into software package
 mkdir -p "${dst_data_dir}"
 
-unzip "${ARCHIVE_PATH}" -d "${dst_data_dir}"
+cp -av "${ARCHIVE_PATH}/*" "${dst_data_dir}/"
