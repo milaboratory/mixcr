@@ -35,4 +35,4 @@ log "Creating: ${dst_data_dir}"
 rm -rf "${dst_data_dir}" # make sure we have no waste to be packed into software package
 mkdir -p "${dst_data_dir}"
 
-cp -av "${ARCHIVE_PATH}/*" "${dst_data_dir}/"
+cp -av "${ARCHIVE_PATH}"/* "${dst_data_dir}"/
