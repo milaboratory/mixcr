@@ -18,7 +18,7 @@ cd "${script_dir}"
 # Script parameters
 #
 : "${ARCHIVE_PATH}" # require variable to be set
-dst_root="${script_dir}/dld/"
+dst_root="${script_dir}/dld"
 dst_data_dir="${dst_root}/mixcr"
 
 function log() {
