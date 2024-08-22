@@ -11,7 +11,7 @@
  */
 package com.milaboratory.mixcr.export
 
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.partialassembler.PartialAlignmentsAssemblerAligner
 import com.milaboratory.mixcr.tests.MiXCRTestUtils
 import com.milaboratory.mixcr.tests.TargetBuilder

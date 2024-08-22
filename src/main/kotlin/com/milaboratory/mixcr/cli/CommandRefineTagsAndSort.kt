@@ -29,17 +29,17 @@ import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractor
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
+import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
+import com.milaboratory.mitool.tag.SequenceTagValue
+import com.milaboratory.mitool.tag.TagValue
+import com.milaboratory.mitool.tag.TagValueType
+import com.milaboratory.mitool.tag.tagAliases
 import com.milaboratory.mixcr.basictypes.IOUtil
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
-import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
-import com.milaboratory.mixcr.basictypes.tag.SequenceTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagValue
-import com.milaboratory.mixcr.basictypes.tag.TagValueType
-import com.milaboratory.mixcr.basictypes.tag.tagAliases
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins
@@ -354,7 +354,7 @@ object CommandRefineTagsAndSort {
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )
-                            val tagTuple = als.tagCount.singletonTuple
+                            val tagTuple = als.tagCount.getSingletonTuple()
                             Array(tagNames.size) { tIdx -> // <- local index for the procedure
                                 val tagValue = tagTuple[tIdx]
                                 when {
@@ -388,14 +388,14 @@ object CommandRefineTagsAndSort {
                             { al -> al.alignmentsIndex }
                         ) { al, newTagValues ->
                             // starting off the copy of original alignment tags array
-                            val updatedTags = al.tagCount.singletonTuple.asArray()
+                            val updatedTags = al.tagCount.getSingletonTuple().asArray()
                             tagNames.indices.forEach { tIdx ->
                                 if (correctionEnabled[tIdx])
                                     updatedTags[tIdx] =
                                         SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
                             }
                             // Applying updated tags values and returning updated alignments object
-                            al.withTagCount(TagCount(TagTuple(*updatedTags), al.tagCount.singletonCount))
+                            al.withTagCount(TagCount(TagTuple(updatedTags), al.tagCount.getSingletonCount()))
                         }
                             .reportProgress("Applying correction & sorting alignments by ${tagNames.last()}")
                     }
@@ -414,7 +414,7 @@ object CommandRefineTagsAndSort {
                         { tIdx -> // <- index inside the alignment object
                             sortByHashOnDisk(
                                 ComparatorWithHash.compareBy { al ->
-                                    val tagTuple = al.tagCount.singletonTuple
+                                    val tagTuple = al.tagCount.getSingletonTuple()
                                     tagTuple[tIdx].extractKey()
                                 },
                                 tempDest,

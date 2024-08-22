@@ -21,11 +21,11 @@ import com.milaboratory.core.sequence.NSequenceWithQuality
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.SequenceQuality
 import com.milaboratory.core.sequence.quality.QualityTrimmerParameters
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.basictypes.Clone
 import com.milaboratory.mixcr.basictypes.MultiAlignmentHelper
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandExportClonesPretty.Companion.outputCompact
 import com.milaboratory.mixcr.util.RunMiXCR
 import com.milaboratory.mixcr.util.RunMiXCR.RunMiXCRAnalysis

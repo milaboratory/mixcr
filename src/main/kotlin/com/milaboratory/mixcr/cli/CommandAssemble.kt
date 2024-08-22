@@ -21,6 +21,8 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.Range
 import com.milaboratory.mitool.consensus.ConsensusResult
 import com.milaboratory.mitool.data.MinGroupsPerGroup
+import com.milaboratory.mitool.tag.TagType.Cell
+import com.milaboratory.mitool.tag.TagType.Molecule
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
 import com.milaboratory.mixcr.assembler.CloneAssembler
 import com.milaboratory.mixcr.assembler.CloneAssemblerRunner
@@ -38,8 +40,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagCount
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType.Cell
-import com.milaboratory.mixcr.basictypes.tag.TagType.Molecule
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -424,7 +424,7 @@ object CommandAssemble {
                                         if (it.cloneIndex == -1L)
                                             return@map it
                                         val cloneTagCount = cloneTagCounts.get(it.cloneIndex.toInt())!!
-                                        val prefixes = it.tagCount.reduceToLevel(cloneTagCount.depth())
+                                        val prefixes = it.tagCount.reduceToLevel(cloneTagCount.depth)
                                         if (!cloneTagCount.containsAll(prefixes.tuples())) {
                                             reportBuilder.onAlignmentFilteredByPrefix(it)
                                             // Dropped with clone semantically fits the case the most

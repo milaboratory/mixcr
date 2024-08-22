@@ -57,6 +57,11 @@ import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
 import com.milaboratory.mitool.pattern.search.SearchSettings
 import com.milaboratory.mitool.report.ReadTrimmerReportBuilder
+import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
+import com.milaboratory.mitool.tag.TagInfo
+import com.milaboratory.mitool.tag.TagType
+import com.milaboratory.mitool.tag.TagValueType
+import com.milaboratory.mitool.tag.TechnicalTag.TAG_INPUT_IDX
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
 import com.milaboratory.mixcr.basictypes.MiXCRHeader
@@ -64,13 +69,8 @@ import com.milaboratory.mixcr.basictypes.SequenceHistory
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.VDJCHit
-import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
 import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagValueType
-import com.milaboratory.mixcr.basictypes.tag.TechnicalTag.TAG_INPUT_IDX
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.BAM
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.Fasta
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.MIC

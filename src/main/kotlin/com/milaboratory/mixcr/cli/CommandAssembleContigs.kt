@@ -24,6 +24,7 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.sequence.NucleotideSequence
+import com.milaboratory.mitool.tag.TagType
 import com.milaboratory.mixcr.assembler.CloneFactory
 import com.milaboratory.mixcr.assembler.CloneFactoryParameters
 import com.milaboratory.mixcr.assembler.fullseq.CoverageAccumulator
@@ -43,7 +44,6 @@ import com.milaboratory.mixcr.basictypes.MiXCRHeader
 import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCSProperties.CloneOrdering
 import com.milaboratory.mixcr.basictypes.tag.TagCountAggregator
-import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
@@ -348,7 +348,7 @@ private class Assembler(
             // process every cell barcode separately
             originalClone.tagCount.splitBy(cellTageLevel)
                 .flatMap { tagsFromCell ->
-                    val cellBarcode = tagsFromCell.reduceToLevel(cellTageLevel).singletonTuple
+                    val cellBarcode = tagsFromCell.reduceToLevel(cellTageLevel).getSingletonTuple()
                     assembleContigs0(
                         originalClone.withTagCount(tagsFromCell),
                         OutputPortFactory {

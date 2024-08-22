@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -12,10 +12,10 @@
 package com.milaboratory.mixcr.postanalysis.ui;
 
 
-import com.milaboratory.mixcr.basictypes.tag.TagInfo;
-import com.milaboratory.mixcr.basictypes.tag.TagType;
-import com.milaboratory.mixcr.basictypes.tag.TagValueType;
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo;
+import com.milaboratory.mitool.container.tag.TagsInfo;
+import com.milaboratory.mitool.tag.TagInfo;
+import com.milaboratory.mitool.tag.TagType;
+import com.milaboratory.mitool.tag.TagValueType;
 import org.junit.Test;
 
 public class DownsamplingParametersTest {
