@@ -1,0 +1,24 @@
+{
+  "name": "@milaboratory/mixcr",
+  "version": "0.0.1",
+  "description": "MiXCR software dependency for Platforma Backend",
+  "scripts": {
+    "build": "true",
+    "postinstall": "./install-ci.sh",
+    "build:package": "pl-pkg build package",
+    "publish:package": "pl-pkg publish package",
+    "release:package": "npm run build:package && npm run publish:package",
+    "build:descriptor": "pl-pkg build descriptor",
+    "publish:descriptor": "pl-pkg publish descriptor",
+    "release:descriptor": "npm run build:descriptor && npm run publish:descriptor",
+    "release": "npm run release:package && npm run release:descriptor"
+  },
+  "files": [
+    "dist/"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@milaboratory/pl-package-builder": "1.5.x",
+    "@milaboratory/runenv-java-corretto": "^0.0.5"
+  }
+}
