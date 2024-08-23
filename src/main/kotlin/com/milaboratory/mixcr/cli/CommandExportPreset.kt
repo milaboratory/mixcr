@@ -34,6 +34,7 @@ import com.milaboratory.mixcr.presets.MiXCRParams
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.util.K_YAML_OM
+import com.mixcr.util.K_JSON_OM
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.ArgGroup
 import picocli.CommandLine.Command
@@ -97,7 +98,7 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
     )
     private var outputFile: Path? = null
         set(value) {
-            ValidationException.requireFileType(value, InputFileType.YAML)
+            ValidationException.requireFileType(value, InputFileType.YAML, InputFileType.JSON)
             field = value
         }
 
@@ -224,11 +225,12 @@ class CommandExportPreset : MiXCRCommandWithOutputs(), MiXCRPresetAwareCommand<U
             validate = !noValidation
         ).first
 
-        val of = outputFile
-        if (of != null)
-            K_YAML_OM.writeValue(of.toFile(), bundle)
-        else
-            K_YAML_OM.writeValue(System.out, bundle)
+        val outputFile = outputFile
+        when {
+            outputFile == null -> K_YAML_OM.writeValue(System.out, bundle)
+            InputFileType.JSON.matches(outputFile) -> K_JSON_OM.writeValue(outputFile.toFile(), bundle)
+            else -> K_YAML_OM.writeValue(outputFile.toFile(), bundle)
+        }
     }
 
     override val paramsResolver: ParamsResolver<MiXCRParamsBundle, Unit>
