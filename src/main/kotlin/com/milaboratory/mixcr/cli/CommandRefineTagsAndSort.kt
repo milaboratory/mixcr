@@ -31,6 +31,7 @@ import com.milaboratory.mitool.refinement.gfilter.SequenceExtractor
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
 import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
 import com.milaboratory.mitool.tag.SequenceTagValue
+import com.milaboratory.mitool.tag.TagTuple
 import com.milaboratory.mitool.tag.TagValue
 import com.milaboratory.mitool.tag.TagValueType
 import com.milaboratory.mitool.tag.tagAliases
@@ -39,7 +40,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRMixinCollection.Companion.mixins

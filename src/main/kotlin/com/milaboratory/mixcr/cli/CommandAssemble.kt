@@ -21,6 +21,7 @@ import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.core.Range
 import com.milaboratory.mitool.consensus.ConsensusResult
 import com.milaboratory.mitool.data.MinGroupsPerGroup
+import com.milaboratory.mitool.tag.TagTuple
 import com.milaboratory.mitool.tag.TagType.Cell
 import com.milaboratory.mitool.tag.TagType.Molecule
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger
@@ -39,7 +40,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignments
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.basictypes.tag.TagCount
-import com.milaboratory.mixcr.basictypes.tag.TagTuple
 import com.milaboratory.mixcr.basictypes.validateCompositeFeatures
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels

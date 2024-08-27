@@ -13,6 +13,7 @@ package com.milaboratory.mixcr.basictypes.tag;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.mitool.tag.SequenceTagValue;
+import com.milaboratory.mitool.tag.TagTuple;
 import com.milaboratory.mitool.tag.TagValue;
 import org.junit.Assert;
 import org.junit.Test;
