@@ -18,6 +18,7 @@ import com.milaboratory.cli.MultiSampleRun.SAVE_OUTPUT_FILE_NAMES_OPTION
 import com.milaboratory.cli.MultiSampleRun.listToSampleName
 import com.milaboratory.cli.POverridesBuilderOps
 import com.milaboratory.mitool.cli.Parse.readSearchPlan
+import com.milaboratory.mitool.pattern.search.toTagsInfo
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.cli.CommandAlign.STRICT_SAMPLE_NAME_MATCHING_OPTION
 import com.milaboratory.mixcr.cli.CommandAlign.inputFileGroups
@@ -369,7 +370,7 @@ object CommandAnalyze {
                     )
                     // fill up args for not aligned reads according to payload tags count that will be in mitool results
                     pathsForNotAligned.fillWithDefaults(
-                        CommandAlign.Cmd.InputType.MIC(allTags = plan.allTags),
+                        CommandAlign.Cmd.InputType.MIC(plan.toTagsInfo()),
                         outputFolder,
                         outputNamePrefix,
                         addNotAligned = true,

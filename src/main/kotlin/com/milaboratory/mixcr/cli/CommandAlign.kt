@@ -56,11 +56,12 @@ import com.milaboratory.mitool.pattern.search.ReadSearchMode
 import com.milaboratory.mitool.pattern.search.ReadSearchPlan
 import com.milaboratory.mitool.pattern.search.ReadSearchSettings
 import com.milaboratory.mitool.pattern.search.SearchSettings
+import com.milaboratory.mitool.pattern.search.toTagsInfo
 import com.milaboratory.mitool.report.ReadTrimmerReportBuilder
 import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
 import com.milaboratory.mitool.tag.TagInfo
 import com.milaboratory.mitool.tag.TagType
-import com.milaboratory.mitool.tag.TagValueType
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mitool.tag.TechnicalTag.TAG_INPUT_IDX
 import com.milaboratory.mixcr.bam.BAMReader
 import com.milaboratory.mixcr.basictypes.MiXCRFooter
@@ -171,7 +172,7 @@ object CommandAlign {
                     f0.matches(InputFileType.FASTQ) -> SingleEndFastq
                     f0.matches(InputFileType.FASTA) || f0.matches(InputFileType.FASTA_GZ) -> Fasta
                     f0.matches(InputFileType.BAM_SAM_CRAM) -> BAM
-                    f0.matches(InputFileType.MIC) -> MIC(allTags = MicReader(f0).header.allTags)
+                    f0.matches(InputFileType.MIC) -> MIC(MicReader(f0).header.tagsInfo)
 
                     else -> throw ValidationException("Unknown file type: $f0")
                 }
@@ -929,15 +930,16 @@ object CommandAlign {
                 // tagPattern is set via mixin (see above)
 
                 // Prepending tag transformation step
-                val matchingTags = params.tagPattern?.let {
-                    ReadSearchPlan.create(it, ReadSearchSettings(SearchSettings.Default, ReadSearchMode.Direct)).allTags
+                val matchingTags = params.tagPattern?.let { tagPattern ->
+                    val plan = ReadSearchPlan.create(
+                        tagPattern,
+                        ReadSearchSettings(SearchSettings.Default, ReadSearchMode.Direct)
+                    )
+                    plan.toTagsInfo().map { it.name }.toSet()
                 } ?: emptySet()
                 params = params.copy(
                     tagTransformationSteps = listOf(
-                        sampleSheet.tagTransformation(
-                            matchingTags,
-                            !strictMatching
-                        )
+                        sampleSheet.tagTransformation(matchingTags, !strictMatching)
                     ) + params.tagTransformationSteps
                 )
             }
@@ -1005,14 +1007,13 @@ object CommandAlign {
             object Fasta : InputType(1, false)
             object BAM : InputType(-1 /* 1 or 2*/, false)
             data class MIC(
-                val readTags: List<String>,
-                val barcodes: List<String>,
+                val readTags: List<TagInfo>,
+                val barcodes: List<TagInfo>
             ) : InputType(readTags.size, false) {
                 companion object {
-                    operator fun invoke(allTags: Collection<String>): MIC {
-                        val (barcodes, readTags) = allTags
-                            .partition { tag -> TagType.isRecognisable(tag) }
-                        return MIC(readTags, barcodes)
+                    operator fun invoke(tagsInfo: TagsInfo): MIC {
+                        val readTags = tagsInfo.allTagsOfType(TagType.Targets)
+                        return MIC(readTags, tagsInfo - readTags)
                     }
                 }
             }
@@ -1071,23 +1072,19 @@ object CommandAlign {
                     val inputFile = inputFileGroups.fileGroups.first().files.first()
                     val idGenerator = AtomicLong()
                     val reader = MicReader(inputFile)
-                    val readTagsShortcuts = inputType.readTags.sorted().map { reader.tagShortcut(it) }
-                    val barcodeShortcuts = inputType.barcodes.map { reader.tagShortcut(it) }
                     reader
                         .map { record ->
                             val readId = idGenerator.getAndIncrement()
                             ProcessingBundle.fromRead(
                                 MultiRead(
-                                    readTagsShortcuts
-                                        .map { record.getTagValue(it) }
-                                        .map { SingleReadImpl(readId, it.value, "$readId") }
+                                    inputType.readTags
+                                        .map { tagInfo -> record.tags[tagInfo.index] as SequenceAndQualityTagValue }
+                                        .map { SingleReadImpl(readId, it.data, "$readId") }
                                         .toTypedArray()
                                 ),
                                 record.weight.toDouble(),
                                 tags = TagTuple(
-                                    *barcodeShortcuts.map {
-                                        SequenceAndQualityTagValue(record.getTagValue(it).value)
-                                    }.toTypedArray()
+                                    inputType.barcodes.map { tagInfo -> record.tags[tagInfo.index] }.toTypedArray()
                                 ),
                                 originalReadId = readId
                             )
@@ -1185,22 +1182,11 @@ object CommandAlign {
 
             // Tags
             val tagsExtractor = when (val inputType = inputFileGroups.inputType) {
-                is MIC -> {
-                    val barcodeTags = inputType.barcodes.mapIndexed { index, tag ->
-                        TagInfo(
-                            TagType.detectByTagName(tag)!!,
-                            TagValueType.SequenceAndQuality,
-                            tag,
-                            index
-                        )
-                    }
-
-                    getTagsExtractor(
-                        cmdParams.copy(tagPattern = null),
-                        inputFileGroups.tags,
-                        barcodeTags
-                    )
-                }
+                is MIC -> getTagsExtractor(
+                    cmdParams.copy(tagPattern = null),
+                    inputFileGroups.tags,
+                    inputType.barcodes
+                )
 
                 else -> getTagsExtractor(cmdParams, inputFileGroups.tags)
             }
