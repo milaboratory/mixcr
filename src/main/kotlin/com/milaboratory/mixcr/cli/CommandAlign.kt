@@ -60,6 +60,17 @@ import com.milaboratory.mitool.pattern.search.toTagsInfo
 import com.milaboratory.mitool.report.ReadTrimmerReportBuilder
 import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
 import com.milaboratory.mitool.tag.TagInfo
+import com.milaboratory.mitool.tag.TagParsePipeline
+import com.milaboratory.mitool.tag.TagParsePipeline.CELL_SPLIT_GROUP_LABEL
+import com.milaboratory.mitool.tag.TagParsePipeline.Output
+import com.milaboratory.mitool.tag.TagParsePipeline.SampleStat
+import com.milaboratory.mitool.tag.TagParsePipeline.Status
+import com.milaboratory.mitool.tag.TagParsePipeline.Status.Good
+import com.milaboratory.mitool.tag.TagParsePipeline.Status.NotAligned
+import com.milaboratory.mitool.tag.TagParsePipeline.Status.NotMatched
+import com.milaboratory.mitool.tag.TagParsePipeline.Status.NotParsed
+import com.milaboratory.mitool.tag.TagParsePipeline.TagsParser
+import com.milaboratory.mitool.tag.TagParsePipeline.getTagsExtractor
 import com.milaboratory.mitool.tag.TagTuple
 import com.milaboratory.mitool.tag.TagType
 import com.milaboratory.mitool.tag.TagsInfo
@@ -81,16 +92,6 @@ import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.SingleEndFastq
 import com.milaboratory.mixcr.cli.CommandAlign.Cmd.InputType.TripleEndFastq
 import com.milaboratory.mixcr.cli.CommandAlignParams.Companion.allTagTransformationSteps
 import com.milaboratory.mixcr.cli.CommandAlignParams.Companion.readSearchPlan
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.CELL_SPLIT_GROUP_LABEL
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.Output
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.SampleStat
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.Status
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.Status.Good
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.Status.NotAligned
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.Status.NotMatched
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.Status.NotParsed
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.TagsParser
-import com.milaboratory.mixcr.cli.CommandAlignPipeline.getTagsExtractor
 import com.milaboratory.mixcr.cli.CommonDescriptions.DEFAULT_VALUE_FROM_PRESET
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
@@ -1030,7 +1031,7 @@ object CommandAlign {
             }
         }
 
-        private fun createReader(pairedPatternPayload: Boolean?): OutputPortWithProgress<CommandAlignPipeline.Input> {
+        private fun createReader(pairedPatternPayload: Boolean?): OutputPortWithProgress<TagParsePipeline.Input> {
             MiXCRMain.lm.reportApplicationInputs(
                 true, false,
                 allInputFiles,
@@ -1050,7 +1051,7 @@ object CommandAlign {
                         cmdParams.replaceWildcards,
                         tempDest,
                         referenceForCram
-                    ).map { CommandAlignPipeline.Input.fromRead(it, it.weight()) }
+                    ).map { TagParsePipeline.Input.fromRead(it, it.weight()) }
                     when (pairedPatternPayload) {
                         null -> reader
                         true -> reader.onEach { record ->
@@ -1074,7 +1075,7 @@ object CommandAlign {
                     FastaSequenceReaderWrapper(
                         FastaReader(inputFile.toFile(), NucleotideSequence.ALPHABET),
                         cmdParams.replaceWildcards
-                    ).map { CommandAlignPipeline.Input.fromRead(it, it.weight()) }
+                    ).map { TagParsePipeline.Input.fromRead(it, it.weight()) }
                 }
 
                 is MIC -> {
@@ -1086,7 +1087,7 @@ object CommandAlign {
                     reader
                         .map { record ->
                             val readId = idGenerator.getAndIncrement()
-                            CommandAlignPipeline.Input(
+                            TagParsePipeline.Input(
                                 read = MultiRead(
                                     inputType.readTags
                                         .map { tagInfo -> record.tags[tagInfo.index] as SequenceAndQualityTagValue }
@@ -1108,7 +1109,7 @@ object CommandAlign {
                     assert(inputFileGroups.fileGroups[0].files.size == inputFileGroups.inputType.numberOfReads)
                     FastqGroupReader(inputFileGroups.fileGroups, cmdParams.replaceWildcards, readBufferSize)
                         .map {
-                            CommandAlignPipeline.Input.fromRead(
+                            TagParsePipeline.Input.fromRead(
                                 it.read,
                                 it.read.weight(),
                                 fileTags = it.fileTags,
@@ -1200,7 +1201,7 @@ object CommandAlign {
             }
 
             val tagsExtractor = getTagsExtractor(
-                CommandAlignPipeline.Params(
+                TagParsePipeline.Params(
                     allTagTransformationSteps = cmdParams.allTagTransformationSteps,
                     readIdAsCellTag = cmdParams.readIdAsCellTag,
                     headerExtractors = cmdParams.headerExtractors,
