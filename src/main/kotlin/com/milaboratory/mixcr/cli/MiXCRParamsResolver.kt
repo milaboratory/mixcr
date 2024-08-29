@@ -88,12 +88,6 @@ abstract class MiXCRParamsResolver<P : Any>(
             ValidationException.require(mitoolPattern == alignPattern) {
                 "Tag patterns are different in `mitool.parse.pattern` and `align.tagPattern`: $mitoolPattern and $alignPattern"
             }
-            ValidationException.require(!alignParams.readIdAsCellTag) {
-                "`readIdAsCellTag` is not supported with mitool commands in pipeline"
-            }
-            ValidationException.require(alignParams.headerExtractors.isEmpty()) {
-                "`headerExtractors` are not supported with mitool commands in pipeline"
-            }
             if (alignParams.parameters.isSaveOriginalReads) {
                 logger.warn { "Saving original reads with mitool commands in pipeline will lead to saving reads after mitool processing, not original ones" }
             }

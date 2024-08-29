@@ -70,7 +70,6 @@ import com.milaboratory.mitool.tag.TagParsePipeline.Status.NotAligned
 import com.milaboratory.mitool.tag.TagParsePipeline.Status.NotMatched
 import com.milaboratory.mitool.tag.TagParsePipeline.Status.NotParsed
 import com.milaboratory.mitool.tag.TagParsePipeline.TagsParser
-import com.milaboratory.mitool.tag.TagParsePipeline.getTagsExtractor
 import com.milaboratory.mitool.tag.TagTuple
 import com.milaboratory.mitool.tag.TagType
 import com.milaboratory.mitool.tag.TagsInfo
@@ -1200,14 +1199,15 @@ object CommandAlign {
                 else -> null
             }
 
-            val tagsExtractor = getTagsExtractor(
+            val tagsExtractor = TagParsePipeline.getTagsExtractor(
                 TagParsePipeline.Params(
                     allTagTransformationSteps = cmdParams.allTagTransformationSteps,
                     readIdAsCellTag = cmdParams.readIdAsCellTag,
                     headerExtractors = cmdParams.headerExtractors,
                     splitBySample = cmdParams.splitBySample
                 ),
-                tagsParser,
+                tagsParser?.tagsInfo,
+                includeTargets = false,
                 inputFileGroups.tags
             )
 
@@ -1592,9 +1592,7 @@ object CommandAlign {
                 "." -> null
                 else -> MultiSampleRun.writer(
                     outputFile,
-                    outputFileList?.let {
-                        MultiSampleRun.SampleNameWriter(it, sampleTags.map { tagInfo -> tagInfo.name })
-                    }
+                    outputFileList?.let { MultiSampleRun.SampleNameWriter(it, sampleTags) }
                 ) { path ->
                     VDJCAlignmentsWriter(
                         path,

@@ -358,7 +358,7 @@ object CommandAnalyze {
             if (pipeline.first() == parse) {
                 val mitoolPreset = bundle.mitool ?: throw ValidationException("No mitool params")
                 val parseParams = mitoolPreset.parse ?: throw ValidationException("No mitool parse params")
-                val plan = parseParams.readSearchPlan()
+                val plan = parseParams.readSearchPlan
                 if (outputNoUsedReads) {
                     // fill up args of not parsed reads in symmetry of input files
                     pathsForNotAligned.fillWithDefaults(
