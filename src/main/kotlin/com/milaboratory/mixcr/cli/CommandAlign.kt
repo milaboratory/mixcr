@@ -1216,7 +1216,7 @@ object CommandAlign {
                 tagsValidation.validate(tagsExtractor.tagsInfo)
 
             // Validating count of inputs with tag pattern
-            tagsParser?.usedReadsCount?.let { requiredInputs ->
+            (tagsParser as? TagsParser.ByPattern)?.usedReadsCount?.let { requiredInputs ->
                 when (inputType) {
                     BAM -> ValidationException.require(requiredInputs <= 2) {
                         "Can't use pattern with more than 2 reads with BAM input"
@@ -1237,8 +1237,13 @@ object CommandAlign {
                     else -> throw ValidationException("More then 2 read tags in pattern")
                 }
 
-                else -> when (tagsParser?.pairedPatternPayload) {
-                    null -> when (inputFileGroups.inputType.numberOfReads) {
+                else -> when (tagsParser) {
+                    is TagsParser.ByPattern -> when {
+                        tagsParser.pairedPatternPayload -> VDJCAligner.ReadsCount.TWO
+                        else -> VDJCAligner.ReadsCount.ONE
+                    }
+
+                    else -> when (inputFileGroups.inputType.numberOfReads) {
                         -1 -> {
                             check(inputFileGroups.inputType == BAM)
                             VDJCAligner.ReadsCount.ONE_OR_TWO
@@ -1248,9 +1253,6 @@ object CommandAlign {
                         2 -> VDJCAligner.ReadsCount.TWO
                         else -> throw ValidationException("Triple and quad fastq inputs require tag pattern for parsing.")
                     }
-
-                    true -> VDJCAligner.ReadsCount.TWO
-                    false -> VDJCAligner.ReadsCount.ONE
                 }
             }
 
@@ -1306,7 +1308,7 @@ object CommandAlign {
             aligner.setEventsListener(reportBuilder)
 
             use(
-                createReader(tagsParser?.pairedPatternPayload),
+                createReader((tagsParser as? TagsParser.ByPattern)?.pairedPatternPayload),
                 alignedWriter(outputFile, tagsExtractor.sampleTags),
                 failedReadsWriter(
                     pathsForNotAligned.notAlignedI1,
