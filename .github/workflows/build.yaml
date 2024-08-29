@@ -13,7 +13,7 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - uses: milaboratory/github-ci/actions/context/init@v4-beta
+      - uses: milaboratory/github-ci/actions/context/init@v4
         with:
           version-canonize: false
       - id: context
@@ -26,7 +26,7 @@ jobs:
     needs:
       - init
 
-    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4-beta
+    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4
     with:
       # Environment
       java-version: '11'
@@ -34,14 +34,14 @@ jobs:
       product-name-slug: 'mixcr'
 
       # Tests
-      test-unit: false
+      test-unit: true
       test-unit-before-tasks: shadowJarAfterObfuscation
       test-unit-cache: true
       test-unit-cache-paths: |
         ./src/test/resources/sequences/big/**
       test-unit-cache-key: 'tests-sequences-v1'
 
-      test-integration: false
+      test-integration: true
       test-integration-before-tasks: shadowJarAfterObfuscation
       test-integration-tasks: ''
       test-integration-cache: true
@@ -50,7 +50,7 @@ jobs:
       test-integration-cache-key: 'tests-sequences-v1'
       test-integration-python-version: '3.9'
 
-      test-regression: false
+      test-regression: true
       test-regression-before-tasks: shadowJarAfterObfuscation
       test-regression-tasks: ''
       test-regression-cache: true
@@ -74,10 +74,10 @@ jobs:
       sign-dist-archive: ${{ github.event_name != 'schedule' }}
 
       # CDN redirect
-      cdn-redirect-s3: false
+      cdn-redirect-s3: true
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
 
-      dist-docker: false
+      dist-docker: true
       dist-docker-tasks: |
         buildDockerImage
         buildIMGTDockerImage
