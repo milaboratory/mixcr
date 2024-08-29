@@ -13,7 +13,7 @@ package com.milaboratory.mixcr.basictypes;
 
 import com.milaboratory.core.sequence.NSequenceWithQuality;
 import com.milaboratory.core.sequence.NucleotideSequence;
-import com.milaboratory.mitool.container.tag.TagsInfo;
+import com.milaboratory.mitool.tag.TagsInfo;
 import com.milaboratory.mixcr.cli.CommandExportAlignmentsPretty;
 import com.milaboratory.mixcr.util.RunMiXCR;
 import io.repseq.core.GeneFeature;

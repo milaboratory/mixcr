@@ -21,7 +21,7 @@ import com.milaboratory.core.io.sequence.fastq.SingleFastqReader;
 import com.milaboratory.core.sequence.NucleotideSequence;
 import com.milaboratory.core.sequence.quality.QualityAggregationType;
 import com.milaboratory.core.tree.TreeSearchParameters;
-import com.milaboratory.mitool.container.tag.TagsInfo;
+import com.milaboratory.mitool.tag.TagsInfo;
 import com.milaboratory.mixcr.assembler.preclone.PreCloneReader;
 import com.milaboratory.mixcr.basictypes.*;
 import com.milaboratory.mixcr.tests.MiXCRTestUtils;

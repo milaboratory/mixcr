@@ -16,7 +16,7 @@ import cc.redberry.pipe.OutputPort;
 import cc.redberry.pipe.blocks.FilteringPort;
 import cc.redberry.pipe.util.CountingOutputPort;
 import com.milaboratory.cli.AppVersionInfo;
-import com.milaboratory.mitool.container.tag.TagsInfo;
+import com.milaboratory.mitool.tag.TagsInfo;
 import com.milaboratory.mixcr.assembler.AlignmentsMappingMerger;
 import com.milaboratory.mixcr.assembler.CloneAssemblerParametersPresets;
 import com.milaboratory.mixcr.assembler.ReadToCloneMapping;

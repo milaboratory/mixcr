@@ -18,10 +18,12 @@ import com.milaboratory.mitool.tag.TagsInfo;
 import com.milaboratory.test.TestUtil;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class TagInfoTest {
     @Test
     public void test1() {
         TestUtil.assertJson(new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 0));
-        TestUtil.assertJson(new TagsInfo(0, new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 0)));
+        TestUtil.assertJson(new TagsInfo(0, Arrays.asList(new TagInfo(TagType.Sample, TagValueType.SequenceAndQuality, "TEST", 0)), false));
     }
 }
