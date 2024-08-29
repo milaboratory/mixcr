@@ -1382,7 +1382,7 @@ object CommandAlign {
                     val record = tagsParser?.parse(input)
 
                     val result = if (tagsParser != null && record == null) {
-                        Output.failed(input, NotParsed)
+                        Output.failed(NotParsed)
                     } else {
                         tagsExtractor.extract(input, record)
                     }
