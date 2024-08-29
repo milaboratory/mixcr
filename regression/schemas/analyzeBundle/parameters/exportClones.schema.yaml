@@ -38,6 +38,7 @@ properties:
       - Sample
       - Cell
       - Molecule
+      - Targets
       - Technical
   splitFilesBy:
     type: array
