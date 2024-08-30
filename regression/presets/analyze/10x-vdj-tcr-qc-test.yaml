@@ -20,6 +20,7 @@ mitool:
     trimmingQualityThreshold: null
     trimmingWindowSize: null
     replaceWildcards: true
+    splitBySample: true
   refineTags:
     tags:
       - CELL

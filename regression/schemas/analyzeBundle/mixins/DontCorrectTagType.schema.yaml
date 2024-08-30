@@ -12,6 +12,7 @@ allOf:
           - Sample
           - Cell
           - Molecule
+          - Targets
           - Technical
   - type: object
     properties:

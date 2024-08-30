@@ -1,17 +1,270 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  GTNConcatenate-1:
+    type: object
+    properties:
+      separator:
+        type: string
+      sources:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/$defs/GTNMultiply-2'
+            - $ref: '#/$defs/GTNPlus-2'
+            - $ref: '#/$defs/GTNConcatenate-2'
+            - $ref: '#/$defs/GTNConstantNumber'
+            - $ref: '#/$defs/GTNConstantSequence'
+            - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+            - $ref: '#/$defs/GTNConstantString'
+            - $ref: '#/$defs/GTNTag'
+  GTNConcatenate-2:
+    $ref: '#/$defs/GTNConcatenate-1'
+    type: object
+    properties:
+      type:
+        const: concatenate
+    required:
+      - type
+  GTNConstantNumber:
+    allOf:
+      - type: object
+        properties:
+          value:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: constantNumber
+        required:
+          - type
+  GTNConstantSequence:
+    allOf:
+      - type: object
+        properties:
+          sequence:
+            $ref: '#/$defs/NucleotideSequence'
+      - type: object
+        properties:
+          type:
+            const: constantSequence
+        required:
+          - type
+  GTNConstantSequenceAndQuality:
+    allOf:
+      - type: object
+        properties:
+          quality:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: string
+          sequence:
+            $ref: '#/$defs/NucleotideSequence'
+      - type: object
+        properties:
+          type:
+            const: constantSequenceAndQuality
+        required:
+          - type
+  GTNConstantString:
+    allOf:
+      - type: object
+        properties:
+          value:
+            type: string
+      - type: object
+        properties:
+          type:
+            const: constantString
+        required:
+          - type
+  GTNMultiply-1:
+    type: object
+    properties:
+      sources:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/$defs/GTNMultiply-2'
+            - $ref: '#/$defs/GTNPlus-2'
+            - $ref: '#/$defs/GTNConcatenate-2'
+            - $ref: '#/$defs/GTNConstantNumber'
+            - $ref: '#/$defs/GTNConstantSequence'
+            - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+            - $ref: '#/$defs/GTNConstantString'
+            - $ref: '#/$defs/GTNTag'
+  GTNMultiply-2:
+    $ref: '#/$defs/GTNMultiply-1'
+    type: object
+    properties:
+      type:
+        const: multiply
+    required:
+      - type
+  GTNPlus-1:
+    type: object
+    properties:
+      sources:
+        type: array
+        items:
+          anyOf:
+            - $ref: '#/$defs/GTNMultiply-2'
+            - $ref: '#/$defs/GTNPlus-2'
+            - $ref: '#/$defs/GTNConcatenate-2'
+            - $ref: '#/$defs/GTNConstantNumber'
+            - $ref: '#/$defs/GTNConstantSequence'
+            - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+            - $ref: '#/$defs/GTNConstantString'
+            - $ref: '#/$defs/GTNTag'
+  GTNPlus-2:
+    $ref: '#/$defs/GTNPlus-1'
+    type: object
+    properties:
+      type:
+        const: plus
+    required:
+      - type
+  GTNTag:
+    allOf:
+      - type: object
+        properties:
+          name:
+            type: string
+      - type: object
+        properties:
+          type:
+            const: tag
+        required:
+          - type
+  NucleotideSequence:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          type: string
 type: object
 properties:
   params:
     type: object
     properties:
+      headerExtractors:
+        type: array
+        items:
+          type: object
+          properties:
+            mappings:
+              type: array
+              items:
+                type: object
+                properties:
+                  groupIndex:
+                    type: integer
+                  groupName:
+                    type: string
+                  tagName:
+                    type: string
+            patter:
+              type: string
+            readIndices:
+              type: array
+              items:
+                type: integer
       limit:
         type: integer
       maxErrorBudget:
         type: number
       pattern:
         type: string
+      readIdAsCellTag:
+        type: boolean
       replaceWildcards:
         type: boolean
+      splitBySample:
+        type: boolean
+      tagTransformationSteps:
+        type: array
+        items:
+          anyOf:
+            - type: object
+              properties:
+                type:
+                  const: cutTechnicalTags
+              required:
+                - type
+            - allOf:
+                - type: object
+                  properties:
+                    destinationTag:
+                      type: string
+                    keepTags:
+                      type: array
+                      items:
+                        type: string
+                    name:
+                      type: string
+                    transformation:
+                      anyOf:
+                        - $ref: '#/$defs/GTNMultiply-2'
+                        - $ref: '#/$defs/GTNPlus-2'
+                        - $ref: '#/$defs/GTNConcatenate-2'
+                        - $ref: '#/$defs/GTNConstantNumber'
+                        - $ref: '#/$defs/GTNConstantSequence'
+                        - $ref: '#/$defs/GTNConstantSequenceAndQuality'
+                        - $ref: '#/$defs/GTNConstantString'
+                        - $ref: '#/$defs/GTNTag'
+                - type: object
+                  properties:
+                    type:
+                      const: generic
+                  required:
+                    - type
+            - allOf:
+                - type: object
+                  properties:
+                    allowOneMismatch:
+                      type: boolean
+                    matchTags:
+                      type: array
+                      items:
+                        type: string
+                    name:
+                      type: string
+                    newTags:
+                      type: array
+                      items:
+                        type: string
+                    preserveMatchedTags:
+                      type: array
+                      items:
+                        type: string
+                    reportingLevel:
+                      type: string
+                      enum:
+                        - NoReport
+                        - SimpleReport
+                        - VerboseReport
+                    rules:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          from:
+                            type: array
+                            items:
+                              type: string
+                          to:
+                            type: array
+                            items:
+                              type: string
+                - type: object
+                  properties:
+                    type:
+                      const: mapTags
+                  required:
+                    - type
       trimTags:
         type: array
         items:
