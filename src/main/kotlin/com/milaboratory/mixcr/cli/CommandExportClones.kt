@@ -410,9 +410,6 @@ object CommandExportClones {
             key.startsWith("tag:", ignoreCase = true) -> {
                 val tagName = key.substring(4)
                 val tag = header.tagsInfo[tagName]
-                ValidationException.requireNotNull(tag) {
-                    "No tag `$tagName` in a file"
-                }
                 val tagType = when (tag.index) {
                     // If splitting by this tag means the same as splitting by tag type
                     header.tagsInfo.getDepthFor(tag.type) - 1 -> tag.type
