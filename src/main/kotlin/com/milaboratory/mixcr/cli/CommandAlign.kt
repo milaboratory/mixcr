@@ -62,7 +62,6 @@ import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
 import com.milaboratory.mitool.tag.TagInfo
 import com.milaboratory.mitool.tag.TagParsePipeline
 import com.milaboratory.mitool.tag.TagParsePipeline.CELL_SPLIT_GROUP_LABEL
-import com.milaboratory.mitool.tag.TagParsePipeline.Output
 import com.milaboratory.mitool.tag.TagParsePipeline.SampleStat
 import com.milaboratory.mitool.tag.TagParsePipeline.Status
 import com.milaboratory.mitool.tag.TagParsePipeline.Status.Good
@@ -1206,7 +1205,7 @@ object CommandAlign {
                     headerExtractors = cmdParams.headerExtractors,
                     splitBySample = cmdParams.splitBySample
                 ),
-                tagsParser?.tagsInfo,
+                tagsParser,
                 includeTargets = false,
                 inputFileGroups.tags
             )
@@ -1379,17 +1378,11 @@ object CommandAlign {
                     .buffered(max(16, threads.value))
 
                 val step0 = mainInputReads.mapUnchunked { input ->
-                    val record = tagsParser?.parse(input)
+                    val result = tagsExtractor.extract(input)
 
-                    val result = if (tagsParser != null && record == null) {
-                        Output.failed(NotParsed)
-                    } else {
-                        tagsExtractor.extract(input, record)
-                    }
-
-                    val newSeq = if (tagsParser != null && record != null) {
+                    val newSeq = if (tagsParser != null && result.ok) {
                         val reads = tagsParser.readTags.map { tagInfo ->
-                            (record.tags[tagInfo.index] as SequenceAndQualityTagValue).data
+                            (result.record!!.tags[tagInfo.index] as SequenceAndQualityTagValue).data
                         }
                         input.sequence.withElements(*reads.toTypedArray())
                     } else {
