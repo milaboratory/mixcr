@@ -6,16 +6,16 @@
     "build": "true",
     "postinstall": "./install-ci.sh",
 
-    "build:package": "pl-pkg build packages",
-    "sign:package": "pl-pkg sign packages --sign-util='gcloud-kms-sign'",
-    "publish:package": "pl-pkg publish packages",
-    "release:package": "npm run build:package && npm run sign:package && npm run publish:package",
+    "pkg:build": "pl-pkg build packages",
+    "pkg:sign": "pl-pkg sign packages --sign-command='[\"gcloud-kms-sign\", \"{pkg}\", \"{pkg}.sig\"]'",
+    "pkg:publish": "pl-pkg publish packages",
+    "pkg:release": "npm run pkg:build && npm run pkg:sign && npm run pkg:publish",
 
-    "build:descriptor": "pl-pkg build descriptors",
-    "publish:descriptor": "pl-pkg publish descriptors",
-    "release:descriptor": "npm run build:descriptor && npm run publish:descriptor",
+    "descriptor:build": "pl-pkg build descriptors",
+    "descriptor:publish": "pl-pkg publish descriptors",
+    "descriptor:release": "npm run descriptor:build && npm run descriptor:publish",
 
-    "release": "npm run release:package && npm run release:descriptor"
+    "release": "npm run pkg:release && npm run descriptor:release"
   },
   "block-software": {
     "packages": {
@@ -41,7 +41,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@milaboratory/pl-package-builder": "^2.6.0",
+    "@milaboratory/pl-package-builder": "^2.6.4",
     "@milaboratory/runenv-java-corretto": "^0.1.1"
   }
 }
