@@ -19,8 +19,6 @@ import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
 import com.milaboratory.cli.POverridesBuilderOps
-import com.milaboratory.core.sequence.NSequenceWithQuality
-import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.core.sequence.ShortSequenceSet
 import com.milaboratory.mitool.data.CriticalThresholdKey
 import com.milaboratory.mitool.refinement.TagCorrectionPlan
@@ -29,10 +27,6 @@ import com.milaboratory.mitool.refinement.TagCorrector
 import com.milaboratory.mitool.refinement.TagCorrectorParameters
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractor
 import com.milaboratory.mitool.refinement.gfilter.SequenceExtractorsFactory
-import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
-import com.milaboratory.mitool.tag.SequenceTagValue
-import com.milaboratory.mitool.tag.TagTuple
-import com.milaboratory.mitool.tag.TagValue
 import com.milaboratory.mitool.tag.TagValueType
 import com.milaboratory.mitool.tag.tagAliases
 import com.milaboratory.mixcr.basictypes.IOUtil
@@ -316,14 +310,6 @@ object CommandRefineTagsAndSort {
 
                         val correctionPlan = TagCorrectionPlan(
                             tagNames,
-                            tagNames.indices.map { i ->
-                                when {
-                                    correctionEnabled[i] -> NSequenceWithQuality::class.java// Sequence&quality tags will be unwrapped for correction
-                                    tagsInfo[i].valueType == TagValueType.NonSequence -> TagValue::class.java // Other tags will be left unchanged to be used as grouping keys
-                                    // for usage of a whitelist nucleotide sequence is needed
-                                    else -> NucleotideSequence::class.java
-                                }
-                            },
                             whitelists,
                             // For now all sequence&quality tags are corrected,
                             // more flexibility will be added in the future
@@ -354,17 +340,7 @@ object CommandRefineTagsAndSort {
                                 "This procedure don't support aggregated tags. " +
                                         "Please run tag correction for *.vdjca files produced by 'align'."
                             )
-                            val tagTuple = als.tagCount.getSingletonTuple()
-                            Array(tagNames.size) { tIdx -> // <- local index for the procedure
-                                val tagValue = tagTuple[tIdx]
-                                when {
-                                    correctionEnabled[tIdx] -> (tagValue as SequenceAndQualityTagValue).data
-                                    else -> when (val key = tagValue.extractKey()) {
-                                        is SequenceTagValue -> key.value // actual sequence
-                                        else -> key// converting any tag type to a key tag
-                                    }
-                                }
-                            }
+                            als.tagCount.getSingletonTuple().asArray()
                         }
 
                         // Running correction, results are temporarily persisted in temp file, so the object can be used
@@ -387,15 +363,14 @@ object CommandRefineTagsAndSort {
                             mainReader.readAlignments(),
                             { al -> al.alignmentsIndex }
                         ) { al, newTagValues ->
-                            // starting off the copy of original alignment tags array
-                            val updatedTags = al.tagCount.getSingletonTuple().asArray()
-                            tagNames.indices.forEach { tIdx ->
-                                if (correctionEnabled[tIdx])
-                                    updatedTags[tIdx] =
-                                        SequenceAndQualityTagValue(newTagValues[tIdx] as NSequenceWithQuality)
+                            val updatedTags = al.tagCount.getSingletonTuple().mapIndexed { i, tagValue ->
+                                if (correctionEnabled[i])
+                                    newTagValues[i]
+                                else
+                                    tagValue
                             }
                             // Applying updated tags values and returning updated alignments object
-                            al.withTagCount(TagCount(TagTuple(updatedTags), al.tagCount.getSingletonCount()))
+                            al.withTagCount(TagCount(updatedTags, al.tagCount.getSingletonCount()))
                         }
                             .reportProgress("Applying correction & sorting alignments by ${tagNames.last()}")
                     }
