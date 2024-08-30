@@ -288,8 +288,17 @@ object CommandRefineTagsAndSort {
                     }
                 logger.log { "Sorting will be applied to the following tags: ${tagNames.joinToString(", ")}" }
 
+                val requestedWhitelists = cmdParams.whitelists.toMutableMap()
+                val alreadyFilteredWhitelists =
+                    mainReader.header.stepParams[AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.refineTags].firstOrNull()?.params?.whitelists
+                if (alreadyFilteredWhitelists != null) {
+                    val repeatedRequest = requestedWhitelists.keys.filter { tagName ->
+                        requestedWhitelists[tagName]?.load() == alreadyFilteredWhitelists[tagName]?.load()
+                    }
+                    requestedWhitelists -= repeatedRequest.toSet()
+                }
                 val corrected = when {
-                    correctionEnabled.none { true } && cmdParams.whitelists.isEmpty() && cmdParams.parameters?.postFilter == null -> {
+                    correctionEnabled.none { true } && requestedWhitelists.isEmpty() && cmdParams.parameters?.postFilter == null -> {
                         mitoolReport = null
                         mainReader.reportProgress("Sorting alignments by ${tagNames.last()}")
                     }
@@ -298,7 +307,7 @@ object CommandRefineTagsAndSort {
                         // Running correction
                         val whitelists = mutableMapOf<Int, ShortSequenceSet>()
                         tagNames.forEachIndexed { i, tn ->
-                            val t = cmdParams.whitelists[tn]
+                            val t = requestedWhitelists[tn]
                             if (t != null) {
                                 logger.log { "The following whitelist will be used for $tn: $t" }
                                 whitelists[i] = t.load()

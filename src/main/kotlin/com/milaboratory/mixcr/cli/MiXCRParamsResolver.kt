@@ -29,7 +29,6 @@ import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.PipelineMixins
 import com.milaboratory.mixcr.presets.Presets
-import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.VDJRegion
@@ -93,13 +92,6 @@ abstract class MiXCRParamsResolver<P : Any>(
             }
             if (alignParams.parameters.isSaveOriginalSequence) {
                 logger.warn { "Saving original sequences with mitool commands in pipeline will lead to saving sequences after mitool processing, not original ones" }
-            }
-
-            bundle.mitool!!.refineTags?.let { refineTags ->
-                ValidationException.requireEmpty(refineTags.dontCorrectTagsTypes) {
-                    "With mitool refineTags command in pipeline, `${RefineTagsAndSortMixins.DontCorrectTagType.CMD_OPTION}` is not applicable, " +
-                            "please use `${RefineTagsAndSortMixins.DontCorrectTagName.CMD_OPTION}` instead"
-                }
             }
         }
     }
