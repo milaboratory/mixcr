@@ -265,6 +265,16 @@ properties:
                       const: mapTags
                   required:
                     - type
+      trimTagTypes:
+        type: array
+        items:
+          type: string
+          enum:
+            - Sample
+            - Cell
+            - Molecule
+            - Targets
+            - Technical
       trimTags:
         type: array
         items:
