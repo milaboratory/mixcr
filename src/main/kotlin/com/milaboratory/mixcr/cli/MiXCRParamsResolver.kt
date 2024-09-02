@@ -18,6 +18,7 @@ import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assemble
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
@@ -74,7 +75,9 @@ abstract class MiXCRParamsResolver<P : Any>(
         }
 
         if (parse in steps) {
-            val parseParams = bundle.mitool!!.parse!!
+            val parseParams = ValidationException.requireNotNull(bundle.mitool?.parse) {
+                "No params for MiTool parse"
+            }
             val mitoolPattern = ValidationException.requireNotNull(parseParams.pattern) {
                 "Tag pattern should be set in `mitool.parse.pattern`"
             }
@@ -92,6 +95,18 @@ abstract class MiXCRParamsResolver<P : Any>(
             }
             if (alignParams.parameters.isSaveOriginalSequence) {
                 logger.warn { "Saving original sequences with mitool commands in pipeline will lead to saving sequences after mitool processing, not original ones" }
+            }
+
+            if (AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.refineTags in steps) {
+                val refineTags = ValidationException.requireNotNull(bundle.mitool?.refineTags) {
+                    "No params for MiTool refine-tags"
+                }
+                ValidationException.require(refineTags.tags.isNotEmpty() || refineTags.tagTypes.isNotEmpty()) {
+                    "Either mitool.refineTags.tags or mitool.refineTags.tagTypes should be set"
+                }
+                ValidationException.require(refineTags.tags.isEmpty() || refineTags.tagTypes.isEmpty()) {
+                    "Both mitool.refineTags.tags or mitool.refineTags.tagTypes are specified, specify only one"
+                }
             }
         }
     }

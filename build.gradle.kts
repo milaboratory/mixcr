@@ -140,7 +140,7 @@ val milibVersion = ""
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val mitoolVersion = ""
+val mitoolVersion = "2.3.0-17-mitool-tag-types"
 // may be blank (will be inherited from mixcr-algo)
 val repseqioVersion = ""
 
