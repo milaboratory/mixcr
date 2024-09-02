@@ -23,3 +23,12 @@ mixcr exportPreset --mixcr-file result.clns original_from_file.yaml
 if ! cmp original_from_param.yaml original_from_file.yaml; then
   diff original_from_param.yaml original_from_file.yaml
 fi
+
+# json is working
+mixcr exportPreset --preset-name test-tcr-shotgun \
+    --assemble-clonotypes-by CDR3 \
+    --species hs \
+    --rna \
+    --floating-left-alignment-boundary \
+    --floating-right-alignment-boundary J\
+    original_from_param.json
