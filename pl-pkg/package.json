@@ -18,20 +18,17 @@
     "release": "npm run pkg:release && npm run descriptor:release"
   },
   "block-software": {
-    "packages": {
-      "mixcr": {
+    "entrypoints": {
+      "main": {
         "binary": {
-          "registry": { "name": "milaboratories" },
-          "name": "milaboratories/mixcr",
-          "crossplatform": true,
-          "type": "java",
-          "environment": "@milaboratory/runenv-java-corretto:21.0.2.13.1",
-          "root": "./dld/mixcr/",
-          "entrypoints": {
-            "main": {
-              "cmd": [ "java", "-jar", "{pkg}/mixcr.jar" ]
-            }
-          }
+          "artifact": {
+            "registry": "milaboratories",
+            "name": "milaboratories/mixcr",
+            "type": "java",
+            "environment": "@milaboratory/runenv-java-corretto:21.0.2.13.1",
+            "root": "./dld/mixcr/"
+          },
+          "cmd": [ "java", "-jar", "{pkg}/mixcr.jar" ]
         }
       }
     }
@@ -41,7 +38,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@milaboratory/pl-package-builder": "^2.6.4",
-    "@milaboratory/runenv-java-corretto": "^0.1.1"
+    "@milaboratory/pl-package-builder": "^2.8.0",
+    "@milaboratory/runenv-java-corretto": "^1.0.0"
   }
 }
