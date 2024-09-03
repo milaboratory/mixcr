@@ -238,11 +238,11 @@ upstreams:
       aligned: 49603
       notAligned: 97
       notAlignedReasons:
-        NoHits: 0
+        NoHits: 8
         FailedAfterAOverlap: 0
         NoCDR3Parts: 0
         NoVHits: 1
-        NoJHits: 8
+        NoJHits: 0
         VAndJOnDifferentTargets: 10
         LowTotalScore: 0
         NoBarcode: 78
@@ -1124,11 +1124,11 @@ upstreams:
       aligned: 29280
       notAligned: 591
       notAlignedReasons:
-        NoHits: 0
+        NoHits: 523
         FailedAfterAOverlap: 0
         NoCDR3Parts: 0
         NoVHits: 2
-        NoJHits: 526
+        NoJHits: 3
         VAndJOnDifferentTargets: 17
         LowTotalScore: 0
         NoBarcode: 46
