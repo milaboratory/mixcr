@@ -12,10 +12,6 @@
       step: mitool-refine-tags
     - type: AddPipelineStep
       step: mitool-consensus
-    - type: RemovePipelineStep
-      step: assemblePartial
-    - type: RemovePipelineStep
-      step: assembleContigs
     - type: SetSpecies
       species: hsa
   mitool:
