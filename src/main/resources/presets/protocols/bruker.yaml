@@ -14,6 +14,8 @@
       step: mitool-consensus
     - type: SetSpecies
       species: hsa
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
   mitool:
     parse:
       inheritFrom: mitool-parse-default
@@ -90,8 +92,6 @@
     overrides:
       clnaOutput: false
       cloneAssemblerParameters:
-        assemblingFeatures:
-          - VDJRegion
         badQualityThreshold: 0
         minimalQuality: 0
         cloneFactoryParameters:
