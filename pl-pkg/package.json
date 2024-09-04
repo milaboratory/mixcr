@@ -34,7 +34,8 @@
     }
   },
   "files": [
-    "dist/"
+    "dist/",
+    "scripts/unpack-ci.js"
   ],
   "license": "UNLICENSED",
   "devDependencies": {
