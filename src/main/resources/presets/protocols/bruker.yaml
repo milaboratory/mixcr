@@ -16,6 +16,11 @@
       species: hsa
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
   mitool:
     parse:
       inheritFrom: mitool-parse-default
