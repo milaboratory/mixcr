@@ -2,27 +2,25 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
-const unzipper = require('unzipper');
 
-function log(message) {
-    console.log(message);
-}
+const scriptDir = __dirname;
+const packageRoot = path.resolve(scriptDir, "../")
+const dstRoot = path.join(packageRoot, 'dld');
+const dstDataDir = path.join(dstRoot, 'mixcr');
 
 if (!process.env.CI) {
     log("Not a CI run. install-ci.js was skipped")
     process.exit(0)
 }
 
+function log(message) {
+    console.log(message);
+}
+
 const ARCHIVE_PATH = process.env.ARCHIVE_PATH;
 if (!ARCHIVE_PATH) {
     throw new Error("ARCHIVE_PATH environment variable is required.");
 }
-
-const scriptDir = __dirname;
-const packageRoot = path.resolve(scriptDir, "../")
-const dstRoot = path.join(packageRoot, 'dld');
-const dstDataDir = path.join(dstRoot, 'mixcr');
 
 function isDir(target) {
     const stats = fs.statSync(target);
@@ -61,6 +59,8 @@ if (fs.existsSync(dstDataDir)) {
 }
 log(`Creating clean data dir: ${dstDataDir}`);
 fs.mkdirSync(dstDataDir, { recursive: true });
+
+const unzipper = require('unzipper');
 
 fs.createReadStream(archivePath)
     .pipe(unzipper.Extract({ path: dstDataDir }))
