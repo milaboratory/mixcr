@@ -255,6 +255,8 @@ properties:
         $ref: '#/$defs/PairedEndReadsLayout'
       relativeMinVFR3CDR3Score:
         type: number
+      retriesAlignmentOfNotCoveredPart:
+        type: integer
       retriesForPartialAlignments:
         type: integer
       saveOriginalReads:
