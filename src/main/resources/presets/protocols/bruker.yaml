@@ -2,7 +2,7 @@
   vendor: "Bruker"
   label: "Single cell VDJ"
   category: non-generic
-  inheritFrom: generic-lt-single-cell-fragmented
+  inheritFrom: generic-lt-single-cell-amplicon
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{10})ggg\^(R2:*)
