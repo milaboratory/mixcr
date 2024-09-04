@@ -220,6 +220,9 @@ takara-mouse-rna-bcr-umi-smarseq (SMART-Seq Mouse BCR (with UMIs))
 
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
+-----Bruker-----
+bruker-sc-xcr-vdj-beacon (Single cell VDJ)
+
 -----MiLaboratories-----
 milab-human-rna-tcr-umi-multiplex (Human TCR RNA Multiplex)
 
