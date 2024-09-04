@@ -16,8 +16,6 @@
       step: assemblePartial
     - type: RemovePipelineStep
       step: assembleContigs
-    - type: SetContigAssemblingFeatures
-      features: VDJRegion
     - type: SetSpecies
       species: hsa
   mitool:
@@ -100,6 +98,27 @@
           - VDJRegion
         badQualityThreshold: 0
         minimalQuality: 0
+        cloneFactoryParameters:
+          vParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore: 0.97
+            scoring: null
+          jParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore:
+            scoring: null
+          dParameters:
+            absoluteMinScore:
+            relativeMinScore:
+            maxHits:
+            scoring: null
+          cParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore:
+            scoring: null
         postFilters: null
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
