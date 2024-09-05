@@ -220,9 +220,6 @@ takara-mouse-rna-bcr-umi-smarseq (SMART-Seq Mouse BCR (with UMIs))
 
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
------Bruker-----
-bruker-sc-xcr-vdj-beacon (Single cell VDJ)
-
 -----MiLaboratories-----
 milab-human-rna-tcr-umi-multiplex (Human TCR RNA Multiplex)
 
@@ -320,6 +317,9 @@ neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR
 10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
     --species <name>
+
+-----Bruker-----
+bruker-human-sc-xcr-vdj-beacon (Single cell VDJ)
 
 -----AbHelix-----
 abhelix-human-rna-xcr (Human immunoglobulin repertoire)
