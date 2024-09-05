@@ -1401,7 +1401,7 @@ object CommandAlign {
 
                     ParseResult(
                         read = input.read,
-                        sequence = newSeq,
+                        sequenceForAlign = newSeq,
                         tags = result.tags,
                         sample = result.sample,
                         status = result.status
@@ -1429,7 +1429,7 @@ object CommandAlign {
                     threads = threads.value
                 ) { bundle ->
                     if (bundle.ok) {
-                        var alignment = aligner.process(bundle.sequence, bundle.read)
+                        var alignment = aligner.process(bundle.sequenceForAlign, bundle.read)
                             ?: return@mapChunksInParallel AlignmentResult.failed(bundle, NotAligned)
                         alignment = alignment
                             .withTagCount(TagCount(bundle.tags))
@@ -1600,13 +1600,13 @@ object CommandAlign {
 
         private data class ParseResult(
             val read: SequenceRead,
-            val sequence: NSQTuple,
+            val sequenceForAlign: NSQTuple,
             val tags: TagTuple,
             val sample: List<String>,
             val status: Status
         ) {
             val ok get() = status == Good
-            fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequence = mapping(sequence))
+            fun mapSequence(mapping: (NSQTuple) -> NSQTuple) = copy(sequenceForAlign = mapping(sequenceForAlign))
         }
 
         private data class AlignmentResult(
@@ -1620,7 +1620,7 @@ object CommandAlign {
             companion object {
                 fun aligned(bundle: ParseResult, alignment: VDJCAlignments) = AlignmentResult(
                     read = bundle.read,
-                    sequence = bundle.sequence,
+                    sequence = bundle.sequenceForAlign,
                     sample = bundle.sample,
                     alignment = alignment,
                     status = Good,
@@ -1629,7 +1629,7 @@ object CommandAlign {
 
                 fun failed(bundle: ParseResult, status: Status) = AlignmentResult(
                     read = bundle.read,
-                    sequence = bundle.sequence,
+                    sequence = bundle.sequenceForAlign,
                     sample = bundle.sample,
                     alignment = null,
                     status = status,
