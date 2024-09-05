@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -21,6 +21,7 @@ import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.PresetSpecification
 import com.milaboratory.util.K_OM
 import com.milaboratory.util.K_YAML_OM
+import com.mixcr.util.K_JSON_OM
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
 import java.nio.file.Path
@@ -41,6 +42,8 @@ class CommandPresetSpecificationsForBack : MiXCRCommand(), MiXCRPresetAwareComma
         output.toAbsolutePath().parent.toFile().mkdirs()
         val preset = if (InputFileType.YAML.matches(Path.of(input))) {
             K_YAML_OM.readValue(Path.of(input).toFile())
+        } else if (InputFileType.JSON.matches(Path.of(input))) {
+            K_JSON_OM.readValue(Path.of(input).toFile())
         } else {
             paramsResolver.resolve(
                 MiXCRParamsSpec(input),
