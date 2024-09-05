@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -16,6 +16,8 @@ import cc.redberry.pipe.util.forEach
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
+import com.milaboratory.mitool.tag.TagType
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.ClnAReader
 import com.milaboratory.mixcr.basictypes.ClnsReader
 import com.milaboratory.mixcr.basictypes.CloneSet.Companion.divideClonesByTags
@@ -28,8 +30,6 @@ import com.milaboratory.mixcr.basictypes.IOUtil.MiXCRFileType.VDJCA
 import com.milaboratory.mixcr.basictypes.MiXCRFileInfo
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
 import com.milaboratory.mixcr.basictypes.VDJCObject
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.AirrColumns
 import com.milaboratory.mixcr.export.AirrColumns.AirrAlignmentBoundary
 import com.milaboratory.mixcr.export.AirrColumns.AlignmentCigar

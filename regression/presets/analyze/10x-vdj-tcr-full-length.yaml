@@ -20,10 +20,11 @@ mitool:
     trimmingQualityThreshold: null
     trimmingWindowSize: null
     replaceWildcards: true
+    splitBySample: true
   refineTags:
-    tags:
-      - CELL
-      - UMI
+    tagTypes:
+      - Cell
+      - Molecule
     whitelists:
       CELL: builtin:737K-august-2016
     parameters:
@@ -65,11 +66,11 @@ mitool:
         minRecordWeightForUse: 0
         maxIterationsPerConsensus: 8
         maxConsensuses: 0
-      groupingTags:
-        - CELL
-        - UMI
-      payloadTags:
-        - R2
+      groupingTagTypes:
+        - Cell
+        - Molecule
+      payloadTagTypes:
+        - Targets
       safeUnusedReads: true
       safeDiscardedReads: true
       inferMinRecordsPerConsensus: true
@@ -102,11 +103,11 @@ mitool:
         minRecordWeightForUse: 0
         maxIterationsPerConsensus: 8
         maxConsensuses: 0
-      groupingTags:
-        - CELL
-        - UMI
-      payloadTags:
-        - R2
+      groupingTagTypes:
+        - Cell
+        - Molecule
+      payloadTagTypes:
+        - Targets
       safeUnusedReads: true
       safeDiscardedReads: true
       inferMinRecordsPerConsensus: true
@@ -139,10 +140,10 @@ mitool:
         minRecordWeightForUse: 0
         maxIterationsPerConsensus: 8
         maxConsensuses: 0
-      groupingTags:
-        - CELL
-      payloadTags:
-        - R2
+      groupingTagTypes:
+        - Cell
+      payloadTagTypes:
+        - Targets
       safeUnusedReads: true
       safeDiscardedReads: true
       inferMinRecordsPerConsensus: true
@@ -175,10 +176,10 @@ mitool:
         minRecordWeightForUse: 2
         maxIterationsPerConsensus: 8
         maxConsensuses: 0
-      groupingTags:
-        - CELL
-      payloadTags:
-        - R2
+      groupingTagTypes:
+        - Cell
+      payloadTagTypes:
+        - Targets
       safeUnusedReads: true
       safeDiscardedReads: true
       inferMinRecordsPerConsensus: true

@@ -445,6 +445,14 @@ $defs:
             const: group_metric_sum_weight
         required:
           - type
+  TagType:
+    type: string
+    enum:
+      - Sample
+      - Cell
+      - Molecule
+      - Targets
+      - Technical
   TopNOp:
     allOf:
       - type: object
@@ -474,7 +482,8 @@ properties:
           type: string
       dontCorrectTagsTypes:
         type: array
-        items: {}
+        items:
+          $ref: '#/$defs/TagType'
       parameters:
         type: object
         properties:
@@ -497,6 +506,10 @@ properties:
               - $ref: '#/$defs/AndKeyedFilter-2'
               - $ref: '#/$defs/GroupFilter'
               - $ref: '#/$defs/InGroupsFilter-2'
+      tagTypes:
+        type: array
+        items:
+          $ref: '#/$defs/TagType'
       tags:
         type: array
         items:

@@ -22,19 +22,19 @@
     refineTags:
       inheritFrom: mitool-refineTags-default
       overrides:
-        tags:
-          - CELL
-          - UMI
+        tagTypes:
+          - Cell
+          - Molecule
         whitelists:
           CELL: builtin:737K-august-2016
     consensus:
       inheritFrom: mitool-consensus-4-steps
       overrides:
-        - groupingTags:
-            - CELL
-            - UMI
-          payloadTags:
-            - R2
+        - groupingTagTypes:
+            - Cell
+            - Molecule
+          payloadTagTypes:
+            - Targets
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 499
@@ -42,11 +42,11 @@
             positiveMinQualityShare: 0.29
             positiveMinIntersectionQuality: 379
             minRecordSharePerConsensus: 0.001
-        - groupingTags:
-            - CELL
-            - UMI
-          payloadTags:
-            - R2
+        - groupingTagTypes:
+            - Cell
+            - Molecule
+          payloadTagTypes:
+            - Targets
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 51
@@ -54,10 +54,10 @@
             positiveMinQualityShare: 0.11
             positiveMinIntersectionQuality: 101
             minRecordSharePerConsensus: 0.3
-        - groupingTags:
-            - CELL
-          payloadTags:
-            - R2
+        - groupingTagTypes:
+            - Cell
+          payloadTagTypes:
+            - Targets
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 41
@@ -66,10 +66,10 @@
             positiveMinIntersectionQuality: 130
             minRecordSharePerConsensus: 0.001
             useWeightsForRecordsPerConsensus: false
-        - groupingTags:
-            - CELL
-          payloadTags:
-            - R2
+        - groupingTagTypes:
+            - Cell
+          payloadTagTypes:
+            - Targets
           parameters:
             aAssemblerParameters:
               minAlignmentScore: 181

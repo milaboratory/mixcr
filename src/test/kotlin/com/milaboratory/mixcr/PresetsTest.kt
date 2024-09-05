@@ -3,10 +3,10 @@ package com.milaboratory.mixcr
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.milaboratory.cli.ParamsBundleSpecBaseAddress
 import com.milaboratory.cli.ParamsBundleSpecBaseEmbedded
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagValueType
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mitool.tag.TagType
+import com.milaboratory.mitool.tag.TagValueType
+import com.milaboratory.mitool.tag.TagInfo
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.cli.CommandAlignParams
 import com.milaboratory.mixcr.cli.allClonesWillBeCoveredByFeature
 import com.milaboratory.mixcr.cli.presetFlagsMessages

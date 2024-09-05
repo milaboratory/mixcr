@@ -18,6 +18,7 @@ import com.milaboratory.cli.PresetAware
 import com.milaboratory.mixcr.basictypes.HasFeatureToAlign
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AlignMixins
+import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.parse
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assemble
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor.assembleCells
@@ -29,7 +30,6 @@ import com.milaboratory.mixcr.presets.MiXCRMixin
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.PipelineMixins
 import com.milaboratory.mixcr.presets.Presets
-import com.milaboratory.mixcr.presets.RefineTagsAndSortMixins
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
 import io.repseq.core.GeneFeature.VDJRegion
@@ -75,7 +75,9 @@ abstract class MiXCRParamsResolver<P : Any>(
         }
 
         if (parse in steps) {
-            val parseParams = bundle.mitool!!.parse!!
+            val parseParams = ValidationException.requireNotNull(bundle.mitool?.parse) {
+                "No params for MiTool parse"
+            }
             val mitoolPattern = ValidationException.requireNotNull(parseParams.pattern) {
                 "Tag pattern should be set in `mitool.parse.pattern`"
             }
@@ -88,12 +90,6 @@ abstract class MiXCRParamsResolver<P : Any>(
             ValidationException.require(mitoolPattern == alignPattern) {
                 "Tag patterns are different in `mitool.parse.pattern` and `align.tagPattern`: $mitoolPattern and $alignPattern"
             }
-            ValidationException.require(!alignParams.readIdAsCellTag) {
-                "`readIdAsCellTag` is not supported with mitool commands in pipeline"
-            }
-            ValidationException.require(alignParams.headerExtractors.isEmpty()) {
-                "`headerExtractors` are not supported with mitool commands in pipeline"
-            }
             if (alignParams.parameters.isSaveOriginalReads) {
                 logger.warn { "Saving original reads with mitool commands in pipeline will lead to saving reads after mitool processing, not original ones" }
             }
@@ -101,10 +97,15 @@ abstract class MiXCRParamsResolver<P : Any>(
                 logger.warn { "Saving original sequences with mitool commands in pipeline will lead to saving sequences after mitool processing, not original ones" }
             }
 
-            bundle.mitool!!.refineTags?.let { refineTags ->
-                ValidationException.requireEmpty(refineTags.dontCorrectTagsTypes) {
-                    "With mitool refineTags command in pipeline, `${RefineTagsAndSortMixins.DontCorrectTagType.CMD_OPTION}` is not applicable, " +
-                            "please use `${RefineTagsAndSortMixins.DontCorrectTagName.CMD_OPTION}` instead"
+            if (AnalyzeCommandDescriptor.MiToolCommandDelegationDescriptor.refineTags in steps) {
+                val refineTags = ValidationException.requireNotNull(bundle.mitool?.refineTags) {
+                    "No params for MiTool refine-tags"
+                }
+                ValidationException.require(refineTags.tags.isNotEmpty() || refineTags.tagTypes.isNotEmpty()) {
+                    "Either mitool.refineTags.tags or mitool.refineTags.tagTypes should be set"
+                }
+                ValidationException.require(refineTags.tags.isEmpty() || refineTags.tagTypes.isEmpty()) {
+                    "Both mitool.refineTags.tags or mitool.refineTags.tagTypes are specified, specify only one"
                 }
             }
         }

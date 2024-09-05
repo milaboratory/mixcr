@@ -14,12 +14,12 @@ package com.milaboratory.mixcr.cli
 import cc.redberry.pipe.CUtils
 import com.milaboratory.app.ApplicationException
 import com.milaboratory.app.ValidationException
+import com.milaboratory.mitool.tag.TagTuple
+import com.milaboratory.mitool.tag.TagType
 import com.milaboratory.mixcr.assembler.preclone.FilePreCloneReader
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerParameters
 import com.milaboratory.mixcr.assembler.preclone.PreCloneAssemblerRunner
 import com.milaboratory.mixcr.basictypes.VDJCAlignmentsReader
-import com.milaboratory.mixcr.basictypes.tag.TagTuple
-import com.milaboratory.mixcr.basictypes.tag.TagType
 import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter

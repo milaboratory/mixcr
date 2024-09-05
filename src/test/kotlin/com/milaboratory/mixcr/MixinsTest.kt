@@ -1,16 +1,16 @@
 package com.milaboratory.mixcr
 
 import com.milaboratory.core.sequence.NSequenceWithQuality
-import com.milaboratory.mixcr.basictypes.tag.SequenceAndQualityTagValue
-import com.milaboratory.mixcr.basictypes.tag.StringTagValue
-import com.milaboratory.mixcr.basictypes.tag.TagInfo
-import com.milaboratory.mixcr.basictypes.tag.TagType.Cell
-import com.milaboratory.mixcr.basictypes.tag.TagType.Sample
-import com.milaboratory.mixcr.basictypes.tag.TagType.Technical
-import com.milaboratory.mixcr.basictypes.tag.TagValueType.NonSequence
-import com.milaboratory.mixcr.basictypes.tag.TagValueType.SequenceAndQuality
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
-import com.milaboratory.mixcr.basictypes.tag.TechnicalTag
+import com.milaboratory.mitool.tag.SequenceAndQualityTagValue
+import com.milaboratory.mitool.tag.StringTagValue
+import com.milaboratory.mitool.tag.TagType.Cell
+import com.milaboratory.mitool.tag.TagType.Sample
+import com.milaboratory.mitool.tag.TagType.Technical
+import com.milaboratory.mitool.tag.TagValueType.NonSequence
+import com.milaboratory.mitool.tag.TagValueType.SequenceAndQuality
+import com.milaboratory.mitool.tag.TechnicalTag
+import com.milaboratory.mitool.tag.TagInfo
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.presets.AlignMixins
 import com.milaboratory.test.TestUtil
 import com.milaboratory.util.K_YAML_OM

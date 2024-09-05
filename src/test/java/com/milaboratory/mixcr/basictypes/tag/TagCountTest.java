@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -12,6 +12,9 @@
 package com.milaboratory.mixcr.basictypes.tag;
 
 import com.milaboratory.core.sequence.NucleotideSequence;
+import com.milaboratory.mitool.tag.SequenceTagValue;
+import com.milaboratory.mitool.tag.TagTuple;
+import com.milaboratory.mitool.tag.TagValue;
 import org.junit.Assert;
 import org.junit.Test;
 
