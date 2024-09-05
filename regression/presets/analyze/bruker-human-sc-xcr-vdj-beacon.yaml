@@ -1,0 +1,578 @@
+flags: []
+pipeline:
+  - mitool-parse
+  - mitool-refine-tags
+  - mitool-consensus
+  - align
+  - refineTagsAndSort
+  - assemble
+  - assembleCells
+  - exportClones
+  - exportCloneGroups
+mitool:
+  parse:
+    pattern: "^(CELL:N{10})ggg\\^(R2:*)"
+    unstranded: false
+    maxErrorBudget: 10.0
+    trimmingQualityThreshold: null
+    trimmingWindowSize: null
+    replaceWildcards: true
+    splitBySample: true
+  refineTags:
+    tagTypes:
+      - Cell
+    whitelists:
+      CELL:
+        - TGGTAGGCTG
+        - GTTAGCTGCT
+        - TACATAAAGA
+        - AGCCCTATCA
+        - ACCTACCGCC
+        - TCTCCAAGAC
+        - GTATACATTA
+        - AGACTCGATT
+        - CCAGGATTAA
+        - CTCCTTCAAG
+        - ACTACTTCTG
+        - GCCTTGTTGT
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0E-5
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter: null
+  consensus:
+    - parameters:
+        aAssemblerParameters:
+          bandWidth: 4
+          scoring:
+            type: linear
+            alphabet: nucleotide
+            subsMatrix: "simple(match = 5, mismatch = -4)"
+            gapPenalty: -19
+          minAlignmentScore: 80
+          maxNormalizedAlignmentPenalty: 0.13
+          trimMinimalSumQuality: 0
+          trimReferenceRegion: true
+          maxQuality: 45
+        kMapParameters:
+          k: 9
+          useQ1Score: true
+          coreSequenceKMers: 20
+          coreSequenceRecordScore: 20
+          neighbourhoodSize: 2
+        positiveMinQualityShare: 0.13
+        positiveMinIntersectionQuality: 150
+        minAlignmentScoreForDiscardRecord: 0
+        maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+        minRecordSharePerConsensus: 0.001
+        minRecordsPerConsensus: 3
+        useWeightsForRecordsPerConsensus: true
+        minRecordWeightForUse: 0
+        maxIterationsPerConsensus: 8
+        maxConsensuses: 0
+      groupingTagTypes:
+        - Cell
+      payloadTagTypes:
+        - Targets
+      safeUnusedReads: true
+      safeDiscardedReads: true
+      inferMinRecordsPerConsensus: true
+    - parameters:
+        aAssemblerParameters:
+          bandWidth: 4
+          scoring:
+            type: linear
+            alphabet: nucleotide
+            subsMatrix: "simple(match = 5, mismatch = -4)"
+            gapPenalty: -19
+          minAlignmentScore: 71
+          maxNormalizedAlignmentPenalty: 0.1
+          trimMinimalSumQuality: 0
+          trimReferenceRegion: true
+          maxQuality: 45
+        kMapParameters:
+          k: 9
+          useQ1Score: true
+          coreSequenceKMers: 20
+          coreSequenceRecordScore: 20
+          neighbourhoodSize: 2
+        positiveMinQualityShare: 0.14
+        positiveMinIntersectionQuality: 239
+        minAlignmentScoreForDiscardRecord: 0
+        maxNormalizedAlignmentPenaltyForDiscardRecord: 0.0
+        minRecordSharePerConsensus: 1.0
+        minRecordsPerConsensus: 3
+        useWeightsForRecordsPerConsensus: true
+        minRecordWeightForUse: 0
+        maxIterationsPerConsensus: 8
+        maxConsensuses: 0
+      groupingTagTypes:
+        - Cell
+      payloadTagTypes:
+        - Targets
+      safeUnusedReads: true
+      safeDiscardedReads: true
+      inferMinRecordsPerConsensus: true
+align:
+  species: hsa
+  libraryName: default
+  trimmingQualityThreshold: 0
+  trimmingWindowSize: 6
+  chains: ALL
+  replaceWildcards: true
+  overlapPairedReads: true
+  bamDropNonVDJ: false
+  writeFailedAlignments: false
+  tagPattern: "^(CELL:N{10})ggg\\^(R2:*)"
+  tagUnstranded: false
+  tagMaxBudget: 10.0
+  headerExtractors: []
+  readIdAsCellTag: false
+  sampleTable: null
+  tagsValidations:
+    - type: MustContainTagType
+      tagType: Cell
+    - type: MustNotContainTagType
+      tagType: Molecule
+    - type: MustContainTagType
+      tagType: Cell
+  splitBySample: true
+  limit: null
+  parameters:
+    vParameters:
+      geneFeatureToAlign: VTranscriptWithP
+      minSumScore: 60
+      relativeMinScore: 0.7
+      maxHits: 5
+      edgeRealignmentMinScoreOverride: 35
+      parameters:
+        type: kaligner2
+        mapperNValue: 9
+        mapperKValue: 1
+        floatingLeftBound: true
+        floatingRightBound: true
+        mapperAbsoluteMinClusterScore: 250
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 127
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.7
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.7
+        maxHits: 3
+        scoring:
+          type: affine
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+      rightForceRealignmentTrigger: CDR3Begin(-6)
+    dParameters:
+      geneFeatureToAlign: DRegionWithP
+      relativeMinScore: 0.85
+      absoluteMinScore: 25.0
+      maxHits: 3
+      scoring:
+        type: linear
+        alphabet: nucleotide
+        subsMatrix: "simple(match = 5, mismatch = -9)"
+        gapPenalty: -12
+    jParameters:
+      geneFeatureToAlign: JRegionWithP
+      minSumScore: 150
+      relativeMinScore: 0.97
+      maxHits: 5
+      parameters:
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
+        floatingLeftBound: true
+        floatingRightBound: false
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: affine
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+    cParameters:
+      geneFeatureToAlign: CExon1
+      minSumScore: 40
+      relativeMinScore: 0.97
+      maxHits: 5
+      parameters:
+        type: kaligner
+        mapperKValue: 5
+        floatingLeftBound: false
+        floatingRightBound: true
+        mapperAbsoluteMinScore: 95.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
+        mapperMismatchPenalty: -0.1
+        mapperOffsetShiftPenalty: -0.3
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
+        minAlignmentLength: 15
+        maxAdjacentIndels: 2
+        alignmentStopPenalty: -1000
+        absoluteMinScore: 40.0
+        relativeMinScore: 0.87
+        maxHits: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -9)"
+          gapPenalty: -12
+    vjAlignmentOrder: VThenJ
+    libraryStructure: Unknown
+    includeDScore: false
+    includeCScore: false
+    minSumScore: 120.0
+    relativeMinVFR3CDR3Score: 0.7
+    allowPartialAlignments: true
+    allowNoCDR3PartAlignments: true
+    allowChimeras: false
+    readsLayout: ReverseOnly
+    mergerParameters:
+      qualityMergingAlgorithm: MaxSubtraction
+      partsLayout: null
+      minimalOverlap: 13
+      minimalMatchQualitySum: 364
+      maxQuality: 50
+      minimalIdentity: 0.7
+      identityType: MinimalQualityWeighted
+    fixSeed: true
+    alignmentBoundaryTolerance: 5
+    minChimeraDetectionScore: 120
+    vjOverlapWindow: 3
+    saveOriginalSequence: false
+    saveOriginalReads: false
+    smartForceEdgeAlignments: true
+    retriesForPartialAlignments: 3
+refineTagsAndSort:
+  whitelists: {}
+  runCorrection: false
+  parameters:
+    correctionPower: 0.001
+    backgroundSubstitutionRate: 0.001
+    backgroundIndelRate: 1.0E-5
+    minQuality: 12
+    maxSubstitutions: 2
+    maxIndels: 2
+    maxTotalErrors: 3
+    postFilter: null
+assemblePartial:
+  overlappedOnly: false
+  dropPartial: false
+  cellLevel: false
+  parameters:
+    kValue: 12
+    kOffset: -7
+    minimalAssembleOverlap: 12
+    minimalNOverlap: 7
+    minimalNOverlapShare: 0.65
+    minimalAlignmentMergeIdentity: 0.85
+    mergerParameters:
+      qualityMergingAlgorithm: SumSubtraction
+      partsLayout: CollinearDirect
+      minimalOverlap: 20
+      minimalMatchQualitySum: 0
+      maxQuality: 45
+      minimalIdentity: 0.95
+      identityType: Unweighted
+    maxLeftParts: 256000
+    maxLeftMatches: 6144
+extend:
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
+  minimalVScore: 50
+  minimalJScore: 50
+assemble:
+  sortBySequence: false
+  clnaOutput: false
+  cellLevel: true
+  consensusAssemblerParameters:
+    assembler:
+      aAssemblerParameters:
+        bandWidth: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -4)"
+          gapPenalty: -14
+        minAlignmentScore: 40
+        maxNormalizedAlignmentPenalty: 0.2
+        trimMinimalSumQuality: 0
+        trimReferenceRegion: false
+        maxQuality: 45
+      maxIterations: 6
+      minAltSeedQualityScore: 11
+      minAltSeedNormalizedPenalty: 0.35
+      altSeedPenaltyTolerance: 0.5
+      minRecordSharePerConsensus: 0.02
+      minRecordsPerConsensus: 0
+      minRecursiveRecordShare: 0.1
+      minQualityScore: 0
+      maxConsensuses: 2
+    minTagSuffixShare: 0.0
+    isolateChains: true
+    empiricalAlignmentAssignment:
+      uniqGeneOccurrenceWithinTag:
+        - V
+        - J
+      uniqGeneOccurrenceWithinCluster:
+        - V
+        - J
+      matchAlignmentsWithoutVJHitsByTags: true
+  cloneAssemblerParameters:
+    assemblingFeatures:
+      - VDJRegion
+    minimalClonalSequenceLength: 12
+    qualityAggregationType: BetaScore
+    cloneClusteringParameters:
+      searchDepth: 2
+      allowedMutationsInNRegions: 1
+      searchParameters: twoMismatchesOrIndels
+      clusteringFilter:
+        type: advanced
+        correctionPower: 0.001
+        backgroundSubstitutionRate: 5.0E-4
+        backgroundIndelRate: 2.0E-4
+    cloneFactoryParameters:
+      vParameters:
+        relativeMinScore: 0.97
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      jParameters:
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      cParameters:
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      dParameters:
+        relativeMinScore: null
+        absoluteMinScore: null
+        maxHits: null
+        scoring: null
+    separateByV: false
+    separateByJ: false
+    separateByC: false
+    maximalPreClusteringRatio: 1.0
+    preClusteringScoreFilteringRatio: 2.0
+    preClusteringCountFilteringRatio: 2.0
+    addReadsCountOnClustering: false
+    badQualityThreshold: 0
+    maxBadPointsPercent: 0.7
+    mappingThreshold: 2of5
+    minimalQuality: 0
+    postFilters: null
+  inferMinRecordsPerConsensus: false
+assembleContigs:
+  ignoreTags: false
+  parameters:
+    branchingMinimalQualityShare: 0.1
+    branchingMinimalSumQuality: 60
+    decisiveBranchingSumQualityThreshold: 120
+    alignedSequenceEdgeDelta: 3
+    alignmentEdgeRegionSize: 7
+    minimalNonEdgePointsFraction: 0.25
+    minimalMeanNormalizedQuality: 5.0
+    outputMinimalQualityShare: 0.75
+    outputMinimalSumQuality: 0
+    subCloningRegions: null
+    assemblingRegions: null
+    postFiltering:
+      type: NoFiltering
+    trimmingParameters:
+      averageQualityThreshold: 10.0
+      windowSize: 8
+    minimalContigLength: 20
+    alignedRegionsOnly: false
+    discardAmbiguousNucleotideCalls: false
+  cloneFactoryParameters:
+    vParameters:
+      relativeMinScore: 0.97
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    jParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    cParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    dParameters:
+      relativeMinScore: null
+      absoluteMinScore: null
+      maxHits: null
+      scoring: null
+assembleCells:
+  algorithm:
+    type: SingleCellGroupingByOverlappingCellIds
+    minOverlapForSmaller:
+      percentage: 0.8
+      roundingMode: UP
+    minOverlapForBigger:
+      percentage: 0.2
+      roundingMode: UP
+    countCellBarcodesWithOneClone: true
+    thresholdForAssigningLeftoverCells:
+      percentage: 0.6
+      roundingMode: DOWN
+    nonFunctional:
+      type: OverlapWithFoundGroups
+      minOverlapForClone:
+        percentage: 0.9
+        roundingMode: UP
+      minOverlapForGroup:
+        percentage: 0.5
+        roundingMode: UP
+exportAlignments:
+  chains: ALL
+  noHeader: false
+  fields:
+    - field: -readIds
+    - field: -tags
+      args:
+        - Cell
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
+exportClones:
+  splitByTagType: null
+  filterOutOfFrames: false
+  filterStops: false
+  chains: ALL
+  noHeader: false
+  fields:
+    - field: -cloneId
+    - field: -cellGroup
+    - field: -tags
+      args:
+        - Cell
+    - field: -readCount
+    - field: -readFraction
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
+    - field: -vAlignment
+    - field: -dAlignment
+    - field: -jAlignment
+    - field: -cAlignment
+    - field: -allNFeaturesWithMinQuality
+    - field: -nFeature
+      args:
+        - VDJRegion
+    - field: -aaFeature
+      args:
+        - VDJRegion
+    - field: -defaultAnchorPoints
+    - field: -topChains
+  splitFilesBy: []
+  groupClonesBy: []
+exportCloneGroups:
+  filterOutOfFrames: false
+  filterStops: false
+  filterOutGroupsWithOneClone: false
+  showSecondaryChains: true
+  types: []
+  noHeader: false
+  fields:
+    - field: -cellGroup
+    - field: -groupReadCount
+    - field: -groupUniqueTagCount
+      args:
+        - Cell
+    - field: -uniqClonesPerChainCount
+    - field: -readCount
+    - field: -readFraction
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
+    - field: -nFeature
+      args:
+        - CDR3
+    - field: -aaFeature
+      args:
+        - CDR3
+  sortChainsBy: Auto
+qc:
+  checks:
+    - type: SuccessfullyAlignedReads
+      upper: 0.85
+      middle: 0.7
+      label: Successfully aligned reads
+    - type: OffTargetReads
+      upper: 0.2
+      middle: 0.1
+      label: Off target (non TCR/IG) reads
+    - type: ReadsWithNoVOrJHits
+      upper: 0.2
+      middle: 0.1
+      label: Reads with no V or J hits
+    - type: ReadsUsedInClonotypes
+      upper: 0.9
+      middle: 0.7
+      label: Reads used in clonotypes
+    - type: AlignmentsWithNoAssemblingFeature
+      upper: 0.15
+      middle: 0.05
+      label: Alignments without assembling feature
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.05
+      middle: 0.01
+      label: Alignments dropped due to low sequence quality
+    - type: ClonesDroppedInPostFiltering
+      upper: 0.05
+      middle: 0.01
+      label: Clones dropped in post-filtering
+    - type: AlignmentsDroppedInPostFiltering
+      upper: 0.05
+      middle: 0.01
+      label: Alignments dropped in clones post-filtering
+    - type: CellBarcodesWithFoundGroups
+      upper: 0.9
+      middle: 0.8
+      label: Cell barcodes used in result groups
