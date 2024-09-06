@@ -1,0 +1,150 @@
+"bruker-human-sc-xcr-vdj-beacon":
+  vendor: "Bruker"
+  label: "Single cell VDJ"
+  category: non-generic
+  inheritFrom: generic-lt-single-cell-amplicon
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{10})ggg\^(R2:*)
+    - type: AddPipelineStep
+      step: mitool-parse
+    - type: AddPipelineStep
+      step: mitool-refine-tags
+    - type: AddPipelineStep
+      step: mitool-consensus
+    - type: SetSpecies
+      species: hsa
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+  mitool:
+    parse:
+      inheritFrom: mitool-parse-default
+    refineTags:
+      inheritFrom: mitool-refineTags-default
+      overrides:
+        tagTypes:
+          - Cell
+        whitelists:
+          CELL:
+            - TGGTAGGCTG
+            - GTTAGCTGCT
+            - TACATAAAGA
+            - AGCCCTATCA
+            - ACCTACCGCC
+            - TCTCCAAGAC
+            - GTATACATTA
+            - AGACTCGATT
+            - CCAGGATTAA
+            - CTCCTTCAAG
+            - ACTACTTCTG
+            - GCCTTGTTGT
+    consensus:
+      inheritFrom: mitool-consensus-2-steps
+      overrides:
+        - groupingTagTypes:
+            - Cell
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 80
+              maxNormalizedAlignmentPenalty: 0.13
+            positiveMinQualityShare: 0.13
+            positiveMinIntersectionQuality: 150
+            minRecordSharePerConsensus: 0.001
+            minRecordsPerConsensus: 3
+        - groupingTagTypes:
+            - Cell
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 71
+              maxNormalizedAlignmentPenalty: 0.1
+            positiveMinQualityShare: 0.14
+            positiveMinIntersectionQuality: 239
+            minRecordSharePerConsensus: 1.0
+            minRecordsPerConsensus: 3
+  align:
+    inheritFrom: align-single-cell
+    overrides:
+      trimmingQualityThreshold: 0
+      parameters:
+        readsLayout: ReverseOnly
+        vParameters:
+          relativeMinScore: 0.7
+          parameters:
+            mapperRelativeMinScore: 0.7
+            relativeMinScore: 0.7
+  refineTagsAndSort:
+    runCorrection: false
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter: null
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
+    overrides:
+      clnaOutput: false
+      cloneAssemblerParameters:
+        badQualityThreshold: 0
+        minimalQuality: 0
+        cloneFactoryParameters:
+          vParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore: 0.97
+            scoring: null
+          jParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore:
+            scoring: null
+          dParameters:
+            absoluteMinScore:
+            relativeMinScore:
+            maxHits:
+            scoring: null
+          cParameters:
+            maxAlignmentWidthLinear: 5
+            maxAlignmentWidthAffine: 500
+            relativeMinScore:
+            scoring: null
+        postFilters: null
+  exportClones:
+    inheritFrom: exportClones-single-cell-no-umi-base
+    overrides:
+      fields:
+        - field: "-cloneId"
+        - field: "-cellGroup"
+        - field: "-tags"
+          args: [ "Cell" ]
+        - field: "-readCount"
+        - field: "-readFraction"
+        - field: "-targetSequences"
+        - field: "-targetQualities"
+        - field: "-vHit"
+        - field: "-dHit"
+        - field: "-jHit"
+        - field: "-cHit"
+        - field: "-vAlignment"
+        - field: "-dAlignment"
+        - field: "-jAlignment"
+        - field: "-cAlignment"
+        - field: "-allNFeaturesWithMinQuality"
+        - field: "-nFeature"
+          args: [ "VDJRegion" ]
+        - field: "-aaFeature"
+          args: [ "VDJRegion" ]
+        - field: "-defaultAnchorPoints"
+        - field: "-topChains"

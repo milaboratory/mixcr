@@ -12,7 +12,7 @@
 package com.milaboratory.mixcr.cli
 
 import com.milaboratory.app.ValidationException
-import com.milaboratory.mixcr.basictypes.tag.TagType
+import com.milaboratory.mitool.tag.TagType
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.cli.MiXCRCommand.OptionsOrder
 import com.milaboratory.mixcr.clonegrouping.CellType

@@ -318,6 +318,9 @@ neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR
   Required args:
     --species <name>
 
+-----Bruker-----
+bruker-human-sc-xcr-vdj-beacon (Single cell VDJ)
+
 -----AbHelix-----
 abhelix-human-rna-xcr (Human immunoglobulin repertoire)
 

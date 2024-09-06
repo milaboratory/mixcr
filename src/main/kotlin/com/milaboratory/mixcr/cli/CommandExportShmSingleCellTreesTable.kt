@@ -15,8 +15,8 @@ import cc.redberry.pipe.util.asSequence
 import com.milaboratory.app.InputFileType
 import com.milaboratory.app.ValidationException
 import com.milaboratory.app.logger
-import com.milaboratory.mixcr.basictypes.tag.TagType
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
+import com.milaboratory.mitool.tag.TagType
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.clonegrouping.CellType
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter

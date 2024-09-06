@@ -6,6 +6,7 @@ $defs:
       - Sample
       - Cell
       - Molecule
+      - Targets
       - Technical
 allOf:
   - type: object

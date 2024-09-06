@@ -17,8 +17,8 @@ import com.milaboratory.app.logger
 import com.milaboratory.app.matches
 import com.milaboratory.cli.StepDataCollection
 import com.milaboratory.cli.getReportSafe
+import com.milaboratory.mitool.tag.TagsInfo
 import com.milaboratory.mixcr.basictypes.IOUtil
-import com.milaboratory.mixcr.basictypes.tag.TagsInfo
 import com.milaboratory.mixcr.export.ExportFieldDescription
 import com.milaboratory.mixcr.export.InfoWriter
 import com.milaboratory.mixcr.export.MetaForExport

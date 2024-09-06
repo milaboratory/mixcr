@@ -1,9 +1,22 @@
 $schema: https://json-schema.org/draft/2020-12/schema
+$defs:
+  TagType:
+    type: string
+    enum:
+      - Sample
+      - Cell
+      - Molecule
+      - Targets
+      - Technical
 type: object
 properties:
   params:
     type: object
     properties:
+      groupingTagTypes:
+        type: array
+        items:
+          $ref: '#/$defs/TagType'
       groupingTags:
         type: array
         items:
@@ -82,6 +95,10 @@ properties:
             type: number
           useWeightsForRecordsPerConsensus:
             type: boolean
+      payloadTagTypes:
+        type: array
+        items:
+          $ref: '#/$defs/TagType'
       payloadTags:
         type: array
         items:
