@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const scriptDir = __dirname;
-const packageRoot = path.resolve(scriptDir, "../")
-const dstRoot = path.join(packageRoot, 'dld');
-const dstDataDir = path.join(dstRoot, 'mixcr');
-
-if (!process.env.CI) {
-    log("Not a CI run. install-ci.js was skipped")
-    process.exit(0)
-}
+const packageRoot = path.resolve(scriptDir, "../");
+const dstRoot = path.join(packageRoot, "dld");
+const dstDataDir = path.join(dstRoot, "mixcr");
 
 function log(message) {
     console.log(message);
 }
 
+if (!process.env.CI) {
+    process.exit(0);
+}
+
 const ARCHIVE_PATH = process.env.ARCHIVE_PATH;
 if (!ARCHIVE_PATH) {
-    throw new Error("ARCHIVE_PATH environment variable is required.");
+    log(
+        "To unpack existing archive after installation, provide 'ARCHIVE_PATH'" +
+        "environment variable with path to the mixcr archive before running 'npm ci' or 'npm install'"
+    );
+    process.exit(0)
 }
 
 function isDir(target) {
@@ -60,8 +63,8 @@ if (fs.existsSync(dstDataDir)) {
 log(`Creating clean data dir: ${dstDataDir}`);
 fs.mkdirSync(dstDataDir, { recursive: true });
 
-const unzipper = require('unzipper');
+const unzipper = require("unzipper");
 
 fs.createReadStream(archivePath)
     .pipe(unzipper.Extract({ path: dstDataDir }))
-    .on('close', () => log(`Extraction complete to '${dstDataDir}'`));
+    .on("close", () => log(`Extraction complete to '${dstDataDir}'`));
