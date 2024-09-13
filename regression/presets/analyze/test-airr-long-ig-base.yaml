@@ -157,6 +157,7 @@ align:
     saveOriginalReads: true
     smartForceEdgeAlignments: true
     retriesForPartialAlignments: 3
+    retriesAlignmentOfNotCoveredPart: 2
 refineTagsAndSort:
   whitelists: {}
   runCorrection: true
