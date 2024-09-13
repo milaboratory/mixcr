@@ -33,6 +33,6 @@ mixcr analyze --verbose generic-amplicon \
 assert "cat case9.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "241364"
 assert "cat case9.assemble.report.json | head -n 1 | jq -r .readsInClones" "200784"
 assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "499"
-assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "3546"
+assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "3547"
 assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "4"
-assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25663"
+assert "cat case9.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25662"
