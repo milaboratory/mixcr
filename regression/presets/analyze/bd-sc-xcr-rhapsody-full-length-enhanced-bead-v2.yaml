@@ -2529,6 +2529,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
     retriesForPartialAlignments: 3
+    retriesAlignmentOfNotCoveredPart: 2
 refineTagsAndSort:
   whitelists: {}
   runCorrection: true
