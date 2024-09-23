@@ -29,6 +29,11 @@
       parameters:
         readsLayout: DirectOnly
 
+"illumina-human-dna-trb-ampliseq-sr":
+  inheritFrom: illumina-human-rna-trb-ampliseq-sr
+  mixins:
+    - type: MaterialTypeRNA
+
 "illumina-human-rna-trb-ampliseq-plus":
   vendor: "Illumina"
   label: "Human TCR Beta Ampliseq Plus"
