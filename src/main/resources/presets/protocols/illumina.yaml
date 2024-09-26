@@ -1,6 +1,6 @@
 "illumina-human-rna-trb-ampliseq-sr":
   vendor: "Illumina"
-  label: "Human TCR Beta Ampliseq Short Read"
+  label: "Human TCR Beta RNA Ampliseq Short Read"
   category: non-generic
   inheritFrom: generic-amplicon
   pipeline:
@@ -30,6 +30,9 @@
         readsLayout: DirectOnly
 
 "illumina-human-dna-trb-ampliseq-sr":
+  vendor: "Illumina"
+  label: "Human TCR Beta DNA Ampliseq Short Read"
+  category: non-generic
   inheritFrom: illumina-human-rna-trb-ampliseq-sr
   mixins:
     - type: MaterialTypeRNA
