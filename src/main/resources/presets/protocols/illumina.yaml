@@ -35,7 +35,7 @@
   category: non-generic
   inheritFrom: illumina-human-rna-trb-ampliseq-sr
   mixins:
-    - type: MaterialTypeRNA
+    - type: MaterialTypeDNA
 
 "illumina-human-rna-trb-ampliseq-plus":
   vendor: "Illumina"
