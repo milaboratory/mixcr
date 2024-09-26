@@ -24,7 +24,7 @@ align:
   limit: null
   parameters:
     vParameters:
-      geneFeatureToAlign: VTranscriptWithP
+      geneFeatureToAlign: VGeneWithP
       minSumScore: 150
       relativeMinScore: 0.97
       maxHits: 5
