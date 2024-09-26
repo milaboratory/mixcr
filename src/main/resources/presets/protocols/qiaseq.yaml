@@ -75,3 +75,47 @@
         ^N{:4}gacacaaaggtatgtcccagtcttatggagatt(R1:*) |
         ^N{:4}ggaaaatagtaggcttgggagaaaagtctgagtc(R1:*) |
         ^N{:4}cacctctttagggtagaaatctttcaccagacaag(R1:*) \ ^(UMI:N{12})N{12}(R2:*)
+
+
+"qiagen-human-rna-tcr-umi-targeted-qiaseq":
+  vendor: "QIAGEN"
+  label: "QIAseq Targeted RNA Panel Human TCR"
+  category: non-generic
+  inheritFrom: generic-amplicon-with-umi
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: CDR3
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsLessBetter
+          middle: 0.05
+          upper: 0.1
+    - type: SetTagPattern
+      tagPattern: ^(R1:*) \ ^(UMI:N{14:18})atgcattggagtcct
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
+
+"qiagen-mouse-rna-tcr-umi-targeted-qiaseq":
+  vendor: "QIAGEN"
+  label: "QIAseq Targeted RNA Panel Mouse TCR"
+  category: non-generic
+  inheritFrom: qiagen-human-rna-tcr-umi-targeted-qiaseq
+  mixins:
+    - type: SetSpecies
+      species: mmu

@@ -304,7 +304,11 @@ bd-human-sc-xcr-rhapsody-cdr3 (Rhapsody Human VDJ CDR3 Assay)
 -----QIAGEN-----
 qiagen-human-rna-tcr-umi-qiaseq (QIAseq Human TCR Panel Immune Repertoire RNA Library Kit)
 
+qiagen-mouse-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Mouse TCR)
+
 qiagen-mouse-rna-tcr-umi-qiaseq (QIAseq Mouse TCR Panel Immune Repertoire RNA Library Kit)
+
+qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
 
 -----New England BioLabs-----
 neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
