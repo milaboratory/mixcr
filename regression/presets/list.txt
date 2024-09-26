@@ -243,7 +243,9 @@ idt-human-rna-bcr-umi-archer (Archer IMMUNOVerse BCR panel)
 -----Illumina-----
 illumina-human-rna-trb-ampliseq-plus (Human TCR Beta Ampliseq Plus)
 
-illumina-human-rna-trb-ampliseq-sr (Human TCR Beta Ampliseq Short Read)
+illumina-human-rna-trb-ampliseq-sr (Human TCR Beta RNA Ampliseq Short Read)
+
+illumina-human-dna-trb-ampliseq-sr (Human TCR Beta DNA Ampliseq Short Read)
 
 -----Public-----
 vergani-et-al-2017-full-length (Vergani et al., 2017)
