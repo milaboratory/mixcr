@@ -15,11 +15,6 @@
       floating: true
     - type: SetClonotypeAssemblingFeatures
       features: [ "CDR3" ]
-  align:
-    inheritFrom: generic-amplicon
-    overrides:
-      parameters:
-        readsLayout: ReverseOnly
 
 "thermofisher-human-rna-trb-oncomine-lr":
   label: "Oncomine RNA TCR Beta‑LR Assay"
