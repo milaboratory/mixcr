@@ -1,8 +1,10 @@
-"bruker-human-sc-xcr-vdj-beacon":
+"bruker-sc-xcr-vdj-beacon":
   vendor: "Bruker"
   label: "Single cell VDJ"
   category: non-generic
   inheritFrom: generic-lt-single-cell-amplicon
+  flags:
+    - species
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{10})ggg\^(R2:*)
@@ -12,8 +14,6 @@
       step: mitool-refine-tags
     - type: AddPipelineStep
       step: mitool-consensus
-    - type: SetSpecies
-      species: hsa
     - type: SetClonotypeAssemblingFeatures
       features: [ "VDJRegion" ]
     - type: LeftAlignmentBoundaryNoPoint
@@ -81,6 +81,40 @@
           parameters:
             mapperRelativeMinScore: 0.7
             relativeMinScore: 0.7
+      tagTransformationSteps:
+        - type: mapTags
+          name: "CELL to Bruker Barcode"
+          matchTags:
+            - CELL
+          newTags:
+            - CELLBARCODE
+          allowOneMismatch: true
+          rules:
+            - from: TGGTAGGCTG
+              to: C0D0F1T0
+            - from: GTTAGCTGCT
+              to: C0D1F1T0
+            - from: TACATAAAGA
+              to: C0D0F0T1
+            - from: AGCCCTATCA
+              to: C0D1F0T0
+            - from: ACCTACCGCC
+              to: C1D1F0T0
+            - from: TCTCCAAGAC
+              to: C0D0F1T1
+            - from: GTATACATTA
+              to: C1D0F0T0
+            - from: AGACTCGATT
+              to: C0D1F0T1
+            - from: CCAGGATTAA
+              to: C0D1F1T1
+            - from: CTCCTTCAAG
+              to: C1D0F0T1
+            - from: ACTACTTCTG
+              to: C1D0F1T0
+            - from: GCCTTGTTGT
+              to: C1D1F1T1
+          reportingLevel: VerboseReport
   refineTagsAndSort:
     runCorrection: false
     parameters:
