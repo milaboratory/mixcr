@@ -1,4 +1,5 @@
-flags: []
+flags:
+  - species
 pipeline:
   - mitool-parse
   - mitool-refine-tags
@@ -118,7 +119,7 @@ mitool:
       safeDiscardedReads: true
       inferMinRecordsPerConsensus: true
 align:
-  species: hsa
+  species: ""
   libraryName: default
   trimmingQualityThreshold: 0
   trimmingWindowSize: 6
@@ -132,6 +133,40 @@ align:
   tagMaxBudget: 10.0
   headerExtractors: []
   readIdAsCellTag: false
+  tagTransformationSteps:
+    - type: mapTags
+      name: CELL to Bruker Barcode
+      matchTags:
+        - CELL
+      newTags:
+        - CELLBARCODE
+      allowOneMismatch: true
+      rules:
+        - from: ACCTACCGCC
+          to: C1D1F0T0
+        - from: ACTACTTCTG
+          to: C1D0F1T0
+        - from: AGACTCGATT
+          to: C0D1F0T1
+        - from: AGCCCTATCA
+          to: C0D1F0T0
+        - from: CCAGGATTAA
+          to: C0D1F1T1
+        - from: CTCCTTCAAG
+          to: C1D0F0T1
+        - from: GCCTTGTTGT
+          to: C1D1F1T1
+        - from: GTATACATTA
+          to: C1D0F0T0
+        - from: GTTAGCTGCT
+          to: C0D1F1T0
+        - from: TACATAAAGA
+          to: C0D0F0T1
+        - from: TCTCCAAGAC
+          to: C0D0F1T1
+        - from: TGGTAGGCTG
+          to: C0D0F1T0
+      reportingLevel: VerboseReport
   sampleTable: null
   tagsValidations:
     - type: MustContainTagType
@@ -277,6 +312,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
     retriesForPartialAlignments: 3
+    retriesAlignmentOfNotCoveredPart: 2
 refineTagsAndSort:
   whitelists: {}
   runCorrection: false
