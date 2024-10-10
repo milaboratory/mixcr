@@ -15,7 +15,7 @@
     "descriptor:release": "npm run descriptor:build && npm run descriptor:publish",
 
     "postinstall": "node ./scripts/unpack-ci.js",
-    "release": "npm run pkg:release && npm run descriptor:release"
+    "prepublishOnly": "npm run pkg:release"
   },
   "block-software": {
     "entrypoints": {
@@ -25,7 +25,7 @@
             "registry": "milaboratories",
             "name": "milaboratories/mixcr",
             "type": "java",
-            "environment": "@milaboratory/runenv-java-corretto:21.0.2.13.1",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
             "root": "./dld/mixcr/"
           },
           "cmd": [ "java", "-jar", "{pkg}/mixcr.jar" ]
