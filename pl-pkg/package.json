@@ -15,7 +15,7 @@
     "descriptor:release": "npm run descriptor:build && npm run descriptor:publish",
 
     "postinstall": "node ./scripts/unpack-ci.js",
-    "prepublishOnly": "npm run pkg:release"
+    "prepublishOnly": "npm run pkg:release && npm run descriptor:build"
   },
   "block-software": {
     "entrypoints": {
