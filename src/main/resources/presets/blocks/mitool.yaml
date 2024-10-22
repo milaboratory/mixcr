@@ -31,8 +31,8 @@ mitool-consensus-1-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
 
 mitool-consensus-2-steps:
@@ -68,8 +68,8 @@ mitool-consensus-2-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
       - parameters:
           aAssemblerParameters:
@@ -100,8 +100,8 @@ mitool-consensus-2-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
 
 mitool-consensus-3-steps:
@@ -137,8 +137,8 @@ mitool-consensus-3-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
       - parameters:
           aAssemblerParameters:
@@ -169,8 +169,8 @@ mitool-consensus-3-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
       - parameters:
           aAssemblerParameters:
@@ -201,8 +201,8 @@ mitool-consensus-3-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
 
 mitool-consensus-4-steps:
@@ -238,8 +238,8 @@ mitool-consensus-4-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
       - parameters:
           aAssemblerParameters:
@@ -270,8 +270,8 @@ mitool-consensus-4-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
       - parameters:
           aAssemblerParameters:
@@ -302,8 +302,8 @@ mitool-consensus-4-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
       - parameters:
           aAssemblerParameters:
@@ -334,8 +334,8 @@ mitool-consensus-4-steps:
           minRecordWeightForUse: 0
           maxIterationsPerConsensus: 8
           maxConsensuses: 0
-        safeUnusedReads: true
-        safeDiscardedReads: true
+        saveUnusedReads: true
+        saveDiscardedReads: true
         inferMinRecordsPerConsensus: true
 
 mitool-parse-default:
