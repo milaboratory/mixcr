@@ -290,7 +290,7 @@ object CommandAssemble {
 
                 // deducing ordering
                 val ordering = if (cmdParam.sortBySequence) {
-                    val assemblingFeatures = cloneAssemblerParameters.assemblingFeatures
+                    val assemblingFeatures = cloneAssemblerParameters.assemblingFeatures.clone()
 
                     // Any CDR3 containing feature will become first
                     for (i in assemblingFeatures.indices) {
