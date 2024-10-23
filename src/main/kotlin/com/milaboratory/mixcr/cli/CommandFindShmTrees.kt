@@ -207,6 +207,19 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     var productiveOnly: Boolean = false
 
     @Option(
+        description = [
+            "In specific cases preliminary search for alleles could be skipped. For example:",
+            " - reads were aligned on gene library for the donor, that wes found beforehand",
+            " - data is synthetic (in biological or computational way) and don't have natural patterns of homo-hetero zygotes",
+            " - you have homogeneous specie and have a library with all presented genes beforehand (but better to run `findAlleles` to check that there is no diversity)",
+        ],
+        names = ["--alleles-search-could-be-skipped"],
+        order = OptionsOrder.main + 10_600,
+        arity = "0"
+    )
+    var allelesCouldBeSkipped: Boolean = false
+
+    @Option(
         description = ["In case of data with cell groups, will not combine trees by cells."],
         names = ["--dont-combine-tree-by-cells"],
         order = OptionsOrder.main + 10_700,
@@ -297,12 +310,24 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             shmTreeBuilderParameters.topologyBuilder.multiplierForNDNScore
         )
 
-        ValidationException.require(datasets.all { it.header.foundAlleles != null }) {
-            "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
+        val foundAlleles = if (!allelesCouldBeSkipped) {
+            ValidationException.require(datasets.all { it.header.foundAlleles != null }) {
+                "Input files must be processed by ${CommandFindAlleles.COMMAND_NAME}"
+            }
+            ValidationException.requireTheSame(datasets.map { it.header.foundAlleles }) {
+                "All input files must be assembled with the same alleles"
+            }!!
+        } else {
+            val inputLibraries = datasets.map { it.usedGenes.first().parentLibrary }
+            ValidationException.requireTheSame(inputLibraries.map { it.libraryId }) {
+                "All inputs should be aligned on the same gene library"
+            }
+
+            MiXCRHeader.FoundAlleles(
+                inputLibraries.first().name,
+                inputLibraries.first().data
+            )
         }
-        val foundAlleles = ValidationException.requireTheSame(datasets.map { it.header.foundAlleles }) {
-            "All input files must be assembled with the same alleles"
-        }!!
 
         ValidationException.require(datasets.all { it.header.allFullyCoveredBy != null }) {
             "Some of the inputs were processed by ${CommandAssembleContigs.COMMAND_NAME} without ${AssembleContigsMixins.SetContigAssemblingFeatures.CMD_OPTION} option"
