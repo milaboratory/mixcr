@@ -79,8 +79,8 @@ mitool:
         - Cell
       payloadTagTypes:
         - Targets
-      safeUnusedReads: true
-      safeDiscardedReads: true
+      saveUnusedReads: true
+      saveDiscardedReads: true
       inferMinRecordsPerConsensus: true
     - parameters:
         aAssemblerParameters:
@@ -115,8 +115,8 @@ mitool:
         - Cell
       payloadTagTypes:
         - Targets
-      safeUnusedReads: true
-      safeDiscardedReads: true
+      saveUnusedReads: true
+      saveDiscardedReads: true
       inferMinRecordsPerConsensus: true
 align:
   species: ""
