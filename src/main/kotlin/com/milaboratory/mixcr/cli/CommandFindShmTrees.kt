@@ -207,6 +207,14 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
     var productiveOnly: Boolean = false
 
     @Option(
+        description = ["In case of data with cell groups, will not combine trees by cells."],
+        names = ["--dont-combine-tree-by-cells"],
+        order = OptionsOrder.main + 10_700,
+        arity = "0"
+    )
+    var dontCombineTreeByCells: Boolean = false
+
+    @Option(
         description = [
             "In specific cases preliminary search for alleles could be skipped. For example:",
             " - reads were aligned on gene library for the donor, that wes found beforehand",
@@ -214,18 +222,10 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
             " - you have homogeneous specie and have a library with all presented genes beforehand (but better to run `findAlleles` to check that there is no diversity)",
         ],
         names = ["--alleles-search-could-be-skipped"],
-        order = OptionsOrder.main + 10_600,
+        order = OptionsOrder.main + 10_800,
         arity = "0"
     )
     var allelesCouldBeSkipped: Boolean = false
-
-    @Option(
-        description = ["In case of data with cell groups, will not combine trees by cells."],
-        names = ["--dont-combine-tree-by-cells"],
-        order = OptionsOrder.main + 10_700,
-        arity = "0"
-    )
-    var dontCombineTreeByCells: Boolean = false
 
     @Mixin
     lateinit var debugDir: DebugDirOption
