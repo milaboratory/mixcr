@@ -165,22 +165,22 @@
             relativeMinScore:
             scoring: null
         postFilters:
-           - type: filter_in_groups
-             isolationKeys:
-               - geneLabel:ReliableChain
-               - allTags:Cell
-             nestedFilter:
-               type: filter_groups
-               groupingKeys:
-                 - clone
-                 predicates:
-                   - metrics:
-                     - type: group_metric_sum_weight
-                       reportHist: null
-                     operator:
-                       type: group_operator_cumtop
-                       share: 0.9
-             aggregateReport: true
+          - type: filter_in_groups
+            isolationKeys:
+              - geneLabel:ReliableChain
+              - allTags:Cell
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - clone
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist: null
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.9
+            aggregateReport: true
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
     overrides:
