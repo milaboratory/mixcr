@@ -26,9 +26,9 @@ data)
       --ids <id>[,<id>...]   Filter specific trees by id
       --chains <chains>      Export only trees that contains clones with specific chain (e.g. IGK,
                                IGL or IGH).
-  -p, --preset <preset>      Specify preset of export fields. Possible values: default,
+      --preset <preset>      Specify preset of export fields. Possible values: default,
                                defaultSingleCell, min.
-      -pf, --preset-file <presetFile>
+      --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.

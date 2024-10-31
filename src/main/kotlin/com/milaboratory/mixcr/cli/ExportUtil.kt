@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2023, MiLaboratories Inc. All Rights Reserved
+ * Copyright (c) 2014-2024, MiLaboratories Inc. All Rights Reserved
  *
  * Before downloading or accessing the software, please read carefully the
  * License Agreement available at:
@@ -65,7 +65,7 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
     if (this is FieldExtractorsFactoryWithPresets) {
         spec.addOption(
             OptionSpec
-                .builder("-p", "--preset")
+                .builder("--preset")
                 .description("Specify preset of export fields. Possible values: \${COMPLETION-CANDIDATES}.")
                 .order(50_000 - 300)
                 .required(false)
@@ -82,7 +82,7 @@ fun <T : Any> FieldExtractorsFactory<T>.addOptionsToSpec(
         )
         spec.addOption(
             OptionSpec
-                .builder("-pf", "--preset-file")
+                .builder("--preset-file")
                 .description("Specify preset file of export fields")
                 .order(50_000 - 200)
                 .required(false)
