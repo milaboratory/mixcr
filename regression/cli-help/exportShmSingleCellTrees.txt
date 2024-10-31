@@ -10,21 +10,24 @@ Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observ
                                       [-rootsCountPerChain] [-treeHeight] [-nodeId] [-isObserved]
                                       [-parentId] [-distance (germline|mrca|parent)]... [-vHit]
                                       [-jHit] [-vGene] [-jGene] [-vFamily] [-jFamily] [-nFeature
-                                      <gene_feature> [(germline|mrca|parent)]]... [-allNFeatures
-                                      [(germline|mrca|parent)]]... [-aaFeature <gene_feature>
-                                      [(germline|mrca|parent)]]... [-allAAFeatures
-                                      [(germline|mrca|parent)]]... [-nFeatureImputed <gene_feature>
-                                      [(germline|mrca|parent)]]... [-allNFeaturesImputed
-                                      [<from_reference_point> <to_reference_point>]
-                                      [(germline|mrca|parent)]]... [-aaFeatureImputed
-                                      <gene_feature> [(germline|mrca|parent)]]...
-                                      [-allAAFeaturesImputed [<from_reference_point>
-                                      <to_reference_point>] [(germline|mrca|parent)]]... [-nLength
-                                      <gene_feature[,gene_feature]...> [(germline|mrca|parent)]]...
-                                      [-allNLength [(germline|mrca|parent)]]... [-aaLength
-                                      <gene_feature[,gene_feature]...> [(germline|mrca|parent)]]...
-                                      [-allAALength [(germline|mrca|parent)]]... [-nMutations
                                       <gene_feature> [(germline|mrca|parent)]
+                                      [withAlignmentGaps]]... [-allNFeatures
+                                      [(germline|mrca|parent)] [withAlignmentGaps]]... [-aaFeature
+                                      <gene_feature> [(germline|mrca|parent)]
+                                      [withAlignmentGaps]]... [-allAAFeatures
+                                      [(germline|mrca|parent)] [withAlignmentGaps]]...
+                                      [-nFeatureImputed <gene_feature> [(germline|mrca|parent)]]...
+                                      [-allNFeaturesImputed [<from_reference_point>
+                                      <to_reference_point>] [(germline|mrca|parent)]]...
+                                      [-aaFeatureImputed <gene_feature>
+                                      [(germline|mrca|parent)]]... [-allAAFeaturesImputed
+                                      [<from_reference_point> <to_reference_point>]
+                                      [(germline|mrca|parent)]]... [-nLength <gene_feature[,
+                                      gene_feature]...> [(germline|mrca|parent)]]... [-allNLength
+                                      [(germline|mrca|parent)]]... [-aaLength <gene_feature[,
+                                      gene_feature]...> [(germline|mrca|parent)]]... [-allAALength
+                                      [(germline|mrca|parent)]]... [-nMutations <gene_feature>
+                                      [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
                                       [-allNMutations [(germline|mrca|parent)]
                                       [(substitutions|indels|inserts|deletions)]]...
@@ -57,8 +60,10 @@ Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observ
                                       gene_feature]...>]
                                       [(substitutions|indels|inserts|deletions)]]...
                                       [-aaMutationsRate [<gene_feature[,gene_feature]...>]
-                                      [(substitutions|indels|inserts|deletions)]]... [-isotype
-                                      [(primary|subclass|auto)]]... [-cellId
+                                      [(substitutions|indels|inserts|deletions)]]... [-pN
+                                      [<gene_feature[,gene_feature]...>]]... [-pS [<gene_feature[,
+                                      gene_feature]...>]]... [-pNpS [<gene_feature[,gene_feature]...
+                                      >]]... [-isotype [(primary|subclass|auto)]]... [-cellId
                                       [(none|space|dash)]]... [-uniqueTagCount
                                       (Molecule|Cell|Sample)]... [-cellGroup] [-hasStops
                                       <gene_feature>]... [-isOOF <gene_feature>]... [-isProductive
@@ -84,8 +89,8 @@ separate columns. Initial data for building tree should contain cell data.
       --ids <id>[,<id>...]   Filter specific trees by id
       --chains <chains>      Export only trees that contains clones with specific chain (e.g. IGK,
                                IGL or IGH).
-  -p, --preset <preset>      Specify preset of export fields. Possible values: min, default.
-      -pf, --preset-file <presetFile>
+      --preset <preset>      Specify preset of export fields. Possible values: min, default.
+      --preset-file <presetFile>
                              Specify preset file of export fields
       --cell-type <cell_type>...
                              Export SHM trees for given cell type. By default all will be exported.
@@ -140,19 +145,19 @@ Possible fields to export
       -jGene                 Export best J hit gene name (e.g. TRBV12-3 for TRBV12-3*00)
       -vFamily               Export best V hit family name (e.g. TRBV12 for TRBV12-3*00)
       -jFamily               Export best J hit family name (e.g. TRBV12 for TRBV12-3*00)
-      -nFeature <gene_feature> [(germline|mrca|parent)]
+      -nFeature <gene_feature> [(germline|mrca|parent)] [withAlignmentGaps]
                              Export nucleotide sequence of specified gene feature.
                              If second arg is omitted, then feature will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
-      -allNFeatures [(germline|mrca|parent)]
+      -allNFeatures [(germline|mrca|parent)] [withAlignmentGaps]
                              Export nucleotide sequences for all covered gene features.
                              If first arg is omitted, then feature will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
-      -aaFeature <gene_feature> [(germline|mrca|parent)]
+      -aaFeature <gene_feature> [(germline|mrca|parent)] [withAlignmentGaps]
                              Export amino acid sequence of specified gene feature.
                              If second arg is omitted, then feature will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
-      -allAAFeatures [(germline|mrca|parent)]
+      -allAAFeatures [(germline|mrca|parent)] [withAlignmentGaps]
                              Export amino acid sequences for all covered gene features.
                              If first arg is omitted, then feature will be printed for current
                                node. Otherwise - for corresponding `parent`, `germline` or `mrca`.
@@ -308,6 +313,21 @@ Possible fields to export
                                Resolutions of wildcards in CDR3 are excluded from calculation.
                                Second parameter will filter mutations by type, by default no
                                filtering.
+      -pN [<gene_feature[,gene_feature]...>]
+                             Count of non-synonymous substitutions normalized by total count of
+                               possible non-synonymous substitutions. By default, will be used all
+                               covered features. For wildcards in VJJunction all possible
+                               combinations will be calculated and averaged.
+      -pS [<gene_feature[,gene_feature]...>]
+                             Count of synonymous substitutions normalized by total count of
+                               possible synonymous substitutions. By default, will be used all
+                               covered features. For wildcards in VJJunction all possible
+                               combinations will be calculated and averaged.
+      -pNpS [<gene_feature[,gene_feature]...>]
+                             Ration of pN to pS. In case of no mutations value will be absent.By
+                               default, will be used all covered features. For wildcards in
+                               VJJunction all possible combinations will be calculated and
+                               averaged. If pN or pS is zero, no value will be exported.
       -isotype [(primary|subclass|auto)]
                              Export isotype for IGH chains if it's can be distinguishable.
                                `primary` will resolve 'IgA', 'IgD', 'IgG', 'IgE', 'IgM'. `subtype`
