@@ -32,8 +32,8 @@ Export reports from files in tabular format.
       [report.tsv]           Path where to write reports. Print in stdout if omitted.
       --without-upstreams    Don't export upstream reports for sources of steps with several
                                inputs, like `findShmTrees`.
-  -p, --preset <preset>      Specify preset of export fields. Possible values: min, full.
-      -pf, --preset-file <presetFile>
+      --preset <preset>      Specify preset of export fields. Possible values: min, full.
+      --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
   -f, --force-overwrite      Force overwrite of output file(s).
