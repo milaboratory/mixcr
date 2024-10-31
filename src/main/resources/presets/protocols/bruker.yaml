@@ -60,7 +60,7 @@
             bandWidth: 4
             scoring:
               alphabet: nucleotide
-              subsMatrix: "simple(match = 5, mismatch = -10)"
+              subsMatrix: "simple(match = 5, mismatch = -9)"
               gapPenalty: -19
             minAlignmentScore: 60
             maxNormalizedAlignmentPenalty: 0.4
