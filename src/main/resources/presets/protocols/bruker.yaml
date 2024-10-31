@@ -59,7 +59,7 @@
             alphabet: nucleotide
             subsMatrix: "simple(match = 5, mismatch = -10)"
             gapPenalty: -19
-          minAlignmentScore: 60
+          minAlignmentScore: 62
           maxNormalizedAlignmentPenalty: 0.4
           trimMinimalSumQuality: 0
           trimReferenceRegion: true
@@ -164,7 +164,23 @@
             maxAlignmentWidthAffine: 500
             relativeMinScore:
             scoring: null
-        postFilters: null
+        postFilters:
+           - type: filter_in_groups
+             isolationKeys:
+               - geneLabel:ReliableChain
+               - allTags:Cell
+             nestedFilter:
+               type: filter_groups
+               groupingKeys:
+                 - clone
+                 predicates:
+                   - metrics:
+                     - type: group_metric_sum_weight
+                       reportHist: null
+                     operator:
+                       type: group_operator_cumtop
+                       share: 0.9
+             aggregateReport: true
   exportClones:
     inheritFrom: exportClones-single-cell-no-umi-base
     overrides:
