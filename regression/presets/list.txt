@@ -220,6 +220,11 @@ takara-mouse-rna-bcr-umi-smarseq (SMART-Seq Mouse BCR (with UMIs))
 
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
+-----Bruker-----
+bruker-sc-xcr-vdj-beacon (Single cell VDJ)
+  Required args:
+    --species <name>
+
 -----MiLaboratories-----
 milab-human-rna-tcr-umi-multiplex (Human TCR RNA Multiplex)
 
@@ -243,7 +248,9 @@ idt-human-rna-bcr-umi-archer (Archer IMMUNOVerse BCR panel)
 -----Illumina-----
 illumina-human-rna-trb-ampliseq-plus (Human TCR Beta Ampliseq Plus)
 
-illumina-human-rna-trb-ampliseq-sr (Human TCR Beta Ampliseq Short Read)
+illumina-human-rna-trb-ampliseq-sr (Human TCR Beta RNA Ampliseq Short Read)
+
+illumina-human-dna-trb-ampliseq-sr (Human TCR Beta DNA Ampliseq Short Read)
 
 -----Public-----
 vergani-et-al-2017-full-length (Vergani et al., 2017)
@@ -302,7 +309,11 @@ bd-human-sc-xcr-rhapsody-cdr3 (Rhapsody Human VDJ CDR3 Assay)
 -----QIAGEN-----
 qiagen-human-rna-tcr-umi-qiaseq (QIAseq Human TCR Panel Immune Repertoire RNA Library Kit)
 
+qiagen-mouse-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Mouse TCR)
+
 qiagen-mouse-rna-tcr-umi-qiaseq (QIAseq Mouse TCR Panel Immune Repertoire RNA Library Kit)
+
+qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
 
 -----New England BioLabs-----
 neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
@@ -317,9 +328,6 @@ neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR
 10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
     --species <name>
-
------Bruker-----
-bruker-human-sc-xcr-vdj-beacon (Single cell VDJ)
 
 -----AbHelix-----
 abhelix-human-rna-xcr (Human immunoglobulin repertoire)

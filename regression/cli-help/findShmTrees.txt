@@ -1,9 +1,9 @@
 Usage: mixcr findShmTrees [--v-gene-names <gene_name>]... [--j-gene-names <gene_name>]...
                           [--cdr3-lengths <n>]... [--min-count <n>] [--productive-only]
-                          [--dont-combine-tree-by-cells] [-O <key=value>]... [--report <path>]
-                          [--json-report <path>] [--use-local-temp] [--threads <n>]
-                          [--force-overwrite] [--no-warnings] [--verbose] [--help] (input_file.
-                          clns|directory)... output_file.shmt
+                          [--dont-combine-tree-by-cells] [--alleles-search-could-be-skipped] [-O
+                          <key=value>]... [--report <path>] [--json-report <path>]
+                          [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
+                          [--verbose] [--help] (input_file.clns|directory)... output_file.shmt
 Builds SHM trees.
 All inputs must be fully covered by the same feature, have the same library produced by
 `findAlleles`, the same scoring of V and J genes and the same features to align.
@@ -22,6 +22,16 @@ All inputs must be fully covered by the same feature, have the same library prod
                                and no out of frame in CDR3)
       --dont-combine-tree-by-cells
                              In case of data with cell groups, will not combine trees by cells.
+      --alleles-search-could-be-skipped
+                             In specific cases preliminary search for alleles could be skipped. For
+                               example:
+                              - reads were aligned on gene library for the donor, that wes found
+                               beforehand
+                              - data is synthetic (in biological or computational way) and don't
+                               have natural patterns of homo-hetero zygotes
+                              - you have homogeneous specie and have a library with all presented
+                               genes beforehand (but better to run `findAlleles` to check that
+                               there is no diversity)
   -O  <key=value>            Overrides default build SHM parameter values
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).

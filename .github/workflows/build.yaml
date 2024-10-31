@@ -89,9 +89,17 @@ jobs:
       # Send notifications
       notify-telegram: true
 
+      # NPM publish
+      node-registry-url: 'https://registry.npmjs.org'
+      node-scope: '@platforma-open'
+      publish-to-public: true
+
     secrets:
       env: |
-        { "MI_LICENSE": ${{ toJSON(secrets.MI_LICENSE) }} }
+        {
+          "MI_LICENSE": ${{ toJSON(secrets.MI_LICENSE) }},
+          "NPMJS_TOKEN": ${{ toJSON(secrets.NPMJS_TOKEN) }}
+        }
 
       GRADLE_PROPERTIES: |
         org.gradle.caching=true

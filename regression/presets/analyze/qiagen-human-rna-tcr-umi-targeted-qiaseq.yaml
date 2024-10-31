@@ -14,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(R1:*) \\ ^(UMI:N{17})N{10}(R2:*)"
+  tagPattern: "^(R1:*) \\ ^(UMI:N{14:18})atgcattggagtcct"
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []
@@ -300,7 +300,7 @@ assemble:
         scoring: null
     separateByV: false
     separateByJ: false
-    separateByC: true
+    separateByC: false
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
@@ -400,9 +400,6 @@ exportClones:
     - field: -allNFeaturesWithMinQuality
     - field: -allAAFeatures
     - field: -defaultAnchorPoints
-    - field: -isotype
-      args:
-        - auto
   splitFilesBy:
     - chain
   groupClonesBy: []
@@ -474,7 +471,7 @@ qc:
       upper: 0.05
       middle: 0.01
       label: Alignments dropped in clones post-filtering
-    - type: OverlappedReadsMoreBetter
-      upper: 0.9
-      middle: 0.8
+    - type: OverlappedReadsLessBetter
+      upper: 0.1
+      middle: 0.05
       label: Overlapped paired-end reads

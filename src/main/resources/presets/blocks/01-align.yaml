@@ -141,6 +141,7 @@ align-amplicon:
       saveOriginalReads: false
       smartForceEdgeAlignments: true
       retriesForPartialAlignments: 3
+      retriesAlignmentOfNotCoveredPart: 2
 
 align-shotgun:
   abstract: true
@@ -272,6 +273,7 @@ align-shotgun:
       saveOriginalReads: false
       smartForceEdgeAlignments: true
       retriesForPartialAlignments: 3
+      retriesAlignmentOfNotCoveredPart: 2
 
 align-long-read:
   abstract: true
@@ -573,3 +575,4 @@ align-single-cell:
       saveOriginalReads: false
       smartForceEdgeAlignments: true
       retriesForPartialAlignments: 3
+      retriesAlignmentOfNotCoveredPart: 2

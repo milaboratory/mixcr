@@ -1,21 +1,18 @@
 {
-  "name": "@milaboratory/mixcr",
-  "version": "0.0.1",
+  "name": "@platforma-open/milaboratories.software-mixcr",
+  "version": "0.0.2",
   "description": "MiXCR software dependency for Platforma Backend",
   "scripts": {
     "build": "true",
-
     "pkg:build": "pl-pkg build packages",
     "pkg:sign": "pl-pkg sign packages --sign-command='[\"gcloud-kms-sign\", \"{pkg}\", \"{pkg}.sig\"]'",
     "pkg:publish": "pl-pkg publish packages",
     "pkg:release": "npm run pkg:build && npm run pkg:sign && npm run pkg:publish",
-
     "descriptor:build": "pl-pkg build descriptors",
     "descriptor:publish": "pl-pkg publish descriptors",
     "descriptor:release": "npm run descriptor:build && npm run descriptor:publish",
-
     "postinstall": "node ./scripts/unpack-ci.js",
-    "release": "npm run pkg:release && npm run descriptor:release"
+    "prepublishOnly": "npm run pkg:release && npm run descriptor:build"
   },
   "block-software": {
     "entrypoints": {
@@ -25,10 +22,15 @@
             "registry": "milaboratories",
             "name": "milaboratories/mixcr",
             "type": "java",
-            "environment": "@milaboratory/runenv-java-corretto:21.0.2.13.1",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
             "root": "./dld/mixcr/"
           },
-          "cmd": [ "java", "-jar", "{pkg}/mixcr.jar" ]
+          "cmd": [
+            "java",
+            "-XX:MaxRAMPercentage=85.0",
+            "-jar",
+            "{pkg}/mixcr.jar"
+          ]
         }
       }
     }
@@ -39,8 +41,8 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@milaboratory/pl-package-builder": "^2.8.0",
-    "@milaboratory/runenv-java-corretto": "^1.0.0",
+    "@platforma-sdk/package-builder": "^2.9.2",
+    "@platforma-open/milaboratories.runenv-java-corretto": "^1.0.2",
     "unzipper": "^0.12.3"
   }
 }

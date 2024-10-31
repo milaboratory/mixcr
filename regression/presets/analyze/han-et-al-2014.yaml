@@ -160,6 +160,7 @@ align:
     saveOriginalReads: false
     smartForceEdgeAlignments: true
     retriesForPartialAlignments: 3
+    retriesAlignmentOfNotCoveredPart: 2
 refineTagsAndSort:
   whitelists:
     CELL1ROW: builtin:han-2014-cell1-row

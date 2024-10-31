@@ -330,7 +330,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
                     "Common feature for input files is ${commonFeature.encode()}\n" + message
         }
         val allFullyCoveredBy = datasets.first().header.allFullyCoveredBy!!
-        logger.debug { "Feature for search alleles: $allFullyCoveredBy" }
+        logger.log { "Feature for search alleles: $allFullyCoveredBy" }
         ValidationException.require(allFullyCoveredBy != GeneFeatures(CDR3)) {
             "Assemble feature must cover more than CDR3"
         }

@@ -238,11 +238,11 @@ upstreams:
       aligned: 49603
       notAligned: 97
       notAlignedReasons:
-        NoHits: 0
+        NoHits: 8
         FailedAfterAOverlap: 0
         NoCDR3Parts: 0
         NoVHits: 1
-        NoJHits: 8
+        NoJHits: 0
         VAndJOnDifferentTargets: 10
         LowTotalScore: 0
         NoBarcode: 78
@@ -252,7 +252,7 @@ upstreams:
       overlappedNotAligned: 8
       alignmentAidedOverlaps: 847
       noCDR3PartsAlignments: 5
-      partialAlignments: 464
+      partialAlignments: 463
       chimeras: 0
       vChimeras: 88
       jChimeras: 0
@@ -899,9 +899,9 @@ upstreams:
         VDJRegion: 47138
         CDR1_TO_FR4: 48144
         FR2_TO_FR4: 49225
-        CDR2_TO_FR4: 49350
+        CDR2_TO_FR4: 49351
         FR3_TO_FR4: 49345
-        CDR3: 49134
+        CDR3: 49135
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -1124,11 +1124,11 @@ upstreams:
       aligned: 29280
       notAligned: 591
       notAlignedReasons:
-        NoHits: 0
+        NoHits: 523
         FailedAfterAOverlap: 0
         NoCDR3Parts: 0
         NoVHits: 2
-        NoJHits: 526
+        NoJHits: 3
         VAndJOnDifferentTargets: 17
         LowTotalScore: 0
         NoBarcode: 46

@@ -103,7 +103,7 @@ properties:
         type: array
         items:
           type: string
-      safeDiscardedReads:
+      saveDiscardedReads:
         type: boolean
-      safeUnusedReads:
+      saveUnusedReads:
         type: boolean

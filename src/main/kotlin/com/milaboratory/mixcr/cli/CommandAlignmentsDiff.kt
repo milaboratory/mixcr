@@ -155,7 +155,7 @@ class CommandAlignmentsDiff : MiXCRCommandWithOutputs() {
                             (diff2?.let(::VDJCAlignmentsWriter) ?: DummyWriter).use { diff2 ->
                                 (report?.let { PrintStream(it.toFile()) } ?: System.out).use { report ->
                                     val readerForProgress = when {
-                                        reader1.numberOfReads > reader2.numberOfReads -> reader1
+                                        reader1.numberOfAlignments > reader2.numberOfAlignments -> reader1
                                         else -> reader2
                                     }
                                     SmartProgressReporter.startProgressReport("Analyzing diff", readerForProgress)
