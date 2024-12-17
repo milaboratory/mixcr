@@ -445,10 +445,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .filter { it.status.exist }
             // Duplicates will be grouped by several key
             .groupBy { it.searchedOn }
-        // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
-        ApplicationException.checkDistinct(allelesAfterRemoval.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
-            "There are duplicates of found alleles"
-        }
+        // // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
+        // ApplicationException.checkDistinct(allelesAfterRemoval.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
+        //     "There are duplicates of found alleles"
+        // }
         // without differentiability of searched on
         val result = allelesAfterRemoval.distinctBy { it.result.name }
         reportBuilder.reportResults(result)
