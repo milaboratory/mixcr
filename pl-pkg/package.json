@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.software-mixcr",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "MiXCR software dependency for Platforma Backend",
   "scripts": {
     "build": "true",
@@ -43,7 +43,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^2.9.2",
+    "@platforma-sdk/package-builder": "^2.14.2",
     "@platforma-open/milaboratories.runenv-java-corretto": "^1.0.2",
     "unzipper": "^0.12.3"
   }
