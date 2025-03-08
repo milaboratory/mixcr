@@ -34,6 +34,23 @@
             "{pkg}/mixcr.jar"
           ]
         }
+      },
+      "low-memory": {
+        "binary": {
+          "artifact": {
+            "registry": "milaboratories",
+            "name": "milaboratories/mixcr",
+            "type": "java",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
+            "root": "./dld/mixcr/"
+          },
+          "cmd": [
+            "java",
+            "-Xmx256m",
+            "-jar",
+            "{pkg}/mixcr.jar"
+          ]
+        }
       }
     }
   },
@@ -43,8 +60,8 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^2.14.2",
-    "@platforma-open/milaboratories.runenv-java-corretto": "^1.0.2",
+    "@platforma-sdk/package-builder": "^2.15.4",
+    "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
     "unzipper": "^0.12.3"
   }
 }
