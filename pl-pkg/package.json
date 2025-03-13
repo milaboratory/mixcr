@@ -1,6 +1,6 @@
 {
   "name": "@platforma-open/milaboratories.software-mixcr",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "MiXCR software dependency for Platforma Backend",
   "scripts": {
     "build": "true",
@@ -27,7 +27,26 @@
           },
           "cmd": [
             "java",
-            "-XX:MaxRAMPercentage=85.0",
+            "-XX:MaxRAMPercentage=80.0",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=2",
+            "-jar",
+            "{pkg}/mixcr.jar"
+          ]
+        }
+      },
+      "low-memory": {
+        "binary": {
+          "artifact": {
+            "registry": "milaboratories",
+            "name": "milaboratories/mixcr",
+            "type": "java",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
+            "root": "./dld/mixcr/"
+          },
+          "cmd": [
+            "java",
+            "-Xmx256m",
             "-jar",
             "{pkg}/mixcr.jar"
           ]
@@ -41,8 +60,8 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^2.9.2",
-    "@platforma-open/milaboratories.runenv-java-corretto": "^1.0.2",
+    "@platforma-sdk/package-builder": "^2.15.4",
+    "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
     "unzipper": "^0.12.3"
   }
 }

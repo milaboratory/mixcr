@@ -888,6 +888,13 @@ object CommandAlign {
         var alignOnAllVariants = false
 
         @Option(
+            names = [BAMReader.lenientBAMValidationOption],
+            description = ["Make BAM validation very forgiving, use for malformed BAM files."],
+            order = OptionsOrder.main + 10_890
+        )
+        var lenientBAMValidation = false
+
+        @Option(
             names = [BAMReader.referenceForCramOption],
             description = ["Reference to the genome that was used for build a cram file"],
             order = OptionsOrder.main + 10_900,
@@ -1048,6 +1055,7 @@ object CommandAlign {
                         cmdParams.bamDropNonVDJ,
                         cmdParams.replaceWildcards,
                         tempDest,
+                        lenientBAMValidation,
                         referenceForCram
                     ).map { TagParsePipeline.Input.fromRead(it, it.weight()) }
                     when (pairedPatternPayload) {

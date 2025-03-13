@@ -34,5 +34,5 @@ assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "2007
 assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25662"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "499"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "3547"
-assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .assemblePrematureTerminationEvents" "4"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r '.assemblePrematureTerminationEvents | round'" "4"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25662"

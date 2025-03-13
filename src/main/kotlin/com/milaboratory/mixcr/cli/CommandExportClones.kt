@@ -370,7 +370,7 @@ object CommandExportClones {
                     }
 
                 // in case of empty set, can't split, so can't calculate file names.
-                if (initialSet.size() == 0) {
+                if (forExport.size() == 0) {
                     // write empty file with headers (if headers are requested)
                     val writer = InfoWriter.create(outputFile, fieldExtractors, !params.noHeader) {
                         RowMetaForExport(initialSet.tagsInfo, headerForExport, exportDefaults.notCoveredAsEmpty)

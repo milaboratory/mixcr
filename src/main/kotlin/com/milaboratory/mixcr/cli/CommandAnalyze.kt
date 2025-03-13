@@ -105,6 +105,12 @@ object CommandAnalyze {
         )
         var forceOverwrite = false
 
+        @Option(
+            names = [BAMReader.lenientBAMValidationOption],
+            description = ["Make BAM validation very forgiving, use for malformed BAM files."],
+            order = OptionsOrder.main + 10_890
+        )
+        var lenientBAMValidation = false
 
         @Option(
             names = [BAMReader.referenceForCramOption],
@@ -433,6 +439,8 @@ object CommandAnalyze {
                     referenceForCram?.let { referenceForCram ->
                         this += listOf(BAMReader.referenceForCramOption, referenceForCram.toString())
                     }
+                    if (lenientBAMValidation)
+                        this += listOf(BAMReader.lenientBAMValidationOption)
 
                     this += mixins.flatMap { it.cmdArgs }
                     this += pathsForNotAligned.argsOfNotAlignedForAlign()

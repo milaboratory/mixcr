@@ -1,6 +1,6 @@
-Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--add-step <step>] [--remove-step
-                     <step>] [-s <species>] [-b <library>] [--split-by-sample]
-                     [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
+Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--lenient-bam-validation]
+                     [--add-step <step>] [--remove-step <step>] [-s <species>] [-b <library>]
+                     [--split-by-sample] [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
                      [--sample-sheet-strict sample_sheet.tsv] [--dna] [--rna]
                      [--floating-left-alignment-boundary [<anchor_point>]]
                      [--rigid-left-alignment-boundary [<anchor_point>]]
@@ -48,6 +48,8 @@ Run full MiXCR pipeline for specific input.
                                directory.
       --reference-for-cram genome.fasta[.gz]
                              Reference to the genome that was used for build a cram file
+      --lenient-bam-validation
+                             Make BAM validation very forgiving, use for malformed BAM files.
       --remove-qc-check <type>
                              Remove qc check with given type. Use `exportPreset` command to see
                                what `qc.checks` are included in the preset.

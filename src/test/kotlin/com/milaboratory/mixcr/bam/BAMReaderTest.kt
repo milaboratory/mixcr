@@ -80,6 +80,7 @@ class BAMReaderTest {
             dropNonVDJChromosomes = false,
             replaceWildcards = false,
             tempFileDest,
+            false,
             referenceForCram = null
         ).use { converter ->
             val resF1 = File.createTempFile("my_r1", ".fastq")

@@ -1,13 +1,13 @@
 Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimming-quality-threshold
                    <n>] [--trimming-window-size <n>] [--write-all] [--tag-pattern-file <path>]
                    [--tag-parse-unstranded] [--tag-max-budget <n>] [--read-id-as-cell-tag]
-                   [--read-buffer <n>] [--high-compression] [--reference-for-cram genome.fasta[.
-                   gz]] [--not-aligned-I1 <path.fastq[.gz]>] [--not-aligned-I2 <path.fastq[.gz]>]
-                   [--not-aligned-R1 <path.fastq[.gz]>] [--not-aligned-R2 <path.fastq[.gz]>]
-                   [--not-parsed-I1 <path.fastq[.gz]>] [--not-parsed-I2 <path.fastq[.gz]>]
-                   [--not-parsed-R1 <path.fastq[.gz]>] [--not-parsed-R2 <path.fastq[.gz]>]
-                   [--species <species>] [--library <library>] [--split-by-sample]
-                   [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
+                   [--read-buffer <n>] [--high-compression] [--lenient-bam-validation]
+                   [--reference-for-cram genome.fasta[.gz]] [--not-aligned-I1 <path.fastq[.gz]>]
+                   [--not-aligned-I2 <path.fastq[.gz]>] [--not-aligned-R1 <path.fastq[.gz]>]
+                   [--not-aligned-R2 <path.fastq[.gz]>] [--not-parsed-I1 <path.fastq[.gz]>]
+                   [--not-parsed-I2 <path.fastq[.gz]>] [--not-parsed-R1 <path.fastq[.gz]>]
+                   [--not-parsed-R2 <path.fastq[.gz]>] [--species <species>] [--library <library>]
+                   [--split-by-sample] [--dont-split-by-sample] [--sample-sheet sample_sheet.tsv]
                    [--sample-sheet-strict sample_sheet.tsv] [--dna] [--rna]
                    [--floating-left-alignment-boundary [<anchor_point>]]
                    [--rigid-left-alignment-boundary [<anchor_point>]]
@@ -84,6 +84,8 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
       --read-buffer <n>      Size of buffer for FASTQ readers in bytes. Default: 4Mb
       --high-compression     Use higher compression for output file, 10~25% slower, minus 30~50% of
                                file size.
+      --lenient-bam-validation
+                             Make BAM validation very forgiving, use for malformed BAM files.
       --reference-for-cram genome.fasta[.gz]
                              Reference to the genome that was used for build a cram file
       --not-aligned-I1 <path.fastq[.gz]>

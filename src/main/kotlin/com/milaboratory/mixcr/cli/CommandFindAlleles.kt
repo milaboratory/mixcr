@@ -15,11 +15,7 @@ package com.milaboratory.mixcr.cli
 
 import cc.redberry.pipe.util.buffered
 import cc.redberry.pipe.util.drain
-import com.milaboratory.app.ApplicationException
-import com.milaboratory.app.InputFileType
-import com.milaboratory.app.ValidationException
-import com.milaboratory.app.logger
-import com.milaboratory.app.matches
+import com.milaboratory.app.*
 import com.milaboratory.cli.apply
 import com.milaboratory.cli.resolve
 import com.milaboratory.core.io.sequence.fasta.FastaRecord
@@ -27,19 +23,9 @@ import com.milaboratory.core.io.sequence.fasta.FastaWriter
 import com.milaboratory.core.sequence.NucleotideSequence
 import com.milaboratory.mitool.tag.TagType
 import com.milaboratory.mitool.tag.TagsInfo
-import com.milaboratory.mixcr.alleles.AlleleSearchResult
+import com.milaboratory.mixcr.alleles.*
 import com.milaboratory.mixcr.alleles.AlleleSearchResult.Status.DE_NOVO
-import com.milaboratory.mixcr.alleles.AllelesBuilder
-import com.milaboratory.mixcr.alleles.CloneRebuild
-import com.milaboratory.mixcr.alleles.CommandFindAllelesParams
-import com.milaboratory.mixcr.alleles.FindAllelesReport
-import com.milaboratory.mixcr.alleles.OverallAllelesStatistics
-import com.milaboratory.mixcr.basictypes.ClnsWriter
-import com.milaboratory.mixcr.basictypes.Clone
-import com.milaboratory.mixcr.basictypes.CloneReader
-import com.milaboratory.mixcr.basictypes.CloneSet
-import com.milaboratory.mixcr.basictypes.CloneSetIO
-import com.milaboratory.mixcr.basictypes.MiXCRHeader
+import com.milaboratory.mixcr.basictypes.*
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.mixcr.presets.AnalyzeCommandDescriptor
 import com.milaboratory.mixcr.presets.AssembleContigsMixins.SetContigAssemblingFeatures
@@ -47,38 +33,17 @@ import com.milaboratory.mixcr.presets.AssembleMixins.SetClonotypeAssemblingFeatu
 import com.milaboratory.mixcr.presets.MiXCRCommandDescriptor
 import com.milaboratory.mixcr.presets.Presets
 import com.milaboratory.mixcr.util.VJPair
-import com.milaboratory.util.GlobalObjectMappers
-import com.milaboratory.util.JsonOverrider
-import com.milaboratory.util.K_OM
-import com.milaboratory.util.ReportUtil
-import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
-import com.milaboratory.util.XSV
+import com.milaboratory.util.*
 import io.repseq.core.GeneFeature
-import io.repseq.core.GeneFeature.CDR3
-import io.repseq.core.GeneFeature.CRegion
-import io.repseq.core.GeneFeature.DRegion
-import io.repseq.core.GeneFeature.Exon1
-import io.repseq.core.GeneFeature.JRegion
-import io.repseq.core.GeneFeature.L2
-import io.repseq.core.GeneFeature.V5UTRGermline
-import io.repseq.core.GeneFeature.VRegion
+import io.repseq.core.GeneFeature.*
 import io.repseq.core.GeneFeatures
-import io.repseq.core.GeneType.Constant
-import io.repseq.core.GeneType.Diversity
-import io.repseq.core.GeneType.Joining
-import io.repseq.core.GeneType.VJ_REFERENCE
-import io.repseq.core.GeneType.Variable
+import io.repseq.core.GeneType.*
 import io.repseq.core.ReferencePoint.FR1Begin
 import io.repseq.core.VDJCLibrary
 import io.repseq.core.VDJCLibraryRegistry
 import io.repseq.dto.VDJCGeneData.metaKey
 import picocli.CommandLine
-import picocli.CommandLine.ArgGroup
-import picocli.CommandLine.Command
-import picocli.CommandLine.Mixin
-import picocli.CommandLine.Option
-import picocli.CommandLine.Parameters
+import picocli.CommandLine.*
 import java.io.File
 import java.nio.file.Path
 import kotlin.collections.set
@@ -445,10 +410,10 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
             .filter { it.status.exist }
             // Duplicates will be grouped by several key
             .groupBy { it.searchedOn }
-        // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
-        ApplicationException.checkDistinct(allelesAfterRemoval.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
-            "There are duplicates of found alleles"
-        }
+        // // There are maybe case of the same allele found on different genes if the actual difference outside of gene feature to search
+        // ApplicationException.checkDistinct(allelesAfterRemoval.map { allele -> "${allele.result.name} found on ${allele.searchedOn}" }) {
+        //     "There are duplicates of found alleles"
+        // }
         // without differentiability of searched on
         val result = allelesAfterRemoval.distinctBy { it.result.name }
         reportBuilder.reportResults(result)

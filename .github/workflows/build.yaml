@@ -11,7 +11,7 @@ on:
 
 jobs:
   init:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: milaboratory/github-ci/actions/context/init@v4
         with:
