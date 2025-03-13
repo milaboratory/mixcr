@@ -1,4 +1,4 @@
-dernaimport com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.SHADOW_GROUP
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
