@@ -93,3 +93,97 @@ exome-seq:
   mixins:
     - type: MaterialTypeDNA
     - type: AssembleContigsWithMaxLength
+
+rna-seq-with-umi:
+  label: "RNA-Seq data with UMI"
+  category: generic
+  inheritFrom: generic-amplicon-with-umi
+  mixins:
+    - type: AddPipelineStep
+      step: mitool-parse
+    - type: AddPipelineStep
+      step: mitool-refine-tags
+    - type: AddPipelineStep
+      step: mitool-consensus
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "VDJRegion" ]
+    - type: MaterialTypeRNA
+  flags:
+    - species
+    - tagPattern
+  mitool:
+    parse:
+      inheritFrom: mitool-parse-default
+    refineTags:
+      inheritFrom: mitool-refineTags-default
+      overrides:
+        tagTypes:
+          - Molecule
+    consensus:
+      inheritFrom: mitool-consensus-2-steps
+      overrides:
+        - groupingTagTypes:
+            - Molecule
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 10
+              maxNormalizedAlignmentPenalty: 0.16
+            positiveMinQualityShare: 0.13
+            positiveMinIntersectionQuality: 50
+            minRecordSharePerConsensus: 0.1
+            minRecordsPerConsensus: 0
+        - groupingTagTypes:
+            - Molecule
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 20
+              maxNormalizedAlignmentPenalty: 0.51
+            positiveMinQualityShare: 0.11
+            positiveMinIntersectionQuality: 50
+            minRecordSharePerConsensus: 0.1
+            minRecordsPerConsensus: 0
+  align:
+    inheritFrom: align-amplicon
+    overrides:
+      trimmingQualityThreshold: 0
+      parameters:
+        readsLayout: ReverseOnly
+        vParameters:
+          relativeMinScore: 0.7
+          parameters:
+            mapperRelativeMinScore: 0.7
+            relativeMinScore: 0.7
+  refineTagsAndSort:
+    runCorrection: false
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter: null
+  assemble:
+    inheritFrom: assemble-with-consensus-base
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - VDJRegion
+        badQualityThreshold: 0
+        minimalQuality: 0
+        postFilters: null
+  exportClones:
+    inheritFrom: exportClones-umi-base
+
+

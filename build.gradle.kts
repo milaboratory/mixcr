@@ -1,4 +1,4 @@
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+dernaimport com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.github.jengelman.gradle.plugins.shadow.ShadowJavaPlugin.SHADOW_GROUP
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
@@ -140,7 +140,7 @@ val milibVersion = ""
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val mitoolVersion = "2.3.0-17-mitool-tag-types"
+val mitoolVersion = "2.3.1-7-main"
 // may be blank (will be inherited from mixcr-algo)
 val repseqioVersion = ""
 
