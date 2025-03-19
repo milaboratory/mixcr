@@ -46,7 +46,7 @@
           },
           "cmd": [
             "java",
-            "-Xmx256m",
+            "-Xmx1g",
             "-jar",
             "{pkg}/mixcr.jar"
           ]
