@@ -724,6 +724,8 @@
       maxTotalErrors: 3
   assemble:
     inheritFrom: generic-amplicon
+  qc:
+    inheritFrom: generic-amplicon
   exportClones:
     chains: ALL
     splitFilesBy: [ "chain" ]
