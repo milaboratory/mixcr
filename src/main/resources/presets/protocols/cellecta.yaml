@@ -748,7 +748,7 @@
       - field: "-defaultAnchorPoints"
 
 "cellecta-human-rna-xcr-full-length-mivbc-drivermap-air-v2":
-  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air
+  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA v2"
   mixins:
     - type: MaterialTypeRNA
@@ -764,7 +764,7 @@
       value: true
 
 "cellecta-human-dna-xcr-mivbc-drivermap-air-v2":
-  inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
+  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2"
   mixins:
     - type: MaterialTypeDNA
