@@ -35,7 +35,6 @@
       parameters:
         readsLayout: DirectOnly
 
-
 "cellecta-human-dna-xcr-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA"
@@ -652,3 +651,127 @@
             - label: TCR Spike-in-13c
               seq: TGTGCTCTTCACGCAACCACGGTAACAGATAAACTCATCTTT
               portion: 1
+
+"cellecta-human-rna-xcr-mivbc-drivermap-air-v2":
+  vendor: "Cellecta"
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling v2"
+  category: non-generic
+  inheritFrom: generic-amplicon-with-umi
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - exportClones
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: SetTagPattern
+      tagPattern: ^(R1:*)\^(MIVBC:gcatcan)(R2:*)|^(MIVBC:agtcgtn)(R2:*)|^(MIVBC:tcgcatcn)(R2:*)|^(MIVBC:agcgtagn)(R2:*)|^(MIVBC:tacgactn)(R2:*)|^(MIVBC:ctgatgan)(R2:*)|^(MIVBC:catagcatn)(R2:*)|^(MIVBC:gtaggctan)(R2:*)
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.8
+          upper: 0.9
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      tagTransformationSteps:
+        - type: mapTags
+          name: "MIVNC to BC"
+          matchTags:
+            - MIVBC
+          newTags:
+            - MIVBC
+          allowOneMismatch: true
+          rules:
+            - from: gcatcan
+              to: BC1
+            - from: agtcgtn
+              to: BC2
+            - from: tcgcatcn
+              to: BC3
+            - from: agcgtagn
+              to: BC4
+            - from: tacgactn
+              to: BC5
+            - from: ctgatgan
+              to: BC6
+            - from: catagcatn
+              to: BC7
+            - from: gtaggctan
+              to: BC8
+          reportingLevel: VerboseReport
+  refineTagsAndSort:
+    runCorrection: false
+    parameters:
+      correctionPower: 1E-3
+      backgroundSubstitutionRate: 1E-3
+      backgroundIndelRate: 1E-5
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+  assemble:
+    inheritFrom: generic-amplicon
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "chain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-tags"
+        args: [ "Molecule" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"
+
+"cellecta-human-rna-xcr-full-length-mivbc-drivermap-air-v2":
+  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
+  label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA v2"
+  mixins:
+    - type: MaterialTypeRNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:FR4End}" ]
+    - type: SetSplitClonesBy
+      geneType: C
+      value: true
+
+"cellecta-human-dna-xcr-mivbc-drivermap-air-v2":
+  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2"
+  mixins:
+    - type: MaterialTypeDNA
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: true
+    - type: RightAlignmentBoundaryNoPoint
+      floating: true
+      geneType: J
+
+
