@@ -763,7 +763,7 @@
       geneType: C
       value: true
 
-"cellecta-human-dna-xcr-mivbc-drivermap-air":
+"cellecta-human-dna-xcr-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2"
   mixins:
