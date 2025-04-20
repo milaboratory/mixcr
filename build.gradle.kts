@@ -134,15 +134,15 @@ val toObfuscate: Configuration by configurations.creating {
 val obfuscationLibs: Configuration by configurations.creating
 
 
-val mixcrAlgoVersion = "4.7.0-39-develop"
+val mixcrAlgoVersion = "4.7.0-40-develop"
 // may be blank (will be inherited from mixcr-algo)
 val milibVersion = ""
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val mitoolVersion = "2.3.1-7-main"
+val mitoolVersion = "2.3.1-8-main"
 // may be blank (will be inherited from mixcr-algo)
-val repseqioVersion = ""
+val repseqioVersion = "2.5.0-2-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.16.0"
@@ -387,21 +387,36 @@ val distributionZip by tasks.registering(Zip::class) {
     from("${project.rootDir}/LICENSE")
 }
 
-val prepareDockerContext by tasks.registering(Copy::class) {
-    group = "docker"
+val prepareDockerContextCommon: Copy.() -> Unit = {
     from(shadowJarAfterObfuscation) {
         rename("-.*\\.jar", "\\.jar")
     }
     from("${project.rootDir}/${project.name}")
     from("${project.rootDir}/LICENSE")
-    into(layout.buildDirectory.dir("docker"))
 }
 
-val prepareIMGTDockerContext by tasks.registering(Download::class) {
+val mainDockerContext = layout.buildDirectory.dir("docker")
+val mainDockerFile = layout.buildDirectory.file("docker/Dockerfile")
+val imgtDockerContext = layout.buildDirectory.dir("docker_imgt")
+val imgtDockerFile = layout.buildDirectory.file("docker_imgt/Dockerfile")
+
+val prepareDockerContextMain by tasks.registering(Copy::class) {
     group = "docker"
-    dependsOn(prepareDockerContext)
+    prepareDockerContextCommon()
+    into(mainDockerContext)
+}
+
+val prepareDockerContextImgt1 by tasks.registering(Copy::class) {
+    group = "docker"
+    prepareDockerContextCommon()
+    into(imgtDockerContext)
+}
+
+val prepareDockerContextImgt2 by tasks.registering(Download::class) {
+    group = "docker"
+    dependsOn(prepareDockerContextImgt1)
     src("https://github.com/repseqio/library-imgt/releases/download/v8/imgt.202214-2.sv8.json.gz")
-    dest(layout.buildDirectory.dir("docker"))
+    dest(imgtDockerContext)
 }
 
 val commonDockerContents: Dockerfile.() -> Unit = {
@@ -418,17 +433,15 @@ val commonDockerContents: Dockerfile.() -> Unit = {
 
 val createDockerfile by tasks.registering(Dockerfile::class) {
     group = "docker"
-    dependsOn(prepareDockerContext)
+    dependsOn(prepareDockerContextMain)
+    destFile.set(mainDockerFile)
     commonDockerContents()
 }
 
-val imgtDockerfile = layout.buildDirectory.file("docker/Dockerfile.imgt")
-
 val createIMGTDockerfile by tasks.registering(Dockerfile::class) {
     group = "docker"
-    dependsOn(createDockerfile)
-    dependsOn(prepareIMGTDockerContext)
-    destFile.set(imgtDockerfile)
+    dependsOn(prepareDockerContextImgt2)
+    destFile.set(imgtDockerFile)
     commonDockerContents()
     copyFile("imgt*", "/opt/${project.name}/")
 }
@@ -442,7 +455,8 @@ val buildDockerImage by tasks.registering(DockerBuildImage::class) {
 val buildIMGTDockerImage by tasks.registering(DockerBuildImage::class) {
     group = "docker"
     dependsOn(createIMGTDockerfile)
-    dockerFile.set(imgtDockerfile)
+    inputDir.set(imgtDockerContext)
+    dockerFile.set(imgtDockerFile)
     images.set(setOf(project.name + ":latest-imgt") + if (version == "") emptySet() else setOf("${project.name}:${version}-imgt"))
 }
 
@@ -486,3 +500,4 @@ tasks.test {
     }
     longTests?.let { systemProperty("longTests", it) }
 }
+
