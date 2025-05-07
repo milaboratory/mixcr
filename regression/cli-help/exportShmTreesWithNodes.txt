@@ -75,13 +75,16 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [-allPositionsInReference [<from_reference_point>
                                      <to_reference_point>]]... [-positionOf <reference_point>]...
                                      [-allPositions [<from_reference_point>
-                                     <to_reference_point>]]... [-defaultAnchorPoints] [-fileName]
-                                     [-cloneId] [-readCount] [-rankByReads] [-readFraction]
-                                     [-targetSequences] [-targetQualities] [-vIdentityPercents]
-                                     [-dIdentityPercents] [-jIdentityPercents] [-cIdentityPercents]
-                                     [-vBestIdentityPercent] [-dBestIdentityPercent]
-                                     [-jBestIdentityPercent] [-cBestIdentityPercent]
-                                     [-nMutationsRate [<gene_feature[,gene_feature]...>]
+                                     <to_reference_point>]]... [-defaultAnchorPoints]
+                                     [-nAnnotationString <annotation_preset> <gene_feature>]...
+                                     [-aaAnnotationString <annotation_preset> <gene_feature>]...
+                                     [-fileName] [-cloneId] [-readCount] [-rankByReads]
+                                     [-readFraction] [-targetSequences] [-targetQualities]
+                                     [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
+                                     [-cIdentityPercents] [-vBestIdentityPercent]
+                                     [-dBestIdentityPercent] [-jBestIdentityPercent]
+                                     [-cBestIdentityPercent] [-nMutationsRate [<gene_feature[,
+                                     gene_feature]...>]
                                      [(substitutions|indels|inserts|deletions)]]...
                                      [-aaMutationsRate [<gene_feature[,gene_feature]...>]
                                      [(substitutions|indels|inserts|deletions)]]... [-pN
@@ -445,6 +448,14 @@ Possible fields to export
       -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
                                etc. see documentation for the full list and formatting) (only for
                                nodes with clones)
+      -nAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in nucleotide
+                               sequence of a feature (only for nodes with clones)
+      -aaAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in amino acid of a
+                               feature (only for nodes with clones)
       -fileName              Name of clns file with sample
       -cloneId               Unique clone identifier (only for nodes with clones)
       -readCount             Number of reads assigned to the clonotype (only for nodes with clones)
