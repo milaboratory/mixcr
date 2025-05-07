@@ -37,3 +37,13 @@ sort case12-without-contigs.clns.tsv > case12-without-contigs.clns.tsv.s
 
 [[ $(cat case12-with-contigs.clns.tsv.s | wc -l) -eq 2 ]] || exit 1
 cmp case12-with-contigs.clns.tsv.s case12-without-contigs.clns.tsv.s
+
+mixcr exportClones --dont-split-files --drop-default-fields \
+    -nFeature VDJRegionInFrame -nAnnotationString CDRs VDJRegionInFrame -nAnnotationString Segments VDJRegionInFrame \
+    -aaFeature VDJRegionInFrame -aaAnnotationString CDRs VDJRegionInFrame -aaAnnotationString Segments VDJRegionInFrame \
+    case12-with-contigs.contigs.clns case12-with-contigs-annotations.clns.tsv
+
+mixcr exportClones --dont-split-files --drop-default-fields \
+    -nFeature VDJRegionInFrame -nAnnotationString CDRs VDJRegionInFrame -nAnnotationString Segments VDJRegionInFrame \
+    -aaFeature VDJRegionInFrame -aaAnnotationString CDRs VDJRegionInFrame -aaAnnotationString Segments VDJRegionInFrame \
+    case12-without-contigs.clns case12-without-contigs-annotations.clns.tsv
