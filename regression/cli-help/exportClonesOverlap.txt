@@ -55,7 +55,9 @@ Usage: mixcr exportClonesOverlap [--chains <chain>[,<chain>...]]... [--criteria 
                                  [-allPositionsInReference [<from_reference_point>
                                  <to_reference_point>]]... [-positionOf <reference_point>]...
                                  [-allPositions [<from_reference_point> <to_reference_point>]]...
-                                 [-defaultAnchorPoints] [-cloneId] [-readCount] [-rankByReads]
+                                 [-defaultAnchorPoints] [-nAnnotationString <annotation_preset>
+                                 <gene_feature>]... [-aaAnnotationString <annotation_preset>
+                                 <gene_feature>]... [-cloneId] [-readCount] [-rankByReads]
                                  [-readFraction] [-targetSequences] [-targetQualities]
                                  [-vIdentityPercents] [-dIdentityPercents] [-jIdentityPercents]
                                  [-cIdentityPercents] [-vBestIdentityPercent]
@@ -380,6 +382,14 @@ Possible fields to export
                                possible or `FR1Begin FR4End` otherwise.
       -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
                                etc. see documentation for the full list and formatting)
+      -nAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in nucleotide
+                               sequence of a feature
+      -aaAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in amino acid of a
+                               feature
       -cloneId               Unique clone identifier
       -readCount             Number of reads assigned to the clonotype
       -rankByReads           Rank by number of reads assigned to the clonotype, i.e how many clones

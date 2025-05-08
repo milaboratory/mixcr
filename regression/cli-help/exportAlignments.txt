@@ -53,8 +53,10 @@ Usage: mixcr exportAlignments [--chains <chains>] [--impute-germline-on-export]
                               [-allPositionsInReference [<from_reference_point>
                               <to_reference_point>]]... [-positionOf <reference_point>]...
                               [-allPositions [<from_reference_point> <to_reference_point>]]...
-                              [-defaultAnchorPoints] [-readIds] [-targetSequences]
-                              [-targetQualities] [-descrsR1] [-descrsR2] [-readHistory] [-cloneId]
+                              [-defaultAnchorPoints] [-nAnnotationString <annotation_preset>
+                              <gene_feature>]... [-aaAnnotationString <annotation_preset>
+                              <gene_feature>]... [-readIds] [-targetSequences] [-targetQualities]
+                              [-descrsR1] [-descrsR2] [-readHistory] [-cloneId]
                               [-cloneIdWithMappingType] [-vIdentityPercents] [-dIdentityPercents]
                               [-jIdentityPercents] [-cIdentityPercents] [-vBestIdentityPercent]
                               [-dBestIdentityPercent] [-jBestIdentityPercent]
@@ -373,6 +375,14 @@ Possible fields to export
                                possible or `FR1Begin FR4End` otherwise.
       -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
                                etc. see documentation for the full list and formatting)
+      -nAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in nucleotide
+                               sequence of a feature
+      -aaAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in amino acid of a
+                               feature
       -readIds               Export id(s) of read(s) corresponding to alignment
       -targetSequences       Export aligned sequences (targets), separated with comma
       -targetQualities       Export aligned sequence (target) qualities, separated with comma

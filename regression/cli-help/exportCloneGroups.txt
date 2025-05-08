@@ -61,7 +61,9 @@ Usage: mixcr exportCloneGroups [--filter-out-of-frames] [--filter-stops]
                                [-allPositionsInReference [<from_reference_point>
                                <to_reference_point>]]... [-positionOf <reference_point>]...
                                [-allPositions [<from_reference_point> <to_reference_point>]]...
-                               [-defaultAnchorPoints] [-cellGroup] [-groupUniqueTagCount
+                               [-defaultAnchorPoints] [-nAnnotationString <annotation_preset>
+                               <gene_feature>]... [-aaAnnotationString <annotation_preset>
+                               <gene_feature>]... [-cellGroup] [-groupUniqueTagCount
                                (Molecule|Cell|Sample)]... [-groupReadCount]
                                [-uniqClonesPerChainCount] [-cloneId] [-readCount] [-rankByReads]
                                [-readFraction] [-targetSequences] [-targetQualities]
@@ -444,6 +446,14 @@ Possible fields to export
       -defaultAnchorPoints   Outputs a list of default reference points (like CDR2Begin, FR4End,
                                etc. see documentation for the full list and formatting). For clones
                                from all chains.
+      -nAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in nucleotide
+                               sequence of a feature. For clones from all chains.
+      -aaAnnotationString <annotation_preset> <gene_feature>
+                             Outputs an encoded annotation string, allowing to reconstruct what
+                               positions belong to which TCR/IG sequence regions in amino acid of a
+                               feature. For clones from all chains.
       -cellGroup             Unique cell group identifier
       -groupUniqueTagCount (Molecule|Cell|Sample)
                              Unique tag count for a cell group
