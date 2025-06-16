@@ -63,7 +63,7 @@
           },
           "cmd": [
             "java",
-            "-Xms{int(system.ram.gb*80/100)}g",
+            "-Xms{int(system.ram.mb*80/100)}m",
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
             "-jar",
