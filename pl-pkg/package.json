@@ -51,6 +51,25 @@
             "{pkg}/mixcr.jar"
           ]
         }
+      },
+      "memory-from-limits": {
+        "binary": {
+          "artifact": {
+            "registry": "milaboratories",
+            "name": "milaboratories/mixcr",
+            "type": "java",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
+            "root": "./dld/mixcr/"
+          },
+          "cmd": [
+            "java",
+            "-Xms{int(system.ram.gb*80/100)}g",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=2",
+            "-jar",
+            "{pkg}/mixcr.jar"
+          ]
+        }
       }
     }
   },
