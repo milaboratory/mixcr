@@ -323,12 +323,11 @@ qiagen-mouse-rna-tcr-umi-qiaseq (QIAseq Mouse TCR Panel Immune Repertoire RNA Li
 
 qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
 
------New England BioLabs-----
-neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
-
-neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR)
-
 -----10x Genomics-----
+10x-sc-xcr-vdj-fast (5' Single cell VDJ (Fast))
+  Required args:
+    --species <name>
+
 10x-sc-5gex (5' Single cell gene expression)
   Required args:
     --species <name>
@@ -336,6 +335,11 @@ neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR
 10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
     --species <name>
+
+-----New England BioLabs-----
+neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
+
+neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR)
 
 -----AbHelix-----
 abhelix-human-rna-xcr (Human immunoglobulin repertoire)
