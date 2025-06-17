@@ -332,6 +332,11 @@ qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
   Required args:
     --species <name>
 
+10x-sc-xcr-vdj-rapid (5' Single cell VDJ (Rapid))
+  Required args:
+    --species <name>
+    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
+
 10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
     --species <name>
