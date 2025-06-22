@@ -149,7 +149,7 @@ cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-1-1-1 (DriverMap Adaptive I
 
 cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-1-1-1 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 1:1:1)
 
-cellecta-human-rna-xcr-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling)
+cellecta-human-rna-xcr-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA)
 
 -----Thermo Fisher-----
 thermofisher-mouse-dna-igh-ampliseq-sr (Ion AmpliSeq Mouse IGH‑SR DNA)
@@ -335,7 +335,6 @@ qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
 10x-sc-xcr-vdj-rapid (5' Single cell VDJ (Rapid))
   Required args:
     --species <name>
-    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
 
 10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
