@@ -509,6 +509,10 @@ object CommandAnalyze {
             planBuilder.executeSteps(dryRun)
 
             println("Analysis finished successfully.")
+
+            println("===============================")
+            println("Visualize results and simplify your immune data analysis with a convenient UI.")
+            println("Explore and install Platforma.bio here: https://platforma.bio")
         }
 
         class InputFileSet(val sampleName: String, val fileNames: List<String>)
