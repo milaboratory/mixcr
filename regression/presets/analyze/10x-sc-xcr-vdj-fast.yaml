@@ -37,8 +37,8 @@ mitool:
       maxTotalErrors: 3
       postFilter: null
     dontCorrectTagsTypes:
-      - Cell
       - Molecule
+      - Cell
   consensus:
     - parameters:
         aAssemblerParameters:
