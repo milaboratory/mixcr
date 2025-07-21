@@ -293,6 +293,11 @@ parsebio-sc-3gex-evercode-wt (Evercode single-cell WT)
   Required args:
     --species <name>
 
+parsebio-sc-bcr-evercode (Evercode single-cell BCR)
+  Required args:
+    --species <name>
+    (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
+
 parsebio-sc-3gex-evercode-wt-mini (Evercode single-cell WT Mini)
   Required args:
     --species <name>
