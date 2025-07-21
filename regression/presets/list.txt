@@ -345,6 +345,10 @@ qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
   Required args:
     --species <name>
 
+10x-sc-xcr-vdj-gemx-v3 (5' GEM-X Single cell VDJ)
+  Required args:
+    --species <name>
+
 -----New England BioLabs-----
 neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
 
