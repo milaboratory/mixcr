@@ -440,6 +440,10 @@ exportClones:
     - field: -readFraction
     - field: -targetSequences
     - field: -targetQualities
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
     - field: -vHitsWithScore
     - field: -dHitsWithScore
     - field: -jHitsWithScore

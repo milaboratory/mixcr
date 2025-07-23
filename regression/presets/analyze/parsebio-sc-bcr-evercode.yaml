@@ -1,6 +1,5 @@
 flags:
   - species
-  - assembleContigsByOrByCell
 pipeline:
   - align
   - refineTagsAndSort
@@ -1226,15 +1225,19 @@ assembleContigs:
     minimalMeanNormalizedQuality: 5.0
     outputMinimalQualityShare: 0.75
     outputMinimalSumQuality: 0
-    subCloningRegions: null
-    assemblingRegions: null
+    subCloningRegions:
+      - VDJRegion
+    assemblingRegions:
+      - VDJRegion
     postFiltering:
-      type: NoFiltering
+      type: OnlyUnambiguouslyCovering
+      geneFeatures:
+        - VDJRegion
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
     minimalContigLength: 20
-    alignedRegionsOnly: false
+    alignedRegionsOnly: true
     discardAmbiguousNucleotideCalls: false
   cloneFactoryParameters:
     vParameters:
@@ -1320,6 +1323,10 @@ exportClones:
         - Molecule
     - field: -targetSequences
     - field: -targetQualities
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
     - field: -vHitsWithScore
     - field: -dHitsWithScore
     - field: -jHitsWithScore
