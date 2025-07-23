@@ -1941,6 +1941,8 @@
   mixins:
     - type: SetTagPattern
       tagPattern: ^(R1:*)\^(UMI:N{10})(CELL3:N{8})N{12}(CELL2:N{8})N{12}(CELL1:N{8})
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align-single-cell
     overrides:
