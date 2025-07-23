@@ -3,6 +3,9 @@
   label: "5' Single cell VDJ"
   category: non-generic
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  defaultChains:
+    - IG
+    - TRAB
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
