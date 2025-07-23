@@ -5,7 +5,7 @@
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
   defaultChains:
     - IG
-    - TRAB
+    - TCRAB
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
