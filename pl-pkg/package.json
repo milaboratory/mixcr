@@ -33,6 +33,20 @@
             "-jar",
             "{pkg}/mixcr.jar"
           ]
+        },
+        "docker": {
+          "artifact": {
+            "type": "docker",
+            "context": "./dld/mixcr/"
+          },
+          "cmd": [
+            "java",
+            "-XX:MaxRAMPercentage=80.0",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=2",
+            "-jar",
+            "/app/mixcr.jar"
+          ]
         }
       },
       "low-memory": {
@@ -49,6 +63,18 @@
             "-Xmx8g",
             "-jar",
             "{pkg}/mixcr.jar"
+          ]
+        },
+        "docker": {
+          "artifact": {
+            "type": "docker",
+            "context": "./dld/mixcr/"
+          },
+          "cmd": [
+            "java",
+            "-Xmx8g",
+            "-jar",
+            "/app/mixcr.jar"
           ]
         }
       },
@@ -69,6 +95,20 @@
             "-jar",
             "{pkg}/mixcr.jar"
           ]
+        },
+        "docker": {
+          "artifact": {
+            "type": "docker",
+            "context": "./dld/mixcr/"
+          },
+          "cmd": [
+            "java",
+            "-Xms{int(((((system.ram.mib*91/100)+(system.ram.mib-2000)-abs((system.ram.mib*91/100)-(system.ram.mib-2000)))/2)+(system.ram.mib*50/100)+abs((((system.ram.mib*91/100)+(system.ram.mib-2000)-abs((system.ram.mib*91/100)-(system.ram.mib-2000)))/2)-(system.ram.mib*50/100)))/2)}m",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=2",
+            "-jar",
+            "/app/mixcr.jar"
+          ]
         }
       }
     }
@@ -79,7 +119,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^2.15.4",
+    "@platforma-sdk/package-builder": "^3.0.2",
     "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
     "unzipper": "^0.12.3"
   }
