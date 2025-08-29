@@ -4,15 +4,8 @@
   "description": "MiXCR software dependency for Platforma Backend",
   "scripts": {
     "build": "true",
-    "pkg:build": "pl-pkg build packages",
-    "pkg:sign": "pl-pkg sign packages --sign-command='[\"gcloud-kms-sign\", \"{pkg}\", \"{pkg}.sig\"]'",
-    "pkg:publish": "pl-pkg publish packages",
-    "pkg:release": "npm run pkg:build && npm run pkg:sign && npm run pkg:publish",
-    "descriptor:build": "pl-pkg build descriptors",
-    "descriptor:publish": "pl-pkg publish descriptors",
-    "descriptor:release": "npm run descriptor:build && npm run descriptor:publish",
     "postinstall": "node ./scripts/unpack-ci.js",
-    "prepublishOnly": "npm run pkg:release && npm run descriptor:build"
+    "prepublishOnly": "pl-pkg build && pl-pkg prepublish"
   },
   "block-software": {
     "entrypoints": {
@@ -119,7 +112,7 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^3.0.2",
+    "@platforma-sdk/package-builder": "^3.2.3",
     "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
     "unzipper": "^0.12.3"
   }
