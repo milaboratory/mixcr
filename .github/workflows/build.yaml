@@ -98,7 +98,9 @@ jobs:
       env: |
         {
           "MI_LICENSE": ${{ toJSON(secrets.MI_LICENSE) }},
-          "NPMJS_TOKEN": ${{ toJSON(secrets.NPMJS_TOKEN) }}
+          "NPMJS_TOKEN": ${{ toJSON(secrets.NPMJS_TOKEN) }},
+          "QUAY_USERNAME": ${{ toJSON(secrets.QUAY_USERNAME) }},
+          "QUAY_ROBOT_TOKEN": ${{ toJSON(secrets.QUAY_ROBOT_TOKEN) }}
         }
 
       GRADLE_PROPERTIES: |
