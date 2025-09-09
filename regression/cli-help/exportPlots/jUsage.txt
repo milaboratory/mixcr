@@ -3,8 +3,9 @@ Usage: mixcr exportPlots jUsage [--metadata <path.tsv>] [--filter <meta(|>|>=|=|
                                 [--family-usage] [--no-samples-dendro] [--no-genes-dendro]
                                 [--color-key <key>]... [--bar-plot] [--bar-plot-by-sample]
                                 [--facet-by <s>] [--palette <s>] [--h-labels-size <d>]
-                                [--v-labels-size <d>] [--width <n>] [--height <n>] [--no-warnings]
-                                [--verbose] [--help] pa.json[.gz] output.(pdf|eps|svg|png|jpeg)
+                                [--v-labels-size <d>] [--width <n>] [--height <n>] [--locale
+                                <localeOverride>] [--no-warnings] [--verbose] [--help] pa.json[.gz]
+                                output.(pdf|eps|svg|png|jpeg)
 Export J gene usage
       pa.json[.gz]           Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
@@ -34,6 +35,10 @@ Export J gene usage
                                tile.
       --width <n>            Plot width.
       --height <n>           Plot height.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.
   -h, --help                 Show this help message and exit.

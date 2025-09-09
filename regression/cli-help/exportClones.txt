@@ -74,8 +74,9 @@ Usage: mixcr exportClones [--chains <chains>] [--filter-out-of-frames] [--filter
                           (Molecule|Cell|Sample)]... [-hasStops <gene_feature>]... [-isOOF
                           <gene_feature>]... [-isProductive <gene_feature>]...
                           [-biochemicalProperty <gene_feature> <property>]...
-                          [-baseBiochemicalProperties <gene_feature>]... [--force-overwrite]
-                          [--no-warnings] [--verbose] [--help] data.(clns|clna) [table.tsv]
+                          [-baseBiochemicalProperties <gene_feature>]... [--locale
+                          <localeOverride>] [--force-overwrite] [--no-warnings] [--verbose]
+                          [--help] data.(clns|clna) [table.tsv]
 Export assembled clones into tab delimited file.
       data.(clns|clna)       Path to input file with clones
       [table.tsv]            Path where to write export table.
@@ -131,6 +132,10 @@ Export assembled clones into tab delimited file.
       --prepend-columns      Added columns will be inserted before default columns. By default
                                columns will be added after default columns
       --not-covered-as-empty Export not covered regions as empty text.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

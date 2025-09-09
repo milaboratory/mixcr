@@ -12,10 +12,10 @@ Usage: mixcr exportShmTrees [--filter-min-nodes <n>] [--filter-min-height <n>] [
                             <to_reference_point>] (germline|mrca)]... [-aaFeatureImputed
                             <gene_feature> (germline|mrca)]... [-allAAFeaturesImputed
                             [<from_reference_point> <to_reference_point>] (germline|mrca)]...
-                            [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                            [[--filter-in-feature <gene_feature>] [--pattern-max-errors <n>]
-                            (--filter-aa-pattern <pattern> | --filter-nt-pattern <pattern>)] trees.
-                            shmt [trees.tsv]
+                            [--locale <localeOverride>] [--force-overwrite] [--no-warnings]
+                            [--verbose] [--help] [[--filter-in-feature <gene_feature>]
+                            [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
+                            --filter-nt-pattern <pattern>)] trees.shmt [trees.tsv]
 Export SHMTree as a table with a row for every SHM root in a table (single row if no single cell
 data)
       trees.shmt             Input file produced by 'findShmTrees' command.
@@ -32,6 +32,10 @@ data)
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

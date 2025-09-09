@@ -2,8 +2,9 @@ Usage: mixcr exportAlignmentsPretty [--top] [--gene] [--limit-before <n>] [--lim
                                     <n>] [--chains <chains>] [--cdr3-equals <seq>] [--feature
                                     <gene_feature>] [--no-feature <gene_feature>] [--read-contains
                                     <seq>] [--filter <s>] [--descriptions] [--read-ids <id>]...
-                                    [--clone-ids <id>]... [--force-overwrite] [--no-warnings]
-                                    [--verbose] [--help] alignments.(vdjca|clna) [output.txt]
+                                    [--clone-ids <id>]... [--locale <localeOverride>]
+                                    [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                                    alignments.(vdjca|clna) [output.txt]
 Export verbose information about alignments.
       alignments.(vdjca|clna)
                             Path to input file with alignments.
@@ -26,6 +27,10 @@ Export verbose information about alignments.
   -d, --descriptions        Print read descriptions
   -i, --read-ids <id>       List of read ids to export
       --clone-ids <id>      List of clone ids to export
+      --locale <localeOverride>
+                            Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                              'de_DE').
+                            Default is 'POSIX'.
   -f, --force-overwrite     Force overwrite of output file(s).
       -nw, --no-warnings    Suppress all warning messages.
       --verbose             Verbose messages.

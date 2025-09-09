@@ -1,4 +1,7 @@
-Usage: mixcr [-h] [-v] [COMMAND]
+Usage: mixcr [--locale <localeOverride>] [-h] [-v] [COMMAND]
+      --locale <localeOverride>
+                  Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US', 'de_DE').
+                  Default is 'POSIX'.
   -h, --help      Show this help message and exit.
   -v, --version   Print version information and exit
 Base commands:

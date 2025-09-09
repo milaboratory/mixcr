@@ -1,5 +1,8 @@
-Usage: mixcr exportQc [-h] COMMAND
+Usage: mixcr exportQc [--locale <localeOverride>] [-h] COMMAND
 Export QC plots. This command has subcommands, use -h to see more
+      --locale <localeOverride>
+               Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US', 'de_DE').
+               Default is 'POSIX'.
   -h, --help   Show this help message and exit.
 Commands:
   align       QC plot for alignments.

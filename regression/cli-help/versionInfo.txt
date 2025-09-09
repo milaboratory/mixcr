@@ -1,7 +1,12 @@
-Usage: mixcr versionInfo [--no-warnings] [--verbose] [--help] input_file.(vdjca|clns|clna|shmt)
+Usage: mixcr versionInfo [--locale <localeOverride>] [--no-warnings] [--verbose] [--help]
+                         input_file.(vdjca|clns|clna|shmt)
 Output information about MiXCR version which generated the file.
       input_file.(vdjca|clns|clna|shmt)
 
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.
   -h, --help               Show this help message and exit.

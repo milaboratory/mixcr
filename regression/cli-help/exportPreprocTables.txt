@@ -1,10 +1,14 @@
-Usage: mixcr exportPreprocTables [--chains <chain>[,<chain>...]]... [--no-warnings] [--verbose]
-                                 [--help] pa.json[.gz] table.(tsv|csv)
+Usage: mixcr exportPreprocTables [--chains <chain>[,<chain>...]]... [--locale <localeOverride>]
+                                 [--no-warnings] [--verbose] [--help] pa.json[.gz] table.(tsv|csv)
 Export preprocessing summary tables.
       pa.json[.gz]         Input file with postanalysis results.
       table.(tsv|csv)      Path for output file.
       --chains <chain>[,<chain>...]
                            Export only for specified immunological chains.
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.
   -h, --help               Show this help message and exit.

@@ -3,9 +3,9 @@ Usage: mixcr postanalysis overlap --default-downsampling (<type>|none) --default
                                   <meta>...]]... [--only-productive] [--drop-outliers] [--chains
                                   <chain>[,<chain>...]]... [--metadata <path>] [--group <group>[,
                                   <group>...]]... [--tables <path.(tsv|csv)>] [--preproc-tables
-                                  <path.(tsv|csv)>] [-O <key=value>]... [--force-overwrite]
-                                  [--no-warnings] [--verbose] [--help] (cloneset.(clns|clna)
-                                  |directory)... result.json[.gz]
+                                  <path.(tsv|csv)>] [-O <key=value>]... [--locale <localeOverride>]
+                                  [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                                  (cloneset.(clns|clna)|directory)... result.json[.gz]
 Overlap analysis
       (cloneset.(clns|clna)|directory)...
                            Paths to input clnx files or to directories with clnx files. Files in
@@ -55,6 +55,10 @@ Overlap analysis
                            For each `chain` will be generated file with path `{dir}/{fileName}.
                              {chain}.(tsv|csv)`
   -O  <key=value>          Overrides default postanalysis settings
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

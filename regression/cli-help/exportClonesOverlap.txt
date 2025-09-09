@@ -74,9 +74,9 @@ Usage: mixcr exportClonesOverlap [--chains <chain>[,<chain>...]]... [--criteria 
                                  (Molecule|Cell|Sample)]... [-hasStops <gene_feature>]... [-isOOF
                                  <gene_feature>]... [-isProductive <gene_feature>]...
                                  [-biochemicalProperty <gene_feature> <property>]...
-                                 [-baseBiochemicalProperties <gene_feature>]... [--force-overwrite]
-                                 [--no-warnings] [--verbose] [--help] cloneset.(clns|clna)...
-                                 output.tsv
+                                 [-baseBiochemicalProperties <gene_feature>]... [--locale
+                                 <localeOverride>] [--force-overwrite] [--no-warnings] [--verbose]
+                                 [--help] cloneset.(clns|clna)... output.tsv
 Build cloneset overlap and export into tab delimited file.
       cloneset.(clns|clna)...
                              Paths to input files
@@ -96,6 +96,10 @@ Build cloneset overlap and export into tab delimited file.
                                Default: CDR3|AA|V|J
       --only-productive      Filter out-of-frame sequences and clonotypes with stop-codons
       --not-covered-as-empty Export not covered regions as empty text.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

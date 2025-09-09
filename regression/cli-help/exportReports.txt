@@ -1,6 +1,6 @@
-Usage: mixcr exportReports [--step <step>] [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                           [--yaml | --json] data.(vdjca|clns|clna|shmt) [report.
-                           (txt|json|yaml|yml)]
+Usage: mixcr exportReports [--step <step>] [--locale <localeOverride>] [--force-overwrite]
+                           [--no-warnings] [--verbose] [--help] [--yaml | --json] data.
+                           (vdjca|clns|clna|shmt) [report.(txt|json|yaml|yml)]
 Export MiXCR reports.
       data.(vdjca|clns|clna|shmt)
                            Path to input file.
@@ -9,6 +9,10 @@ Export MiXCR reports.
       --yaml               Export as yaml
       --json               Export as json
       --step <step>        Export report only for a specific step
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

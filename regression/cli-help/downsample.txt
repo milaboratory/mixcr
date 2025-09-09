@@ -1,7 +1,7 @@
 Usage: mixcr downsample --downsampling <type> [--chains <chains>[,<chains>...]]...
                         [--only-productive] [--summary <path>] [--suffix <s>] [--out <path_prefix>]
-                        [--force-overwrite] [--no-warnings] [--verbose] [--help] cloneset.
-                        (clns|clna)...
+                        [--locale <localeOverride>] [--force-overwrite] [--no-warnings] [--verbose]
+                        [--help] cloneset.(clns|clna)...
 Downsample clonesets.
       cloneset.(clns|clna)...
                             Paths to input files.
@@ -17,6 +17,10 @@ Downsample clonesets.
       --suffix <s>          Suffix to add to output clns file.
                               Default: downsampled
       --out <path_prefix>   Output path prefix.
+      --locale <localeOverride>
+                            Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                              'de_DE').
+                            Default is 'POSIX'.
   -f, --force-overwrite     Force overwrite of output file(s).
       -nw, --no-warnings    Suppress all warning messages.
       --verbose             Verbose messages.

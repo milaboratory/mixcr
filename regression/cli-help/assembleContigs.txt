@@ -1,7 +1,8 @@
 Usage: mixcr assembleContigs [--ignore-tags] [--assemble-contigs-by <gene_features>]
-                             [--assemble-longest-contigs] [-O <key=value>]... [--report <path>]
-                             [--json-report <path>] [--threads <n>] [--force-overwrite]
-                             [--no-warnings] [--verbose] [--help] clones.clna clones.clns
+                             [--assemble-longest-contigs] [-O <key=value>]... [--locale
+                             <localeOverride>] [--report <path>] [--json-report <path>] [--threads
+                             <n>] [--force-overwrite] [--no-warnings] [--verbose] [--help] clones.
+                             clna clones.clns
 Assemble full sequences.
       clones.clna            Path to input clna file
       clones.clns            Path where to write assembled clones.
@@ -16,6 +17,10 @@ Assemble full sequences.
       --assemble-longest-contigs
                              Contigs with maximum possible length will be assembled.
   -O  <key=value>            Overrides for the assembler parameters.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.

@@ -1,7 +1,8 @@
 Usage: mixcr extend [--v-anchor <anchor_point>] [--j-anchor <anchor_point>] [--min-v-score <n>]
-                    [--min-j-score <n>] [--chains <chains>] [--quality <n>] [--report <path>]
-                    [--json-report <path>] [--threads <n>] [--force-overwrite] [--no-warnings]
-                    [--verbose] [--help] data.(vdjca|clns|clna) extendeed.(vdjca|clns|clna)
+                    [--min-j-score <n>] [--chains <chains>] [--quality <n>] [--locale
+                    <localeOverride>] [--report <path>] [--json-report <path>] [--threads <n>]
+                    [--force-overwrite] [--no-warnings] [--verbose] [--help] data.(vdjca|clns|clna)
+                    extendeed.(vdjca|clns|clna)
 Impute alignments or clones with germline sequences.
       data.(vdjca|clns|clna) Path to input file.
       extendeed.(vdjca|clns|clna)
@@ -21,6 +22,10 @@ Impute alignments or clones with germline sequences.
                                Default: TCR
   -q, --quality <n>          Quality score value to assign imputed sequences.
                                Default: 30
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.

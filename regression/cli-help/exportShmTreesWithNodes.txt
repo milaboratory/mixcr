@@ -100,11 +100,11 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [<gene_feature>]]... [-biochemicalProperty <gene_feature>
                                      <property> [(germline|mrca|parent)]]...
                                      [-baseBiochemicalProperties <gene_feature>
-                                     [(germline|mrca|parent)]]... [--use-local-temp]
-                                     [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                                     [[--filter-in-feature <gene_feature>] [--pattern-max-errors
-                                     <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
-                                     <pattern>)] trees.shmt [trees.tsv]
+                                     [(germline|mrca|parent)]]... [--locale <localeOverride>]
+                                     [--use-local-temp] [--force-overwrite] [--no-warnings]
+                                     [--verbose] [--help] [[--filter-in-feature <gene_feature>]
+                                     [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
+                                     --filter-nt-pattern <pattern>)] trees.shmt [trees.tsv]
 Export SHMTree as a table with a row for every clone or reconstructed node for each root (only one
 root if no single cell data)
       trees.shmt             Input file produced by 'findShmTrees' command.
@@ -124,6 +124,10 @@ root if no single cell data)
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
       --use-local-temp       Put temporary files in the same folder as the output files.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.

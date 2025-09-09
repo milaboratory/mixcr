@@ -1,8 +1,9 @@
 Usage: mixcr alignmentsDiff [--only-in-first <path.vdjca>] [--only-in-second <path.vdjca>]
                             [--diff-from-first <path.vdjca>] [--diff-from-second <path.vdjca>]
                             [--gene-feature <gene_feature>] [--top-hits-level <n>]
-                            [--different-feature-only] [--force-overwrite] [--no-warnings]
-                            [--verbose] [--help] input_file1.vdjca input_file2.vdjca [report.txt]
+                            [--different-feature-only] [--locale <localeOverride>]
+                            [--force-overwrite] [--no-warnings] [--verbose] [--help] input_file1.
+                            vdjca input_file2.vdjca [report.txt]
 Calculates the difference between two .vdjca files.
       input_file1.vdjca
       input_file2.vdjca
@@ -24,6 +25,10 @@ Calculates the difference between two .vdjca files.
   -k, --different-feature-only
                              Output only those alignments that are different in terms of target
                                gene feature.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

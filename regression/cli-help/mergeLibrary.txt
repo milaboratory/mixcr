@@ -1,8 +1,13 @@
-Usage: mixcr mergeLibrary [--force-overwrite] [--no-warnings] [--verbose] [--help] input.json[.
-                          gz]... output.json[.gz] input.json[.gz]... output.json[.gz]...
+Usage: mixcr mergeLibrary [--locale <localeOverride>] [--force-overwrite] [--no-warnings]
+                          [--verbose] [--help] input.json[.gz]... output.json[.gz] input.json[.
+                          gz]... output.json[.gz]...
 Merge multiple reference libraries in one file
       input.json[.gz]... output.json[.gz] input.json[.gz]... output.json[.gz]...
 
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

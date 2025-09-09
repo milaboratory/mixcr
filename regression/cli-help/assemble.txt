@@ -1,9 +1,10 @@
 Usage: mixcr assemble [--write-alignments] [--cell-level] [--sort-by-sequence]
                       [--dont-infer-threshold] [--high-compression] [--assemble-clonotypes-by
                       <gene_features>] [--split-clones-by <gene_type>]... [--dont-split-clones-by
-                      <gene_type>]... [-O <key=value>]... [-P <key=value>]... [--report <path>]
-                      [--json-report <path>] [--use-local-temp] [--force-overwrite] [--no-warnings]
-                      [--verbose] [--help] alignments.vdjca clones.(clns|clna)
+                      <gene_type>]... [-O <key=value>]... [--locale <localeOverride>] [-P
+                      <key=value>]... [--report <path>] [--json-report <path>] [--use-local-temp]
+                      [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.vdjca
+                      clones.(clns|clna)
 Assemble clones.
       alignments.vdjca       Path to input file with alignments.
       clones.(clns|clna)     Path where to write assembled clones.
@@ -36,6 +37,10 @@ Assemble clones.
                              Clones with equal clonal sequence but different gene will be merged
                                into single clone.
   -O  <key=value>            Overrides default parameter values.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -P  <key=value>            Overrides default pre-clone assembler parameter values.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).

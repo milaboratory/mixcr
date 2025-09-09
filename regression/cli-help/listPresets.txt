@@ -1,6 +1,10 @@
-Usage: mixcr listPresets [--no-warnings] [--verbose] [--help] [<query>]
+Usage: mixcr listPresets [--locale <localeOverride>] [--no-warnings] [--verbose] [--help] [<query>]
 Show all available presets
       [<query>]            Will export only presets that contains a specified parameter.
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.
   -h, --help               Show this help message and exit.

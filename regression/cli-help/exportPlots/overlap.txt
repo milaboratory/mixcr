@@ -2,8 +2,9 @@ Usage: mixcr exportPlots overlap [--metadata <path.tsv>] [--filter <meta(|>|>=|=
                                  (|>|>=|=|<=|<)value>...]]... [--chains <chain>[,<chain>...]]...
                                  [--no-dendro] [--color-key <meta>]... [--fill-diagonal] [--metric
                                  <metric>]... [--palette <s>] [--h-labels-size <d>]
-                                 [--v-labels-size <d>] [--width <n>] [--height <n>] [--no-warnings]
-                                 [--verbose] [--help] pa.json[.gz] output.(pdf|eps|svg|png|jpeg)
+                                 [--v-labels-size <d>] [--width <n>] [--height <n>] [--locale
+                                 <localeOverride>] [--no-warnings] [--verbose] [--help] pa.json[.
+                                 gz] output.(pdf|eps|svg|png|jpeg)
 Export overlap heatmaps
       pa.json[.gz]          Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
@@ -33,6 +34,10 @@ Export overlap heatmaps
                               tile.
       --width <n>           Plot width.
       --height <n>          Plot height.
+      --locale <localeOverride>
+                            Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                              'de_DE').
+                            Default is 'POSIX'.
       -nw, --no-warnings    Suppress all warning messages.
       --verbose             Verbose messages.
   -h, --help                Show this help message and exit.

@@ -1,5 +1,6 @@
-Usage: mixcr exportReads [--force-overwrite] [--no-warnings] [--verbose] [--help] input.vdjca
-                         [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]
+Usage: mixcr exportReads [--locale <localeOverride>] [--force-overwrite] [--no-warnings]
+                         [--verbose] [--help] input.vdjca [output_R1.fastq[.gz] [output_R2.fastq[.
+                         gz]]]
 Export original reads from vdjca file.
       input.vdjca          Path to input file with alignments
       [output_R1.fastq[.gz] [output_R2.fastq[.gz]]]
@@ -7,6 +8,10 @@ Export original reads from vdjca file.
                            Will write to output if omitted.
                            Will write to single file if specified only one output file.
                            Will write paired reads to two files if specified two output files.
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

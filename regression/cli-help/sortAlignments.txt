@@ -1,9 +1,14 @@
-Usage: mixcr sortAlignments [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
-                            [--help] alignments.vdjca alignments.sorted.vdjca
+Usage: mixcr sortAlignments [--locale <localeOverride>] [--use-local-temp] [--force-overwrite]
+                            [--no-warnings] [--verbose] [--help] alignments.vdjca alignments.sorted.
+                            vdjca
 Sort alignments in vdjca file by read id.
       alignments.vdjca
       alignments.sorted.vdjca
 
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
       --use-local-temp     Put temporary files in the same folder as the output files.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.

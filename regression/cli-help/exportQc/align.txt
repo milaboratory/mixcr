@@ -1,6 +1,6 @@
-Usage: mixcr exportQc align [--absolute-values] [--force-overwrite] [--no-warnings] [--verbose]
-                            [--help] [--width <n> --height <n>] sample.(vdjca|clns|clna)... align.
-                            (pdf|eps|svg|png|jpeg)
+Usage: mixcr exportQc align [--absolute-values] [--locale <localeOverride>] [--force-overwrite]
+                            [--no-warnings] [--verbose] [--help] [--width <n> --height <n>] sample.
+                            (vdjca|clns|clna)... align.(pdf|eps|svg|png|jpeg)
 QC plot for alignments.
       sample.(vdjca|clns|clna)...
                            Paths to input files with alignments
@@ -9,6 +9,10 @@ QC plot for alignments.
       --absolute-values    Plot in absolute values instead of percent
       --width <n>          Plot width
       --height <n>         Plot height
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

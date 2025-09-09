@@ -3,10 +3,10 @@ Usage: mixcr exportPlots shmTrees [--metadata <path.(tsv|csv)>] [--node-color <m
                                   [--alignment-nt <gene_feature>] [--alignment-aa <gene_feature>]
                                   [--alignment-no-fill] [--filter-min-nodes <n>]
                                   [--filter-min-height <n>] [--ids <id>[,<id>...]]... [--chains
-                                  <chains>] [--force-overwrite] [--no-warnings] [--verbose]
-                                  [--help] [[--filter-in-feature <gene_feature>]
-                                  [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
-                                  --filter-nt-pattern <pattern>)] trees.shmt plots.pdf
+                                  <chains>] [--locale <localeOverride>] [--force-overwrite]
+                                  [--no-warnings] [--verbose] [--help] [[--filter-in-feature
+                                  <gene_feature>] [--pattern-max-errors <n>] (--filter-aa-pattern
+                                  <pattern> | --filter-nt-pattern <pattern>)] trees.shmt plots.pdf
 Visualize SHM tree and save in PDF format
       trees.shmt             Input file produced by 'findShmTrees' command.
       plots.pdf              Path where to write PDF file with plots.
@@ -30,6 +30,10 @@ Visualize SHM tree and save in PDF format
       --ids <id>[,<id>...]   Filter specific trees by id
       --chains <chains>      Export only trees that contains clones with specific chain (e.g. IGK,
                                IGL or IGH).
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

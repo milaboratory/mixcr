@@ -1,7 +1,7 @@
 Usage: mixcr filterAlignments [--chains <chains>] [--contains-feature <gene_feature>]
-                              [--cdr3-equals <seq>] [--chimeras-only] [--limit <n>]
-                              [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
-                              vdjca alignments.filtered.vdjca
+                              [--cdr3-equals <seq>] [--chimeras-only] [--limit <n>] [--locale
+                              <localeOverride>] [--force-overwrite] [--no-warnings] [--verbose]
+                              [--help] alignments.vdjca alignments.filtered.vdjca
 Filter alignments.
       alignments.vdjca      Path to input file with alignments.
       alignments.filtered.vdjca
@@ -14,6 +14,10 @@ Filter alignments.
   -e, --cdr3-equals <seq>   Include only those alignments which CDR3 equals to a specified sequence.
   -x, --chimeras-only       Output only chimeric alignments.
   -n, --limit <n>           Maximal number of reads to process
+      --locale <localeOverride>
+                            Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                              'de_DE').
+                            Default is 'POSIX'.
   -f, --force-overwrite     Force overwrite of output file(s).
       -nw, --no-warnings    Suppress all warning messages.
       --verbose             Verbose messages.

@@ -1,9 +1,10 @@
 Usage: mixcr findShmTrees [--v-gene-names <gene_name>]... [--j-gene-names <gene_name>]...
                           [--cdr3-lengths <n>]... [--min-count <n>] [--productive-only]
                           [--dont-combine-tree-by-cells] [--alleles-search-could-be-skipped] [-O
-                          <key=value>]... [--report <path>] [--json-report <path>]
-                          [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
-                          [--verbose] [--help] (input_file.clns|directory)... output_file.shmt
+                          <key=value>]... [--locale <localeOverride>] [--report <path>]
+                          [--json-report <path>] [--use-local-temp] [--threads <n>]
+                          [--force-overwrite] [--no-warnings] [--verbose] [--help] (input_file.
+                          clns|directory)... output_file.shmt
 Builds SHM trees.
 All inputs must be fully covered by the same feature, have the same library produced by
 `findAlleles`, the same scoring of V and J genes and the same features to align.
@@ -33,6 +34,10 @@ All inputs must be fully covered by the same feature, have the same library prod
                                genes beforehand (but better to run `findAlleles` to check that
                                there is no diversity)
   -O  <key=value>            Overrides default build SHM parameter values
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.

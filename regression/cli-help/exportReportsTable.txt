@@ -22,9 +22,9 @@ Usage: mixcr exportReportsTable [--without-upstreams] [--preset <preset>] [--pre
                                 [-assembleCells.cellBarcodesWithFoundGroups] [-findAlleles.
                                 inputFiles] [-findAlleles.found] [-findAlleles.deNova]
                                 [-findAlleles.notEnoughInformation] [-findTrees.inputFiles]
-                                [-findTrees.treesCount] [-findTrees.cloneInTrees]
-                                [--force-overwrite] [--no-warnings] [--verbose] [--help] (data.
-                                (vdjca|clns|clna|shmt)|directory)... [report.tsv]
+                                [-findTrees.treesCount] [-findTrees.cloneInTrees] [--locale
+                                <localeOverride>] [--force-overwrite] [--no-warnings] [--verbose]
+                                [--help] (data.(vdjca|clns|clna|shmt)|directory)... [report.tsv]
 Export reports from files in tabular format.
       (data.(vdjca|clns|clna|shmt)|directory)...
                              Path to input files or directories.
@@ -36,6 +36,10 @@ Export reports from files in tabular format.
       --preset-file <presetFile>
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.

@@ -1,6 +1,7 @@
-Usage: mixcr qc [--json] [--print-to-stdout] [--print-warn] [--force-overwrite] [--no-warnings]
-                [--verbose] [--help] [--remove-qc-check <type> [--remove-qc-check <type>]...]...
-                input.(vdjca|clns|clna) [output.(txt|json) [output.(txt|json)]]
+Usage: mixcr qc [--json] [--print-to-stdout] [--print-warn] [--locale <localeOverride>]
+                [--force-overwrite] [--no-warnings] [--verbose] [--help] [--remove-qc-check <type>
+                [--remove-qc-check <type>]...]... input.(vdjca|clns|clna) [output.(txt|json)
+                [output.(txt|json)]]
 Perform quality control checks on results.
       input.(vdjca|clns|clna)
                            Path to input file.
@@ -12,6 +13,10 @@ Perform quality control checks on results.
       --remove-qc-check <type>
                            Remove qc check with given type. Use `exportPreset` command to see what
                              `qc.checks` are included in the preset.
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

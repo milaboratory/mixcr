@@ -8,9 +8,9 @@ Usage: mixcr exportPlots diversity [--metadata <path.tsv>] [--filter <meta(|>|>=
                                    [--pairwise-comparisons] [--ref-group <refGroup>]
                                    [--hide-non-significant] [--paired] [--method <method>]
                                    [--method-multiple-groups <method>] [--p-adjust-method <method>]
-                                   [--show-significance] [--width <n>] [--height <n>]
-                                   [--no-warnings] [--verbose] [--help] pa.json[.gz] output.
-                                   (pdf|eps|svg|png|jpeg)
+                                   [--show-significance] [--width <n>] [--height <n>] [--locale
+                                   <localeOverride>] [--no-warnings] [--verbose] [--help] pa.json[.
+                                   gz] output.(pdf|eps|svg|png|jpeg)
 Export diversity metrics
       pa.json[.gz]          Input file with postanalysis results.
       output.(pdf|eps|svg|png|jpeg)
@@ -67,6 +67,10 @@ Export diversity metrics
                               other case).
       --width <n>           Plot width.
       --height <n>          Plot height.
+      --locale <localeOverride>
+                            Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                              'de_DE').
+                            Default is 'POSIX'.
       -nw, --no-warnings    Suppress all warning messages.
       --verbose             Verbose messages.
   -h, --help                Show this help message and exit.

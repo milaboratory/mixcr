@@ -3,8 +3,9 @@ Usage: mixcr postanalysis individual --default-downsampling (<type>|none) --defa
                                      [--chains <chain>[,<chain>...]]... [--metadata <path>]
                                      [--group <group>[,<group>...]]... [--tables <path.(tsv|csv)>]
                                      [--preproc-tables <path.(tsv|csv)>] [-O <key=value>]...
-                                     [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                                     (cloneset.(clns|clna)|directory)... result.json[.gz]
+                                     [--locale <localeOverride>] [--force-overwrite]
+                                     [--no-warnings] [--verbose] [--help] (cloneset.(clns|clna)
+                                     |directory)... result.json[.gz]
 Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype metrics
       (cloneset.(clns|clna)|directory)...
                            Paths to input clnx files or to directories with clnx files. Files in
@@ -44,6 +45,10 @@ Run postanalysis for CDR3 metrics, diversity, V/J/VJ-usage, CDR3/V-Spectratype m
                            For each `chain` will be generated file with path `{dir}/{fileName}.
                              {chain}.(tsv|csv)`
   -O  <key=value>          Overrides default postanalysis settings
+      --locale <localeOverride>
+                           Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                             'de_DE').
+                           Default is 'POSIX'.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.
       --verbose            Verbose messages.

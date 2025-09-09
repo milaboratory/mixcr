@@ -1,7 +1,7 @@
 Usage: mixcr assemblePartial [--overlapped-only] [--drop-partial] [--cell-level] [-O
-                             <key=value>]... [--report <path>] [--json-report <path>]
-                             [--force-overwrite] [--no-warnings] [--verbose] [--help] alignments.
-                             vdjca alignments.recovered.vdjca
+                             <key=value>]... [--locale <localeOverride>] [--report <path>]
+                             [--json-report <path>] [--force-overwrite] [--no-warnings] [--verbose]
+                             [--help] alignments.vdjca alignments.recovered.vdjca
 Assembles partially aligned reads into longer sequences.
       alignments.vdjca       Path to input alignments file.
       alignments.recovered.vdjca
@@ -16,6 +16,10 @@ Assembles partially aligned reads into longer sequences.
                                with molecular and cell barcodes.
                                Default value determined by the preset.
   -O  <key=value>            Overrides default parameter values.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.

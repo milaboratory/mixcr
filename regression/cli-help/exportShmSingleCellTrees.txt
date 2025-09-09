@@ -70,10 +70,10 @@ Usage: mixcr exportShmSingleCellTrees [--include-one-chain-trees] [--only-observ
                                       [<gene_feature>]]... [-biochemicalProperty <gene_feature>
                                       <property> [(germline|mrca|parent)]]...
                                       [-baseBiochemicalProperties <gene_feature>
-                                      [(germline|mrca|parent)]]... [--force-overwrite]
-                                      [--no-warnings] [--verbose] [--help] [[--filter-in-feature
-                                      <gene_feature>] [--pattern-max-errors <n>]
-                                      (--filter-aa-pattern <pattern> | --filter-nt-pattern
+                                      [(germline|mrca|parent)]]... [--locale <localeOverride>]
+                                      [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                                      [[--filter-in-feature <gene_feature>] [--pattern-max-errors
+                                      <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
                                       <pattern>)] trees.shmt [trees.tsv]
 Export SHM trees with one row per node. Tree may contain several roots, that will be exported in
 separate columns. Initial data for building tree should contain cell data.
@@ -104,6 +104,10 @@ separate columns. Initial data for building tree should contain cell data.
                                Default: Clones
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.
+      --locale <localeOverride>
+                             Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US',
+                               'de_DE').
+                             Default is 'POSIX'.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.
       --verbose              Verbose messages.
