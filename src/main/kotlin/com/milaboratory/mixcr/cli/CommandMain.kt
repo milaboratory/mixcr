@@ -21,6 +21,7 @@ import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.ScopeType.INHERIT
+import java.util.Locale
 
 @Command(
     name = "mixcr",
@@ -51,6 +52,35 @@ class CommandMain {
     )
     fun setHelpRequested(param: Boolean) {
 
+    }
+
+    @Suppress("unused")
+    @Option(
+        names = ["--locale"],
+        description = [
+            "Override default locale for formatting (e.g. 'POSIX', 'C', 'en_US', 'de_DE').",
+            "Default is 'POSIX'."
+        ],
+        scope = INHERIT,
+        order = OptionsOrder.overrides + 10
+    )
+    fun setLocaleOverride(localeSpec: String?) {
+        if (!localeSpec.isNullOrBlank()) {
+            val loc = parseLocale(localeSpec)
+            Locale.setDefault(loc)
+        }
+    }
+
+    private fun parseLocale(spec: String): Locale {
+        val s = spec.trim()
+        if (s.equals("C", ignoreCase = true) || s.equals("POSIX", ignoreCase = true)) return Locale.ROOT
+        val parts = s.split("_", "-")
+            .filter { it.isNotBlank() }
+        return when (parts.size) {
+            1 -> Locale(parts[0])
+            2 -> Locale(parts[0], parts[1])
+            else -> Locale(parts[0], parts[1], parts.subList(2, parts.size).joinToString("_"))
+        }
     }
 
     internal class VersionProvider : CommandLine.IVersionProvider {
