@@ -24,7 +24,8 @@
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
             "-jar",
-            "{pkg}/mixcr.jar"
+            "{pkg}/mixcr.jar",
+            "--locale", "C"
           ]
         },
         "docker": {
@@ -38,7 +39,8 @@
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
             "-jar",
-            "/app/mixcr.jar"
+            "/app/mixcr.jar",
+            "--locale", "C"
           ]
         }
       },
@@ -55,7 +57,8 @@
             "java",
             "-Xmx8g",
             "-jar",
-            "{pkg}/mixcr.jar"
+            "{pkg}/mixcr.jar",
+            "--locale", "C"
           ]
         },
         "docker": {
@@ -67,7 +70,8 @@
             "java",
             "-Xmx8g",
             "-jar",
-            "/app/mixcr.jar"
+            "/app/mixcr.jar",
+            "--locale", "C"
           ]
         }
       },
@@ -86,7 +90,8 @@
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
             "-jar",
-            "{pkg}/mixcr.jar"
+            "{pkg}/mixcr.jar",
+            "--locale", "C"
           ]
         },
         "docker": {
@@ -100,7 +105,8 @@
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
             "-jar",
-            "/app/mixcr.jar"
+            "/app/mixcr.jar",
+            "--locale", "C"
           ]
         }
       }
