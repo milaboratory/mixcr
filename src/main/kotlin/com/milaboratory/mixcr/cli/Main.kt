@@ -68,6 +68,7 @@ import java.io.IOException
 import java.lang.management.ManagementFactory
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.Locale
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.system.exitProcess
@@ -297,6 +298,9 @@ object Main {
 
     fun initializeSystem() {
         if (!initialized) {
+            // Fixing locale to make results reproducible
+            Locale.setDefault(Locale.ROOT)
+
             // Checking whether we are running a test version
             if (!assertionsDisabled() && !VersionInfo.getVersionInfoForArtifact("mixcr").isProductionBuild) // If so, enable asserts
                 ClassLoader.getSystemClassLoader().setDefaultAssertionStatus(true)
