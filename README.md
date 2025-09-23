@@ -42,6 +42,8 @@ Other key features:
 
 See full documentation at [https://docs.milaboratories.com](https://docs.milaboratories.com).
 
+If you’re interested in MiXCR’s capabilities without coding, check out [Platforma](https://platforma.bio/?utm_source=github&utm_medium=github&utm_campaign=github_readme&utm_id=github), our no-code bioinformatics platform for NGS data, also free for academia. On Platforma, you can directly start from FASTQ or [import pre-processed data from MiXCR](https://docs.platforma.bio/guides/vdj-analysis/import-vdj-data/), and run powerful downstream functionalities like clonotyping, sequence liability prediction, differential expression, and more.
+
 ## Who uses MiXCR 
 MiXCR is used by 8 out of 10 world leading pharmaceutical companies in the R&D for:
 - Vaccine development
