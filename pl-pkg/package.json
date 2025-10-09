@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "MiXCR software dependency for Platforma Backend",
   "scripts": {
-    "build": "true",
     "postinstall": "node ./scripts/unpack-ci.js",
-    "prepublishOnly": "pl-pkg build && pl-pkg prepublish"
+    "build": "pl-pkg build",
+    "prepublishOnly": "pl-pkg prepublish"
   },
   "block-software": {
     "entrypoints": {
@@ -110,9 +110,10 @@
     "dist/",
     "scripts/unpack-ci.js"
   ],
+  "packageManager": "npm@11.6.2",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^3.2.3",
+    "@platforma-sdk/package-builder": "^3.8.0",
     "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
     "unzipper": "^0.12.3"
   }
