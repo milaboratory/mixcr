@@ -1,3 +1,4 @@
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
 align:
   type: alignerReport
   commandLine: align -f --report baseSingleCell.vdjcontigs.align.report.txt --json-report

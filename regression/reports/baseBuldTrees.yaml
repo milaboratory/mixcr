@@ -1,3 +1,4 @@
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
 findShmTrees:
   type: buildSHMTreeReport
   commandLine: findShmTrees -j trees/report.json -r trees/report.txt --productive-only
