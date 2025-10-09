@@ -71,7 +71,8 @@ jobs:
       dist-archive-s3-add-sha: true
 
       # Distribution sign
-      # sign-dist-archive: ${{ github.event_name != 'schedule' }}
+      build-pl-package: true
+      # build-pl-package: ${{ github.event_name != 'schedule' }}
 
       # CDN redirect
       cdn-redirect-s3: true
