@@ -176,9 +176,9 @@ References to cite: Lefranc, M.-P. et al., Nucleic Acids Research, 27, 209-212 (
 
 To run MiXCR one needs a license file. MiXCR is free for academic users with no commercial funding. We are committed to support academic community and provide our software free of charge for scientists doing non-profit research.
 
-Academic users can quickly get a license at https://licensing.milaboratories.com.
+Academic users can quickly get a license at https://platforma.bio/getlicense.
 
-Commercial trial license may be requested at https://licensing.milaboratories.com or by email to licensing@milaboratories.com.
+Commercial trial license may be requested at https://platforma.bio/getlicense or by email to licensing@milaboratories.com.
 
 To activate the license do one of the following:
 
