@@ -39,8 +39,8 @@
   qc:
     checks:
       - type: AlignmentsDroppedLowQuality
-        middle: 0.3
-        upper: 0.5
+        middle: 0.5
+        upper: 0.7
 
 "generic-ont-with-umi":
   label: "Oxford Nanopore data with UMIs"
@@ -91,5 +91,5 @@
   qc:
     checks:
       - type: AlignmentsDroppedLowQuality
-        middle: 0.3
-        upper: 0.5
+        middle: 0.5
+        upper: 0.7

@@ -17,29 +17,29 @@ generic-amplicon:
   qc:
     checks:
       - type: SuccessfullyAlignedReads
-        middle: 0.7
-        upper: 0.85
+        middle: 0.5
+        upper: 0.7
       - type: OffTargetReads
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
       - type: ReadsWithNoVOrJHits
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
       - type: ReadsUsedInClonotypes
-        middle: 0.7
-        upper: 0.9
+        middle: 0.5
+        upper: 0.7
       - type: AlignmentsWithNoAssemblingFeature
+        middle: 0.15
+        upper: 0.3
+      - type: AlignmentsDroppedLowQuality
         middle: 0.05
         upper: 0.15
-      - type: AlignmentsDroppedLowQuality
-        middle: 0.01
-        upper: 0.05
       - type: ClonesDroppedInPostFiltering
-        middle: 0.01
-        upper: 0.05
+        middle: 0.05
+        upper: 0.15
       - type: AlignmentsDroppedInPostFiltering
-        middle: 0.01
-        upper: 0.05
+        middle: 0.05
+        upper: 0.15
 
 generic-amplicon-with-umi:
   label: "Generic amplicon with UMI barcodes"
@@ -75,52 +75,52 @@ generic-amplicon-with-umi:
   qc:
     checks:
       - type: SuccessfullyAlignedReads
-        middle: 0.7
-        upper: 0.85
+        middle: 0.5
+        upper: 0.7
       - type: OffTargetReads
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
       - type: ReadsWithNoVOrJHits
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
       - type: AlignmentsWithNoAssemblingFeature
-        middle: 0.05
-        upper: 0.15
+        middle: 0.15
+        upper: 0.3
       - type: ReadsWithNoBarcode
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
       - type: ReadsDroppedInTagRefinement
-        middle: 0.05
-        upper: 0.1
+        middle: 0.15
+        upper: 0.25
       - type: TagArtificialDiversityEliminated
         tag: UMI
-        middle: 0.3
-        upper: 0.5
+        middle: 0.5
+        upper: 0.7
       - type: ReadsDroppedInTagCorrection
         tag: UMI
-        middle: 0.05
-        upper: 0.1
+        middle: 0.15
+        upper: 0.25
       - type: ReadsDroppedInTagFiltering
-        middle: 0.05
-        upper: 0.1
+        middle: 0.15
+        upper: 0.25
       - type: TagGroupsWithNoAssemblingFeature
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
       - type: TagGroupsWithMultipleConsensuses
-        middle: 0.01
-        upper: 0.1
-      - type: UnassignedAlignments
         middle: 0.05
-        upper: 0.1
+        upper: 0.2
+      - type: UnassignedAlignments
+        middle: 0.15
+        upper: 0.25
       - type: ReadsUsedInClonotypes
-        middle: 0.7
-        upper: 0.9
+        middle: 0.5
+        upper: 0.7
       - type: AlignmentsDroppedLowQuality
-        middle: 0.01
-        upper: 0.05
+        middle: 0.05
+        upper: 0.15
       - type: ClonesDroppedInPostFiltering
-        middle: 0.01
-        upper: 0.05
+        middle: 0.05
+        upper: 0.15
       - type: AlignmentsDroppedInPostFiltering
-        middle: 0.01
-        upper: 0.05
+        middle: 0.05
+        upper: 0.15
