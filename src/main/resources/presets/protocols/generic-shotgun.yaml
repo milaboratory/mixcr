@@ -16,8 +16,8 @@ shotgun-base:
   qc:
     checks:
       - type: AlignmentsDroppedLowQuality
-        middle: 0.1
-        upper: 0.2
+        middle: 0.2
+        upper: 0.4
   align:
     inheritFrom: align-shotgun
   assemblePartial:
