@@ -23,8 +23,8 @@
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
-          middle: 0.8
-          upper: 0.9
+          middle: 0.6
+          upper: 0.7
 
 "biomed2-human-rna-igkl":
   vendor: "Public"
