@@ -332,6 +332,6 @@ exportClones:
 qc:
   checks:
     - type: SuccessfullyAlignedReads
-      upper: 0.85
-      middle: 0.7
+      upper: 0.7
+      middle: 0.5
       label: Successfully aligned reads

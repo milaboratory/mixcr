@@ -451,10 +451,10 @@ exportCloneGroups:
 qc:
   checks:
     - type: AlignmentsDroppedLowQuality
-      upper: 0.2
-      middle: 0.1
+      upper: 0.4
+      middle: 0.2
       label: Alignments dropped due to low sequence quality
     - type: CellBarcodesWithFoundGroups
-      upper: 0.9
-      middle: 0.8
+      upper: 0.75
+      middle: 0.6
       label: Cell barcodes used in result groups
