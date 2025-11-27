@@ -32,8 +32,8 @@ neb-human-rna-xcr-umi-nebnext:
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
-          middle: 0.8
-          upper: 0.9
+          middle: 0.6
+          upper: 0.8
   align:
     inheritFrom: generic-amplicon-with-umi
     overrides:

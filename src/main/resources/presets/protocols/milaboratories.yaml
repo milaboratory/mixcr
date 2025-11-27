@@ -32,8 +32,8 @@ milab-human-rna-ig-umi-multiplex:
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
-          middle: 0.8
-          upper: 0.9
+          middle: 0.6
+          upper: 0.7
   align:
     inheritFrom: generic-amplicon-with-umi
     overrides:
@@ -67,8 +67,8 @@ milab-human-rna-tcr-umi-race:
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
-          middle: 0.8
-          upper: 0.9
+          middle: 0.6
+          upper: 0.7
   align:
     inheritFrom: generic-amplicon-with-umi
     overrides:
@@ -102,8 +102,8 @@ milab-human-rna-tcr-umi-multiplex:
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
-          middle: 0.8
-          upper: 0.9
+          middle: 0.6
+          upper: 0.7
   align:
     inheritFrom: generic-amplicon-with-umi
     overrides:
@@ -129,8 +129,8 @@ milab-human-dna-tcr-multiplex:
     - type: AddQcChecks
       args:
         - type: OverlappedReadsMoreBetter
-          middle: 0.8
-          upper: 0.9
+          middle: 0.6
+          upper: 0.7
   align:
     inheritFrom: generic-amplicon
     overrides:
