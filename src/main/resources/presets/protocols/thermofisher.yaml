@@ -38,6 +38,8 @@
 "thermofisher-human-dna-trb-oncomine-sr":
   label: "Oncomine DNA TCR Beta‑LR Assay"
   inheritFrom: thermofisher-human-rna-trb-oncomine-sr
+  mixins:
+    - type: MaterialTypeDNA
 
 "thermofisher-human-rna-igh-oncomine-lr":
   label: "Oncomine RNA IGH LR Assay"
@@ -68,6 +70,8 @@
 "thermofisher-human-dna-igh-oncomine-sr":
   label: "Oncomine DNA IGH SR Assay"
   inheritFrom: thermofisher-human-rna-igh-oncomine-sr
+  mixins:
+    - type: MaterialTypeDNA
 
 
 "thermofisher-human-dna-bcr-oncomine-pan-clonality":
@@ -119,7 +123,7 @@
   label: "Ion AmpliSeq Mouse TCR Beta‑SR DNA"
   inheritFrom: thermofisher-mouse-rna-tcb-ampliseq-sr
   mixins:
-    - type: MaterialTypeRNA
+    - type: MaterialTypeDNA
 
 "thermofisher-mouse-rna-igh-ampliseq-sr":
   label: "Ion AmpliSeq Mouse IGH‑SR RNA"
@@ -132,4 +136,4 @@
   label: "Ion AmpliSeq Mouse IGH‑SR DNA"
   inheritFrom: thermofisher-mouse-rna-igh-ampliseq-sr
   mixins:
-    - type: MaterialTypeRNA
+    - type: MaterialTypeDNA
