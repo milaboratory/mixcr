@@ -459,18 +459,18 @@ exportCloneGroups:
 qc:
   checks:
     - type: SuccessfullyAlignedReads
-      upper: 0.8
-      middle: 0.6
+      upper: 0.6
+      middle: 0.4
       label: Successfully aligned reads
     - type: UnassignedAlignments
-      upper: 0.2
-      middle: 0.1
+      upper: 0.4
+      middle: 0.2
       label: Unassigned alignments in clonotype assembly
     - type: AlignmentsDroppedLowQuality
-      upper: 0.2
-      middle: 0.1
+      upper: 0.4
+      middle: 0.2
       label: Alignments dropped due to low sequence quality
     - type: CellBarcodesWithFoundGroups
-      upper: 0.9
-      middle: 0.8
+      upper: 0.75
+      middle: 0.6
       label: Cell barcodes used in result groups
