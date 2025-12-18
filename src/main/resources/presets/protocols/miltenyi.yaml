@@ -44,7 +44,7 @@ miltenyi-human-rna-bcr-profiling:
         readsLayout: ReverseOnly
 
 
-mimiltenyi-human-rna-tcr-profiling:
+miltenyi-human-rna-tcr-profiling:
   vendor: "Miltenyi"
   label: "Human TCR α/β RNA Profiling Kit"
   category: non-generic
