@@ -2,6 +2,11 @@
   label: "Smart-Seq2"
   category: generic
   inheritFrom: generic-single-cell-gex
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   refineTagsAndSort:
     inheritFrom: refineTagsAndSort-base
     overrides:

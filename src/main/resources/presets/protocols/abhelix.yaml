@@ -7,6 +7,11 @@
     - align
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hs

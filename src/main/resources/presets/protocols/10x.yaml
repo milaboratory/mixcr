@@ -193,6 +193,9 @@
   label: "5' GEM-X Single cell VDJ"
   category: non-generic
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  defaultChains:
+    - IG
+    - TCRAB
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{12})\^(R2:*)
@@ -380,6 +383,9 @@
   label: "5' Single cell VDJ (Fast)"
   category: non-generic
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  defaultChains:
+    - IG
+    - TCRAB
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
@@ -570,6 +576,9 @@
   label: "5' Single cell VDJ (Rapid)"
   category: non-generic
   inheritFrom: generic-ht-single-cell-fragmented-with-umi
+  defaultChains:
+    - IG
+    - TCRAB
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)
@@ -698,6 +707,9 @@
   label: "5' Single cell gene expression"
   category: non-generic
   inheritFrom: generic-single-cell-gex-with-umi
+  defaultChains:
+    - IG
+    - TCRAB
   mixins:
     - type: SetTagPattern
       tagPattern: ^(CELL:N{16})(UMI:N{10})\^(R2:*)

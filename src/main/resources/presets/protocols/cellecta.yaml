@@ -8,6 +8,13 @@
     - refineTagsAndSort
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: hsa
@@ -38,6 +45,13 @@
 "cellecta-human-dna-xcr-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeDNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -49,6 +63,13 @@
 "cellecta-human-rna-xcr-full-length-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -65,6 +86,13 @@
 "cellecta-mouse-rna-xcr-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: mmu
@@ -81,6 +109,13 @@
 "cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-1-1-1":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 1:1:1"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: AddQcChecks
       args:
@@ -238,6 +273,13 @@
 "cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-16-4-1":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 16:4:1"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: AddQcChecks
       args:
@@ -395,6 +437,13 @@
 "cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-1-1-1":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 1:1:1"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: AddQcChecks
       args:
@@ -657,6 +706,13 @@
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling v2"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   pipeline:
     - align
     - refineTagsAndSort
@@ -752,6 +808,13 @@
 "cellecta-human-rna-xcr-full-length-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA v2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -768,6 +831,13 @@
 "cellecta-human-dna-xcr-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeDNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -779,6 +849,13 @@
 "cellecta-mouse-rna-xcr-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA V2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: mmu

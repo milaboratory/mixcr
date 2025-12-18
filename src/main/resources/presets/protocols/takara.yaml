@@ -8,6 +8,9 @@
     - refineTagsAndSort
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
+    - IGLight
   mixins:
     - type: SetSpecies
       species: hs
@@ -45,12 +48,18 @@
   label: "SMARTer Human BCR IgG IgM H/K/L Profiling Kit"
   category: non-generic
   inheritFrom: takara-human-rna-bcr-umi-smartseq
+  defaultChains:
+    - IGHeavy
+    - IGLight
 
 "takara-human-rna-tcr-umi-smartseq":
   vendor: "Takara Bio"
   label: "SMART-Seq Human TCR (with UMIs)"
   category: non-generic
   inheritFrom: takara-human-rna-bcr-umi-smartseq
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
@@ -60,6 +69,9 @@
   label: "SMARTer Human TCR a/b Profiling Kit v2"
   category: non-generic
   inheritFrom: takara-human-rna-tcr-umi-smartseq
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
 
 "takara-human-rna-tcr-smarter":
   vendor: "Takara Bio"
@@ -70,6 +82,9 @@
     - align
     - assemble
     - exportClones
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hs
@@ -106,6 +121,9 @@
     - align
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
+    - IGLight
   mixins:
     - type: SetSpecies
       species: mmu
@@ -138,12 +156,18 @@
   label: "SMARTer Mouse TCR a/b Profiling Kit"
   category: non-generic
   inheritFrom: takara-mouse-rna-bcr-smarter
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
 
 "takara-mouse-rna-tcr-umi-smarseq":
   vendor: "Takara Bio"
   label: "SMART-Seq Mouse TCR (with UMIs)"
   category: non-generic
   inheritFrom: takara-human-rna-bcr-umi-smartseq
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: mmu
@@ -155,6 +179,9 @@
   label: "SMART-Seq Mouse BCR (with UMIs)"
   category: non-generic
   inheritFrom: takara-human-rna-bcr-umi-smartseq
+  defaultChains:
+    - IGHeavy
+    - IGLight
   mixins:
     - type: SetSpecies
       species: mmu
@@ -166,6 +193,9 @@
   label: "SMARTer Human scTCR a/b Profiling Kit"
   category: non-generic
   inheritFrom: generic-lt-single-cell-amplicon
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hsa

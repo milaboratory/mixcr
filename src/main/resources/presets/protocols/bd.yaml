@@ -6277,6 +6277,9 @@
   label: "Rhapsody Human VDJ CDR3 Assay"
   category: non-generic
   inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
+  defaultChains:
+    - IG
+    - TCRAB
   mixins:
     - type: SetSpecies
       species: hs
@@ -6306,6 +6309,9 @@
   label: "Rhapsody Mouse VDJ CDR3 Assay"
   category: non-generic
   inheritFrom: bd-rhapsody-cdr3-amplicon-A96-base
+  defaultChains:
+    - IG
+    - TCRAB
   mixins:
     - type: SetSpecies
       species: mmu
@@ -6338,6 +6344,9 @@
   label: "Rhapsody Full-length TCR/BCR Multiomic Assay"
   category: non-generic
   inheritFrom: bd-rhapsody-full-length-single-cell-A96-base
+  defaultChains:
+    - IG
+    - TCRAB
   flags:
     - species
 
@@ -6346,6 +6355,9 @@
   label: "Rhapsody Full-length TCR/BCR Multiomic Assay Enhaced Beads V2"
   category: non-generic
   inheritFrom: bd-rhapsody-full-length-single-cell-B384-base
+  defaultChains:
+    - IG
+    - TCRAB
   flags:
     - species
 
