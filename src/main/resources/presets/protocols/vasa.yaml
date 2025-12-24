@@ -1,17 +1,791 @@
-"seq-well-vdj":
-  vendor: "Public"
-  label: "Seq-well VDJ"
-  category: non-generic
-  inheritFrom: generic-ht-single-cell-amplicon-with-umi
-  flags:
-    - species
-  defaultChains:
-    - TCRAB
-  mixins:
-    - type: SetTagPattern
-      tagPattern: ^(R1:*)\^(CELL:N{12})(UMI:N{8})
-    - type: LeftAlignmentBoundaryNoPoint
-      floating: true
-    - type: RightAlignmentBoundaryNoPoint
-      floating: true
-      geneType: C
+inheritFrom: generic-lt-single-cell-fragmented-with-umi
+vendor: "Single Cell Discoveries"
+label: "VASA-seq"
+category: non-generic
+mixins:
+  - type: SetTagPattern
+    tagPattern: ^(UMI:N{6})(CELL:N{8})(R1:*)\^(R2:*)
+  - type: SetContigAssemblingFeatures
+    features: VDJRegion
+align:
+  inheritFrom: generic-lt-single-cell-fragmented-with-umi
+  overrides:
+    tagTransformationSteps:
+      - type: mapTags
+        name: "CELL to WEll"
+        matchTags:
+          - CELL
+        newTags:
+          - CELLWELL
+        allowOneMismatch: true
+        rules:
+          - from: CGTCTAAT 
+            to: A1
+          - from: AGACTCGT 
+            to: A2
+          - from: GCACGTCA 
+            to: A3
+          - from: TCAACGAC 
+            to: A4
+          - from: ATTTAGCG 
+            to: A5
+          - from: ATACAGAC 
+            to: A6
+          - from: TGCGTAGG 
+            to: A7
+          - from: TGGAGCTC 
+            to: A8
+          - from: TGAATACC 
+            to: A9
+          - from: TCTCACAC 
+            to: A10
+          - from: TACTGGTA 
+            to: A11
+          - from: ACGATAGG 
+            to: A12
+          - from: GATGTCGA 
+            to: A13
+          - from: TTACGGGT 
+            to: A14
+          - from: CACAGCAT 
+            to: A15
+          - from: CTTTGACA 
+            to: A16
+          - from: CCTTCAAG 
+            to: A17
+          - from: GAGTCCTG 
+            to: A18
+          - from: CACACTGA 
+            to: A19
+          - from: GTTACAGG 
+            to: A20
+          - from: GGACCTTT 
+            to: A21
+          - from: TTCCGTTC 
+            to: A22
+          - from: ACTGTTTG 
+            to: A23
+          - from: AAGTGGCT 
+            to: A24
+          - from: CTGTACAA 
+            to: B1
+          - from: CGCAAAGT 
+            to: B2
+          - from: GTGCATGA 
+            to: B3
+          - from: GTCATTAG 
+            to: B4
+          - from: AGCTCCTT 
+            to: B5
+          - from: TCACCCGA 
+            to: B6
+          - from: GTTGCCAC 
+            to: B7
+          - from: TGTACCAA 
+            to: B8
+          - from: AACGAGGT 
+            to: B9
+          - from: AGCCACCA 
+            to: B10
+          - from: GGTAATCA 
+            to: B11
+          - from: CCAGTCCA 
+            to: B12
+          - from: ACCTCAGC 
+            to: B13
+          - from: GGTGGACT 
+            to: B14
+          - from: GACAAACC 
+            to: B15
+          - from: TAACTCCG 
+            to: B16
+          - from: ACACCGTG 
+            to: B17
+          - from: GTAGAACG 
+            to: B18
+          - from: GGATTGAC 
+            to: B19
+          - from: ACGTATCC 
+            to: B20
+          - from: TTCGGAAA 
+            to: B21
+          - from: AGTTGTGT 
+            to: B22
+          - from: AAGCACAT 
+            to: B23
+          - from: CTGTCATT 
+            to: B24
+          - from: GTCCTATA 
+            to: C1
+          - from: CTACGCTG 
+            to: C2
+          - from: GGGATTGT 
+            to: C3
+          - from: TGATGTAG 
+            to: C4
+          - from: TTCGCTGT 
+            to: C5
+          - from: GAAGACTT 
+            to: C6
+          - from: TCTGGGCA 
+            to: C7
+          - from: CAACTAGA 
+            to: C8
+          - from: CCATGGGA 
+            to: C9
+          - from: ATGCGACG 
+            to: C10
+          - from: GAGGGTAG 
+            to: C11
+          - from: CGGGTGAA 
+            to: C12
+          - from: GCCATCTT 
+            to: C13
+          - from: GCATAATC 
+            to: C14
+          - from: TCTATGGT 
+            to: C15
+          - from: AGGACTTA 
+            to: C16
+          - from: CGTGATTC 
+            to: C17
+          - from: ACTAGCGA 
+            to: C18
+          - from: GTAACTCC 
+            to: C19
+          - from: CGGAAGTG 
+            to: C20
+          - from: CCGAGTAC 
+            to: C21
+          - from: GACGCAAT 
+            to: C22
+          - from: ACCTGGAG 
+            to: C23
+          - from: CATGGGTT 
+            to: C24
+          - from: ATTCCTAG 
+            to: D1
+          - from: AATCATGC 
+            to: D2
+          - from: GCTTCCCT 
+            to: D3
+          - from: AGGTAAAG 
+            to: D4
+          - from: CCACAACT 
+            to: D5
+          - from: ACAGGCAT 
+            to: D6
+          - from: TTTGTGTC 
+            to: D7
+          - from: TGAGCATA 
+            to: D8
+          - from: TTAGACGC 
+            to: D9
+          - from: CGCTTGCT 
+            to: D10
+          - from: AGTCTGCC 
+            to: D11
+          - from: CATAGTCG 
+            to: D12
+          - from: TCTTGCTG 
+            to: D13
+          - from: GGGACAAC 
+            to: D14
+          - from: ATATTCCC 
+            to: D15
+          - from: TGTTAAGC 
+            to: D16
+          - from: TACGCCTC 
+            to: D17
+          - from: CACTTATC 
+            to: D18
+          - from: ACCGCTAA 
+            to: D19
+          - from: TAAGGTCC 
+            to: D20
+          - from: GAAAGGTG 
+            to: D21
+          - from: ACGTTGTA 
+            to: D22
+          - from: GCAGAGAA 
+            to: D23
+          - from: GCATTTGG 
+            to: D24
+          - from: TAGTGTGC 
+            to: E1
+          - from: TACAAGGG 
+            to: E2
+          - from: GGACTACT 
+            to: E3
+          - from: TCCCTAGA 
+            to: E4
+          - from: ATGAGCAG 
+            to: E5
+          - from: TACTGCTG 
+            to: E6
+          - from: CTGACTGT 
+            to: E7
+          - from: CAGCGATT 
+            to: E8
+          - from: GTTCGCTA 
+            to: E9
+          - from: CATCTCAC 
+            to: E10
+          - from: TCTGCCTA 
+            to: E11
+          - from: CTGGCTAA 
+            to: E12
+          - from: GATTGCTC 
+            to: E13
+          - from: GGGTTATG 
+            to: E14
+          - from: CTTCGTAC 
+            to: E15
+          - from: GAAACTGC 
+            to: E16
+          - from: TACCAGAC 
+            to: E17
+          - from: TTGCAACC 
+            to: E18
+          - from: TTAGGACG 
+            to: E19
+          - from: TATCCACG 
+            to: E20
+          - from: TCTAGAGG 
+            to: E21
+          - from: CAGATCGT 
+            to: E22
+          - from: ATGTGCGT 
+            to: E23
+          - from: AAGTCTCG 
+            to: E24
+          - from: CTAGCAAC 
+            to: F1
+          - from: TTCCTACC 
+            to: F2
+          - from: TCCTAGCT 
+            to: F3
+          - from: GGTTCTGA 
+            to: F4
+          - from: ACGTACTG 
+            to: F5
+          - from: GTGAACTC 
+            to: F6
+          - from: GGCGATTT 
+            to: F7
+          - from: AATCGGCA 
+            to: F8
+          - from: GCGTATAG 
+            to: F9
+          - from: CCGATTCT 
+            to: F10
+          - from: CTATAGGC 
+            to: F11
+          - from: CTTGTGCA 
+            to: F12
+          - from: CAGTGACA 
+            to: F13
+          - from: ACGCTCTT 
+            to: F14
+          - from: ATAGGAGC 
+            to: F15
+          - from: GTTCTGCT 
+            to: F16
+          - from: TAGACGCT 
+            to: F17
+          - from: CGTATCAG 
+            to: F18
+          - from: TTGTTCCG 
+            to: F19
+          - from: TAGGTCAC 
+            to: F20
+          - from: ATACACGG 
+            to: F21
+          - from: CGAGAATG 
+            to: F22
+          - from: CGCTATAG 
+            to: F23
+          - from: GTATCGCT 
+            to: F24
+          - from: CGGTGTTT 
+            to: G1
+          - from: CAAGGTGT 
+            to: G2
+          - from: AGAACCAC 
+            to: G3
+          - from: AAGCTGCA 
+            to: G4
+          - from: ACGGATGT 
+            to: G5
+          - from: AGTGGGAT 
+            to: G6
+          - from: AGGGACAA 
+            to: G7
+          - from: GTGTAACC 
+            to: G8
+          - from: CAAGAGAC 
+            to: G9
+          - from: GTCCGTAA 
+            to: G10
+          - from: TGGTTGTC 
+            to: G11
+          - from: AGGCATCT 
+            to: G12
+          - from: GTCTACCT 
+            to: G13
+          - from: GTTCAGTG 
+            to: G14
+          - from: GCCACAAA 
+            to: G15
+          - from: GAGAACGA 
+            to: G16
+          - from: GCTGTAAC 
+            to: G17
+          - from: TCAGCTTG 
+            to: G18
+          - from: TTCCCTCA 
+            to: G19
+          - from: TCGACTCA 
+            to: G20
+          - from: GTGATGTC 
+            to: G21
+          - from: ATCGGTTG 
+            to: G22
+          - from: CCATTTCC 
+            to: G23
+          - from: CTGAAGGA 
+            to: G24
+          - from: GAGTCTGT 
+            to: H1
+          - from: TCGCCATT 
+            to: H2
+          - from: CGGTAATC 
+            to: H3
+          - from: CCTGACAA 
+            to: H4
+          - from: AAGACAGC 
+            to: H5
+          - from: TGCGGTAT 
+            to: H6
+          - from: TATCTCGC 
+            to: H7
+          - from: TTCACGTG 
+            to: H8
+          - from: CCCCTATT 
+            to: H9
+          - from: TATCCTGC 
+            to: H10
+          - from: CCTTCGTA 
+            to: H11
+          - from: CAAAGTGG 
+            to: H12
+          - from: GTCTCACA 
+            to: H13
+          - from: CAGATACC 
+            to: H14
+          - from: CCTACACA 
+            to: H15
+          - from: AGCAGAAC 
+            to: H16
+          - from: TTTGAGGG 
+            to: H17
+          - from: AAACAGGC 
+            to: H18
+          - from: TGATCCTC 
+            to: H19
+          - from: GAGAAGAG 
+            to: H20
+          - from: CGTAATCG 
+            to: H21
+          - from: CGAATGCA 
+            to: H22
+          - from: TGAAAGCG 
+            to: H23
+          - from: CGTAGAAG 
+            to: H24
+          - from: CCAGAAAG 
+            to: I1
+          - from: CTTACGAC 
+            to: I2
+          - from: CCGCATTT 
+            to: I3
+          - from: ACGATCCT 
+            to: I4
+          - from: AGGATGGA 
+            to: I5
+          - from: TCGGTTGA 
+            to: I6
+          - from: TCTGTGAG 
+            to: I7
+          - from: ACCACGAT 
+            to: I8
+          - from: GGCTCTAT 
+            to: I9
+          - from: TACTGCAC 
+            to: I10
+          - from: CATGTCAC 
+            to: I11
+          - from: AAGGAGCA 
+            to: I12
+          - from: AACCGCTT 
+            to: I13
+          - from: CAACCATG 
+            to: I14
+          - from: AGAACAGG 
+            to: I15
+          - from: TAAGCCGT 
+            to: I16
+          - from: GATGCTCT 
+            to: I17
+          - from: CTAGTTCC 
+            to: I18
+          - from: GATCACCT 
+            to: I19
+          - from: GATCGAAG 
+            to: I20
+          - from: GCTTCTTC 
+            to: I21
+          - from: TGGTGAGT 
+            to: I22
+          - from: CACTATCC 
+            to: I23
+          - from: GTAATCCG 
+            to: I24
+          - from: CAGATAGC 
+            to: J1
+          - from: CCGTCTAA 
+            to: J2
+          - from: TACCTGTC 
+            to: J3
+          - from: TATTCGGG 
+            to: J4
+          - from: GTTGGTGA 
+            to: J5
+          - from: TAGCTACC 
+            to: J6
+          - from: GACTTGAG 
+            to: J7
+          - from: TTCAGCGT 
+            to: J8
+          - from: ACAGAAGC 
+            to: J9
+          - from: ACGCGTAA 
+            to: J10
+          - from: CATAGCTC 
+            to: J11
+          - from: ACCCATCT 
+            to: J12
+          - from: GCAATCGA 
+            to: J13
+          - from: TCCAATCG 
+            to: J14
+          - from: TTCTCGGA 
+            to: J15
+          - from: TATGACCC 
+            to: J16
+          - from: TTCAGACC 
+            to: J17
+          - from: GAGAGAGA 
+            to: J18
+          - from: ATGCTCTG 
+            to: J19
+          - from: TGACCAAG 
+            to: J20
+          - from: GAGCAAAC 
+            to: J21
+          - from: GTCGATCT 
+            to: J22
+          - from: CTCTTTGC 
+            to: J23
+          - from: AAGGTCAG 
+            to: J24
+          - from: ATGCCTCA 
+            to: K1
+          - from: TCCGAACA 
+            to: K2
+          - from: CTGCGAAA 
+            to: K3
+          - from: TGGGTTTC 
+            to: K4
+          - from: CAGTCCAT 
+            to: K5
+          - from: CGACTTAC 
+            to: K6
+          - from: TCGGAATC 
+            to: K7
+          - from: CAGCTTTG 
+            to: K8
+          - from: TGGTAGCT 
+            to: K9
+          - from: TTATCCGG 
+            to: K10
+          - from: GCATCAGT 
+            to: K11
+          - from: CAATACGC 
+            to: K12
+          - from: TAGGGGAA 
+            to: K13
+          - from: GCTTTGGA 
+            to: K14
+          - from: TCAGCACT 
+            to: K15
+          - from: TGCGTGAT 
+            to: K16
+          - from: GTAGTGAG 
+            to: K17
+          - from: GTGGTGTA 
+            to: K18
+          - from: TCATGAGG 
+            to: K19
+          - from: TCCAGCTA 
+            to: K20
+          - from: GGATGATG 
+            to: K21
+          - from: AGCACTCT 
+            to: K22
+          - from: AAGCGAGT 
+            to: K23
+          - from: TGATCTCC 
+            to: K24
+          - from: ACAGAGCT 
+            to: L1
+          - from: ATAGCTGC 
+            to: L2
+          - from: TGATTCGC 
+            to: L3
+          - from: ATCGTGCA 
+            to: L4
+          - from: AGTCAGGA 
+            to: L5
+          - from: TTTTCGCC 
+            to: L6
+          - from: AGGAGACT 
+            to: L7
+          - from: GTTCCGAT 
+            to: L8
+          - from: TCGCGATA 
+            to: L9
+          - from: GGACGAAT 
+            to: L10
+          - from: TCGACAAG 
+            to: L11
+          - from: GAACAGCA 
+            to: L12
+          - from: GTCCAAAG 
+            to: L13
+          - from: CTGCTTCT 
+            to: L14
+          - from: ACCCTACA 
+            to: L15
+          - from: TCGTCCTT 
+            to: L16
+          - from: GCTAATGG 
+            to: L17
+          - from: GGAGTACA 
+            to: L18
+          - from: CGGTACTT 
+            to: L19
+          - from: AACACGCA 
+            to: L20
+          - from: GCAAGAAG 
+            to: L21
+          - from: CATGCACA 
+            to: L22
+          - from: GTTCTTGC 
+            to: L23
+          - from: AGCGAACT 
+            to: L24
+          - from: GTGTTCAG 
+            to: M1
+          - from: TCTCGTCT 
+            to: M2
+          - from: TACGGTGA 
+            to: M3
+          - from: GATGTACC 
+            to: M4
+          - from: TACCACGA 
+            to: M5
+          - from: TCTGGTTC 
+            to: M6
+          - from: CCTCTCAA 
+            to: M7
+          - from: GTATGCAC 
+            to: M8
+          - from: GGAGCTAA 
+            to: M9
+          - from: ACCCCATT 
+            to: M10
+          - from: AGTTCTCG 
+            to: M11
+          - from: ACCAAGGA 
+            to: M12
+          - from: GTGCGTAT 
+            to: M13
+          - from: AGTACGTG 
+            to: M14
+          - from: AGAGGTGA 
+            to: M15
+          - from: GGGAAGAT 
+            to: M16
+          - from: CCAACGTT 
+            to: M17
+          - from: GGGGATTT 
+            to: M18
+          - from: GGCAACAA 
+            to: M19
+          - from: CAGTCAGA 
+            to: M20
+          - from: CGAAAGCT 
+            to: M21
+          - from: AATGGTGG 
+            to: M22
+          - from: TGGCACAA 
+            to: M23
+          - from: ATGGGCTT 
+            to: M24
+          - from: TGATCGGT 
+            to: N1
+          - from: CTGATCAC 
+            to: N2
+          - from: CTCGTACT 
+            to: N3
+          - from: CTACCGTA 
+            to: N4
+          - from: TTGTCCAC 
+            to: N5
+          - from: ATTGGACC 
+            to: N6
+          - from: TGAAAGGC 
+            to: N7
+          - from: ACATGTGC 
+            to: N8
+          - from: CGATCCTA 
+            to: N9
+          - from: ATGGCACT 
+            to: N10
+          - from: TAGAGGGT 
+            to: N11
+          - from: GTATCGTC 
+            to: N12
+          - from: CACCATGT 
+            to: N13
+          - from: TAGGAACG 
+            to: N14
+          - from: TGATGCCA 
+            to: N15
+          - from: GAGTTGGT 
+            to: N16
+          - from: TGAGAGAG 
+            to: N17
+          - from: CCTGTAGA 
+            to: N18
+          - from: GGTGTTAG 
+            to: N19
+          - from: GTCTTACC 
+            to: N20
+          - from: AGACAACC 
+            to: N21
+          - from: TGGCTTCA 
+            to: N22
+          - from: AGCTTCAC 
+            to: N23
+          - from: CAGTGTCA 
+            to: N24
+          - from: GTTATGCC 
+            to: O1
+          - from: CGAACTGT 
+            to: O2
+          - from: GATCCTGA 
+            to: O3
+          - from: CCAGATGA 
+            to: O4
+          - from: AACCTGCT 
+            to: O5
+          - from: TATGGAGC 
+            to: O6
+          - from: CACTCACT 
+            to: O7
+          - from: GGGTAAGA 
+            to: O8
+          - from: CAAACGAG 
+            to: O9
+          - from: AAAGGCTG 
+            to: O10
+          - from: ACAAGGCA 
+            to: O11
+          - from: AGTTTCGG 
+            to: O12
+          - from: ACCAGTTC 
+            to: O13
+          - from: AATAGGGC 
+            to: O14
+          - from: AACCCAAC 
+            to: O15
+          - from: CGCATAAC 
+            to: O16
+          - from: GTGCTAGT 
+            to: O17
+          - from: GGTGACTA 
+            to: O18
+          - from: GGTTAGTG 
+            to: O19
+          - from: CGAAGCAA 
+            to: O20
+          - from: CCGAGATT 
+            to: O21
+          - from: CTCTGCTA 
+            to: O22
+          - from: TAGTTGCG 
+            to: O23
+          - from: AGGCTAAC 
+            to: O24
+          - from: ACAAACCG 
+            to: P1
+          - from: ATCGACGA 
+            to: P2
+          - from: CTCATGTC 
+            to: P3
+          - from: CCCTAGTA 
+            to: P4
+          - from: CCTTTGAC 
+            to: P5
+          - from: TGTGGCTT 
+            to: P6
+          - from: GCGATATC 
+            to: P7
+          - from: ACGAACAC 
+            to: P8
+          - from: TTGATGGC 
+            to: P9
+          - from: AACATGGG 
+            to: P10
+          - from: CTTAGCCT 
+            to: P11
+          - from: AAAGCGGA 
+            to: P12
+          - from: CAATGGTC 
+            to: P13
+          - from: AACCGGAA 
+            to: P14
+          - from: AACTCTGG 
+            to: P15
+          - from: TTAGGCAG 
+            to: P16
+          - from: CGTCGTTT 
+            to: P17
+          - from: CCTGCTAT 
+            to: P18
+          - from: CAGAGAAG 
+            to: P19
+          - from: GATTGTCC 
+            to: P20
+          - from: CACCTCTA 
+            to: P21
+          - from: AGTTGGAC 
+            to: P22
+          - from: AGTGCAGA 
+            to: P23
+          - from: CTCTGTCT 
+            to: P24
+        reportingLevel: VerboseReport
+
