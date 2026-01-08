@@ -85,10 +85,10 @@ assert "head -n 1 alleles/report.json | jq -r .statuses.DE_NOVO" "1"
 # commented after alignment-aided overlap fix
 #assert "head -n 1 alleles/report.json | jq -r '.zygotes.\"2\"'" "1"
 
-assert "mixcr exportReportsTable --no-header base_build_trees.shmt | wc -l" "3"
-assert "mixcr exportReportsTable --without-upstreams --no-header base_build_trees.shmt | wc -l" "1"
+assert "mixcr exportReportsTable --no-header base_build_trees.shmt | grep -v '^WARNING' | wc -l" "3"
+assert "mixcr exportReportsTable --without-upstreams --no-header base_build_trees.shmt | grep -v '^WARNING' | wc -l" "1"
 
-assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -c '2'" "2"
+assert "mixcr exportReportsTable --no-header -foundAllelesCount base_build_trees.shmt | grep -v '^WARNING' | grep -c '2'" "2"
 
 # commented after alignment-aided overlap fix
 # 3 found alleles of IGHV2-70 or IGHV2-70D
