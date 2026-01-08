@@ -15,6 +15,8 @@ pipeline:
 mixins:
   - type: SetTagPattern
     tagPattern: ^(UMI:N{6})(CELL:N{8})(R1:*)\^(R2:*)
+  - type: SetClonotypeAssemblingFeatures
+    features: [ "CDR3" ]
   - type: SetContigAssemblingFeatures
     features: VDJRegion
 align:
