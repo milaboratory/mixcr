@@ -229,6 +229,11 @@ takara-mouse-rna-bcr-umi-smarseq (SMART-Seq Mouse BCR (with UMIs))
 
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
+-----Miltenyi-----
+miltenyi-human-rna-bcr-profiling (Human BCR RNA Profiling Kit)
+
+miltenyi-human-rna-tcr-profiling (Human TCR α/β RNA Profiling Kit)
+
 -----Bruker-----
 bruker-sc-xcr-vdj-beacon (Single cell VDJ)
   Required args:
