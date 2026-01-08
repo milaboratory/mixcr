@@ -61,7 +61,7 @@ mixcr exportShmTreesWithNodes base_build_trees.shmt trees/trees_with_nodes.tsv
 assert "mixcr exportShmTreesWithNodes -readFraction base_build_trees.shmt | grep -c 'NaN'" "0"
 
 # no other columns if something specified
-assert "mixcr exportShmTreesWithNodes -cloneId base_build_trees.shmt | head -n 1 | wc -w" "1"
+assert "mixcr exportShmTreesWithNodes -cloneId base_build_trees.shmt | grep -v '^WARNING' | head -n 1 | wc -w" "1"
 
 mixcr exportPlots shmTrees base_build_trees.shmt trees/plots.pdf
 
