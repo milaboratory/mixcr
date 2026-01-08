@@ -229,11 +229,6 @@ takara-mouse-rna-bcr-umi-smarseq (SMART-Seq Mouse BCR (with UMIs))
 
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
------Miltenyi-----
-miltenyi-human-rna-bcr-profiling (Human BCR RNA Profiling Kit)
-
-miltenyi-human-rna-tcr-profiling (Human TCR α/β RNA Profiling Kit)
-
 -----Bruker-----
 bruker-sc-xcr-vdj-beacon (Single cell VDJ)
   Required args:
@@ -251,6 +246,35 @@ milab-human-dna-xcr-7genes-multiplex (Human 7GENES DNA Multiplex)
 milab-human-dna-tcr-multiplex (Human TCR DNA Multiplex)
 
 milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
+
+-----10x Genomics-----
+10x-ont-sc-3gex-v4 (Oxford Nanopore 3' GEM-X v4)
+  Required args:
+    --species <name>
+
+10x-sc-xcr-vdj-fast (5' Single cell VDJ (Fast))
+  Required args:
+    --species <name>
+
+10x-sc-5gex (5' Single cell gene expression)
+  Required args:
+    --species <name>
+
+10x-sc-xcr-vdj-rapid (5' Single cell VDJ (Rapid))
+  Required args:
+    --species <name>
+
+10x-ont-sc-xcr-vdj-gemx-v3 (Oxford Nanopore GEM-X Single cell VDJ V3)
+  Required args:
+    --species <name>
+
+10x-sc-xcr-vdj (5' Single cell VDJ)
+  Required args:
+    --species <name>
+
+10x-sc-xcr-vdj-gemx-v3 (5' GEM-X Single cell VDJ)
+  Required args:
+    --species <name>
 
 -----Integrated DNA Technologies-----
 idt-human-rna-tcr-umi-archer (Archer IMMUNOVerse TCR panel)
@@ -333,31 +357,18 @@ qiagen-mouse-rna-tcr-umi-qiaseq (QIAseq Mouse TCR Panel Immune Repertoire RNA Li
 
 qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
 
------10x Genomics-----
-10x-sc-xcr-vdj-fast (5' Single cell VDJ (Fast))
-  Required args:
-    --species <name>
-
-10x-sc-5gex (5' Single cell gene expression)
-  Required args:
-    --species <name>
-
-10x-sc-xcr-vdj-rapid (5' Single cell VDJ (Rapid))
-  Required args:
-    --species <name>
-
-10x-sc-xcr-vdj (5' Single cell VDJ)
-  Required args:
-    --species <name>
-
-10x-sc-xcr-vdj-gemx-v3 (5' GEM-X Single cell VDJ)
-  Required args:
-    --species <name>
-
 -----New England BioLabs-----
 neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
 
 neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR)
+
+-----Single Cell Discoveries-----
+vasa-seq-vdj (VASA-seq)
+  Required args:
+    --species <name>
+
+-----Miltenyi-----
+miltenyi-human-rna-tcr-profiling (Human TCR α/β RNA Profiling Kit)
 
 -----AbHelix-----
 abhelix-human-rna-xcr (Human immunoglobulin repertoire)
