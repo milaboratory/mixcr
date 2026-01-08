@@ -744,7 +744,9 @@
     - refineTagsAndSort
     - assemble
     - assembleContigs
+    - assembleCells
     - exportClones
+    - exportCloneGroups
   mixins:
     - type: SetTagPattern
       tagPattern: ^*cgacgctcttccgatct(CELL:N{16(UMI:N{12})tttcttatatggg(R1:*)gtactctgcgttgataccac*
@@ -854,6 +856,8 @@
     inheritFrom: exportAlignments-single-cell-with-umi-base
   assembleCells:
     inheritFrom: assembleCells-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
 
 10x-ont-sc-3gex-v4:
   vendor: "10x Genomics"
@@ -867,7 +871,9 @@
     - refineTagsAndSort
     - assemble
     - assembleContigs
+    - assembleCells
     - exportClones
+    - exportCloneGroups
   mixins:
     - type: SetTagPattern
       tagPattern: ^*cgacgctcttccgatct(CELL:N{16})(UMI:N{12})(R1:*)atgtactctgcgttgataccac*
@@ -977,3 +983,5 @@
     inheritFrom: exportAlignments-single-cell-with-umi-base
   assembleCells:
     inheritFrom: assembleCells-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
