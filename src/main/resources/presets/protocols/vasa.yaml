@@ -2,6 +2,16 @@ inheritFrom: generic-lt-single-cell-fragmented-with-umi
 vendor: "Single Cell Discoveries"
 label: "VASA-seq"
 category: non-generic
+pipeline:
+  - align
+  - refineTagsAndSort
+  - assemblePartial
+  - extend
+  - assemble
+  - assembleContigs
+  - assembleCells
+  - exportClones
+  - exportCloneGroups
 mixins:
   - type: SetTagPattern
     tagPattern: ^(UMI:N{6})(CELL:N{8})(R1:*)\^(R2:*)
