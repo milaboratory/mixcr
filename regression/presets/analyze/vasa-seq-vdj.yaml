@@ -1,0 +1,1332 @@
+flags:
+  - species
+pipeline:
+  - align
+  - refineTagsAndSort
+  - assemblePartial
+  - extend
+  - assemble
+  - assembleContigs
+  - assembleCells
+  - exportClones
+  - exportCloneGroups
+align:
+  species: ""
+  libraryName: default
+  trimmingQualityThreshold: 10
+  trimmingWindowSize: 6
+  chains: ALL
+  replaceWildcards: true
+  overlapPairedReads: true
+  bamDropNonVDJ: false
+  writeFailedAlignments: false
+  tagPattern: "^(UMI:N{6})(CELL:N{8})(R1:*)\\^(R2:*)"
+  tagUnstranded: false
+  tagMaxBudget: 10.0
+  headerExtractors: []
+  readIdAsCellTag: false
+  tagTransformationSteps:
+    - type: mapTags
+      name: CELL to WEll
+      matchTags:
+        - CELL
+      newTags:
+        - CELLWELL
+      allowOneMismatch: true
+      rules:
+        - from: AAACAGGC
+          to: H18
+        - from: AAAGCGGA
+          to: P12
+        - from: AAAGGCTG
+          to: O10
+        - from: AACACGCA
+          to: L20
+        - from: AACATGGG
+          to: P10
+        - from: AACCCAAC
+          to: O15
+        - from: AACCGCTT
+          to: I13
+        - from: AACCGGAA
+          to: P14
+        - from: AACCTGCT
+          to: O5
+        - from: AACGAGGT
+          to: B9
+        - from: AACTCTGG
+          to: P15
+        - from: AAGACAGC
+          to: H5
+        - from: AAGCACAT
+          to: B23
+        - from: AAGCGAGT
+          to: K23
+        - from: AAGCTGCA
+          to: G4
+        - from: AAGGAGCA
+          to: I12
+        - from: AAGGTCAG
+          to: J24
+        - from: AAGTCTCG
+          to: E24
+        - from: AAGTGGCT
+          to: A24
+        - from: AATAGGGC
+          to: O14
+        - from: AATCATGC
+          to: D2
+        - from: AATCGGCA
+          to: F8
+        - from: AATGGTGG
+          to: M22
+        - from: ACAAACCG
+          to: P1
+        - from: ACAAGGCA
+          to: O11
+        - from: ACACCGTG
+          to: B17
+        - from: ACAGAAGC
+          to: J9
+        - from: ACAGAGCT
+          to: L1
+        - from: ACAGGCAT
+          to: D6
+        - from: ACATGTGC
+          to: N8
+        - from: ACCAAGGA
+          to: M12
+        - from: ACCACGAT
+          to: I8
+        - from: ACCAGTTC
+          to: O13
+        - from: ACCCATCT
+          to: J12
+        - from: ACCCCATT
+          to: M10
+        - from: ACCCTACA
+          to: L15
+        - from: ACCGCTAA
+          to: D19
+        - from: ACCTCAGC
+          to: B13
+        - from: ACCTGGAG
+          to: C23
+        - from: ACGAACAC
+          to: P8
+        - from: ACGATAGG
+          to: A12
+        - from: ACGATCCT
+          to: I4
+        - from: ACGCGTAA
+          to: J10
+        - from: ACGCTCTT
+          to: F14
+        - from: ACGGATGT
+          to: G5
+        - from: ACGTACTG
+          to: F5
+        - from: ACGTATCC
+          to: B20
+        - from: ACGTTGTA
+          to: D22
+        - from: ACTAGCGA
+          to: C18
+        - from: ACTGTTTG
+          to: A23
+        - from: AGAACAGG
+          to: I15
+        - from: AGAACCAC
+          to: G3
+        - from: AGACAACC
+          to: N21
+        - from: AGACTCGT
+          to: A2
+        - from: AGAGGTGA
+          to: M15
+        - from: AGCACTCT
+          to: K22
+        - from: AGCAGAAC
+          to: H16
+        - from: AGCCACCA
+          to: B10
+        - from: AGCGAACT
+          to: L24
+        - from: AGCTCCTT
+          to: B5
+        - from: AGCTTCAC
+          to: N23
+        - from: AGGACTTA
+          to: C16
+        - from: AGGAGACT
+          to: L7
+        - from: AGGATGGA
+          to: I5
+        - from: AGGCATCT
+          to: G12
+        - from: AGGCTAAC
+          to: O24
+        - from: AGGGACAA
+          to: G7
+        - from: AGGTAAAG
+          to: D4
+        - from: AGTACGTG
+          to: M14
+        - from: AGTCAGGA
+          to: L5
+        - from: AGTCTGCC
+          to: D11
+        - from: AGTGCAGA
+          to: P23
+        - from: AGTGGGAT
+          to: G6
+        - from: AGTTCTCG
+          to: M11
+        - from: AGTTGGAC
+          to: P22
+        - from: AGTTGTGT
+          to: B22
+        - from: AGTTTCGG
+          to: O12
+        - from: ATACACGG
+          to: F21
+        - from: ATACAGAC
+          to: A6
+        - from: ATAGCTGC
+          to: L2
+        - from: ATAGGAGC
+          to: F15
+        - from: ATATTCCC
+          to: D15
+        - from: ATCGACGA
+          to: P2
+        - from: ATCGGTTG
+          to: G22
+        - from: ATCGTGCA
+          to: L4
+        - from: ATGAGCAG
+          to: E5
+        - from: ATGCCTCA
+          to: K1
+        - from: ATGCGACG
+          to: C10
+        - from: ATGCTCTG
+          to: J19
+        - from: ATGGCACT
+          to: N10
+        - from: ATGGGCTT
+          to: M24
+        - from: ATGTGCGT
+          to: E23
+        - from: ATTCCTAG
+          to: D1
+        - from: ATTGGACC
+          to: N6
+        - from: ATTTAGCG
+          to: A5
+        - from: CAAACGAG
+          to: O9
+        - from: CAAAGTGG
+          to: H12
+        - from: CAACCATG
+          to: I14
+        - from: CAACTAGA
+          to: C8
+        - from: CAAGAGAC
+          to: G9
+        - from: CAAGGTGT
+          to: G2
+        - from: CAATACGC
+          to: K12
+        - from: CAATGGTC
+          to: P13
+        - from: CACACTGA
+          to: A19
+        - from: CACAGCAT
+          to: A15
+        - from: CACCATGT
+          to: N13
+        - from: CACCTCTA
+          to: P21
+        - from: CACTATCC
+          to: I23
+        - from: CACTCACT
+          to: O7
+        - from: CACTTATC
+          to: D18
+        - from: CAGAGAAG
+          to: P19
+        - from: CAGATACC
+          to: H14
+        - from: CAGATAGC
+          to: J1
+        - from: CAGATCGT
+          to: E22
+        - from: CAGCGATT
+          to: E8
+        - from: CAGCTTTG
+          to: K8
+        - from: CAGTCAGA
+          to: M20
+        - from: CAGTCCAT
+          to: K5
+        - from: CAGTGACA
+          to: F13
+        - from: CAGTGTCA
+          to: N24
+        - from: CATAGCTC
+          to: J11
+        - from: CATAGTCG
+          to: D12
+        - from: CATCTCAC
+          to: E10
+        - from: CATGCACA
+          to: L22
+        - from: CATGGGTT
+          to: C24
+        - from: CATGTCAC
+          to: I11
+        - from: CCAACGTT
+          to: M17
+        - from: CCACAACT
+          to: D5
+        - from: CCAGAAAG
+          to: I1
+        - from: CCAGATGA
+          to: O4
+        - from: CCAGTCCA
+          to: B12
+        - from: CCATGGGA
+          to: C9
+        - from: CCATTTCC
+          to: G23
+        - from: CCCCTATT
+          to: H9
+        - from: CCCTAGTA
+          to: P4
+        - from: CCGAGATT
+          to: O21
+        - from: CCGAGTAC
+          to: C21
+        - from: CCGATTCT
+          to: F10
+        - from: CCGCATTT
+          to: I3
+        - from: CCGTCTAA
+          to: J2
+        - from: CCTACACA
+          to: H15
+        - from: CCTCTCAA
+          to: M7
+        - from: CCTGACAA
+          to: H4
+        - from: CCTGCTAT
+          to: P18
+        - from: CCTGTAGA
+          to: N18
+        - from: CCTTCAAG
+          to: A17
+        - from: CCTTCGTA
+          to: H11
+        - from: CCTTTGAC
+          to: P5
+        - from: CGAAAGCT
+          to: M21
+        - from: CGAACTGT
+          to: O2
+        - from: CGAAGCAA
+          to: O20
+        - from: CGAATGCA
+          to: H22
+        - from: CGACTTAC
+          to: K6
+        - from: CGAGAATG
+          to: F22
+        - from: CGATCCTA
+          to: N9
+        - from: CGCAAAGT
+          to: B2
+        - from: CGCATAAC
+          to: O16
+        - from: CGCTATAG
+          to: F23
+        - from: CGCTTGCT
+          to: D10
+        - from: CGGAAGTG
+          to: C20
+        - from: CGGGTGAA
+          to: C12
+        - from: CGGTAATC
+          to: H3
+        - from: CGGTACTT
+          to: L19
+        - from: CGGTGTTT
+          to: G1
+        - from: CGTAATCG
+          to: H21
+        - from: CGTAGAAG
+          to: H24
+        - from: CGTATCAG
+          to: F18
+        - from: CGTCGTTT
+          to: P17
+        - from: CGTCTAAT
+          to: A1
+        - from: CGTGATTC
+          to: C17
+        - from: CTACCGTA
+          to: N4
+        - from: CTACGCTG
+          to: C2
+        - from: CTAGCAAC
+          to: F1
+        - from: CTAGTTCC
+          to: I18
+        - from: CTATAGGC
+          to: F11
+        - from: CTCATGTC
+          to: P3
+        - from: CTCGTACT
+          to: N3
+        - from: CTCTGCTA
+          to: O22
+        - from: CTCTGTCT
+          to: P24
+        - from: CTCTTTGC
+          to: J23
+        - from: CTGAAGGA
+          to: G24
+        - from: CTGACTGT
+          to: E7
+        - from: CTGATCAC
+          to: N2
+        - from: CTGCGAAA
+          to: K3
+        - from: CTGCTTCT
+          to: L14
+        - from: CTGGCTAA
+          to: E12
+        - from: CTGTACAA
+          to: B1
+        - from: CTGTCATT
+          to: B24
+        - from: CTTACGAC
+          to: I2
+        - from: CTTAGCCT
+          to: P11
+        - from: CTTCGTAC
+          to: E15
+        - from: CTTGTGCA
+          to: F12
+        - from: CTTTGACA
+          to: A16
+        - from: GAAACTGC
+          to: E16
+        - from: GAAAGGTG
+          to: D21
+        - from: GAACAGCA
+          to: L12
+        - from: GAAGACTT
+          to: C6
+        - from: GACAAACC
+          to: B15
+        - from: GACGCAAT
+          to: C22
+        - from: GACTTGAG
+          to: J7
+        - from: GAGAACGA
+          to: G16
+        - from: GAGAAGAG
+          to: H20
+        - from: GAGAGAGA
+          to: J18
+        - from: GAGCAAAC
+          to: J21
+        - from: GAGGGTAG
+          to: C11
+        - from: GAGTCCTG
+          to: A18
+        - from: GAGTCTGT
+          to: H1
+        - from: GAGTTGGT
+          to: N16
+        - from: GATCACCT
+          to: I19
+        - from: GATCCTGA
+          to: O3
+        - from: GATCGAAG
+          to: I20
+        - from: GATGCTCT
+          to: I17
+        - from: GATGTACC
+          to: M4
+        - from: GATGTCGA
+          to: A13
+        - from: GATTGCTC
+          to: E13
+        - from: GATTGTCC
+          to: P20
+        - from: GCAAGAAG
+          to: L21
+        - from: GCAATCGA
+          to: J13
+        - from: GCACGTCA
+          to: A3
+        - from: GCAGAGAA
+          to: D23
+        - from: GCATAATC
+          to: C14
+        - from: GCATCAGT
+          to: K11
+        - from: GCATTTGG
+          to: D24
+        - from: GCCACAAA
+          to: G15
+        - from: GCCATCTT
+          to: C13
+        - from: GCGATATC
+          to: P7
+        - from: GCGTATAG
+          to: F9
+        - from: GCTAATGG
+          to: L17
+        - from: GCTGTAAC
+          to: G17
+        - from: GCTTCCCT
+          to: D3
+        - from: GCTTCTTC
+          to: I21
+        - from: GCTTTGGA
+          to: K14
+        - from: GGACCTTT
+          to: A21
+        - from: GGACGAAT
+          to: L10
+        - from: GGACTACT
+          to: E3
+        - from: GGAGCTAA
+          to: M9
+        - from: GGAGTACA
+          to: L18
+        - from: GGATGATG
+          to: K21
+        - from: GGATTGAC
+          to: B19
+        - from: GGCAACAA
+          to: M19
+        - from: GGCGATTT
+          to: F7
+        - from: GGCTCTAT
+          to: I9
+        - from: GGGAAGAT
+          to: M16
+        - from: GGGACAAC
+          to: D14
+        - from: GGGATTGT
+          to: C3
+        - from: GGGGATTT
+          to: M18
+        - from: GGGTAAGA
+          to: O8
+        - from: GGGTTATG
+          to: E14
+        - from: GGTAATCA
+          to: B11
+        - from: GGTGACTA
+          to: O18
+        - from: GGTGGACT
+          to: B14
+        - from: GGTGTTAG
+          to: N19
+        - from: GGTTAGTG
+          to: O19
+        - from: GGTTCTGA
+          to: F4
+        - from: GTAACTCC
+          to: C19
+        - from: GTAATCCG
+          to: I24
+        - from: GTAGAACG
+          to: B18
+        - from: GTAGTGAG
+          to: K17
+        - from: GTATCGCT
+          to: F24
+        - from: GTATCGTC
+          to: N12
+        - from: GTATGCAC
+          to: M8
+        - from: GTCATTAG
+          to: B4
+        - from: GTCCAAAG
+          to: L13
+        - from: GTCCGTAA
+          to: G10
+        - from: GTCCTATA
+          to: C1
+        - from: GTCGATCT
+          to: J22
+        - from: GTCTACCT
+          to: G13
+        - from: GTCTCACA
+          to: H13
+        - from: GTCTTACC
+          to: N20
+        - from: GTGAACTC
+          to: F6
+        - from: GTGATGTC
+          to: G21
+        - from: GTGCATGA
+          to: B3
+        - from: GTGCGTAT
+          to: M13
+        - from: GTGCTAGT
+          to: O17
+        - from: GTGGTGTA
+          to: K18
+        - from: GTGTAACC
+          to: G8
+        - from: GTGTTCAG
+          to: M1
+        - from: GTTACAGG
+          to: A20
+        - from: GTTATGCC
+          to: O1
+        - from: GTTCAGTG
+          to: G14
+        - from: GTTCCGAT
+          to: L8
+        - from: GTTCGCTA
+          to: E9
+        - from: GTTCTGCT
+          to: F16
+        - from: GTTCTTGC
+          to: L23
+        - from: GTTGCCAC
+          to: B7
+        - from: GTTGGTGA
+          to: J5
+        - from: TAACTCCG
+          to: B16
+        - from: TAAGCCGT
+          to: I16
+        - from: TAAGGTCC
+          to: D20
+        - from: TACAAGGG
+          to: E2
+        - from: TACCACGA
+          to: M5
+        - from: TACCAGAC
+          to: E17
+        - from: TACCTGTC
+          to: J3
+        - from: TACGCCTC
+          to: D17
+        - from: TACGGTGA
+          to: M3
+        - from: TACTGCAC
+          to: I10
+        - from: TACTGCTG
+          to: E6
+        - from: TACTGGTA
+          to: A11
+        - from: TAGACGCT
+          to: F17
+        - from: TAGAGGGT
+          to: N11
+        - from: TAGCTACC
+          to: J6
+        - from: TAGGAACG
+          to: N14
+        - from: TAGGGGAA
+          to: K13
+        - from: TAGGTCAC
+          to: F20
+        - from: TAGTGTGC
+          to: E1
+        - from: TAGTTGCG
+          to: O23
+        - from: TATCCACG
+          to: E20
+        - from: TATCCTGC
+          to: H10
+        - from: TATCTCGC
+          to: H7
+        - from: TATGACCC
+          to: J16
+        - from: TATGGAGC
+          to: O6
+        - from: TATTCGGG
+          to: J4
+        - from: TCAACGAC
+          to: A4
+        - from: TCACCCGA
+          to: B6
+        - from: TCAGCACT
+          to: K15
+        - from: TCAGCTTG
+          to: G18
+        - from: TCATGAGG
+          to: K19
+        - from: TCCAATCG
+          to: J14
+        - from: TCCAGCTA
+          to: K20
+        - from: TCCCTAGA
+          to: E4
+        - from: TCCGAACA
+          to: K2
+        - from: TCCTAGCT
+          to: F3
+        - from: TCGACAAG
+          to: L11
+        - from: TCGACTCA
+          to: G20
+        - from: TCGCCATT
+          to: H2
+        - from: TCGCGATA
+          to: L9
+        - from: TCGGAATC
+          to: K7
+        - from: TCGGTTGA
+          to: I6
+        - from: TCGTCCTT
+          to: L16
+        - from: TCTAGAGG
+          to: E21
+        - from: TCTATGGT
+          to: C15
+        - from: TCTCACAC
+          to: A10
+        - from: TCTCGTCT
+          to: M2
+        - from: TCTGCCTA
+          to: E11
+        - from: TCTGGGCA
+          to: C7
+        - from: TCTGGTTC
+          to: M6
+        - from: TCTGTGAG
+          to: I7
+        - from: TCTTGCTG
+          to: D13
+        - from: TGAAAGCG
+          to: H23
+        - from: TGAAAGGC
+          to: N7
+        - from: TGAATACC
+          to: A9
+        - from: TGACCAAG
+          to: J20
+        - from: TGAGAGAG
+          to: N17
+        - from: TGAGCATA
+          to: D8
+        - from: TGATCCTC
+          to: H19
+        - from: TGATCGGT
+          to: N1
+        - from: TGATCTCC
+          to: K24
+        - from: TGATGCCA
+          to: N15
+        - from: TGATGTAG
+          to: C4
+        - from: TGATTCGC
+          to: L3
+        - from: TGCGGTAT
+          to: H6
+        - from: TGCGTAGG
+          to: A7
+        - from: TGCGTGAT
+          to: K16
+        - from: TGGAGCTC
+          to: A8
+        - from: TGGCACAA
+          to: M23
+        - from: TGGCTTCA
+          to: N22
+        - from: TGGGTTTC
+          to: K4
+        - from: TGGTAGCT
+          to: K9
+        - from: TGGTGAGT
+          to: I22
+        - from: TGGTTGTC
+          to: G11
+        - from: TGTACCAA
+          to: B8
+        - from: TGTGGCTT
+          to: P6
+        - from: TGTTAAGC
+          to: D16
+        - from: TTACGGGT
+          to: A14
+        - from: TTAGACGC
+          to: D9
+        - from: TTAGGACG
+          to: E19
+        - from: TTAGGCAG
+          to: P16
+        - from: TTATCCGG
+          to: K10
+        - from: TTCACGTG
+          to: H8
+        - from: TTCAGACC
+          to: J17
+        - from: TTCAGCGT
+          to: J8
+        - from: TTCCCTCA
+          to: G19
+        - from: TTCCGTTC
+          to: A22
+        - from: TTCCTACC
+          to: F2
+        - from: TTCGCTGT
+          to: C5
+        - from: TTCGGAAA
+          to: B21
+        - from: TTCTCGGA
+          to: J15
+        - from: TTGATGGC
+          to: P9
+        - from: TTGCAACC
+          to: E18
+        - from: TTGTCCAC
+          to: N5
+        - from: TTGTTCCG
+          to: F19
+        - from: TTTGAGGG
+          to: H17
+        - from: TTTGTGTC
+          to: D7
+        - from: TTTTCGCC
+          to: L6
+      reportingLevel: VerboseReport
+  sampleTable: null
+  tagsValidations:
+    - type: MustContainTagType
+      tagType: Cell
+    - type: MustContainTagType
+      tagType: Molecule
+  splitBySample: true
+  limit: null
+  parameters:
+    vParameters:
+      geneFeatureToAlign: VTranscriptWithP
+      minSumScore: 60
+      relativeMinScore: 0.7
+      maxHits: 5
+      edgeRealignmentMinScoreOverride: 35
+      parameters:
+        type: kaligner2
+        mapperNValue: 9
+        mapperKValue: 1
+        floatingLeftBound: false
+        floatingRightBound: true
+        mapperAbsoluteMinClusterScore: 250
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 127
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 15
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 250
+        mapperRelativeMinScore: 0.9
+        mapperMinSeedsDistance: 6
+        mapperMaxSeedsDistance: 6
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: affine
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+      rightForceRealignmentTrigger: CDR3Begin(-6)
+    dParameters:
+      geneFeatureToAlign: DRegionWithP
+      relativeMinScore: 0.85
+      absoluteMinScore: 25.0
+      maxHits: 3
+      scoring:
+        type: linear
+        alphabet: nucleotide
+        subsMatrix: "simple(match = 5, mismatch = -9)"
+        gapPenalty: -12
+    jParameters:
+      geneFeatureToAlign: JRegionWithP
+      minSumScore: 150
+      relativeMinScore: 0.97
+      maxHits: 5
+      parameters:
+        type: kaligner2
+        mapperNValue: 8
+        mapperKValue: 1
+        floatingLeftBound: true
+        floatingRightBound: false
+        mapperAbsoluteMinClusterScore: 102
+        mapperExtraClusterScore: -38
+        mapperMatchScore: 95
+        mapperMismatchScore: -14
+        mapperOffsetShiftScore: -82
+        mapperSlotCount: 6
+        mapperMaxClusters: 4
+        mapperMaxClusterIndels: 4
+        mapperKMersPerPosition: 4
+        mapperAbsoluteMinScore: 100
+        mapperRelativeMinScore: 0.8
+        mapperMinSeedsDistance: 5
+        mapperMaxSeedsDistance: 5
+        alignmentStopPenalty: 0
+        absoluteMinScore: 150
+        relativeMinScore: 0.8
+        maxHits: 3
+        scoring:
+          type: affine
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 10, mismatch = -19)"
+          gapOpenPenalty: -62
+          gapExtensionPenalty: -11
+    cParameters:
+      geneFeatureToAlign: CExon1
+      minSumScore: 40
+      relativeMinScore: 0.97
+      maxHits: 5
+      parameters:
+        type: kaligner
+        mapperKValue: 5
+        floatingLeftBound: false
+        floatingRightBound: false
+        mapperAbsoluteMinScore: 95.0
+        mapperRelativeMinScore: 0.63
+        mapperMatchScore: 128.0
+        mapperMismatchPenalty: -0.1
+        mapperOffsetShiftPenalty: -0.3
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 18
+        minAlignmentLength: 15
+        maxAdjacentIndels: 2
+        alignmentStopPenalty: -1000
+        absoluteMinScore: 40.0
+        relativeMinScore: 0.87
+        maxHits: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -9)"
+          gapPenalty: -12
+    vjAlignmentOrder: VThenJ
+    libraryStructure: Unknown
+    includeDScore: false
+    includeCScore: false
+    minSumScore: 120.0
+    relativeMinVFR3CDR3Score: 0.7
+    allowPartialAlignments: true
+    allowNoCDR3PartAlignments: true
+    allowChimeras: false
+    readsLayout: Opposite
+    mergerParameters:
+      qualityMergingAlgorithm: MaxSubtraction
+      partsLayout: null
+      minimalOverlap: 13
+      minimalMatchQualitySum: 364
+      maxQuality: 50
+      minimalIdentity: 0.7
+      identityType: MinimalQualityWeighted
+    fixSeed: true
+    alignmentBoundaryTolerance: 5
+    minChimeraDetectionScore: 120
+    vjOverlapWindow: 3
+    saveOriginalSequence: false
+    saveOriginalReads: false
+    smartForceEdgeAlignments: true
+    retriesForPartialAlignments: 3
+    retriesAlignmentOfNotCoveredPart: 2
+refineTagsAndSort:
+  whitelists: {}
+  runCorrection: true
+  parameters:
+    correctionPower: 0.001
+    backgroundSubstitutionRate: 0.001
+    backgroundIndelRate: 1.0E-5
+    minQuality: 12
+    maxSubstitutions: 2
+    maxIndels: 2
+    maxTotalErrors: 3
+    postFilter:
+      type: filter_and
+      operands:
+        - type: filter_groups
+          groupingKeys:
+            - allTags:Cell
+            - allTags:Molecule
+          predicates:
+            - metrics:
+                - type: group_metric_sum_weight
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+                    multiplyWeightByKey: false
+              operator:
+                type: group_operator_lowest_threshold
+                operators:
+                  - type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      - type: inflate
+                        fraction: 0.15
+                        value: 1.0
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+                    accept: High
+                  - type: group_operator_cumtop
+                    share: 0.85
+                    round: Down
+                    accept: High
+                accept: High
+              expectedSorting: []
+              requiredSequences: []
+          expectedSorting:
+            - allTags:Cell
+            - allTags:Molecule
+          requiredSequences: []
+      expectedSorting:
+        - allTags:Cell
+        - allTags:Molecule
+      requiredSequences: []
+assemblePartial:
+  overlappedOnly: false
+  dropPartial: false
+  cellLevel: false
+  parameters:
+    kValue: 12
+    kOffset: -7
+    minimalAssembleOverlap: 12
+    minimalNOverlap: 7
+    minimalNOverlapShare: 0.65
+    minimalAlignmentMergeIdentity: 0.85
+    mergerParameters:
+      qualityMergingAlgorithm: SumSubtraction
+      partsLayout: CollinearDirect
+      minimalOverlap: 20
+      minimalMatchQualitySum: 0
+      maxQuality: 45
+      minimalIdentity: 0.95
+      identityType: Unweighted
+    maxLeftParts: 256000
+    maxLeftMatches: 6144
+extend:
+  vAnchor: CDR3Begin
+  jAnchor: FR4Begin
+  minimalVScore: 50
+  minimalJScore: 50
+assemble:
+  sortBySequence: false
+  clnaOutput: true
+  cellLevel: true
+  consensusAssemblerParameters:
+    assembler:
+      aAssemblerParameters:
+        bandWidth: 4
+        scoring:
+          type: linear
+          alphabet: nucleotide
+          subsMatrix: "simple(match = 5, mismatch = -4)"
+          gapPenalty: -14
+        minAlignmentScore: 40
+        maxNormalizedAlignmentPenalty: 0.2
+        trimMinimalSumQuality: 0
+        trimReferenceRegion: false
+        maxQuality: 45
+      maxIterations: 6
+      minAltSeedQualityScore: 11
+      minAltSeedNormalizedPenalty: 0.35
+      altSeedPenaltyTolerance: 0.5
+      minRecordSharePerConsensus: 0.02
+      minRecordsPerConsensus: 0
+      minRecursiveRecordShare: 0.1
+      minQualityScore: 0
+      maxConsensuses: 2
+    minTagSuffixShare: 0.0
+    isolateChains: true
+    empiricalAlignmentAssignment:
+      uniqGeneOccurrenceWithinTag:
+        - V
+        - J
+      uniqGeneOccurrenceWithinCluster:
+        - V
+        - J
+      matchAlignmentsWithoutVJHitsByTags: true
+  cloneAssemblerParameters:
+    assemblingFeatures:
+      - CDR3
+    minimalClonalSequenceLength: 12
+    qualityAggregationType: BetaScore
+    cloneClusteringParameters:
+      searchDepth: 2
+      allowedMutationsInNRegions: 1
+      searchParameters: twoMismatchesOrIndels
+      clusteringFilter:
+        type: advanced
+        correctionPower: 0.001
+        backgroundSubstitutionRate: 5.0E-4
+        backgroundIndelRate: 2.0E-4
+    cloneFactoryParameters:
+      vParameters:
+        relativeMinScore: 0.8
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      jParameters:
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      cParameters:
+        maxAlignmentWidthLinear: 5
+        maxAlignmentWidthAffine: 500
+      dParameters:
+        relativeMinScore: null
+        absoluteMinScore: null
+        maxHits: null
+        scoring: null
+    separateByV: false
+    separateByJ: false
+    separateByC: false
+    maximalPreClusteringRatio: 1.0
+    preClusteringScoreFilteringRatio: 2.0
+    preClusteringCountFilteringRatio: 2.0
+    addReadsCountOnClustering: false
+    badQualityThreshold: 10
+    maxBadPointsPercent: 0.7
+    mappingThreshold: 2of5
+    minimalQuality: 20
+    postFilters:
+      - type: filter_in_groups
+        isolationKeys:
+          - chain
+          - allTags:Cell
+        nestedFilter:
+          type: filter_groups
+          groupingKeys:
+            - clone
+          predicates:
+            - metrics:
+                - type: group_metric_nunique
+                  reportHist: null
+                  keys:
+                    - allTags:Molecule
+              operator:
+                type: group_operator_cumtop
+                share: 0.95
+                accept: High
+              expectedSorting:
+                - allTags:Molecule
+              requiredSequences: []
+          expectedSorting:
+            - clone
+            - allTags:Molecule
+          requiredSequences: []
+        aggregateReport: true
+        expectedSorting:
+          - chain
+          - allTags:Cell
+          - clone
+          - allTags:Molecule
+  inferMinRecordsPerConsensus: false
+assembleContigs:
+  ignoreTags: false
+  parameters:
+    branchingMinimalQualityShare: 0.1
+    branchingMinimalSumQuality: 60
+    decisiveBranchingSumQualityThreshold: 120
+    alignedSequenceEdgeDelta: 3
+    alignmentEdgeRegionSize: 7
+    minimalNonEdgePointsFraction: 0.25
+    minimalMeanNormalizedQuality: 5.0
+    outputMinimalQualityShare: 0.75
+    outputMinimalSumQuality: 0
+    subCloningRegions:
+      - VDJRegion
+    assemblingRegions:
+      - VDJRegion
+    postFiltering:
+      type: OnlyUnambiguouslyCovering
+      geneFeatures:
+        - VDJRegion
+    trimmingParameters:
+      averageQualityThreshold: 10.0
+      windowSize: 8
+    minimalContigLength: 20
+    alignedRegionsOnly: true
+    discardAmbiguousNucleotideCalls: false
+  cloneFactoryParameters:
+    vParameters:
+      relativeMinScore: 0.97
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    jParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    cParameters:
+      maxAlignmentWidthLinear: 5
+      maxAlignmentWidthAffine: 500
+    dParameters:
+      relativeMinScore: null
+      absoluteMinScore: null
+      maxHits: null
+      scoring: null
+assembleCells:
+  algorithm:
+    type: SingleCellGroupingByOverlappingCellIds
+    minOverlapForSmaller:
+      percentage: 0.8
+      roundingMode: UP
+    minOverlapForBigger:
+      percentage: 0.2
+      roundingMode: UP
+    countCellBarcodesWithOneClone: true
+    thresholdForAssigningLeftoverCells:
+      percentage: 0.6
+      roundingMode: DOWN
+    nonFunctional:
+      type: OverlapWithFoundGroups
+      minOverlapForClone:
+        percentage: 0.9
+        roundingMode: UP
+      minOverlapForGroup:
+        percentage: 0.5
+        roundingMode: UP
+exportAlignments:
+  chains: ALL
+  noHeader: false
+  fields:
+    - field: -readIds
+    - field: -tags
+      args:
+        - Cell
+    - field: -tags
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
+exportClones:
+  splitByTagType: null
+  filterOutOfFrames: false
+  filterStops: false
+  chains: ALL
+  noHeader: false
+  fields:
+    - field: -cloneId
+    - field: -cellGroup
+    - field: -tags
+      args:
+        - Cell
+    - field: -readCount
+    - field: -readFraction
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqueTagFraction
+      args:
+        - Molecule
+    - field: -targetSequences
+    - field: -targetQualities
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
+    - field: -vHitsWithScore
+    - field: -dHitsWithScore
+    - field: -jHitsWithScore
+    - field: -cHitsWithScore
+    - field: -vAlignments
+    - field: -dAlignments
+    - field: -jAlignments
+    - field: -cAlignments
+    - field: -allNFeaturesWithMinQuality
+    - field: -allAAFeatures
+    - field: -defaultAnchorPoints
+    - field: -topChains
+  splitFilesBy: []
+  groupClonesBy: []
+exportCloneGroups:
+  filterOutOfFrames: false
+  filterStops: false
+  filterOutGroupsWithOneClone: false
+  showSecondaryChains: true
+  types: []
+  noHeader: false
+  fields:
+    - field: -cellGroup
+    - field: -groupReadCount
+    - field: -groupUniqueTagCount
+      args:
+        - Cell
+    - field: -groupUniqueTagCount
+      args:
+        - Molecule
+    - field: -uniqClonesPerChainCount
+    - field: -readCount
+    - field: -uniqueTagCount
+      args:
+        - Molecule
+    - field: -vHit
+    - field: -dHit
+    - field: -jHit
+    - field: -cHit
+    - field: -nFeature
+      args:
+        - CDR3
+    - field: -aaFeature
+      args:
+        - CDR3
+  sortChainsBy: Auto
+qc:
+  checks:
+    - type: SuccessfullyAlignedReads
+      upper: 0.8
+      middle: 0.6
+      label: Successfully aligned reads
+    - type: UnassignedAlignments
+      upper: 0.2
+      middle: 0.1
+      label: Unassigned alignments in clonotype assembly
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.2
+      middle: 0.1
+      label: Alignments dropped due to low sequence quality
+    - type: ReadsDroppedInTagRefinement
+      upper: 0.3
+      middle: 0.15
+      label: Reads dropped in tags error correction and filtering
+    - type: TagArtificialDiversityEliminated
+      tag: CELL
+      upper: 0.8
+      middle: 0.7
+      label: CELLs artificial diversity eliminated
+    - type: ReadsDroppedInTagFiltering
+      upper: 0.2
+      middle: 0.1
+      label: Reads dropped in tags filtering
+    - type: CellBarcodesWithFoundGroups
+      upper: 0.9
+      middle: 0.8
+      label: Cell barcodes used in result groups
