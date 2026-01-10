@@ -8,6 +8,8 @@
     - refineTagsAndSort
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: SetSpecies
       species: hs

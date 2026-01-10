@@ -1,0 +1,83 @@
+# miltenyi-human-rna-bcr-profiling:
+#   vendor: "Miltenyi"
+#   label: "Human BCR RNA Profiling Kit"
+#   category: non-generic
+#   inheritFrom: generic-amplicon-with-umi
+#   defaultChains:
+#     - IGHeavy
+#     - IGLight
+#   pipeline:
+#     - align
+#     - refineTagsAndSort
+#     - assemble
+#     - exportClones
+#   mixins:
+#     - type: SetSpecies
+#       species: hsa
+#     - type: MaterialTypeRNA
+#     - type: SetTagPattern
+#       tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{20}(R1:*) \ ^N{12}(R2:*)
+#     - type: LeftAlignmentBoundaryNoPoint
+#       floating: false
+#     - type: RightAlignmentBoundaryNoPoint
+#       floating: false
+#       geneType: C
+#     - type: SetSplitClonesBy
+#       geneType: C
+#       value: true
+#     - type: SetClonotypeAssemblingFeatures
+#       features: [ "{CDR1Begin:FR4End}" ]
+#     - type: AddExportClonesField
+#       field: -isotype
+#       insertIndex: -1
+#       args:
+#         - auto
+#     - type: AddQcChecks
+#       args:
+#         - type: OverlappedReadsMoreBetter
+#           middle: 0.6
+#           upper: 0.7
+#   align:
+#     inheritFrom: generic-amplicon-with-umi
+#     overrides:
+#       parameters:
+#         readsLayout: ReverseOnly
+
+
+miltenyi-human-rna-tcr-profiling:
+  vendor: "Miltenyi"
+  label: "Human TCR α/β RNA Profiling Kit"
+  category: non-generic
+  inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: ^N{0:2}tggtatcaacgcagagt(UMI:N{14})N{21}(R1:*) \ ^N{20}(R2:*)
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: SetSplitClonesBy
+      geneType: V
+      value: true
+    - type: SetSplitClonesBy
+      geneType: J
+      value: true
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "CDR3" ]
+    - type: AddQcChecks
+      args:
+        - type: OverlappedReadsMoreBetter
+          middle: 0.6
+          upper: 0.7
+  align:
+    inheritFrom: generic-amplicon-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly

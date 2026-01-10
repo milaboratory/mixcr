@@ -7,6 +7,8 @@
     - align
     - assemble
     - exportClones
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hs
@@ -29,6 +31,8 @@
   label: "Human TCR Beta DNA Ampliseq Short Read"
   category: non-generic
   inheritFrom: illumina-human-rna-trb-ampliseq-sr
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: MaterialTypeDNA
 
@@ -37,6 +41,8 @@
   label: "Human TCR Beta Ampliseq Plus"
   category: non-generic
   inheritFrom: illumina-human-rna-trb-ampliseq-sr
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:FR4End}" ]
