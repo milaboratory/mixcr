@@ -81,3 +81,15 @@ miltenyi-human-rna-tcr-profiling:
     overrides:
       parameters:
         readsLayout: ReverseOnly
+
+miltenyi-human-rna-tcr-profiling-miltiplex:
+  vendor: "Miltenyi"
+  label: "Human TCR α/β RNA Profiling Kit (Miltiplex)"
+  category: non-generic
+  inheritFrom: miltenyi-human-rna-tcr-profiling
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^N{0:12}tggtatcaacgcagagt(SMPL:N{5})(UMI:N{14})N{21}(R1:)\^N{20}(R2:)
