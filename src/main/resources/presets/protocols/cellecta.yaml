@@ -739,6 +739,11 @@
         - type: OverlappedReadsMoreBetter
           middle: 0.6
           upper: 0.7
+    - type: AddQcChecks
+      args:
+        - type: ReadsWithNoBarcode
+          middle: 0.2
+          upper: 0.4
   align:
     inheritFrom: generic-amplicon-with-umi
     overrides:
