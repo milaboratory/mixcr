@@ -42,9 +42,11 @@
 "thermofisher-human-dna-trb-oncomine-sr":
   label: "Oncomine DNA TCR Beta‑LR Assay"
   inheritFrom: thermofisher-human-rna-trb-oncomine-sr
+  mixins:
+    - type: MaterialTypeDNA
   defaultChains:
     - TCRBeta
-
+    
 "thermofisher-human-rna-igh-oncomine-lr":
   label: "Oncomine RNA IGH LR Assay"
   inheritFrom: thermofisher-human-oncomine-base
@@ -78,9 +80,10 @@
 "thermofisher-human-dna-igh-oncomine-sr":
   label: "Oncomine DNA IGH SR Assay"
   inheritFrom: thermofisher-human-rna-igh-oncomine-sr
+  mixins:
+    - type: MaterialTypeDNA
   defaultChains:
     - IGHeavy
-
 
 "thermofisher-human-dna-bcr-oncomine-pan-clonality":
   label: "Oncomine BCR Pan-Clonality Assay"
@@ -149,7 +152,7 @@
   defaultChains:
     - TCRBeta
   mixins:
-    - type: MaterialTypeRNA
+    - type: MaterialTypeDNA
 
 "thermofisher-mouse-rna-igh-ampliseq-sr":
   label: "Ion AmpliSeq Mouse IGH‑SR RNA"
@@ -166,4 +169,4 @@
   defaultChains:
     - IGHeavy
   mixins:
-    - type: MaterialTypeRNA
+    - type: MaterialTypeDNA
