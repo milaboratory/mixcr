@@ -160,7 +160,7 @@
     - TCRAlpha
     - TCRBeta
 
-"takara-mouse-rna-tcr-umi-smarseq":
+"takara-mouse-rna-tcr-umi-smartseq":
   vendor: "Takara Bio"
   label: "SMART-Seq Mouse TCR (with UMIs)"
   category: non-generic
@@ -174,7 +174,7 @@
     - type: SetTagPattern
       tagPattern: ^N{5}(R1:*) \ ^(UMI:N{12})N{10}(R2:*)
 
-"takara-mouse-rna-bcr-umi-smarseq":
+"takara-mouse-rna-bcr-umi-smartseq":
   vendor: "Takara Bio"
   label: "SMART-Seq Mouse BCR (with UMIs)"
   category: non-generic
