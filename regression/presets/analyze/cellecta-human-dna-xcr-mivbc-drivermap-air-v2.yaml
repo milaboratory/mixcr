@@ -369,3 +369,7 @@ qc:
       upper: 0.7
       middle: 0.6
       label: Overlapped paired-end reads
+    - type: ReadsWithNoBarcode
+      upper: 0.4
+      middle: 0.2
+      label: Reads with no barcode
