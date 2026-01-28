@@ -8,6 +8,11 @@ neb-human-rna-xcr-umi-nebnext:
     - refineTagsAndSort
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hsa
@@ -45,6 +50,11 @@ neb-mouse-rna-xcr-umi-nebnext:
   label: "NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR"
   category: non-generic
   inheritFrom: neb-human-rna-xcr-umi-nebnext
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: mmu

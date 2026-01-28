@@ -3,6 +3,9 @@ idt-human-rna-tcr-umi-archer:
   label: "Archer IMMUNOVerse TCR panel"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   pipeline:
     - align
     - refineTagsAndSort
@@ -26,6 +29,9 @@ idt-human-rna-bcr-umi-archer:
   label: "Archer IMMUNOVerse BCR panel"
   category: non-generic
   inheritFrom: idt-human-rna-tcr-umi-archer
+  defaultChains:
+    - IGHeavy
+    - IGLight
   pipeline:
     - align
     - refineTagsAndSort

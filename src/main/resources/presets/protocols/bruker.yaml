@@ -3,6 +3,9 @@
   label: "Single cell VDJ"
   category: non-generic
   inheritFrom: generic-lt-single-cell-amplicon
+  defaultChains:
+    - IG
+    - TCRAB
   flags:
     - species
   mixins:

@@ -46,5 +46,5 @@ mixcr align -p generic-amplicon --verbose \
 
 assert "cat case028.report.json | head -n 1 | jq -r .totalReadsProcessed" "1"
 assert "cat case028.report.json | head -n 1 | jq -r .aligned" "1"
-assert "mixcr exportAlignments case028-xxx.vdjca --drop-default-fields --no-header -vHit" "IGHVXX"
-assert "mixcr exportAlignments case028-xxx.vdjca --drop-default-fields --no-header -jHit" "IGHJXX"
+assert "mixcr exportAlignments case028-xxx.vdjca --drop-default-fields --no-header -vHit | grep -v '^WARNING'" "IGHVXX"
+assert "mixcr exportAlignments case028-xxx.vdjca --drop-default-fields --no-header -jHit | grep -v '^WARNING'" "IGHJXX"

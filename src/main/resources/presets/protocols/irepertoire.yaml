@@ -3,6 +3,13 @@
   label: "Human IGH/TCR Repseq Short Read"
   category: non-generic
   inheritFrom: generic-amplicon
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   pipeline:
     - align
     - assemble
@@ -29,6 +36,13 @@
   label: "Human IGH/TCR Repseq Long Read"
   category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:FR4End}"]
@@ -47,6 +61,13 @@
   label: "Mouse IGH/TCR Repseq Long Read"
   category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: mmu
@@ -58,6 +79,11 @@
   label: "Human IGH/TCR Repseq Plus"
   category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-sr
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:FR4End}" ]
@@ -66,6 +92,11 @@
   vendor: "iRepertoire"
   label: "Mouse IGH/TCR Repseq Plus"
   category: non-generic
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   inheritFrom: irepertoire-mouse-rna-xcr-repseq-lr
 
 
@@ -74,6 +105,9 @@
   label: "Human DNA IGH/TCR Repseq Short Read"
   category: non-generic
   inheritFrom: generic-amplicon
+  defaultChains:
+    - IGHeavy
+    - TCRBeta
   pipeline:
     - align
     - assemble
@@ -100,6 +134,11 @@
   label: "Human DNA IGH/TCR Repseq Long Read"
   category: non-generic
   inheritFrom: irepertoire-human-dna-xcr-repseq-sr
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: ["{CDR1Begin:CDR3End}"]
@@ -109,6 +148,11 @@
   label: "Human IGH/TCR Repseq Plus with UMI Paired End"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   pipeline:
     - align
     - refineTagsAndSort
@@ -173,6 +217,11 @@
   label: "Human IGH/TCR Repseq Plus with UMI Single End"
   category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-plus-umi-pe
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetTagPattern
       tagPattern: ^(UMI:N{10})N{8}(R1:*)
@@ -185,6 +234,11 @@
   label: "Mouse IGH/TCR Repseq Plus with UMI Paired End"
   category: non-generic
   inheritFrom: irepertoire-human-rna-xcr-repseq-plus-umi-pe
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: mmu

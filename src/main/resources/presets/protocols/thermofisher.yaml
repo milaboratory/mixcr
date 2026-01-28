@@ -19,6 +19,8 @@
 "thermofisher-human-rna-trb-oncomine-lr":
   label: "Oncomine RNA TCR Beta‑LR Assay"
   inheritFrom: thermofisher-human-oncomine-base
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -30,6 +32,8 @@
 "thermofisher-human-rna-trb-oncomine-sr":
   label: "Oncomine RNA TCR Beta‑SR Assay"
   inheritFrom: thermofisher-human-oncomine-base
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -40,10 +44,14 @@
   inheritFrom: thermofisher-human-rna-trb-oncomine-sr
   mixins:
     - type: MaterialTypeDNA
-
+  defaultChains:
+    - TCRBeta
+    
 "thermofisher-human-rna-igh-oncomine-lr":
   label: "Oncomine RNA IGH LR Assay"
   inheritFrom: thermofisher-human-oncomine-base
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -62,6 +70,8 @@
 "thermofisher-human-rna-igh-oncomine-sr":
   label: "Oncomine RNA IGH SR Assay"
   inheritFrom: thermofisher-human-oncomine-base
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: RightAlignmentBoundaryNoPoint
       floating: true
@@ -72,11 +82,15 @@
   inheritFrom: thermofisher-human-rna-igh-oncomine-sr
   mixins:
     - type: MaterialTypeDNA
-
+  defaultChains:
+    - IGHeavy
 
 "thermofisher-human-dna-bcr-oncomine-pan-clonality":
   label: "Oncomine BCR Pan-Clonality Assay"
   inheritFrom: thermofisher-human-oncomine-base
+  defaultChains:
+    - IGHeavy
+    - IGLight
   mixins:
     - type: MaterialTypeDNA
     - type: RightAlignmentBoundaryNoPoint
@@ -86,10 +100,14 @@
 "thermofisher-human-dna-igh-oncomine-fr3-j":
   label: "Oncomine IGH FR3(d)-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
+  defaultChains:
+    - IGHeavy
 
 "thermofisher-human-dna-igh-oncomine-fr2-j":
   label: "Oncomine IGH FR2-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR2Begin:CDR3End}" ]
@@ -97,6 +115,8 @@
 "thermofisher-human-dna-igh-oncomine-fr1-j":
   label: "Oncomine IGH FR1-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{CDR1Begin:CDR3End}" ]
@@ -104,6 +124,8 @@
 "thermofisher-human-dna-igh-oncomine-v-leader-j":
   label: "Oncomine IGH Leader-J Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: SetClonotypeAssemblingFeatures
       features: [ "{FR1Begin:CDR3End}" ]
@@ -111,10 +133,15 @@
 "thermofisher-human-dna-tcr-oncomine-pan-clonality":
   label: "Oncomine TCR Pan-Clonality Assay"
   inheritFrom: thermofisher-human-dna-bcr-oncomine-pan-clonality
+  defaultChains:
+    - TCRBeta
+    - TCRGamma
 
 "thermofisher-mouse-rna-tcb-ampliseq-sr":
   label: "Ion AmpliSeq Mouse TCR Beta‑SR RNA"
   inheritFrom: thermofisher-human-rna-trb-oncomine-sr
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: mmu
@@ -122,12 +149,16 @@
 "thermofisher-mouse-dna-tcb-ampliseq-sr":
   label: "Ion AmpliSeq Mouse TCR Beta‑SR DNA"
   inheritFrom: thermofisher-mouse-rna-tcb-ampliseq-sr
+  defaultChains:
+    - TCRBeta
   mixins:
     - type: MaterialTypeDNA
 
 "thermofisher-mouse-rna-igh-ampliseq-sr":
   label: "Ion AmpliSeq Mouse IGH‑SR RNA"
   inheritFrom: thermofisher-human-rna-igh-oncomine-sr
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: SetSpecies
       species: mmu
@@ -135,5 +166,7 @@
 "thermofisher-mouse-dna-igh-ampliseq-sr":
   label: "Ion AmpliSeq Mouse IGH‑SR DNA"
   inheritFrom: thermofisher-mouse-rna-igh-ampliseq-sr
+  defaultChains:
+    - IGHeavy
   mixins:
     - type: MaterialTypeDNA

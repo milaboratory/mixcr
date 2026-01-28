@@ -140,13 +140,13 @@ val milibVersion = ""
 // may be blank (will be inherited from mixcr-algo or milib)
 val miuVersion = ""
 // may be blank (will be inherited from mixcr-algo)
-val mitoolVersion = "2.3.1-14-main"
+val mitoolVersion = "2.3.1-33-main"
 // may be blank (will be inherited from mixcr-algo)
 val repseqioVersion = "2.5.0-14-master"
 
 val picocliVersion = "4.6.3"
 val jacksonBomVersion = "2.16.0"
-val milmVersion = "4.7.0"
+val milmVersion = "4.7.0-4-main"
 
 val cliktVersion = "3.5.0"
 val jcommanderVersion = "1.72"

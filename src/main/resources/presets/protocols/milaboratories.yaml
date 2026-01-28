@@ -3,6 +3,9 @@ milab-human-rna-ig-umi-multiplex:
   label: "Human Ig RNA Multiplex"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - IGHeavy
+    - IGLight
   pipeline:
     - align
     - refineTagsAndSort
@@ -45,6 +48,9 @@ milab-human-rna-tcr-umi-race:
   label: "Human TCR RNA 5'RACE"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hsa
@@ -80,6 +86,9 @@ milab-human-rna-tcr-umi-multiplex:
   label: "Human TCR RNA Multiplex"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hsa
@@ -115,6 +124,9 @@ milab-human-dna-tcr-multiplex:
   label: "Human TCR DNA Multiplex"
   category: non-generic
   inheritFrom: generic-amplicon
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: hsa
@@ -142,6 +154,13 @@ milab-human-dna-xcr-7genes-multiplex:
   label: "Human 7GENES DNA Multiplex"
   category: non-generic
   inheritFrom: milab-human-dna-tcr-multiplex
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
 
 
 milab-mouse-rna-tcr-umi-race:
@@ -149,6 +168,9 @@ milab-mouse-rna-tcr-umi-race:
   label: "Mouse TCR RNA 5'RACE"
   category: non-generic
   inheritFrom: milab-human-rna-tcr-umi-race
+  defaultChains:
+    - TCRAlpha
+    - TCRBeta
   mixins:
     - type: SetSpecies
       species: mmu

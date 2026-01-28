@@ -8,6 +8,13 @@
     - refineTagsAndSort
     - assemble
     - exportClones
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: hsa
@@ -38,6 +45,13 @@
 "cellecta-human-dna-xcr-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeDNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -49,6 +63,13 @@
 "cellecta-human-rna-xcr-full-length-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -65,6 +86,13 @@
 "cellecta-mouse-rna-xcr-umi-drivermap-air":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: mmu
@@ -81,6 +109,13 @@
 "cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-1-1-1":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 1:1:1"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: AddQcChecks
       args:
@@ -238,6 +273,13 @@
 "cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-16-4-1":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 16:4:1"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: AddQcChecks
       args:
@@ -395,6 +437,13 @@
 "cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-1-1-1":
   inheritFrom: cellecta-human-rna-xcr-umi-drivermap-air
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 1:1:1"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: AddQcChecks
       args:
@@ -657,6 +706,13 @@
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling v2"
   category: non-generic
   inheritFrom: generic-amplicon-with-umi
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   pipeline:
     - align
     - refineTagsAndSort
@@ -752,6 +808,13 @@
 "cellecta-human-rna-xcr-full-length-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA v2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeRNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -768,6 +831,13 @@
 "cellecta-human-dna-xcr-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: MaterialTypeDNA
     - type: LeftAlignmentBoundaryNoPoint
@@ -779,6 +849,13 @@
 "cellecta-mouse-rna-xcr-mivbc-drivermap-air-v2":
   inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
   label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA V2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: mmu
@@ -792,4 +869,308 @@
       geneType: C
       value: true
 
+"cellecta-mouse-dna-xcr-mivbc-drivermap-air-v2":
+  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
+  label: "DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse DNA v2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
+  mixins:
+    - type: SetSpecies
+      species: mmu
 
+"cellecta-mouse-rna-xcr-full-length-mivbc-drivermap-air-v2":
+  inheritFrom: cellecta-human-rna-xcr-mivbc-drivermap-air-v2
+  label: "DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Mouse RNA v2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
+  mixins:
+    - type: SetSpecies
+      species: mmu
+
+"cellecta-human-sc-xcr-vdj-drivermap-air-immunophenotyping-assay-v2":
+  inheritFrom: generic-lt-single-cell-amplicon
+  label: "DriverMap™ Single-cell AIR TCR-BCR Immunophenotyping Assay Human V2"
+  defaultChains:
+    - IGHeavy
+    - IGLight
+    - TCRAlpha
+    - TCRBeta
+  mixins:
+    - type: SetSpecies
+      species: hsa
+    - type: MaterialTypeRNA
+    - type: SetTagPattern
+      tagPattern: '^(R1:*)\^(CELL:N{10})(MIVBC:GCATCA)(R2:*)|^(CELL:N{10})(MIVBC:AGTCGT)(R2:*)|^(CELL:N{10})(MIVBC:TCGCAT)(R2:*)|^(CELL:N{10})(MIVBC:AGCGTA)(R2:*)'
+    - type: LeftAlignmentBoundaryNoPoint
+      floating: false
+    - type: RightAlignmentBoundaryNoPoint
+      floating: false
+      geneType: C
+    - type: SetClonotypeAssemblingFeatures
+      features: [ "{CDR1Begin:FR4End}" ]
+  align:
+    inheritFrom: generic-lt-single-cell-amplicon-with-umi
+    overrides:
+      tagTransformationSteps:
+        - type: mapTags
+          name: "MIVBC to BC"
+          matchTags:
+            - MIVBC
+          newTags:
+            - MIBC
+          allowOneMismatch: true
+          rules:
+            - from: GCATCA
+              to: BC1
+            - from: AGTCGT
+              to: BC2
+            - from: TCGCAT
+              to: BC3
+            - from: AGCGTA
+              to: BC4
+          reportingLevel: VerboseReport
+        - type: mapTags
+          name: "CELL to CELLWELL"
+          matchTags:
+            - CELL
+          newTags:
+            - CELLWELL
+          allowOneMismatch: true
+          rules:
+            - from: CTTATGGAAT
+              to: A1
+            - from: AGAGCACTAG
+              to: A2
+            - from: TAATGGCAAG
+              to: A3
+            - from: AGTCAACCAT
+              to: A4
+            - from: GTATGTAGAA
+              to: A5
+            - from: TGGATGCTTA
+              to: A6
+            - from: GTCGATTACA
+              to: A7
+            - from: TGACTACATA
+              to: A8
+            - from: GCCATTAGAC
+              to: A9
+            - from: TAGAATAACG
+              to: A10
+            - from: TAATGGATCT
+              to: A11
+            - from: GTGCAACACT
+              to: A12
+            - from: TCTTACATCA
+              to: B1
+            - from: TTAGGATAGA
+              to: B2
+            - from: CCGAAGCGAG
+              to: B3
+            - from: GGACCAACAG
+              to: B4
+            - from: TTCCAGGTAA
+              to: B5
+            - from: TAACAGTGTT
+              to: B6
+            - from: AGACACATTA
+              to: B7
+            - from: GCGTTGGTAT
+              to: B8
+            - from: ACGTCAATAC
+              to: B9
+            - from: GGTGTACAAG
+              to: B10
+            - from: ACCTTATGAA
+              to: B11
+            - from: CGCTGCAGAG
+              to: B12
+            - from: GTAGAGTCAG
+              to: C1
+            - from: GGATACCAGA
+              to: C2
+            - from: CGCACTAATG
+              to: C3
+            - from: GTAAGGCATA
+              to: C4
+            - from: GGAATTCCAA
+              to: C5
+            - from: CTGGATATGT
+              to: C6
+            - from: CAATCTATGA
+              to: C7
+            - from: TCTCCATTGA
+              to: C8
+            - from: ACATGCATAT
+              to: C9
+            - from: ACGCTAATTA
+              to: C10
+            - from: CCTTGTTAAT
+              to: C11
+            - from: GTAGCCATCA
+              to: C12
+            - from: CTTGTAATTC
+              to: D1
+            - from: TCCAATTCTA
+              to: D2
+            - from: GAACAAGTAT
+              to: D3
+            - from: ACACAATATC
+              to: D4
+            - from: AACGTTACAT
+              to: D5
+            - from: CATAACACCA
+              to: D6
+            - from: ATAGGTATTC
+              to: D7
+            - from: CCTTCACGTA
+              to: D8
+            - from: ATTCAGAATC
+              to: D9
+            - from: GTATTCTCTA
+              to: D10
+            - from: CCTGATACAA
+              to: D11
+            - from: AGATGGAATT
+              to: D12
+            - from: ACACCGTTAA
+              to: E1
+            - from: CGAAGGTTAA
+              to: E2
+            - from: ATCGCATATG
+              to: E3
+            - from: CCAACAACAT
+              to: E4
+            - from: TCCAAGAATT
+              to: E5
+            - from: CAACATTCAA
+              to: E6
+            - from: TATCATGAGA
+              to: E7
+            - from: AGTTATCACA
+              to: E8
+            - from: GTAGCATACT
+              to: E9
+            - from: CTTCAGTTAC
+              to: E10
+            - from: GATATCCTAA
+              to: E11
+            - from: AATAGAGCAA
+              to: E12
+            - from: CTAACTGTAA
+              to: F1
+            - from: TACCGAACTA
+              to: F2
+            - from: GGTTATGCTA
+              to: F3
+            - from: GCTTCCACTA
+              to: F4
+            - from: AAGTCTTGTA
+              to: F5
+            - from: TGCTAACTAT
+              to: F6
+            - from: TAAGACCTAT
+              to: F7
+            - from: TGGTTAAGAA
+              to: F8
+            - from: TTGAGAGGAT
+              to: F9
+            - from: AGTGGATAAT
+              to: F10
+            - from: GGTATTGAGA
+              to: F11
+            - from: AGATTGTTAC
+              to: F12
+            - from: CATGGTCTAA
+              to: G1
+            - from: GAGACATAAT
+              to: G2
+            - from: AGCTGTTATA
+              to: G3
+            - from: CACTTAATCT
+              to: G4
+            - from: CAGAGTGATA
+              to: G5
+            - from: GACTTAGAAG
+              to: G6
+            - from: AGTGAGTGAA
+              to: G7
+            - from: TGTGATGTAT
+              to: G8
+            - from: AACATACCTA
+              to: G9
+            - from: CATACTTGAA
+              to: G10
+            - from: TGCACGAGAA
+              to: G11
+            - from: GTGCTATTAA
+              to: G12
+            - from: TACTAACACA
+              to: H1
+            - from: AAGCAGATAT
+              to: H2
+            - from: TTGGATTCAA
+              to: H3
+            - from: ACCAGTCATT
+              to: H4
+            - from: CCACCTTACA
+              to: H5
+            - from: TTCCTCCTTA
+              to: H6
+            - from: TGAAGTAAGT
+              to: H7
+            - from: AGCATTAACT
+              to: H8
+            - from: ACTGAATAGA
+              to: H9
+            - from: CAGTATCAAT
+              to: H10
+            - from: ATGAGAACCA
+              to: H11
+            - from: CAAGTTCATA
+              to: H12
+          reportingLevel: VerboseReport
+  refineTagsAndSort:
+    runCorrection: false
+    parameters:
+      correctionPower: 1E-3
+      backgroundSubstitutionRate: 1E-3
+      backgroundIndelRate: 1E-5
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+  exportClones:
+    chains: ALL
+    splitFilesBy: [ "chain" ]
+    fields:
+      - field: "-cloneId"
+      - field: "-readCount"
+      - field: "-readFraction"
+      - field: "-tags"
+        args: [ "Molecule" ]
+      - field: "-tags"
+        args: [ "Cell" ]
+      - field: "-targetSequences"
+      - field: "-targetQualities"
+      - field: "-vHitsWithScore"
+      - field: "-dHitsWithScore"
+      - field: "-jHitsWithScore"
+      - field: "-cHitsWithScore"
+      - field: "-vAlignments"
+      - field: "-dAlignments"
+      - field: "-jAlignments"
+      - field: "-cAlignments"
+      - field: "-allNFeaturesWithMinQuality"
+      - field: "-allAAFeatures"
+      - field: "-defaultAnchorPoints"

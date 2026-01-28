@@ -24,11 +24,11 @@ mixcr analyze --verbose generic-tcr-amplicon \
   --floating-right-alignment-boundary J \
   test_R1.fastq test_R2.fastq result
 
-assert "mixcr exportClones --drop-default-fields -nFeature CDR2 -nMutations CDR2 -aaMutations CDR2 result.clns | head -n 1" "nSeqCDR2\tnMutationsCDR2\taaMutationsCDR2"
+assert "mixcr exportClones --drop-default-fields -nFeature CDR2 -nMutations CDR2 -aaMutations CDR2 result.clns | grep -v '^WARNING' | head -n 1" "nSeqCDR2\tnMutationsCDR2\taaMutationsCDR2"
 
 touch args.txt
 echo '-nFeature CDR2' >> args.txt
 echo '-nMutations CDR2' >> args.txt
 echo '-aaMutations CDR2' >> args.txt
 
-assert "mixcr exportClones --drop-default-fields @args.txt result.clns | head -n 1" "nSeqCDR2\tnMutationsCDR2\taaMutationsCDR2"
+assert "mixcr exportClones --drop-default-fields @args.txt result.clns | grep -v '^WARNING' | head -n 1" "nSeqCDR2\tnMutationsCDR2\taaMutationsCDR2"
