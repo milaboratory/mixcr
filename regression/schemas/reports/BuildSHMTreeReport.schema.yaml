@@ -43,6 +43,8 @@ properties:
         type: integer
       countOfSecondaryChainsSplitByCDR3:
         type: integer
+      duplicateRootsMerged:
+        type: integer
       groupsWithContradictionsInSecondaryChains:
         type: integer
       initialSecondaryChainsCount:
