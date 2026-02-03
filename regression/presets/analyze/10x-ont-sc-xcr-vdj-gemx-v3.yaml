@@ -18,7 +18,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^*cgacgctcttccgatct(CELL:N{16(UMI:N{12})tttcttatatggg(R1:*)gtactctgcgttgataccac*"
+  tagPattern: "^*cgacgctcttccgatct(CELL:N{16})(UMI:N{12})tttcttatatggg(R1:*)gtactctgcgttgataccac*"
   tagUnstranded: true
   tagMaxBudget: 10.0
   headerExtractors: []
