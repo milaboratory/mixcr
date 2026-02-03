@@ -17,6 +17,8 @@ $defs:
           - $ref: '#/$defs/SingleLinkage'
       limit:
         type: integer
+      maxIterations:
+        type: integer
   BronKerboschWithFallback-2:
     $ref: '#/$defs/BronKerboschWithFallback-1'
     type: object
