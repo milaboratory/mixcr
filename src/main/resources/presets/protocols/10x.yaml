@@ -749,7 +749,7 @@
     - exportCloneGroups
   mixins:
     - type: SetTagPattern
-      tagPattern: ^*cgacgctcttccgatct(CELL:N{16(UMI:N{12})tttcttatatggg(R1:*)gtactctgcgttgataccac*
+      tagPattern: ^*cgacgctcttccgatct(CELL:N{16})(UMI:N{12})tttcttatatggg(R1:*)gtactctgcgttgataccac*
     - type: MaterialTypeRNA
     - type: SetContigAssemblingFeatures
       features: VDJRegion
