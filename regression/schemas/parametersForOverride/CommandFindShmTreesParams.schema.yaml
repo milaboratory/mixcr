@@ -19,6 +19,8 @@ $defs:
         type: integer
       maxIterations:
         type: integer
+      maxMatrixSize:
+        type: integer
   BronKerboschWithFallback-2:
     $ref: '#/$defs/BronKerboschWithFallback-1'
     type: object
@@ -28,12 +30,17 @@ $defs:
     required:
       - type
   SingleLinkage:
-    type: object
-    properties:
-      type:
-        const: SingleLinkage
-    required:
-      - type
+    allOf:
+      - type: object
+        properties:
+          maxComparisons:
+            type: integer
+      - type: object
+        properties:
+          type:
+            const: SingleLinkage
+        required:
+          - type
 type: object
 properties:
   cellCombiner:
