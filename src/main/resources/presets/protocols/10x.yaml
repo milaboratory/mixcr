@@ -732,6 +732,36 @@
       maxTotalErrors: 3
       postFilter: null
 
+"10x-sc-5gex-gemx-v3":
+  vendor: "10x Genomics"
+  label: "5' Single cell gene expression V3"
+  category: non-generic
+  inheritFrom: generic-single-cell-gex-with-umi
+  defaultChains:
+    - IG
+    - TCRAB
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(CELL:N{16})(UMI:N{12})\^(R2:*)
+  align:
+    inheritFrom: generic-single-cell-gex-with-umi
+    overrides:
+      parameters:
+        readsLayout: ReverseOnly
+  refineTagsAndSort:
+    whitelists:
+      CELL: builtin:builtin:3M-5pgex-jan-2023
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter: null
+
 10x-ont-sc-xcr-vdj-gemx-v3:
   vendor: "10x Genomics"
   label: "Oxford Nanopore GEM-X Single cell VDJ V3"
@@ -887,6 +917,311 @@
   refineTagsAndSort:
     whitelists:
       CELL: builtin:3M-3pgex-may-2023
+    runCorrection: true
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 0
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+            predicates:
+              - metrics:
+                  - type: "group_metric_nunique"
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                    keys:
+                      - allTags:Molecule
+                operator:
+                  type: group_operator_advanced_thresholding
+                  algo:
+                    type: otsu
+                  histTransformers:
+                    # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                    - type: inflate
+                      fraction: 0.15
+                  logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+              - allTags:Molecule
+            predicates:
+              - metrics:
+                  - type: group_metric_kmer_diversity
+                    sequences:
+                      - targets
+                    k: 12
+                    minimalQuality: 20
+                    topShare: 0.5
+                    minSequenceCount: 4
+                    reportHist:
+                      binNumber: 0
+                      minBinWidth: 6
+                operator:
+                  type: group_operator_range
+                  lower: 150.0
+                  acceptNaN: true
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
+        badQualityThreshold: 0
+        minimalQuality: 0
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - clone
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.1
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+            aggregateReport: true
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
+    overrides:
+      parameters:
+        useOnlyFullAlignments:
+          cumtop: 0.95
+          fallbackToTopAlignment: true
+  exportClones:
+    inheritFrom: exportClones-single-cell-with-umi-base
+  exportAlignments:
+    inheritFrom: exportAlignments-single-cell-with-umi-base
+  assembleCells:
+    inheritFrom: assembleCells-base
+  exportCloneGroups:
+    inheritFrom: exportCloneGroups-single-cell-with-umi-base
+
+10x-visium-hd-3gex:
+  vendor: "10x Genomics"
+  label: "Visium HD Human 3' Gene Expression"
+  category: non-generic
+  inheritFrom: 10x-sc-xcr-vdj
+  defaultChains:
+    - IG
+    - TCRAB
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^(UMI:N{9})N{2}(CELL1:gN{13:14}g)(CELL2:N{13:14}g)\^(R2:*)
+  mitool:
+    parse:
+      inheritFrom: mitool-parse-default
+    refineTags:
+      inheritFrom: mitool-refineTags-default
+      overrides:
+        tagTypes:
+          - Cell
+          - Molecule
+        whitelists:
+          CELL1: builtin:visium-hd-bc1
+          CELL2: builtin:visium-hd-bc2
+    consensus:
+      inheritFrom: mitool-consensus-4-steps
+      overrides:
+        - groupingTagTypes:
+            - Cell
+            - Molecule
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 499
+              maxNormalizedAlignmentPenalty: 0.46
+            positiveMinQualityShare: 0.29
+            positiveMinIntersectionQuality: 379
+            minRecordSharePerConsensus: 0.001
+        - groupingTagTypes:
+            - Cell
+            - Molecule
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 51
+              maxNormalizedAlignmentPenalty: 0.42
+            positiveMinQualityShare: 0.11
+            positiveMinIntersectionQuality: 101
+            minRecordSharePerConsensus: 0.3
+        - groupingTagTypes:
+            - Cell
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 41
+              maxNormalizedAlignmentPenalty: 0.35
+            positiveMinQualityShare: 0.77
+            positiveMinIntersectionQuality: 130
+            minRecordSharePerConsensus: 0.001
+            useWeightsForRecordsPerConsensus: false
+        - groupingTagTypes:
+            - Cell
+          payloadTagTypes:
+            - Targets
+          parameters:
+            aAssemblerParameters:
+              minAlignmentScore: 181
+              maxNormalizedAlignmentPenalty: 0.59
+            positiveMinQualityShare: 0.51
+            positiveMinIntersectionQuality: 51
+            minRecordSharePerConsensus: 0.001
+            useWeightsForRecordsPerConsensus: false
+            minRecordWeightForUse: 2
+  align:
+    inheritFrom: generic-ht-single-cell-fragmented-with-umi
+    overrides:
+      trimmingQualityThreshold: 0
+      parameters:
+        readsLayout: ReverseOnly
+        vParameters:
+          relativeMinScore: 0.7
+          parameters:
+            mapperRelativeMinScore: 0.7
+            relativeMinScore: 0.7
+  refineTagsAndSort:
+    runCorrection: true
+    dontCorrectTagsTypes:
+      - Cell
+      - Molecule
+    parameters:
+      correctionPower: 0.001
+      backgroundSubstitutionRate: 0.001
+      backgroundIndelRate: 1.0e-05
+      minQuality: 12
+      maxSubstitutions: 2
+      maxIndels: 2
+      maxTotalErrors: 3
+      postFilter:
+        type: filter_and
+        operands:
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+            predicates:
+              - metrics:
+                  - type: "group_metric_nunique"
+                    reportHist:
+                      log: true
+                      binNumber: 0
+                      minBinWidth: 0.2
+                    keys:
+                      - allTags:Molecule
+                operator:
+                  type: group_operator_advanced_thresholding
+                  algo:
+                    type: otsu
+                  histTransformers:
+                    # Artificially adds 15% of singletons to the histogram before auto-thresholding algorithm
+                    - type: inflate
+                      fraction: 0.15
+                  logX: true
+                  minimalSample: 20
+                  fallbackThreshold: 1.0
+          - type: filter_groups
+            groupingKeys:
+              - allTags:Cell
+              - allTags:Molecule
+            predicates:
+              - metrics:
+                  - type: group_metric_kmer_diversity
+                    sequences:
+                      - targets
+                    k: 12
+                    minimalQuality: 20
+                    topShare: 0.5
+                    minSequenceCount: 4
+                    reportHist:
+                      binNumber: 0
+                      minBinWidth: 6
+                operator:
+                  type: group_operator_range
+                  lower: 150.0
+                  acceptNaN: true
+  assemble:
+    inheritFrom: assemble-with-consensus-sc-cell-level-fr
+    overrides:
+      clnaOutput: true
+      cloneAssemblerParameters:
+        assemblingFeatures:
+          - CDR3
+        badQualityThreshold: 0
+        minimalQuality: 0
+        postFilters:
+          - type: filter_in_groups
+            isolationKeys:
+              - clone
+            nestedFilter:
+              type: filter_groups
+              groupingKeys:
+                - allTags:Cell
+              predicates:
+                - metrics:
+                    - type: group_metric_sum_weight
+                      reportHist:
+                        log: true
+                        binNumber: 0
+                        minBinWidth: 0.1
+                  operator:
+                    type: group_operator_cumtop
+                    share: 0.99
+            aggregateReport: true
+  assembleContigs:
+    inheritFrom: assembleContigs-sc-fr
+    overrides:
+      parameters:
+        useOnlyFullAlignments:
+          cumtop: 0.95
+          fallbackToTopAlignment: true
+
+10x-ont-visium-hd-3gex:
+  vendor: "10x Genomics"
+  label: "Oxford Nanopore Visium HD 3' Gene Expression"
+  inheritFrom: bundle-base
+  pipeline:
+    - align
+    - refineTagsAndSort
+    - assemble
+    - assembleContigs
+    - assembleCells
+    - exportClones
+    - exportCloneGroups
+  mixins:
+    - type: SetTagPattern
+      tagPattern: ^*ctacacgacgctcttccgatct(UMI:N{9})N{2}(CELL1:gN{13:14}g)(CELL2:N{13:14}g)(R1:*)gcccgcgtaccg*
+    - type: SetContigAssemblingFeatures
+      features: VDJRegion
+  align:
+    inheritFrom: align-long-read
+    overrides:
+      tagUnstranded: true
+  refineTagsAndSort:
+    whitelists:
+      CELL1: builtin:visium-hd-bc1
+      CELL2: builtin:visium-hd-bc2
     runCorrection: true
     parameters:
       correctionPower: 0.001
