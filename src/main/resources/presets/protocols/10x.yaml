@@ -1200,6 +1200,7 @@
 10x-ont-visium-hd-3gex:
   vendor: "10x Genomics"
   label: "Oxford Nanopore Visium HD 3' Gene Expression"
+  category: non-generic
   inheritFrom: bundle-base
   pipeline:
     - align
