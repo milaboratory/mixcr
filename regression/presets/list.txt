@@ -1,27 +1,27 @@
 WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
 Generic presets:
-[1mgeneric-single-cell-gex[21m[0m [2m(Generic single-cell gene expression)[22m[0m
+generic-single-cell-gex (Generic single-cell gene expression)
   Required args:
     --species <name>
 
-[1mgeneric-ont[21m[0m [2m(Oxford Nanopore data)[22m[0m
+generic-ont (Oxford Nanopore data)
   Required args:
     --species <name>
 
-[1mgeneric-pacbio-with-umi[21m[0m [2m(PacBio data with UMIs)[22m[0m
+generic-pacbio-with-umi (PacBio data with UMIs)
   Required args:
     --assemble-clonotypes-by <gene_features>
     --species <name>
     --tag-pattern <pattern>
 
-[1mcellecta-human-sc-xcr-vdj-drivermap-air-immunophenotyping-assay-v2[21m[0m [2m(DriverMap™ Single-cell AIR TCR-BCR Immunophenotyping Assay Human V2)[22m[0m
+cellecta-human-sc-xcr-vdj-drivermap-air-immunophenotyping-assay-v2 (DriverMap™ Single-cell AIR TCR-BCR Immunophenotyping Assay Human V2)
 
-[1mgeneric-lt-single-cell-fragmented[21m[0m [2m(Generic low throughput shotgun single-cell)[22m[0m
+generic-lt-single-cell-fragmented (Generic low throughput shotgun single-cell)
   Required args:
     --species <name>
     (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
 
-[1mgeneric-amplicon[21m[0m [2m(Generic amplicon)[22m[0m
+generic-amplicon (Generic amplicon)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
     --assemble-clonotypes-by <gene_features>
@@ -29,34 +29,34 @@ Generic presets:
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     (--dna|--rna)
 
-[1mgeneric-ont-with-umi[21m[0m [2m(Oxford Nanopore data with UMIs)[22m[0m
+generic-ont-with-umi (Oxford Nanopore data with UMIs)
   Required args:
     --species <name>
     --tag-pattern <pattern>
 
-[1mgeneric-single-cell-gex-with-umi[21m[0m [2m(Generic single-cell gene expression with UMIs)[22m[0m
+generic-single-cell-gex-with-umi (Generic single-cell gene expression with UMIs)
   Required args:
     --species <name>
     --tag-pattern <pattern>
 
-[1mgeneric-ht-single-cell-fragmented-with-umi[21m[0m [2m(Generic high throughput shotgun single-cell with UMIs)[22m[0m
+generic-ht-single-cell-fragmented-with-umi (Generic high throughput shotgun single-cell with UMIs)
   Required args:
     --species <name>
     (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
     --tag-pattern <pattern>
 
-[1msmart-seq2-vdj[21m[0m [2m(Smart-Seq2)[22m[0m
+smart-seq2-vdj (Smart-Seq2)
   Required args:
     --species <name>
 
-[1mgeneric-lt-single-cell-amplicon-with-umi[21m[0m [2m(Generic low throughput amplicon single-cell with UMIs)[22m[0m
+generic-lt-single-cell-amplicon-with-umi (Generic low throughput amplicon single-cell with UMIs)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
     --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
 
-[1mgeneric-amplicon-with-umi[21m[0m [2m(Generic amplicon with UMI barcodes)[22m[0m
+generic-amplicon-with-umi (Generic amplicon with UMI barcodes)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
     --assemble-clonotypes-by <gene_features>
@@ -65,41 +65,20 @@ Generic presets:
     (--dna|--rna)
     --tag-pattern <pattern>
 
-[1mgeneric-ht-single-cell-fragmented[21m[0m [2m(Generic high throughput shotgun single-cell)[22m[0m
+generic-ht-single-cell-fragmented (Generic high throughput shotgun single-cell)
   Required args:
     --species <name>
     (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
     --tag-pattern <pattern>
 
-[1mgeneric-lt-single-cell-amplicon[21m[0m [2m(Generic low throughput amplicon single-cell)[22m[0m
+generic-lt-single-cell-amplicon (Generic low throughput amplicon single-cell)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
     --assemble-clonotypes-by <gene_features>
     --species <name>
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
 
-[1mgeneric-ht-single-cell-amplicon-with-umi[21m[0m [2m(Generic high throughput amplicon single-cell with UMIs)[22m[0m
-  Required args:
-    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
-    --assemble-clonotypes-by <gene_features>
-    --species <name>
-    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
-    --tag-pattern <pattern>
-
-[1mgeneric-pacbio[21m[0m [2m(PacBio data)[22m[0m
-  Required args:
-    --assemble-clonotypes-by <gene_features>
-    --species <name>
-
-[1mrna-seq[21m[0m [2m(RNA-Seq data)[22m[0m
-  Required args:
-    --species <name>
-
-[1mexome-seq[21m[0m [2m(Exome-Seq data)[22m[0m
-  Required args:
-    --species <name>
-
-[1mgeneric-ht-single-cell-amplicon[21m[0m [2m(Generic high throughput amplicon single-cell)[22m[0m
+generic-ht-single-cell-amplicon-with-umi (Generic high throughput amplicon single-cell with UMIs)
   Required args:
     (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
     --assemble-clonotypes-by <gene_features>
@@ -107,295 +86,316 @@ Generic presets:
     (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
     --tag-pattern <pattern>
 
-[1mgeneric-lt-single-cell-fragmented-with-umi[21m[0m [2m(Generic low throughput shotgun single-cell with UMIs)[22m[0m
+generic-pacbio (PacBio data)
+  Required args:
+    --assemble-clonotypes-by <gene_features>
+    --species <name>
+
+rna-seq (RNA-Seq data)
+  Required args:
+    --species <name>
+
+exome-seq (Exome-Seq data)
+  Required args:
+    --species <name>
+
+generic-ht-single-cell-amplicon (Generic high throughput amplicon single-cell)
+  Required args:
+    (--floating-left-alignment-boundary [<anchor_point>]|--rigid-left-alignment-boundary [<anchor_point>])
+    --assemble-clonotypes-by <gene_features>
+    --species <name>
+    (--floating-right-alignment-boundary (<gene_type>|<anchor_point>)|--rigid-right-alignment-boundary [(<gene_type>|<anchor_point>)])
+    --tag-pattern <pattern>
+
+generic-lt-single-cell-fragmented-with-umi (Generic low throughput shotgun single-cell with UMIs)
   Required args:
     --species <name>
     (--assemble-contigs-by <gene_features>|--assemble-contigs-by-cells)
 
 -----Invivoscribe-----
-[1minvivoscribe-human-dna-igk-lymphotrack[21m[0m [2m(LymphoTrack IGK Assay Panel)[22m[0m
+invivoscribe-human-dna-igk-lymphotrack (LymphoTrack IGK Assay Panel)
 
-[1minvivoscribe-human-dna-igh-fr2-lymphotrack[21m[0m [2m(LymphoTrack IGH FR2)[22m[0m
+invivoscribe-human-dna-igh-fr2-lymphotrack (LymphoTrack IGH FR2)
 
-[1minvivoscribe-human-dna-igh-fr123-lymphotrack[21m[0m [2m(LymphoTrack IGH FR1/2/3)[22m[0m
+invivoscribe-human-dna-igh-fr123-lymphotrack (LymphoTrack IGH FR1/2/3)
 
-[1minvivoscribe-human-dna-ighv-leader-lymphotrack[21m[0m [2m(LymphoTrack IGHV Leader Somatic Hypermutation)[22m[0m
+invivoscribe-human-dna-ighv-leader-lymphotrack (LymphoTrack IGHV Leader Somatic Hypermutation)
 
-[1minvivoscribe-human-dna-igh-fr1-lymphotrack[21m[0m [2m(LymphoTrack IGH FR1)[22m[0m
+invivoscribe-human-dna-igh-fr1-lymphotrack (LymphoTrack IGH FR1)
 
-[1minvivoscribe-human-dna-igh-fr3-lymphotrack[21m[0m [2m(LymphoTrack IGH FR3)[22m[0m
+invivoscribe-human-dna-igh-fr3-lymphotrack (LymphoTrack IGH FR3)
 
-[1minvivoscribe-human-dna-trb-lymphotrack[21m[0m [2m(LymphoTrack TRB Assay Panel)[22m[0m
+invivoscribe-human-dna-trb-lymphotrack (LymphoTrack TRB Assay Panel)
 
-[1minvivoscribe-human-dna-trg-lymphotrack[21m[0m [2m(LymphoTrack TRG Assay Panel)[22m[0m
+invivoscribe-human-dna-trg-lymphotrack (LymphoTrack TRG Assay Panel)
 
 -----Cellecta-----
-[1mcellecta-mouse-rna-xcr-umi-drivermap-air[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA)[22m[0m
+cellecta-mouse-rna-xcr-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA)
 
-[1mcellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-16-4-1[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 16:4:1)[22m[0m
+cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-16-4-1 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 16:4:1)
 
-[1mcellecta-human-dna-xcr-mivbc-drivermap-air-v2[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2)[22m[0m
+cellecta-human-dna-xcr-mivbc-drivermap-air-v2 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA v2)
 
-[1mcellecta-human-rna-xcr-full-length-mivbc-drivermap-air-v2[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA v2)[22m[0m
+cellecta-human-rna-xcr-full-length-mivbc-drivermap-air-v2 (DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA v2)
 
-[1mcellecta-human-rna-xcr-full-length-umi-drivermap-air[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA)[22m[0m
+cellecta-human-rna-xcr-full-length-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Human RNA)
 
-[1mcellecta-mouse-rna-xcr-mivbc-drivermap-air-v2[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA V2)[22m[0m
+cellecta-mouse-rna-xcr-mivbc-drivermap-air-v2 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse RNA V2)
 
-[1mcellecta-human-rna-xcr-mivbc-drivermap-air-v2[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling v2)[22m[0m
+cellecta-human-rna-xcr-mivbc-drivermap-air-v2 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling v2)
 
-[1mcellecta-mouse-rna-xcr-full-length-mivbc-drivermap-air-v2[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Mouse RNA v2)[22m[0m
+cellecta-mouse-rna-xcr-full-length-mivbc-drivermap-air-v2 (DriverMap Adaptive Immune Receptor (AIR) Full-length TCR-BCR Profiling Mouse RNA v2)
 
-[1mcellecta-human-dna-xcr-umi-drivermap-air[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA)[22m[0m
+cellecta-human-dna-xcr-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human DNA)
 
-[1mcellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-16-4-1[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 16:4:1)[22m[0m
+cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-16-4-1 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 16:4:1)
 
-[1mcellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-1-1-1[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 1:1:1)[22m[0m
+cellecta-human-rna-xcr-umi-drivermap-air-bcr-spikein-1-1-1 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with BCR Spike-in mix 1:1:1)
 
-[1mcellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-1-1-1[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 1:1:1)[22m[0m
+cellecta-human-rna-xcr-umi-drivermap-air-tcr-spikein-1-1-1 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA with TCR Spike-in mix 1:1:1)
 
-[1mcellecta-mouse-dna-xcr-mivbc-drivermap-air-v2[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse DNA v2)[22m[0m
+cellecta-mouse-dna-xcr-mivbc-drivermap-air-v2 (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Mouse DNA v2)
 
-[1mcellecta-human-rna-xcr-umi-drivermap-air[21m[0m [2m(DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA)[22m[0m
+cellecta-human-rna-xcr-umi-drivermap-air (DriverMap Adaptive Immune Receptor (AIR) TCR-BCR Profiling Human RNA)
 
 -----Thermo Fisher-----
-[1mthermofisher-mouse-dna-igh-ampliseq-sr[21m[0m [2m(Ion AmpliSeq Mouse IGH‑SR DNA)[22m[0m
+thermofisher-mouse-dna-igh-ampliseq-sr (Ion AmpliSeq Mouse IGH‑SR DNA)
 
-[1mthermofisher-human-dna-igh-oncomine-sr[21m[0m [2m(Oncomine DNA IGH SR Assay)[22m[0m
+thermofisher-human-dna-igh-oncomine-sr (Oncomine DNA IGH SR Assay)
 
-[1mthermofisher-mouse-rna-tcb-ampliseq-sr[21m[0m [2m(Ion AmpliSeq Mouse TCR Beta‑SR RNA)[22m[0m
+thermofisher-mouse-rna-tcb-ampliseq-sr (Ion AmpliSeq Mouse TCR Beta‑SR RNA)
 
-[1mthermofisher-human-dna-trb-oncomine-sr[21m[0m [2m(Oncomine DNA TCR Beta‑LR Assay)[22m[0m
+thermofisher-human-dna-trb-oncomine-sr (Oncomine DNA TCR Beta‑LR Assay)
 
-[1mthermofisher-human-dna-bcr-oncomine-pan-clonality[21m[0m [2m(Oncomine BCR Pan-Clonality Assay)[22m[0m
+thermofisher-human-dna-bcr-oncomine-pan-clonality (Oncomine BCR Pan-Clonality Assay)
 
-[1mthermofisher-human-dna-igh-oncomine-v-leader-j[21m[0m [2m(Oncomine IGH Leader-J Assay)[22m[0m
+thermofisher-human-dna-igh-oncomine-v-leader-j (Oncomine IGH Leader-J Assay)
 
-[1mthermofisher-human-dna-igh-oncomine-fr1-j[21m[0m [2m(Oncomine IGH FR1-J Assay)[22m[0m
+thermofisher-human-dna-igh-oncomine-fr1-j (Oncomine IGH FR1-J Assay)
 
-[1mthermofisher-human-rna-igh-oncomine-lr[21m[0m [2m(Oncomine RNA IGH LR Assay)[22m[0m
+thermofisher-human-rna-igh-oncomine-lr (Oncomine RNA IGH LR Assay)
 
-[1mthermofisher-human-dna-tcr-oncomine-pan-clonality[21m[0m [2m(Oncomine TCR Pan-Clonality Assay)[22m[0m
+thermofisher-human-dna-tcr-oncomine-pan-clonality (Oncomine TCR Pan-Clonality Assay)
 
-[1mthermofisher-human-rna-igh-oncomine-sr[21m[0m [2m(Oncomine RNA IGH SR Assay)[22m[0m
+thermofisher-human-rna-igh-oncomine-sr (Oncomine RNA IGH SR Assay)
 
-[1mthermofisher-human-dna-igh-oncomine-fr3-j[21m[0m [2m(Oncomine IGH FR3(d)-J Assay)[22m[0m
+thermofisher-human-dna-igh-oncomine-fr3-j (Oncomine IGH FR3(d)-J Assay)
 
-[1mthermofisher-human-rna-trb-oncomine-sr[21m[0m [2m(Oncomine RNA TCR Beta‑SR Assay)[22m[0m
+thermofisher-human-rna-trb-oncomine-sr (Oncomine RNA TCR Beta‑SR Assay)
 
-[1mthermofisher-mouse-dna-tcb-ampliseq-sr[21m[0m [2m(Ion AmpliSeq Mouse TCR Beta‑SR DNA)[22m[0m
+thermofisher-mouse-dna-tcb-ampliseq-sr (Ion AmpliSeq Mouse TCR Beta‑SR DNA)
 
-[1mthermofisher-mouse-rna-igh-ampliseq-sr[21m[0m [2m(Ion AmpliSeq Mouse IGH‑SR RNA)[22m[0m
+thermofisher-mouse-rna-igh-ampliseq-sr (Ion AmpliSeq Mouse IGH‑SR RNA)
 
-[1mthermofisher-human-rna-trb-oncomine-lr[21m[0m [2m(Oncomine RNA TCR Beta‑LR Assay)[22m[0m
+thermofisher-human-rna-trb-oncomine-lr (Oncomine RNA TCR Beta‑LR Assay)
 
-[1mthermofisher-human-dna-igh-oncomine-fr2-j[21m[0m [2m(Oncomine IGH FR2-J Assay)[22m[0m
+thermofisher-human-dna-igh-oncomine-fr2-j (Oncomine IGH FR2-J Assay)
 
 -----iRepertoire-----
-[1mirepertoire-human-dna-xcr-repseq-sr[21m[0m [2m(Human DNA IGH/TCR Repseq Short Read)[22m[0m
+irepertoire-human-dna-xcr-repseq-sr (Human DNA IGH/TCR Repseq Short Read)
 
-[1mirepertoire-mouse-rna-xcr-repseq-lr[21m[0m [2m(Mouse IGH/TCR Repseq Long Read)[22m[0m
+irepertoire-mouse-rna-xcr-repseq-lr (Mouse IGH/TCR Repseq Long Read)
 
-[1mirepertoire-human-dna-xcr-repseq-lr[21m[0m [2m(Human DNA IGH/TCR Repseq Long Read)[22m[0m
+irepertoire-human-dna-xcr-repseq-lr (Human DNA IGH/TCR Repseq Long Read)
 
-[1mirepertoire-mouse-rna-xcr-repseq-sr[21m[0m [2m(Mouse IGH/TCR Repseq Short Read)[22m[0m
+irepertoire-mouse-rna-xcr-repseq-sr (Mouse IGH/TCR Repseq Short Read)
 
-[1mirepertoire-mouse-rna-xcr-repseq-plus[21m[0m [2m(Mouse IGH/TCR Repseq Plus)[22m[0m
+irepertoire-mouse-rna-xcr-repseq-plus (Mouse IGH/TCR Repseq Plus)
 
-[1mirepertoire-mouse-rna-xcr-repseq-plus-umi-pe[21m[0m [2m(Mouse IGH/TCR Repseq Plus with UMI Paired End)[22m[0m
+irepertoire-mouse-rna-xcr-repseq-plus-umi-pe (Mouse IGH/TCR Repseq Plus with UMI Paired End)
 
-[1mirepertoire-human-rna-xcr-repseq-plus-umi-pe[21m[0m [2m(Human IGH/TCR Repseq Plus with UMI Paired End)[22m[0m
+irepertoire-human-rna-xcr-repseq-plus-umi-pe (Human IGH/TCR Repseq Plus with UMI Paired End)
 
-[1mirepertoire-human-rna-xcr-repseq-plus-umi-se[21m[0m [2m(Human IGH/TCR Repseq Plus with UMI Single End)[22m[0m
+irepertoire-human-rna-xcr-repseq-plus-umi-se (Human IGH/TCR Repseq Plus with UMI Single End)
 
-[1mirepertoire-human-rna-xcr-repseq-sr[21m[0m [2m(Human IGH/TCR Repseq Short Read)[22m[0m
+irepertoire-human-rna-xcr-repseq-sr (Human IGH/TCR Repseq Short Read)
 
-[1mirepertoire-human-rna-xcr-repseq-plus[21m[0m [2m(Human IGH/TCR Repseq Plus)[22m[0m
+irepertoire-human-rna-xcr-repseq-plus (Human IGH/TCR Repseq Plus)
 
-[1mirepertoire-human-rna-xcr-repseq-lr[21m[0m [2m(Human IGH/TCR Repseq Long Read)[22m[0m
+irepertoire-human-rna-xcr-repseq-lr (Human IGH/TCR Repseq Long Read)
 
 -----Takara Bio-----
-[1mtakara-human-rna-tcr-umi-smarter-v2[21m[0m [2m(SMARTer Human TCR a/b Profiling Kit v2)[22m[0m
+takara-human-rna-tcr-umi-smarter-v2 (SMARTer Human TCR a/b Profiling Kit v2)
 
-[1mtakara-mouse-rna-tcr-umi-smartseq[21m[0m [2m(SMART-Seq Mouse TCR (with UMIs))[22m[0m
+takara-mouse-rna-tcr-umi-smartseq (SMART-Seq Mouse TCR (with UMIs))
 
-[1mtakara-sc-human-rna-tcr-smarter[21m[0m [2m(SMARTer Human scTCR a/b Profiling Kit)[22m[0m
+takara-sc-human-rna-tcr-smarter (SMARTer Human scTCR a/b Profiling Kit)
 
-[1mtakara-mouse-rna-bcr-umi-smartseq[21m[0m [2m(SMART-Seq Mouse BCR (with UMIs))[22m[0m
+takara-mouse-rna-bcr-umi-smartseq (SMART-Seq Mouse BCR (with UMIs))
 
-[1mtakara-mouse-rna-tcr-smarter[21m[0m [2m(SMARTer Mouse TCR a/b Profiling Kit)[22m[0m
+takara-mouse-rna-tcr-smarter (SMARTer Mouse TCR a/b Profiling Kit)
 
-[1mtakara-human-rna-tcr-umi-smartseq[21m[0m [2m(SMART-Seq Human TCR (with UMIs))[22m[0m
+takara-human-rna-tcr-umi-smartseq (SMART-Seq Human TCR (with UMIs))
 
-[1mtakara-mouse-rna-bcr-smarter[21m[0m [2m(SMARTer Mouse BCR IgG H/K/L Profiling Kit)[22m[0m
+takara-mouse-rna-bcr-smarter (SMARTer Mouse BCR IgG H/K/L Profiling Kit)
 
-[1mtakara-human-rna-bcr-umi-smarter[21m[0m [2m(SMARTer Human BCR IgG IgM H/K/L Profiling Kit)[22m[0m
+takara-human-rna-bcr-umi-smarter (SMARTer Human BCR IgG IgM H/K/L Profiling Kit)
 
-[1mtakara-human-rna-tcr-smarter[21m[0m [2m(SMARTer Human TCR a/b Profiling Kit)[22m[0m
+takara-human-rna-tcr-smarter (SMARTer Human TCR a/b Profiling Kit)
 
-[1mtakara-human-rna-bcr-umi-smartseq[21m[0m [2m(SMART-Seq Human BCR (with UMIs))[22m[0m
+takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
 -----Miltenyi-----
-[1mmiltenyi-human-rna-tcr-profiling-miltiplex[21m[0m [2m(Human TCR α/β RNA Profiling Kit (Miltiplex))[22m[0m
+miltenyi-human-rna-tcr-profiling-miltiplex (Human TCR α/β RNA Profiling Kit (Miltiplex))
 
-[1mmiltenyi-human-rna-tcr-profiling[21m[0m [2m(Human TCR α/β RNA Profiling Kit)[22m[0m
+miltenyi-human-rna-tcr-profiling (Human TCR α/β RNA Profiling Kit)
 
 -----Bruker-----
-[1mbruker-sc-xcr-vdj-beacon[21m[0m [2m(Single cell VDJ)[22m[0m
+bruker-sc-xcr-vdj-beacon (Single cell VDJ)
   Required args:
     --species <name>
 
 -----MiLaboratories-----
-[1mmilab-human-rna-tcr-umi-multiplex[21m[0m [2m(Human TCR RNA Multiplex)[22m[0m
+milab-human-rna-tcr-umi-multiplex (Human TCR RNA Multiplex)
 
-[1mmilab-mouse-rna-tcr-umi-race[21m[0m [2m(Mouse TCR RNA 5'RACE)[22m[0m
+milab-mouse-rna-tcr-umi-race (Mouse TCR RNA 5'RACE)
 
-[1mmilab-human-rna-tcr-umi-race[21m[0m [2m(Human TCR RNA 5'RACE)[22m[0m
+milab-human-rna-tcr-umi-race (Human TCR RNA 5'RACE)
 
-[1mmilab-human-dna-xcr-7genes-multiplex[21m[0m [2m(Human 7GENES DNA Multiplex)[22m[0m
+milab-human-dna-xcr-7genes-multiplex (Human 7GENES DNA Multiplex)
 
-[1mmilab-human-dna-tcr-multiplex[21m[0m [2m(Human TCR DNA Multiplex)[22m[0m
+milab-human-dna-tcr-multiplex (Human TCR DNA Multiplex)
 
-[1mmilab-human-rna-ig-umi-multiplex[21m[0m [2m(Human Ig RNA Multiplex)[22m[0m
+milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
 
 -----10x Genomics-----
-[1m10x-ont-sc-3gex-v4[21m[0m [2m(Oxford Nanopore 3' GEM-X v4)[22m[0m
+10x-ont-sc-3gex-v4 (Oxford Nanopore 3' GEM-X v4)
   Required args:
     --species <name>
 
-[1m10x-sc-xcr-vdj-fast[21m[0m [2m(5' Single cell VDJ (Fast))[22m[0m
+10x-sc-xcr-vdj-fast (5' Single cell VDJ (Fast))
   Required args:
     --species <name>
 
-[1m10x-sc-5gex[21m[0m [2m(5' Single cell gene expression)[22m[0m
+10x-sc-5gex (5' Single cell gene expression)
   Required args:
     --species <name>
 
-[1m10x-sc-xcr-vdj-rapid[21m[0m [2m(5' Single cell VDJ (Rapid))[22m[0m
+10x-sc-xcr-vdj-rapid (5' Single cell VDJ (Rapid))
   Required args:
     --species <name>
 
-[1m10x-ont-sc-xcr-vdj-gemx-v3[21m[0m [2m(Oxford Nanopore GEM-X Single cell VDJ V3)[22m[0m
+10x-ont-sc-xcr-vdj-gemx-v3 (Oxford Nanopore GEM-X Single cell VDJ V3)
   Required args:
     --species <name>
 
-[1m10x-sc-5gex-gemx-v3[21m[0m [2m(5' Single cell gene expression V3)[22m[0m
+10x-sc-5gex-gemx-v3 (5' Single cell gene expression V3)
   Required args:
     --species <name>
 
-[1m10x-sc-xcr-vdj[21m[0m [2m(5' Single cell VDJ)[22m[0m
+10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
     --species <name>
 
-[1m10x-ont-visium-hd-3gex[21m[0m [2m(Oxford Nanopore Visium HD 3' Gene Expression)[22m[0m
+10x-ont-visium-hd-3gex (Oxford Nanopore Visium HD 3' Gene Expression)
   Required args:
     --species <name>
     (--dna|--rna)
 
-[1m10x-sc-xcr-vdj-gemx-v3[21m[0m [2m(5' GEM-X Single cell VDJ)[22m[0m
+10x-sc-xcr-vdj-gemx-v3 (5' GEM-X Single cell VDJ)
   Required args:
     --species <name>
 
-[1m10x-visium-hd-3gex[21m[0m [2m(Visium HD Human 3' Gene Expression)[22m[0m
+10x-visium-hd-3gex (Visium HD Human 3' Gene Expression)
   Required args:
     --species <name>
 
 -----Integrated DNA Technologies-----
-[1midt-human-rna-tcr-umi-archer[21m[0m [2m(Archer IMMUNOVerse TCR panel)[22m[0m
+idt-human-rna-tcr-umi-archer (Archer IMMUNOVerse TCR panel)
   Required args:
     --assemble-clonotypes-by <gene_features>
 
-[1midt-human-rna-bcr-umi-archer[21m[0m [2m(Archer IMMUNOVerse BCR panel)[22m[0m
+idt-human-rna-bcr-umi-archer (Archer IMMUNOVerse BCR panel)
 
 -----Illumina-----
-[1millumina-human-rna-trb-ampliseq-plus[21m[0m [2m(Human TCR Beta Ampliseq Plus)[22m[0m
+illumina-human-rna-trb-ampliseq-plus (Human TCR Beta Ampliseq Plus)
 
-[1millumina-human-rna-trb-ampliseq-sr[21m[0m [2m(Human TCR Beta RNA Ampliseq Short Read)[22m[0m
+illumina-human-rna-trb-ampliseq-sr (Human TCR Beta RNA Ampliseq Short Read)
 
-[1millumina-human-dna-trb-ampliseq-sr[21m[0m [2m(Human TCR Beta DNA Ampliseq Short Read)[22m[0m
+illumina-human-dna-trb-ampliseq-sr (Human TCR Beta DNA Ampliseq Short Read)
 
 -----Public-----
-[1mvergani-et-al-2017-full-length[21m[0m [2m(Vergani et al., 2017)[22m[0m
+vergani-et-al-2017-full-length (Vergani et al., 2017)
 
-[1mseq-well-vdj[21m[0m [2m(Seq-well VDJ)[22m[0m
+seq-well-vdj (Seq-well VDJ)
   Required args:
     --species <name>
     --assemble-clonotypes-by <gene_features>
 
-[1mmikelov-et-al-2021[21m[0m [2m(Mikelov et al., 2021)[22m[0m
+mikelov-et-al-2021 (Mikelov et al., 2021)
 
-[1msplit-seq-3gex[21m[0m [2m(SPLIT-seq 3' Gene expression)[22m[0m
+split-seq-3gex (SPLIT-seq 3' Gene expression)
   Required args:
     --species <name>
 
-[1mbiomed2-human-rna-igkl[21m[0m [2m(BIOMED2 IGK/IGL)[22m[0m
+biomed2-human-rna-igkl (BIOMED2 IGK/IGL)
 
-[1mvergani-et-al-2017-cdr3[21m[0m [2m(Vergani et al., 2017)[22m[0m
+vergani-et-al-2017-cdr3 (Vergani et al., 2017)
 
-[1mhan-et-al-2014[21m[0m [2m(Han et al., 2014)[22m[0m
+han-et-al-2014 (Han et al., 2014)
   Required args:
     --species <name>
 
-[1mflairr-seq-bcr[21m[0m [2m(FLLAIRR-seq)[22m[0m
+flairr-seq-bcr (FLLAIRR-seq)
 
-[1mbiomed2-human-rna-igh[21m[0m [2m(BIOMED2 IGH)[22m[0m
+biomed2-human-rna-igh (BIOMED2 IGH)
 
-[1mbiomed2-human-rna-trbdg[21m[0m [2m(BIOMED2 TCR Beta/Delta/Gamma)[22m[0m
+biomed2-human-rna-trbdg (BIOMED2 TCR Beta/Delta/Gamma)
 
 -----Parse Biosciences-----
-[1mparsebio-sc-3gex-evercode-wt[21m[0m [2m(Evercode single-cell WT)[22m[0m
+parsebio-sc-3gex-evercode-wt (Evercode single-cell WT)
   Required args:
     --species <name>
 
-[1mparsebio-sc-bcr-evercode[21m[0m [2m(Evercode single-cell BCR)[22m[0m
+parsebio-sc-bcr-evercode (Evercode single-cell BCR)
   Required args:
     --species <name>
 
-[1mparsebio-sc-3gex-evercode-wt-mini[21m[0m [2m(Evercode single-cell WT Mini)[22m[0m
+parsebio-sc-3gex-evercode-wt-mini (Evercode single-cell WT Mini)
   Required args:
     --species <name>
 
-[1mparsebio-sc-3gex-evercode-wt-mega[21m[0m [2m(Evercode single-cell WT Mega)[22m[0m
+parsebio-sc-3gex-evercode-wt-mega (Evercode single-cell WT Mega)
   Required args:
     --species <name>
 
 -----BD biosciences-----
-[1mbd-mouse-sc-xcr-rhapsody-cdr3[21m[0m [2m(Rhapsody Mouse VDJ CDR3 Assay)[22m[0m
+bd-mouse-sc-xcr-rhapsody-cdr3 (Rhapsody Mouse VDJ CDR3 Assay)
 
-[1mbd-sc-xcr-rhapsody-full-length[21m[0m [2m(Rhapsody Full-length TCR/BCR Multiomic Assay)[22m[0m
+bd-sc-xcr-rhapsody-full-length (Rhapsody Full-length TCR/BCR Multiomic Assay)
   Required args:
     --species <name>
 
-[1mbd-sc-xcr-rhapsody-full-length-enhanced-bead-v2[21m[0m [2m(Rhapsody Full-length TCR/BCR Multiomic Assay Enhaced Beads V2)[22m[0m
+bd-sc-xcr-rhapsody-full-length-enhanced-bead-v2 (Rhapsody Full-length TCR/BCR Multiomic Assay Enhaced Beads V2)
   Required args:
     --species <name>
 
-[1mbd-human-sc-xcr-rhapsody-cdr3[21m[0m [2m(Rhapsody Human VDJ CDR3 Assay)[22m[0m
+bd-human-sc-xcr-rhapsody-cdr3 (Rhapsody Human VDJ CDR3 Assay)
 
 -----QIAGEN-----
-[1mqiagen-human-rna-tcr-umi-qiaseq[21m[0m [2m(QIAseq Human TCR Panel Immune Repertoire RNA Library Kit)[22m[0m
+qiagen-human-rna-tcr-umi-qiaseq (QIAseq Human TCR Panel Immune Repertoire RNA Library Kit)
 
-[1mqiagen-mouse-rna-tcr-umi-targeted-qiaseq[21m[0m [2m(QIAseq Targeted RNA Panel Mouse TCR)[22m[0m
+qiagen-mouse-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Mouse TCR)
 
-[1mqiagen-mouse-rna-tcr-umi-qiaseq[21m[0m [2m(QIAseq Mouse TCR Panel Immune Repertoire RNA Library Kit)[22m[0m
+qiagen-mouse-rna-tcr-umi-qiaseq (QIAseq Mouse TCR Panel Immune Repertoire RNA Library Kit)
 
-[1mqiagen-human-rna-tcr-umi-targeted-qiaseq[21m[0m [2m(QIAseq Targeted RNA Panel Human TCR)[22m[0m
+qiagen-human-rna-tcr-umi-targeted-qiaseq (QIAseq Targeted RNA Panel Human TCR)
 
 -----New England BioLabs-----
-[1mneb-human-rna-xcr-umi-nebnext[21m[0m [2m(NEBNext® Immune Sequencing Kit (Human) BCR & TCR)[22m[0m
+neb-human-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Human) BCR & TCR)
 
-[1mneb-mouse-rna-xcr-umi-nebnext[21m[0m [2m(NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR)[22m[0m
+neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR)
 
 -----Single Cell Discoveries-----
-[1mvasa-seq-vdj[21m[0m [2m(VASA-seq)[22m[0m
+vasa-seq-vdj (VASA-seq)
   Required args:
     --species <name>
 
 -----AbHelix-----
-[1mabhelix-human-rna-xcr[21m[0m [2m(Human immunoglobulin repertoire)[22m[0m
+abhelix-human-rna-xcr (Human immunoglobulin repertoire)
 
 -----Singleron Biotechnologies-----
-[1msingleron-human-sc-xcr-gexscope-vdj[21m[0m [2m(GEXSCOPE Human Single Cell V(D)J Kit )[22m[0m
+singleron-human-sc-xcr-gexscope-vdj (GEXSCOPE Human Single Cell V(D)J Kit )
   Required args:
     --assemble-clonotypes-by <gene_features>
 
