@@ -279,11 +279,24 @@ milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
   Required args:
     --species <name>
 
+10x-sc-5gex-gemx-v3 (5' Single cell gene expression V3)
+  Required args:
+    --species <name>
+
 10x-sc-xcr-vdj (5' Single cell VDJ)
   Required args:
     --species <name>
 
+10x-ont-visium-hd-3gex (Oxford Nanopore Visium HD 3' Gene Expression)
+  Required args:
+    --species <name>
+    (--dna|--rna)
+
 10x-sc-xcr-vdj-gemx-v3 (5' GEM-X Single cell VDJ)
+  Required args:
+    --species <name>
+
+10x-visium-hd-3gex (Visium HD Human 3' Gene Expression)
   Required args:
     --species <name>
 
