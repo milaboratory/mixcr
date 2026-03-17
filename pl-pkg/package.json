@@ -82,7 +82,7 @@
           },
           "cmd": [
             "java",
-            "-Xmx{int(max(min(system.ram.mib*85/100,system.ram.mib-2500),system.ram.mib*50/100))}m",
+            "-Xmx{int(max(min(system.ram.mib*85/100,system.ram.mib-3500),system.ram.mib*50/100))}m",
             "-Xms{int(system.ram.mib*50/100)}m",
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
@@ -97,7 +97,7 @@
           },
           "cmd": [
             "java",
-            "-Xmx{int(max(min(system.ram.mib*85/100,system.ram.mib-2500),system.ram.mib*50/100))}m",
+            "-Xmx{int(max(min(system.ram.mib*85/100,system.ram.mib-3500),system.ram.mib*50/100))}m",
             "-Xms{int(system.ram.mib*50/100)}m",
             "-XX:MaxHeapFreeRatio=10",
             "-XX:MinHeapFreeRatio=2",
