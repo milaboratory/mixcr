@@ -750,7 +750,7 @@
         readsLayout: ReverseOnly
   refineTagsAndSort:
     whitelists:
-      CELL: builtin:builtin:3M-5pgex-jan-2023
+      CELL: builtin:3M-5pgex-jan-2023
     runCorrection: true
     parameters:
       correctionPower: 0.001
