@@ -230,6 +230,8 @@ properties:
                       type: array
                       items:
                         type: string
+                    maxMismatches:
+                      type: integer
                     name:
                       type: string
                     newTags:
