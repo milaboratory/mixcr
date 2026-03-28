@@ -40,11 +40,6 @@
 -keep class com.milaboratory.milm.metric.** { *; }
 -keep class com.milaboratory.**.*Parameters* { *; }
 -keep class com.milaboratory.**.*Parameters*$* { *; }
-# SequenceTreeMap is referenced only in Kotlin metadata (generic type args — erased in JVM
-# bytecode), so ProGuard drops it without this rule; needed at runtime via Kotlin reflection
-# when Jackson introspects MapTags / MatchTagData constructor parameters.
--keep class com.milaboratory.core.tree.SequenceTreeMap { *; }
--keep class com.milaboratory.core.tree.SequenceTreeMap$* { *; }
 -keep class com.milaboratory.**.*Report { *; }
 -keep class com.milaboratory.**.*Report$* { *; }
 
