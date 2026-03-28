@@ -229,6 +229,8 @@ takara-human-rna-tcr-umi-smartseq (SMART-Seq Human TCR (with UMIs))
 
 takara-mouse-rna-bcr-smarter (SMARTer Mouse BCR IgG H/K/L Profiling Kit)
 
+takara-human-rna-xcr-umi-maxiseq (MaxiSeq Human FFPE TCR+BCR (with UMIs))
+
 takara-human-rna-bcr-umi-smarter (SMARTer Human BCR IgG IgM H/K/L Profiling Kit)
 
 takara-human-rna-tcr-smarter (SMARTer Human TCR a/b Profiling Kit)
@@ -287,10 +289,9 @@ milab-human-rna-ig-umi-multiplex (Human Ig RNA Multiplex)
   Required args:
     --species <name>
 
-10x-ont-visium-hd-3gex (Oxford Nanopore Visium HD 3' Gene Expression)
+10x-ont-visium-hd-3gex (Visium HD Oxford Nanopore XCR)
   Required args:
     --species <name>
-    (--dna|--rna)
 
 10x-sc-xcr-vdj-gemx-v3 (5' GEM-X Single cell VDJ)
   Required args:
