@@ -253,6 +253,10 @@
   defaultChains:
     - IGHeavy
     - IGLight
+    - TCRAlpha
+    - TCRBeta
+    - TCRGamma
+    - TCRDelta
   mixins:
     - type: SetSpecies
       species: hs
