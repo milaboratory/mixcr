@@ -1,16 +1,11 @@
-flags:
-  - species
+flags: []
 pipeline:
   - align
   - refineTagsAndSort
-  - assemblePartial
-  - extend
   - assemble
-  - assembleContigs
   - exportClones
-  - exportCloneGroups
 align:
-  species: ""
+  species: hs
   libraryName: default
   trimmingQualityThreshold: 10
   trimmingWindowSize: 6
@@ -19,7 +14,7 @@ align:
   overlapPairedReads: true
   bamDropNonVDJ: false
   writeFailedAlignments: false
-  tagPattern: "^(CELL:N{16})(UMI:N{12})\\^(R2:*)"
+  tagPattern: "^(R1:*) \\ ^(UMI:N{14})(R2:*)"
   tagUnstranded: false
   tagMaxBudget: 10.0
   headerExtractors: []
@@ -27,48 +22,44 @@ align:
   sampleTable: null
   tagsValidations:
     - type: MustContainTagType
-      tagType: Cell
-    - type: MustContainTagType
       tagType: Molecule
   splitBySample: true
   limit: null
   parameters:
     vParameters:
       geneFeatureToAlign: VTranscriptWithP
-      minSumScore: 60
-      relativeMinScore: 0.7
+      minSumScore: 150
+      relativeMinScore: 0.97
       maxHits: 5
-      edgeRealignmentMinScoreOverride: 35
       parameters:
         type: kaligner2
-        mapperNValue: 9
+        mapperNValue: 8
         mapperKValue: 1
-        floatingLeftBound: false
+        floatingLeftBound: true
         floatingRightBound: true
-        mapperAbsoluteMinClusterScore: 250
+        mapperAbsoluteMinClusterScore: 102
         mapperExtraClusterScore: -38
-        mapperMatchScore: 127
+        mapperMatchScore: 98
         mapperMismatchScore: -14
         mapperOffsetShiftScore: -82
-        mapperSlotCount: 6
-        mapperMaxClusters: 15
+        mapperSlotCount: 8
+        mapperMaxClusters: 11
         mapperMaxClusterIndels: 4
         mapperKMersPerPosition: 4
-        mapperAbsoluteMinScore: 250
-        mapperRelativeMinScore: 0.9
-        mapperMinSeedsDistance: 6
-        mapperMaxSeedsDistance: 6
+        mapperAbsoluteMinScore: 103
+        mapperRelativeMinScore: 0.81
+        mapperMinSeedsDistance: 8
+        mapperMaxSeedsDistance: 8
         alignmentStopPenalty: 0
         absoluteMinScore: 150
         relativeMinScore: 0.8
-        maxHits: 3
+        maxHits: 2
         scoring:
           type: affine
           alphabet: nucleotide
           subsMatrix: "simple(match = 10, mismatch = -19)"
           gapOpenPenalty: -62
           gapExtensionPenalty: -11
-      rightForceRealignmentTrigger: CDR3Begin(-6)
     dParameters:
       geneFeatureToAlign: DRegionWithP
       relativeMinScore: 0.85
@@ -122,20 +113,20 @@ align:
         type: kaligner
         mapperKValue: 5
         floatingLeftBound: false
-        floatingRightBound: false
-        mapperAbsoluteMinScore: 95.0
-        mapperRelativeMinScore: 0.63
-        mapperMatchScore: 128.0
+        floatingRightBound: true
+        mapperAbsoluteMinScore: 1.5
+        mapperRelativeMinScore: 0.75
+        mapperMatchScore: 1.0
         mapperMismatchPenalty: -0.1
         mapperOffsetShiftPenalty: -0.3
-        mapperMinSeedsDistance: 8
-        mapperMaxSeedsDistance: 18
+        mapperMinSeedsDistance: 4
+        mapperMaxSeedsDistance: 10
         minAlignmentLength: 15
         maxAdjacentIndels: 2
         alignmentStopPenalty: -1000
         absoluteMinScore: 40.0
         relativeMinScore: 0.87
-        maxHits: 4
+        maxHits: 7
         scoring:
           type: linear
           alphabet: nucleotide
@@ -147,8 +138,8 @@ align:
     includeCScore: false
     minSumScore: 120.0
     relativeMinVFR3CDR3Score: 0.7
-    allowPartialAlignments: true
-    allowNoCDR3PartAlignments: true
+    allowPartialAlignments: false
+    allowNoCDR3PartAlignments: false
     allowChimeras: false
     readsLayout: ReverseOnly
     mergerParameters:
@@ -169,8 +160,7 @@ align:
     retriesForPartialAlignments: 3
     retriesAlignmentOfNotCoveredPart: 2
 refineTagsAndSort:
-  whitelists:
-    CELL: builtin:3M-5pgex-jan-2023
+  whitelists: {}
   runCorrection: true
   parameters:
     correctionPower: 0.001
@@ -180,11 +170,46 @@ refineTagsAndSort:
     maxSubstitutions: 2
     maxIndels: 2
     maxTotalErrors: 3
-    postFilter: null
+    postFilter:
+      type: filter_groups
+      groupingKeys:
+        - allTags:Molecule
+      predicates:
+        - metrics:
+            - type: group_metric_sum_weight
+              reportHist:
+                log: true
+                binNumber: 0
+                minBinWidth: 0.2
+                multiplyWeightByKey: false
+          operator:
+            type: group_operator_lowest_threshold
+            operators:
+              - type: group_operator_advanced_thresholding
+                algo:
+                  type: otsu
+                histTransformers:
+                  - type: inflate
+                    fraction: 0.15
+                    value: 1.0
+                logX: true
+                minimalSample: 20
+                fallbackThreshold: 1.0
+                accept: High
+              - type: group_operator_cumtop
+                share: 0.85
+                round: Down
+                accept: High
+            accept: High
+          expectedSorting: []
+          requiredSequences: []
+      expectedSorting:
+        - allTags:Molecule
+      requiredSequences: []
 assemblePartial:
   overlappedOnly: false
   dropPartial: false
-  cellLevel: true
+  cellLevel: false
   parameters:
     kValue: 12
     kOffset: -7
@@ -209,8 +234,8 @@ extend:
   minimalJScore: 50
 assemble:
   sortBySequence: false
-  clnaOutput: true
-  cellLevel: true
+  clnaOutput: false
+  cellLevel: false
   consensusAssemblerParameters:
     assembler:
       aAssemblerParameters:
@@ -229,13 +254,13 @@ assemble:
       minAltSeedQualityScore: 11
       minAltSeedNormalizedPenalty: 0.35
       altSeedPenaltyTolerance: 0.5
-      minRecordSharePerConsensus: 0.02
+      minRecordSharePerConsensus: 0.2
       minRecordsPerConsensus: 0
-      minRecursiveRecordShare: 0.1
+      minRecursiveRecordShare: 0.4
       minQualityScore: 0
-      maxConsensuses: 2
+      maxConsensuses: 3
     minTagSuffixShare: 0.0
-    isolateChains: true
+    isolateChains: false
     empiricalAlignmentAssignment:
       uniqGeneOccurrenceWithinTag:
         - V
@@ -260,7 +285,6 @@ assemble:
         backgroundIndelRate: 2.0E-4
     cloneFactoryParameters:
       vParameters:
-        relativeMinScore: 0.8
         maxAlignmentWidthLinear: 5
         maxAlignmentWidthAffine: 500
       jParameters:
@@ -276,17 +300,17 @@ assemble:
         scoring: null
     separateByV: false
     separateByJ: false
-    separateByC: false
+    separateByC: true
     maximalPreClusteringRatio: 1.0
     preClusteringScoreFilteringRatio: 2.0
     preClusteringCountFilteringRatio: 2.0
     addReadsCountOnClustering: false
-    badQualityThreshold: 10
+    badQualityThreshold: 15
     maxBadPointsPercent: 0.7
     mappingThreshold: 2of5
     minimalQuality: 20
     postFilters: null
-  inferMinRecordsPerConsensus: false
+  inferMinRecordsPerConsensus: true
 assembleContigs:
   ignoreTags: false
   parameters:
@@ -325,35 +349,11 @@ assembleContigs:
       absoluteMinScore: null
       maxHits: null
       scoring: null
-assembleCells:
-  algorithm:
-    type: SingleCellGroupingByOverlappingCellIds
-    minOverlapForSmaller:
-      percentage: 0.8
-      roundingMode: UP
-    minOverlapForBigger:
-      percentage: 0.2
-      roundingMode: UP
-    countCellBarcodesWithOneClone: true
-    thresholdForAssigningLeftoverCells:
-      percentage: 0.6
-      roundingMode: DOWN
-    nonFunctional:
-      type: OverlapWithFoundGroups
-      minOverlapForClone:
-        percentage: 0.9
-        roundingMode: UP
-      minOverlapForGroup:
-        percentage: 0.5
-        roundingMode: UP
 exportAlignments:
   chains: ALL
   noHeader: false
   fields:
     - field: -readIds
-    - field: -tags
-      args:
-        - Cell
     - field: -tags
       args:
         - Molecule
@@ -379,10 +379,6 @@ exportClones:
   noHeader: false
   fields:
     - field: -cloneId
-    - field: -cellGroup
-    - field: -tags
-      args:
-        - Cell
     - field: -readCount
     - field: -readFraction
     - field: -uniqueTagCount
@@ -408,48 +404,76 @@ exportClones:
     - field: -allNFeaturesWithMinQuality
     - field: -allAAFeatures
     - field: -defaultAnchorPoints
-    - field: -topChains
-  splitFilesBy: []
+    - field: -isotype
+      args:
+        - auto
+  splitFilesBy:
+    - chain
   groupClonesBy: []
-exportCloneGroups:
-  filterOutOfFrames: false
-  filterStops: false
-  filterOutGroupsWithOneClone: false
-  showSecondaryChains: true
-  types: []
-  noHeader: false
-  fields:
-    - field: -cellGroup
-    - field: -groupReadCount
-    - field: -groupUniqueTagCount
-      args:
-        - Cell
-    - field: -groupUniqueTagCount
-      args:
-        - Molecule
-    - field: -uniqClonesPerChainCount
-    - field: -readCount
-    - field: -uniqueTagCount
-      args:
-        - Molecule
-    - field: -vHit
-    - field: -dHit
-    - field: -jHit
-    - field: -cHit
-    - field: -nFeature
-      args:
-        - CDR3
-    - field: -aaFeature
-      args:
-        - CDR3
-  sortChainsBy: Auto
 qc:
   checks:
-    - type: AlignmentsDroppedLowQuality
+    - type: SuccessfullyAlignedReads
+      upper: 0.8
+      middle: 0.6
+      label: Successfully aligned reads
+    - type: OffTargetReads
       upper: 0.4
       middle: 0.2
+      label: Off target (non TCR/IG) reads
+    - type: ReadsWithNoVOrJHits
+      upper: 0.4
+      middle: 0.2
+      label: Reads with no V or J hits
+    - type: AlignmentsWithNoAssemblingFeature
+      upper: 0.3
+      middle: 0.15
+      label: Alignments without assembling feature
+    - type: ReadsWithNoBarcode
+      upper: 0.4
+      middle: 0.2
+      label: Reads with no barcode
+    - type: ReadsDroppedInTagRefinement
+      upper: 0.25
+      middle: 0.15
+      label: Reads dropped in tags error correction and filtering
+    - type: ReadsDroppedInTagCorrection
+      tag: UMI
+      upper: 0.25
+      middle: 0.15
+      label: Reads dropped in UMI error correction and whitelist
+    - type: ReadsDroppedInTagFiltering
+      upper: 0.25
+      middle: 0.15
+      label: Reads dropped in tags filtering
+    - type: TagGroupsWithNoAssemblingFeature
+      upper: 0.4
+      middle: 0.2
+      label: Tag groups with no assembling feature
+    - type: TagGroupsWithMultipleConsensuses
+      upper: 0.2
+      middle: 0.05
+      label: Barcode collisions in clonotype assembly
+    - type: UnassignedAlignments
+      upper: 0.25
+      middle: 0.15
+      label: Unassigned alignments in clonotype assembly
+    - type: ReadsUsedInClonotypes
+      upper: 0.7
+      middle: 0.5
+      label: Reads used in clonotypes
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.15
+      middle: 0.05
       label: Alignments dropped due to low sequence quality
-    - type: CellBarcodesWithFoundGroups
-      upper: 0.75
+    - type: ClonesDroppedInPostFiltering
+      upper: 0.15
+      middle: 0.05
+      label: Clones dropped in post-filtering
+    - type: AlignmentsDroppedInPostFiltering
+      upper: 0.15
+      middle: 0.05
+      label: Alignments dropped in clones post-filtering
+    - type: OverlappedReadsMoreBetter
+      upper: 0.7
       middle: 0.6
-      label: Cell barcodes used in result groups
+      label: Overlapped paired-end reads
