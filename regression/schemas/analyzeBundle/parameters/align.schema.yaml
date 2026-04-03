@@ -144,7 +144,13 @@ $defs:
       data:
         type: array
         items:
-          type: string
+          type: integer
+      hash:
+        type: integer
+      isBit2:
+        type: boolean
+      size:
+        type: integer
   PairedEndReadsLayout:
     type: string
     enum:
