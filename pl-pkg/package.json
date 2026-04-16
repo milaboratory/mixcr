@@ -82,9 +82,10 @@
           },
           "cmd": [
             "java",
-            "-XX:+UseZGC",
             "-Xmx{int(max(min(system.ram.mib*85/100,system.ram.mib-3500),system.ram.mib*50/100))}m",
             "-Xms{int(system.ram.mib*50/100)}m",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=2",
             "-jar",
             "{pkg}/mixcr.jar"
           ]
@@ -96,9 +97,10 @@
           },
           "cmd": [
             "java",
-            "-XX:+UseZGC",
             "-Xmx{int(max(min(system.ram.mib*85/100,system.ram.mib-3500),system.ram.mib*50/100))}m",
             "-Xms{int(system.ram.mib*50/100)}m",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=2",
             "-jar",
             "/app/mixcr.jar"
           ]
