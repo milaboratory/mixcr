@@ -14,7 +14,6 @@ class SerializationTest {
     fun `mitool tag correction report`() {
         val report = MiToolReportsDelegate.RefineTags(
             TagCorrectionCmdReport(
-                0,
                 "mitool refineTags",
                 listOf("input"),
                 listOf("output"),
@@ -36,7 +35,7 @@ class SerializationTest {
     fun `mitool parse correction report`() {
         val report = MiToolReportsDelegate.Parse(
             ParseCmdReport(
-                ParseReport(null, 5L, 1L, 0.5, emptyMap(), emptyList()),
+                ParseReport(5L, 1L, 0.5, emptyMap(), emptyList()),
                 null,
                 "mitool refineTags",
                 listOf("input"),

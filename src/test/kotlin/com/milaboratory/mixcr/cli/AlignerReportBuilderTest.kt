@@ -58,7 +58,6 @@ class AlignerReportBuilderTest {
                 ParseReport(
                     0L,
                     0L,
-                    0L,
                     0.0,
                     mapOf(IntListKey(listOf(1, 2)) to 10L),
                     emptyList()
