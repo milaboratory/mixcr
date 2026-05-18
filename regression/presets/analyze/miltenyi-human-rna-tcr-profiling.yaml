@@ -173,7 +173,7 @@ refineTagsAndSort:
     postFilter:
       type: filter_groups
       groupingKeys:
-        - allTags:Molecule
+        - UMI
       predicates:
         - metrics:
             - type: group_metric_sum_weight
@@ -204,7 +204,7 @@ refineTagsAndSort:
           expectedSorting: []
           requiredSequences: []
       expectedSorting:
-        - allTags:Molecule
+        - UMI
       requiredSequences: []
 assemblePartial:
   overlappedOnly: false
