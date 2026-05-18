@@ -142,9 +142,9 @@ miltenyi-human-rna-tcr-profiling:
                     share: 0.85
                     round: Down
 
-miltenyi-human-rna-tcr-profiling-miltiplex:
+miltenyi-human-rna-tcr-profiling-multiplex:
   vendor: "Miltenyi"
-  label: "Human TCR α/β RNA Profiling Kit (Miltiplex)"
+  label: "Human TCR α/β RNA Profiling Kit (Multiplex)"
   category: non-generic
   inheritFrom: miltenyi-human-rna-tcr-profiling
   defaultChains:
