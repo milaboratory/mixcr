@@ -287,4 +287,4 @@
     inheritFrom: generic-amplicon-with-umi
     overrides:
       parameters:
-        readsLayout: ReverseOnly
+        readsLayout: DirectOnly
