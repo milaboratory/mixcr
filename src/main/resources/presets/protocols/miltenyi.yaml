@@ -42,6 +42,36 @@
 #     overrides:
 #       parameters:
 #         readsLayout: ReverseOnly
+#   refineTagsAndSort:
+#     inheritFrom: refineTagsAndSort-amplicon-umi-base
+#     overrides:
+#       parameters:
+#         postFilter:
+#           type: filter_groups
+#           groupingKeys:
+#             - UMI
+#           predicates:
+#             - metrics:
+#                 - type: "group_metric_sum_weight"
+#                   reportHist:
+#                     log: true
+#                     binNumber: 0
+#                     minBinWidth: 0.2
+#               operator:
+#                 type: group_operator_lowest_threshold
+#                 operators:
+#                   - type: group_operator_advanced_thresholding
+#                     algo:
+#                       type: otsu
+#                     histTransformers:
+#                       - type: inflate
+#                         fraction: 0.15
+#                     logX: true
+#                     minimalSample: 20
+#                     fallbackThreshold: 1.0
+#                   - type: group_operator_cumtop
+#                     share: 0.85
+#                     round: Down
 
 
 miltenyi-human-rna-tcr-profiling:
@@ -81,6 +111,36 @@ miltenyi-human-rna-tcr-profiling:
     overrides:
       parameters:
         readsLayout: ReverseOnly
+  refineTagsAndSort:
+    inheritFrom: refineTagsAndSort-amplicon-umi-base
+    overrides:
+      parameters:
+        postFilter:
+          type: filter_groups
+          groupingKeys:
+            - UMI
+          predicates:
+            - metrics:
+                - type: "group_metric_sum_weight"
+                  reportHist:
+                    log: true
+                    binNumber: 0
+                    minBinWidth: 0.2
+              operator:
+                type: group_operator_lowest_threshold
+                operators:
+                  - type: group_operator_advanced_thresholding
+                    algo:
+                      type: otsu
+                    histTransformers:
+                      - type: inflate
+                        fraction: 0.15
+                    logX: true
+                    minimalSample: 20
+                    fallbackThreshold: 1.0
+                  - type: group_operator_cumtop
+                    share: 0.85
+                    round: Down
 
 miltenyi-human-rna-tcr-profiling-miltiplex:
   vendor: "Miltenyi"
