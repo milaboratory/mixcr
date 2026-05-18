@@ -237,11 +237,6 @@ takara-human-rna-tcr-smarter (SMARTer Human TCR a/b Profiling Kit)
 
 takara-human-rna-bcr-umi-smartseq (SMART-Seq Human BCR (with UMIs))
 
------Miltenyi-----
-miltenyi-human-rna-tcr-profiling-miltiplex (Human TCR α/β RNA Profiling Kit (Miltiplex))
-
-miltenyi-human-rna-tcr-profiling (Human TCR α/β RNA Profiling Kit)
-
 -----Bruker-----
 bruker-sc-xcr-vdj-beacon (Single cell VDJ)
   Required args:
@@ -391,6 +386,11 @@ neb-mouse-rna-xcr-umi-nebnext (NEBNext® Immune Sequencing Kit (Mouse) BCR & TCR
 vasa-seq-vdj (VASA-seq)
   Required args:
     --species <name>
+
+-----Miltenyi-----
+miltenyi-human-rna-tcr-profiling (Human TCR α/β RNA Profiling Kit)
+
+miltenyi-human-rna-tcr-profiling-multiplex (Human TCR α/β RNA Profiling Kit (Multiplex))
 
 -----AbHelix-----
 abhelix-human-rna-xcr (Human immunoglobulin repertoire)
