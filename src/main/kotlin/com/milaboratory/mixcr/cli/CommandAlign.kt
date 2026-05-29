@@ -1307,7 +1307,16 @@ object CommandAlign {
                         "(turn on verbose warnings by adding --verbose option)."
             )
             reportBuilder.setStartMillis(beginTimestamp)
-            reportBuilder.setInputFiles(inputFiles)
+            // Record input file names only (not absolute paths) when MI_REPORT_RELATIVE_INPUT_FILES
+            // is set, so report bytes -- and thus the content hash of binary outputs such as .clns --
+            // do not depend on the working directory the command ran in. Content-addressed
+            // deduplication downstream relies on that stability. Off by default (absolute paths).
+            reportBuilder.setInputFiles(
+                if ("true".equals(System.getenv("MI_REPORT_RELATIVE_INPUT_FILES"), ignoreCase = true))
+                    inputFiles.map { it.fileName ?: it }
+                else
+                    inputFiles
+            )
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
 
