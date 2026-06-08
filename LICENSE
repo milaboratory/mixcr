@@ -119,12 +119,29 @@ Academic User requires a Commercial License. Any such collaboration undertaken
 without first obtaining a Commercial License constitutes a breach of this
 License. 
 
-(4) Fair Usage Policy for Academic Users. The royalty-free Academic License is
-intended for standard individual research and classroom instruction. “Academic Use”
-under this license is subject to a Fair Usage Limit of 1,000 samples/records per year.
-Any use exceeding this limit, or any use involving “High-Throughput” processing,
-automated massive-scale screening, or institutional-wide core facility deployments,
-requires a High-Volume Academic License or a Commercial License.
+(4) Fair Usage for Academic Users.
+The royalty-free Academic License covers non-commercial research and teaching in full.
+There is no per-sample limit, no automated cutoff, and no restriction on scale —
+large cohort studies, population-scale analyses, and high-throughput research
+pipelines are all included. If the work is non-commercial research, it is covered.
+
+This license does not extend to commercial use. In particular, it does not cover:
+(a) use by or on behalf of a for-profit entity;
+(b) running MiXCR as a service for third parties on a commercial or fee-bearing basis; or
+(c) incorporating MiXCR into a product or service offered to others.
+
+Activity of this kind — for example, a core facility processing samples for external
+or commercial clients — requires a Commercial License. (Running MiXCR for your
+own institution's academic labs is non-commercial research and remains free.)
+Genuine academic research at scale remains free. You do not need permission or
+a separate license to run a large study — just use it. For sustained large-volume
+programs or institution-wide research deployments, we invite you (but do not
+require you in advance) to register for a complimentary High-Volume Academic
+License, so we can confirm eligibility and make sure your deployment is well
+supported. There is no fee for qualifying academic research, at any volume.
+We do not impose surprise interruptions on bona fide research. If a usage pattern
+looks commercial or like a third-party service rather than academic research,
+we will contact the user to discuss the right license before any change to access.
 
 
 Section 4 - Disclaimer of Warranties and Limitation of Liability.
