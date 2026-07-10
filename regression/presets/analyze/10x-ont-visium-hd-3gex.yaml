@@ -13923,3 +13923,25 @@ exportClones:
     - field: -topChains
   splitFilesBy: []
   groupClonesBy: []
+qc:
+  checks:
+    - type: SuccessfullyAlignedReads
+      upper: 0.6
+      middle: 0.4
+      label: Successfully aligned reads
+    - type: UnassignedAlignments
+      upper: 0.4
+      middle: 0.2
+      label: Unassigned alignments in clonotype assembly
+    - type: AlignmentsDroppedLowQuality
+      upper: 0.4
+      middle: 0.2
+      label: Alignments dropped due to low sequence quality
+    - type: ReadsDroppedInTagRefinement
+      upper: 0.5
+      middle: 0.3
+      label: Reads dropped in tags error correction and filtering
+    - type: ReadsDroppedInTagFiltering
+      upper: 0.4
+      middle: 0.2
+      label: Reads dropped in tags filtering
