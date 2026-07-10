@@ -777,6 +777,30 @@
     - assembleCells
     - exportClones
     - exportCloneGroups
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.4
+        upper: 0.6
+      - type: UnassignedAlignments
+        middle: 0.2
+        upper: 0.4
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.2
+        upper: 0.4
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.3
+        upper: 0.5
+      - type: TagArtificialDiversityEliminated
+        tag: CELL
+        middle: 0.8
+        upper: 0.9
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.2
+        upper: 0.4
+      - type: CellBarcodesWithFoundGroups
+        middle: 0.6
+        upper: 0.75
   mixins:
     - type: SetTagPattern
       tagPattern: ^*cgacgctcttccgatct(CELL:N{16})(UMI:N{12})tttcttatatggg(R1:*)gtactctgcgttgataccac*
@@ -904,6 +928,30 @@
     - assembleCells
     - exportClones
     - exportCloneGroups
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.4
+        upper: 0.6
+      - type: UnassignedAlignments
+        middle: 0.2
+        upper: 0.4
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.2
+        upper: 0.4
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.3
+        upper: 0.5
+      - type: TagArtificialDiversityEliminated
+        tag: CELL
+        middle: 0.8
+        upper: 0.9
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.2
+        upper: 0.4
+      - type: CellBarcodesWithFoundGroups
+        middle: 0.6
+        upper: 0.75
   mixins:
     - type: SetTagPattern
       tagPattern: ^*cgacgctcttccgatct(CELL:N{16})(UMI:N{12})(R1:*)atgtactctgcgttgataccac*
@@ -7948,6 +7996,23 @@
     - assemble
     - assembleContigs
     - exportClones
+  qc:
+    checks:
+      - type: SuccessfullyAlignedReads
+        middle: 0.4
+        upper: 0.6
+      - type: UnassignedAlignments
+        middle: 0.2
+        upper: 0.4
+      - type: AlignmentsDroppedLowQuality
+        middle: 0.2
+        upper: 0.4
+      - type: ReadsDroppedInTagRefinement
+        middle: 0.3
+        upper: 0.5
+      - type: ReadsDroppedInTagFiltering
+        middle: 0.2
+        upper: 0.4
   mixins:
     - type: SetTagPattern
       tagPattern: ^*ctcttccgatctN{0:5}(UMI:N{9})N{0:3}(CELL1:gN{13:14}g)(CELL2:N{13:14}g)N{0:5}T{7:}(R1:*)
