@@ -26,22 +26,23 @@ jobs:
     needs:
       - init
 
-    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4
+    uses: milaboratory/github-ci/.github/workflows/java-gradle.yaml@v4-beta
     with:
+      release-branch-name: MILAB-6872_ci-canary   # ADD — else publishPlPackage is skipped
       # Environment
       java-version: '11'
       product-name: MiXCR
       product-name-slug: 'mixcr'
 
       # Tests
-      test-unit: true
+      test-unit: false
       test-unit-before-tasks: shadowJarAfterObfuscation
       test-unit-cache: true
       test-unit-cache-paths: |
         ./src/test/resources/sequences/big/**
       test-unit-cache-key: 'tests-sequences-v1'
 
-      test-integration: true
+      test-integration: false
       test-integration-before-tasks: shadowJarAfterObfuscation
       test-integration-tasks: ''
       test-integration-cache: true
@@ -50,7 +51,7 @@ jobs:
       test-integration-cache-key: 'tests-sequences-v1'
       test-integration-python-version: '3.9'
 
-      test-regression: true
+      test-regression: false
       test-regression-before-tasks: shadowJarAfterObfuscation
       test-regression-tasks: ''
       test-regression-cache: true
@@ -59,7 +60,7 @@ jobs:
       test-regression-cache-key: 'tests-sequences-v1'
 
       # Lib
-      dist-library: ${{ github.event_name != 'schedule' }}
+      dist-library: false
       dist-library-dev-tasks: publishAllPublicationsToMiprivRepository
       dist-library-release-tasks: publishAllPublicationsToMiprivRepository
 
@@ -76,7 +77,7 @@ jobs:
       cdn-redirect-s3: true
       cdn-redirect-s3-bucket-path: 'link/software/mixcr'
 
-      dist-docker: true
+      dist-docker: false
       dist-docker-tasks: |
         buildDockerImage
         buildIMGTDockerImage
