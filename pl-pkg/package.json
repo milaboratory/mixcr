@@ -115,7 +115,7 @@
   "packageManager": "npm@11.6.2",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@platforma-sdk/package-builder": "^3.8.0",
+    "@platforma-sdk/package-builder": "^3.15.0",
     "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
     "unzipper": "^0.12.3"
   }
