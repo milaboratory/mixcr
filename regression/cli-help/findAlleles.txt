@@ -1,8 +1,8 @@
 Usage: mixcr findAlleles [--export-library <path.(json|fasta)>]... [--export-alleles-mutations
                          <path.(t|c)sv>] [--result-library-name <name>]
                          [--dont-remove-unused-genes] [-O <key=value>]... [--report <path>]
-                         [--json-report <path>] [--use-local-temp] [--threads <n>]
-                         [--force-overwrite] [--no-warnings] [--verbose] [--help]
+                         [--json-report <path>] [--temp-dir <path>] [--use-local-temp] [--threads
+                         <n>] [--force-overwrite] [--no-warnings] [--verbose] [--help]
                          (--output-template <template.clns> | --no-clns-output) (input_file.
                          (clns|clna)|directory)...
 Find allele variants in clnx.
@@ -88,6 +88,13 @@ of V and J genes and the same features to align.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.
+      --temp-dir <path>      Put temporary files, such as sort spills, in the specified folder,
+                               creating it if needed. In analyze, defaults to the intermediates
+                               location when those are relocated, and to the system temp folder
+                               otherwise. Takes precedence over --use-local-temp. Steps that MiXCR
+                               delegates to mitool do not take a folder: their scratch data sits
+                               next to their own output when intermediates are relocated or
+                               --use-local-temp is given, and in the system temp folder otherwise.
       --use-local-temp       Put temporary files in the same folder as the output files.
   -t, --threads <n>          Processing threads
   -f, --force-overwrite      Force overwrite of output file(s).

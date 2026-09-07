@@ -100,11 +100,11 @@ Usage: mixcr exportShmTreesWithNodes [--split-by-tags (Molecule|Cell|Sample)] [-
                                      [<gene_feature>]]... [-biochemicalProperty <gene_feature>
                                      <property> [(germline|mrca|parent)]]...
                                      [-baseBiochemicalProperties <gene_feature>
-                                     [(germline|mrca|parent)]]... [--use-local-temp]
-                                     [--force-overwrite] [--no-warnings] [--verbose] [--help]
-                                     [[--filter-in-feature <gene_feature>] [--pattern-max-errors
-                                     <n>] (--filter-aa-pattern <pattern> | --filter-nt-pattern
-                                     <pattern>)] trees.shmt [trees.tsv]
+                                     [(germline|mrca|parent)]]... [--temp-dir <path>]
+                                     [--use-local-temp] [--force-overwrite] [--no-warnings]
+                                     [--verbose] [--help] [[--filter-in-feature <gene_feature>]
+                                     [--pattern-max-errors <n>] (--filter-aa-pattern <pattern> |
+                                     --filter-nt-pattern <pattern>)] trees.shmt [trees.tsv]
 Export SHMTree as a table with a row for every clone or reconstructed node for each root (only one
 root if no single cell data)
       trees.shmt             Input file produced by 'findShmTrees' command.
@@ -124,6 +124,13 @@ root if no single cell data)
                              Specify preset file of export fields
       --no-header            Don't print first header line, print only data
       --not-covered-as-empty Export not covered regions as empty text.
+      --temp-dir <path>      Put temporary files, such as sort spills, in the specified folder,
+                               creating it if needed. In analyze, defaults to the intermediates
+                               location when those are relocated, and to the system temp folder
+                               otherwise. Takes precedence over --use-local-temp. Steps that MiXCR
+                               delegates to mitool do not take a folder: their scratch data sits
+                               next to their own output when intermediates are relocated or
+                               --use-local-temp is given, and in the system temp folder otherwise.
       --use-local-temp       Put temporary files in the same folder as the output files.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.

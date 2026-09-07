@@ -35,11 +35,11 @@ Usage: mixcr align --preset <preset> [--strict-sample-sheet-matching] [--trimmin
                    [--show-secondary-chain-on-export-cell-groups]
                    [--dont-show-secondary-chain-on-export-cell-groups]
                    [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)] [-O <key=value>]...
-                   [--report <path>] [--json-report <path>] [--use-local-temp] [--threads <n>]
-                   [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M <key=value>]...
-                   [--remove-qc-check <type> [--remove-qc-check <type>]...]... ([file_I1.fastq[.gz]
-                   [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta[.gz]
-                   |bam|sam|cram)) alignments.vdjca
+                   [--report <path>] [--json-report <path>] [--temp-dir <path>] [--use-local-temp]
+                   [--threads <n>] [--force-overwrite] [--no-warnings] [--verbose] [--help] [-M
+                   <key=value>]... [--remove-qc-check <type> [--remove-qc-check <type>]...]...
+                   ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.
+                   gz]]|file.(fasta[.gz]|bam|sam|cram)) alignments.vdjca
 Builds alignments with V,D,J and C genes for input sequencing reads.
       ([file_I1.fastq[.gz] [file_I2.fastq[.gz]]] file_R1.fastq[.gz] [file_R2.fastq[.gz]]|file.(fasta
         [.gz]|bam|sam|cram))
@@ -165,6 +165,13 @@ Builds alignments with V,D,J and C genes for input sequencing reads.
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.
+      --temp-dir <path>      Put temporary files, such as sort spills, in the specified folder,
+                               creating it if needed. In analyze, defaults to the intermediates
+                               location when those are relocated, and to the system temp folder
+                               otherwise. Takes precedence over --use-local-temp. Steps that MiXCR
+                               delegates to mitool do not take a folder: their scratch data sits
+                               next to their own output when intermediates are relocated or
+                               --use-local-temp is given, and in the system temp folder otherwise.
       --use-local-temp       Put temporary files in the same folder as the output files.
   -t, --threads <n>          Processing threads
   -f, --force-overwrite      Force overwrite of output file(s).

@@ -31,6 +31,8 @@ Usage: mixcr analyze [--reference-for-cram genome.fasta[.gz]] [--lenient-bam-val
                      [--dont-show-secondary-chain-on-export-cell-groups]
                      [--export-clone-groups-sort-chains-by (Read|Molecule|Auto)] [--no-reports]
                      [--no-json-reports] [--output-not-used-reads] [--strict-sample-sheet-matching]
+                     [--intermediates-dir <path>] [--intermediates-in-temp]
+                     [--remove-intermediates] [--output-path <name=path>]... [--temp-dir <path>]
                      [--use-local-temp] [--threads <n>] [--force-overwrite] [--no-warnings]
                      [--verbose] [--help] [-M <key=value>]... [--remove-qc-check <type>
                      [--remove-qc-check <type>]...]... <preset> ([file_I1.fastq[.gz] [file_I2.fastq
@@ -64,6 +66,41 @@ Run full MiXCR pipeline for specific input.
                              Perform strict matching against input sample sheet (one substitution
                                will be allowed by default).
                              This option only valid if input file is *.tsv sample sheet.
+      --intermediates-dir <path>
+                             Write intermediate files to the specified folder instead of next to
+                               the output files, creating it if needed. Intermediates are the step
+                               data outputs that later steps read: the .mic and .vdjca files, and
+                               any .clns/.clna the pipeline produces before the last one. Reports,
+                               QC and exports are unaffected and stay with the output files.
+                               Mutually exclusive with --intermediates-in-temp.
+      --intermediates-in-temp
+                             Write intermediate files to a folder MiXCR creates inside the system
+                               temp folder and removes when the run exits, including after a failed
+                               step but not if the process is killed outright. The system temp
+                               folder must have room for them; in a container that is the
+                               container's own /tmp. Use --intermediates-dir to place them
+                               somewhere you choose. Mutually exclusive with --intermediates-dir.
+      --remove-intermediates Delete each intermediate file as soon as the last step that reads it
+                               has finished, so the run holds only what it still needs rather than
+                               every file it has produced. A file given an explicit --output-path
+                               is a deliverable and is never deleted. Recovering from a failed step
+                               means re-running from the input files.
+      --output-path <name=path>
+                             Write one produced file to an explicit path, overriding every other
+                               placement option and making that file a deliverable. The name is the
+                               file name the step produces, as printed with the step's command
+                               while the run executes, e.g. --output-path result.vdjca=/data/result.
+                               vdjca. Repeat to pin several files. For multi-sample input use the
+                               name produced before the input is split by sample; with several
+                               samples the folder of the path is used and each sample keeps its own
+                               file name.
+      --temp-dir <path>      Put temporary files, such as sort spills, in the specified folder,
+                               creating it if needed. In analyze, defaults to the intermediates
+                               location when those are relocated, and to the system temp folder
+                               otherwise. Takes precedence over --use-local-temp. Steps that MiXCR
+                               delegates to mitool do not take a folder: their scratch data sits
+                               next to their own output when intermediates are relocated or
+                               --use-local-temp is given, and in the system temp folder otherwise.
       --use-local-temp       Put temporary files in the same folder as the output files.
   -t, --threads <n>          Processing threads
   -f, --force-overwrite      Force overwrite of output file(s).

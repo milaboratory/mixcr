@@ -4,8 +4,9 @@ Usage: mixcr refineTagsAndSort [--power <d>] [--substitution-rate <d>] [--indel-
                                <key=value>] [--reset-whitelist <tag_name>]
                                [--dont-correct-tag-with-name <tag_name>] [--dont-correct-tag-type
                                (Molecule|Cell|Sample)] [--report <path>] [--json-report <path>]
-                               [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
-                               [--help] alignments.vdjca alignments.corrected.vdjca
+                               [--temp-dir <path>] [--use-local-temp] [--force-overwrite]
+                               [--no-warnings] [--verbose] [--help] alignments.vdjca alignments.
+                               corrected.vdjca
 Applies error correction algorithm for tag sequences and sorts resulting file by tags.
       alignments.vdjca       Path to input alignments
       alignments.corrected.vdjca
@@ -49,6 +50,13 @@ Applies error correction algorithm for tag sequences and sorts resulting file by
   -r, --report <path>        Report file (human readable version, see `-j / --json-report` for
                                machine readable report).
   -j, --json-report <path>   JSON formatted report file.
+      --temp-dir <path>      Put temporary files, such as sort spills, in the specified folder,
+                               creating it if needed. In analyze, defaults to the intermediates
+                               location when those are relocated, and to the system temp folder
+                               otherwise. Takes precedence over --use-local-temp. Steps that MiXCR
+                               delegates to mitool do not take a folder: their scratch data sits
+                               next to their own output when intermediates are relocated or
+                               --use-local-temp is given, and in the system temp folder otherwise.
       --use-local-temp       Put temporary files in the same folder as the output files.
   -f, --force-overwrite      Force overwrite of output file(s).
       -nw, --no-warnings     Suppress all warning messages.

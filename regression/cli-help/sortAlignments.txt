@@ -1,9 +1,17 @@
-Usage: mixcr sortAlignments [--use-local-temp] [--force-overwrite] [--no-warnings] [--verbose]
-                            [--help] alignments.vdjca alignments.sorted.vdjca
+Usage: mixcr sortAlignments [--temp-dir <path>] [--use-local-temp] [--force-overwrite]
+                            [--no-warnings] [--verbose] [--help] alignments.vdjca alignments.sorted.
+                            vdjca
 Sort alignments in vdjca file by read id.
       alignments.vdjca
       alignments.sorted.vdjca
 
+      --temp-dir <path>    Put temporary files, such as sort spills, in the specified folder,
+                             creating it if needed. In analyze, defaults to the intermediates
+                             location when those are relocated, and to the system temp folder
+                             otherwise. Takes precedence over --use-local-temp. Steps that MiXCR
+                             delegates to mitool do not take a folder: their scratch data sits next
+                             to their own output when intermediates are relocated or
+                             --use-local-temp is given, and in the system temp folder otherwise.
       --use-local-temp     Put temporary files in the same folder as the output files.
   -f, --force-overwrite    Force overwrite of output file(s).
       -nw, --no-warnings   Suppress all warning messages.

@@ -919,7 +919,7 @@ mitool-parse:
             costDistributions:
               "0": 46879
   trimmerReport: null
-  commandLine: parse --report baseSingleCell.raw.parse.report.txt --preset local:MiTool.preset
+  commandLine: parse --report baseSingleCell.raw.parse.report.txt --preset local:baseSingleCell.raw.MiTool.preset
     --save-output-file-names baseSingleCell.raw.parse.list.tsv single_cell_vdj_t_subset_R1.fastq.gz
     single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.raw.parsed.mic
   inputFiles:
