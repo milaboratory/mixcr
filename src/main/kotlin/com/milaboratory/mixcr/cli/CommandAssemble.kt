@@ -49,7 +49,6 @@ import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.HashFunctions
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.use
 import gnu.trove.map.hash.TIntObjectHashMap
 import io.repseq.core.GeneFeature.CDR3
@@ -165,7 +164,7 @@ object CommandAssemble {
         lateinit var useLocalTemp: UseLocalTempOption
 
         private val tempDest by lazy {
-            TempFileManager.smartTempDestination(outputFile, ".tmp.", !useLocalTemp.value)
+            useLocalTemp.tempDestination(outputFile, ".tmp.")
         }
 
         @Option(

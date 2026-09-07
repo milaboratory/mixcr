@@ -115,7 +115,6 @@ import com.milaboratory.util.PathPatternExpandException
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.limit
 import com.milaboratory.util.parseAndRunAndCorrelateFSPattern
 import com.milaboratory.util.use
@@ -734,12 +733,8 @@ object CommandAlign {
         description = ["Builds alignments with V,D,J and C genes for input sequencing reads."]
     )
     class Cmd : CmdBase() {
-        @Option(
-            description = ["Put temporary files in the same folder as the output files."],
-            names = ["--use-local-temp"],
-            order = OptionsOrder.localTemp
-        )
-        var useLocalTemp = false
+        @Mixin
+        lateinit var useLocalTemp: UseLocalTempOption
 
         @Option(
             description = ["Analysis preset. Sets key parameters of this and all downstream analysis steps. " +
@@ -916,7 +911,7 @@ object CommandAlign {
         private var outputFileList: Path? = null
 
         private val tempDest by lazy {
-            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
+            useLocalTemp.tempDestination(outputFile, "")
         }
 
 

@@ -48,7 +48,6 @@ import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportHelper
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortByHashOnDisk
 import org.apache.commons.io.FileUtils
 import picocli.CommandLine.ArgGroup
@@ -212,7 +211,7 @@ object CommandRefineTagsAndSort {
         lateinit var useLocalTemp: UseLocalTempOption
 
         private val tempDest by lazy {
-            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp.value)
+            useLocalTemp.tempDestination(outputFile, "")
         }
 
         @Option(

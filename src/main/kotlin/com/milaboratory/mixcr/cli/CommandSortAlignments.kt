@@ -23,7 +23,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.primitivio.PipeReader
 import com.milaboratory.primitivio.PipeWriter
 import com.milaboratory.util.ObjectSerializer
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.sortOnDisk
 import io.repseq.core.VDJCGene
 import picocli.CommandLine.Command
@@ -53,7 +52,7 @@ class CommandSortAlignments : MiXCRCommandWithOutputs() {
         get() = listOf(out)
 
     private val tempDest by lazy {
-        TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)
+        useLocalTemp.tempDestination(out, "")
     }
 
     override fun validate() {

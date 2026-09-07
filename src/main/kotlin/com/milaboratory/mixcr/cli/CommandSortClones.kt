@@ -28,7 +28,6 @@ import com.milaboratory.mixcr.basictypes.VDJCSProperties
 import com.milaboratory.mixcr.cli.CommonDescriptions.Labels
 import com.milaboratory.util.ArraysUtils
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.exhaustive
 import io.repseq.core.GeneFeature
 import io.repseq.core.GeneFeature.CDR3
@@ -96,7 +95,7 @@ class CommandSortClones : MiXCRCommandWithOutputs() {
                 VDJCLibraryRegistry.getDefault(),
                 Runtime.getRuntime().availableProcessors()
             ).use { reader ->
-                ClnAWriter(out, TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)).use { writer ->
+                ClnAWriter(out, useLocalTemp.tempDestination(out, "")).use { writer ->
                     SmartProgressReporter.startProgressReport(writer)
                     val ordering = chooseOrdering(reader)
                     writer.writeClones(reader.readCloneSet().reorder(ordering))

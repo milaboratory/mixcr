@@ -196,7 +196,7 @@ class CommandFindAlleles : MiXCRCommandWithOutputs() {
     private val tempDest: TempFileDest by lazy {
         val path = outputFiles.first()
         if (useLocalTemp.value) path.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(path, ".find_alleles", !useLocalTemp.value)
+        useLocalTemp.tempDestination(path, ".find_alleles")
     }
 
     private val findAllelesParameters: CommandFindAllelesParams by lazy {

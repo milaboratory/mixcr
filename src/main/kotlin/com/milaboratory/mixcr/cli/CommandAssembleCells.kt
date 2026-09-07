@@ -37,7 +37,6 @@ import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.util.Concurrency
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.SmartProgressReporter
-import com.milaboratory.util.TempFileManager
 import io.repseq.core.VDJCLibraryRegistry
 import picocli.CommandLine.Command
 import picocli.CommandLine.Mixin
@@ -150,7 +149,7 @@ object CommandAssembleCells {
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
-                val tempDest = TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp.value)
+                val tempDest = useLocalTemp.tempDestination(outputFile, "")
                 ClnAWriter(outputFile, tempDest).use { writer ->
                     var newNumberOfAlignments: Long = 0
                     val allAlignmentsList = mutableListOf<OutputPort<VDJCAlignments>>()

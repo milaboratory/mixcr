@@ -37,7 +37,6 @@ import com.milaboratory.mixcr.basictypes.VDJCAlignmentsWriter
 import com.milaboratory.mixcr.trees.SHMTreesReader
 import com.milaboratory.mixcr.trees.SHMTreesWriter
 import com.milaboratory.mixcr.util.Concurrency
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.exhaustive
 import gnu.trove.set.hash.TLongHashSet
 import io.repseq.core.VDJCLibraryRegistry
@@ -159,7 +158,7 @@ class CommandSlice : MiXCRCommandWithOutputs() {
 
     private fun sliceClnA() {
         ClnAReader(input, VDJCLibraryRegistry.getDefault(), Concurrency.noMoreThan(4)).use { reader ->
-            ClnAWriter(out.toFile(), TempFileManager.smartTempDestination(out, "", !useLocalTemp.value)).use { writer ->
+            ClnAWriter(out.toFile(), useLocalTemp.tempDestination(out, "")).use { writer ->
                 // Getting full clone set
                 val cloneSet = reader.readCloneSet()
 

@@ -61,7 +61,6 @@ import com.milaboratory.util.JsonOverrider
 import com.milaboratory.util.OutputPortWithProgress
 import com.milaboratory.util.ReportUtil
 import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.cached
 import com.milaboratory.util.groupByOnDisk
 import com.milaboratory.util.withExpectedSize
@@ -275,7 +274,7 @@ class CommandFindShmTrees : MiXCRCommandWithOutputs() {
 
     private val tempDest: TempFileDest by lazy {
         if (useLocalTemp.value) outputTreesPath.toAbsolutePath().parent.createDirectories()
-        TempFileManager.smartTempDestination(outputTreesPath, ".build_trees", !useLocalTemp.value)
+        useLocalTemp.tempDestination(outputTreesPath, ".build_trees")
     }
 
     override fun run1() {

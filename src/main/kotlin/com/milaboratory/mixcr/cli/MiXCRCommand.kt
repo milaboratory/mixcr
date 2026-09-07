@@ -71,6 +71,8 @@ abstract class MiXCRCommand : Runnable {
         const val overrides = 500_000
 
         const val report = 1_000_000 + 1_000
+        const val intermediates = 1_000_000 + 1_500
+        const val tempDir = 1_000_000 + 1_900
         const val localTemp = 1_000_000 + 2_000
         const val threads = 1_000_000 + 3_000
         const val forceOverride = 1_000_000 + 4_000

@@ -18,8 +18,8 @@ import com.milaboratory.core.io.sequence.SingleRead
 import com.milaboratory.core.io.sequence.fastq.PairedFastqWriter
 import com.milaboratory.core.io.sequence.fastq.SingleFastqWriter
 import com.milaboratory.mixcr.bam.BAMReader
-import com.milaboratory.util.TempFileManager
 import picocli.CommandLine.Command
+import picocli.CommandLine.Mixin
 import picocli.CommandLine.Option
 import java.nio.file.Path
 
@@ -29,12 +29,8 @@ import java.nio.file.Path
     description = ["Converts BAM/SAM file to paired/unpaired fastq files"]
 )
 class CommandBAM2fastq : MiXCRCommandWithOutputs() {
-    @Option(
-        description = ["Put temporary files in the same folder as the output files."],
-        names = ["--use-local-temp"],
-        order = OptionsOrder.localTemp
-    )
-    var useLocalTemp = false
+    @Mixin
+    lateinit var useLocalTemp: UseLocalTempOption
 
     @Option(
         names = ["-b", "--bam"],
@@ -107,7 +103,7 @@ class CommandBAM2fastq : MiXCRCommandWithOutputs() {
         get() = listOf(fastq1, fastq2, fastqUnpaired)
 
     override fun run1() {
-        val tempFileDest = TempFileManager.smartTempDestination(fastq1, "", !useLocalTemp)
+        val tempFileDest = useLocalTemp.tempDestination(fastq1, "")
         BAMReader(
             bamFiles,
             dropNonVDJ,

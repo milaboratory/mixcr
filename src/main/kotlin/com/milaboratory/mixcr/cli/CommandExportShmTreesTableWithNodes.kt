@@ -37,7 +37,6 @@ import com.milaboratory.mixcr.trees.forPostanalysis
 import com.milaboratory.mixcr.trees.splitToChains
 import com.milaboratory.util.ComparatorWithHash
 import com.milaboratory.util.TempFileDest
-import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.groupByOnDisk
 import gnu.trove.set.hash.TIntHashSet
 import io.repseq.core.VDJCLibraryRegistry
@@ -112,9 +111,9 @@ class CommandExportShmTreesTableWithNodes : CommandExportShmTreesAbstract() {
 
     private val tempDest: TempFileDest by lazy {
         ValidationException.requireNotNull(out) {
-            "With --use-local-temp explicit output path is required"
+            "With --temp-dir or --use-local-temp explicit output path is required"
         }
-        TempFileManager.smartTempDestination(out!!, ".build_trees", !useLocalTemp.value)
+        useLocalTemp.tempDestination(out!!, ".build_trees")
     }
 
     override val outputFiles
