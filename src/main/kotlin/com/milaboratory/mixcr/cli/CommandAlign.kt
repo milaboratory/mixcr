@@ -916,7 +916,7 @@ object CommandAlign {
         private var outputFileList: Path? = null
 
         private val tempDest by lazy {
-            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp)
+            TempFileManager.smartTempDestination(outputFile, ".tmp.", !useLocalTemp)
         }
 
 

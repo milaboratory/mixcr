@@ -232,8 +232,9 @@ object CommandAnalyze {
             description = ["Write intermediate files to the specified folder instead of next to the " +
                     "output files, creating it if needed. Intermediates are the step outputs that " +
                     "later steps read: the .mic and .vdjca files, and any .clns/.clna produced " +
-                    "before the last one. Reports, QC and exports are unaffected. Scratch data " +
-                    "follows the intermediates here. Mutually exclusive with --intermediates-in-temp."],
+                    "before the last one. Reports, QC and exports are unaffected. Scratch data of " +
+                    "the relocated steps follows them here; the last step's stays in the system " +
+                    "temp folder. Mutually exclusive with --intermediates-in-temp."],
             names = ["--intermediates-dir"],
             paramLabel = "<path>",
             order = OptionsOrder.intermediates
@@ -439,18 +440,36 @@ object CommandAnalyze {
                 (pipeline + listOfNotNull(qcStep)).forEach { cmd ->
                     val rounds = (cmd as? AllowedMultipleRounds)?.roundsCount(bundle) ?: 1
                     repeat(rounds) { round ->
-                        val outputName = cmd.outputName(outputNamePrefix, "", bundle, round)
+                        // A step the bundle carries no parameters for produces nothing to address,
+                        // and asking it for a name throws. The pipeline tolerates such a step
+                        // elsewhere, so listing the names must not be what breaks the run.
+                        val outputName = try {
+                            cmd.outputName(outputNamePrefix, "", bundle, round)
+                        } catch (e: RuntimeException) {
+                            return@repeat
+                        }
                         if (cmd == AnalyzeCommandDescriptor.qc) {
                             val base = outputName.substring(0, outputName.lastIndexOf('.'))
                             add("$base.txt")
                             add("$base.json")
                         } else
                             add(outputName)
-                        cmd.textReportName(outputNamePrefix, "", bundle, round)?.let { add(it) }
-                        cmd.jsonReportName(outputNamePrefix, "", bundle, round)?.let { add(it) }
+                        if (!noReports)
+                            cmd.textReportName(outputNamePrefix, "", bundle, round)?.let { add(it) }
+                        if (!noJsonReports)
+                            cmd.jsonReportName(outputNamePrefix, "", bundle, round)?.let { add(it) }
                     }
                 }
             }
+            outputPaths.entries.groupBy({ it.value }, { it.key })
+                .filterValues { it.size > 1 }
+                .forEach { (path, names) ->
+                    throw ValidationException(
+                        "--output-path sends ${names.sorted().joinToString(" and ")} to the same " +
+                                "path $path"
+                    )
+                }
+
             val unknownPins = outputPaths.keys - producibleNames
             if (unknownPins.isNotEmpty())
                 throw ValidationException(
@@ -490,10 +509,12 @@ object CommandAnalyze {
                 }
                 // mitool resolves a local: name against its own search path, which includes the
                 // working directory, and Path.resolve returns an absolute argument unchanged, so
-                // this path works either relative or absolute. It is passed on exactly as given:
-                // resolving it against the working directory would put that directory into the
-                // command line recorded in every output header, and two runs of the same analysis
-                // from different folders would stop producing identical files.
+                // this path works either relative or absolute. It is passed on exactly as given
+                // rather than resolved, because it is recorded in the command line of every
+                // downstream file header: keeping it relative is what lets two runs of the same
+                // analysis in different folders produce identical files. Relocating the
+                // intermediates puts that location in the header instead, which is the caller's
+                // choice to make.
                 val mitoolPresetPath = (intermediatesFolder ?: outputFolder)
                     .resolve("${outputNamePrefix.dotAfterIfNotBlank()}MiTool.preset.yaml")
                 mitoolPresetPath.toFile().deleteOnExit()
@@ -870,10 +891,13 @@ object CommandAnalyze {
                             arguments += listOf("--threads", threadsOption.value.toString())
                         }
 
-                        // Every step places its scratch data next to its own output, which is the
-                        // intermediates location when those are relocated. Steps take no scratch
-                        // folder of their own, so this is the only way to move it, and it is the
-                        // same for the steps delegated to mitool as for MiXCR's own.
+                        // A step whose output was relocated puts its scratch data next to that
+                        // output, so the scratch follows the intermediates. Steps take no scratch
+                        // folder of their own, which makes this the only mechanism available, and
+                        // it is the same for the steps delegated to mitool as for MiXCR's own.
+                        // The last step is left alone: its output is a deliverable at the output
+                        // prefix, and its scratch belongs in the system temp folder rather than
+                        // next to the results.
                         if (cmd.hasUseLocalTempOption &&
                             (useLocalTemp.value || (intermediate && intermediatesFolder != null))
                         )
