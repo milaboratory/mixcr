@@ -922,7 +922,7 @@ mitool-parse:
               "0": 46879
   trimmerReport: null
   commandLine: parse --report baseSingleCell.vdjcontigs.parse.report.txt --preset
-    local:MiTool.preset --save-output-file-names baseSingleCell.vdjcontigs.parse.list.tsv
+    local:baseSingleCell.vdjcontigs.MiTool.preset --save-output-file-names baseSingleCell.vdjcontigs.parse.list.tsv
     single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.parsed.mic
   inputFiles:
     - single_cell_vdj_t_subset_R1.fastq.gz
