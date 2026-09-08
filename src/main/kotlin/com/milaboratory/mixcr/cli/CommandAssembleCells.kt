@@ -150,7 +150,7 @@ object CommandAssembleCells {
 
                 val result = calculateGroupIdForClones(reader.readCloneSet(), reader.header, reportBuilder)
 
-                val tempDest = TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp.value)
+                val tempDest = TempFileManager.smartTempDestination(outputFile, ".tmp.", !useLocalTemp.value)
                 ClnAWriter(outputFile, tempDest).use { writer ->
                     var newNumberOfAlignments: Long = 0
                     val allAlignmentsList = mutableListOf<OutputPort<VDJCAlignments>>()

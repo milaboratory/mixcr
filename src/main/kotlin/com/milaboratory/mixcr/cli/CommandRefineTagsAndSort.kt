@@ -212,7 +212,7 @@ object CommandRefineTagsAndSort {
         lateinit var useLocalTemp: UseLocalTempOption
 
         private val tempDest by lazy {
-            TempFileManager.smartTempDestination(outputFile, "", !useLocalTemp.value)
+            TempFileManager.smartTempDestination(outputFile, ".tmp.", !useLocalTemp.value)
         }
 
         @Option(
