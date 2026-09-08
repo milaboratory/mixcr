@@ -109,7 +109,8 @@ public class CloneAssemblerRunnerTest {
         CloneAssemblerRunner assemblerRunner = new CloneAssemblerRunner(
                 PreCloneReader.fromAlignments(alignmentsProvider, assemblerParameters.getAssemblingFeatures(), __ -> {
                 }),
-                new CloneAssembler(TagsInfo.NO_TAGS, assemblerParameters, true, aligner.getUsedGenes(), alignerParameters));
+                new CloneAssembler(TagsInfo.NO_TAGS, assemblerParameters, true, aligner.getUsedGenes(), alignerParameters,
+                        TempFileManager.systemTempFolderDestination("test.assemble")));
         SmartProgressReporter.startProgressReport(assemblerRunner);
         assemblerRunner.run();
 
