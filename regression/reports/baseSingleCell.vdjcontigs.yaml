@@ -226,8 +226,7 @@ mitool-consensus:
     readsFilteredByCount: 1240
     readsFilteredNotInConsensus: 45639
     consensuses: 0
-    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.1.report.txt
-      baseSingleCell.vdjcontigs.refined.mic baseSingleCell.vdjcontigs.consensus.1.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.vdjcontigs.refined.mic
     outputFiles:
@@ -587,8 +586,7 @@ mitool-consensus:
     readsFilteredByCount: 1240
     readsFilteredNotInConsensus: 1224
     consensuses: 146
-    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.2.report.txt
-      baseSingleCell.vdjcontigs.consensus.1.mic baseSingleCell.vdjcontigs.consensus.2.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.vdjcontigs.consensus.1.mic
     outputFiles:
@@ -783,8 +781,7 @@ mitool-consensus:
     readsFilteredByCount: 0
     readsFilteredNotInConsensus: 1543
     consensuses: 79
-    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.3.report.txt
-      baseSingleCell.vdjcontigs.consensus.2.mic baseSingleCell.vdjcontigs.consensus.3.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.vdjcontigs.consensus.2.mic
     outputFiles:
@@ -869,8 +866,7 @@ mitool-consensus:
     readsFilteredByCount: 0
     readsFilteredNotInConsensus: 64
     consensuses: 27
-    commandLine: consensus --report baseSingleCell.vdjcontigs.consensus.4.report.txt
-      baseSingleCell.vdjcontigs.consensus.3.mic baseSingleCell.vdjcontigs.consensus.4.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.vdjcontigs.consensus.3.mic
     outputFiles:
@@ -920,10 +916,9 @@ mitool-parse:
                       "0": 46879
             costDistributions:
               "0": 46879
+    perSampleMatched: []
   trimmerReport: null
-  commandLine: parse --report baseSingleCell.vdjcontigs.parse.report.txt --preset
-    local:baseSingleCell.vdjcontigs.MiTool.preset --save-output-file-names baseSingleCell.vdjcontigs.parse.list.tsv
-    single_cell_vdj_t_subset_R1.fastq.gz single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.vdjcontigs.parsed.mic
+  commandLine: ""
   inputFiles:
     - single_cell_vdj_t_subset_R1.fastq.gz
     - single_cell_vdj_t_subset_R2.fastq.gz
@@ -931,8 +926,7 @@ mitool-parse:
     - baseSingleCell.vdjcontigs.parsed.mic
 mitool-refine-tags:
   type: MiTool.RefineTags
-  commandLine: refine-tags --report baseSingleCell.vdjcontigs.refineTags.report.txt
-    baseSingleCell.vdjcontigs.parsed.mic baseSingleCell.vdjcontigs.refined.mic
+  commandLine: ""
   inputFiles:
     - baseSingleCell.vdjcontigs.parsed.mic
   outputFiles:
