@@ -894,6 +894,7 @@ upstreams:
                   "15": 10
                   "17": 7
                   "19": 12
+        perSampleMatched: []
       notMatchedByHeader: 0
       transformerReports: []
       coverage:
@@ -1798,6 +1799,7 @@ upstreams:
                   "15": 5
                   "17": 11
                   "19": 4
+        perSampleMatched: []
       notMatchedByHeader: 0
       transformerReports: []
       coverage:
