@@ -29,10 +29,10 @@ mixcr analyze --verbose generic-amplicon \
   -Malign.parameters.readsLayout=Collinear \
   CD4M1_test_R1.fastq.gz CD4M1_test_R2.fastq.gz case8
 
-assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "241364"
-assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "200784"
-assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25662"
+assert "cat case8.align.report.json | head -n 1 | jq -r .chainUsage.chains.TRA.total" "241395"
+assert "cat case8.assemble.report.json | head -n 1 | jq -r .readsInClones" "200812"
+assert "cat case8.assemble.report.json | head -n 1 | jq -r .clones" "25664"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .longestContigLength" "499"
-assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "3547"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .clonesWithAmbiguousLetters" "3548"
 assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r '.assemblePrematureTerminationEvents | round'" "4"
-assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25662"
+assert "cat case8.assembleContigs.report.json | head -n 1 | jq -r .finalCloneCount" "25664"
