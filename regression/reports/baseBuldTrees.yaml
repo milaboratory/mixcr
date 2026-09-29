@@ -253,14 +253,14 @@ upstreams:
       overlappedNotAligned: 8
       alignmentAidedOverlaps: 847
       noCDR3PartsAlignments: 5
-      partialAlignments: 463
+      partialAlignments: 464
       chimeras: 0
-      vChimeras: 88
+      vChimeras: 75
       jChimeras: 0
-      pairedEndAlignmentConflicts: 714
+      pairedEndAlignmentConflicts: 717
       realignedWithForcedNonFloatingBound: 4644
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1559
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1559
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1573
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1573
       chainUsage:
         type: chainUsage
         chimeras: 0
@@ -900,10 +900,10 @@ upstreams:
       coverage:
         VDJRegion: 47138
         CDR1_TO_FR4: 48144
-        FR2_TO_FR4: 49225
-        CDR2_TO_FR4: 49351
-        FR3_TO_FR4: 49345
-        CDR3: 49135
+        FR2_TO_FR4: 49224
+        CDR2_TO_FR4: 49350
+        FR3_TO_FR4: 49344
+        CDR3: 49134
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -1142,12 +1142,12 @@ upstreams:
       noCDR3PartsAlignments: 0
       partialAlignments: 327
       chimeras: 0
-      vChimeras: 88
+      vChimeras: 76
       jChimeras: 1
-      pairedEndAlignmentConflicts: 731
+      pairedEndAlignmentConflicts: 734
       realignedWithForcedNonFloatingBound: 4364
-      realignedWithForcedNonFloatingRightBoundInLeftRead: 1338
-      realignedWithForcedNonFloatingLeftBoundInRightRead: 1338
+      realignedWithForcedNonFloatingRightBoundInLeftRead: 1350
+      realignedWithForcedNonFloatingLeftBoundInRightRead: 1350
       chainUsage:
         type: chainUsage
         chimeras: 0
@@ -1805,9 +1805,9 @@ upstreams:
       coverage:
         VDJRegion: 27289
         CDR1_TO_FR4: 27823
-        FR2_TO_FR4: 28780
-        CDR2_TO_FR4: 29010
-        FR3_TO_FR4: 29010
+        FR2_TO_FR4: 28779
+        CDR2_TO_FR4: 29009
+        FR3_TO_FR4: 29009
         CDR3: 28953
     assemble:
       type: assemblerReport
