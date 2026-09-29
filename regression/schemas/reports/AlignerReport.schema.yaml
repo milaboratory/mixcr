@@ -77,6 +77,17 @@ properties:
               type: object
       matchedReads:
         type: integer
+      perSampleMatched:
+        type: array
+        items:
+          type: object
+          properties:
+            matched:
+              type: integer
+            sampleKey:
+              type: array
+              items:
+                type: string
       projections:
         type: object
       totalBitCost:

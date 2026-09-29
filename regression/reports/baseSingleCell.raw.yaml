@@ -224,8 +224,7 @@ mitool-consensus:
     readsFilteredByCount: 1240
     readsFilteredNotInConsensus: 45639
     consensuses: 0
-    commandLine: consensus --report baseSingleCell.raw.consensus.1.report.txt baseSingleCell.raw.refined.mic
-      baseSingleCell.raw.consensus.1.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.raw.refined.mic
     outputFiles:
@@ -585,8 +584,7 @@ mitool-consensus:
     readsFilteredByCount: 1240
     readsFilteredNotInConsensus: 1224
     consensuses: 146
-    commandLine: consensus --report baseSingleCell.raw.consensus.2.report.txt baseSingleCell.raw.consensus.1.mic
-      baseSingleCell.raw.consensus.2.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.raw.consensus.1.mic
     outputFiles:
@@ -781,8 +779,7 @@ mitool-consensus:
     readsFilteredByCount: 0
     readsFilteredNotInConsensus: 1543
     consensuses: 79
-    commandLine: consensus --report baseSingleCell.raw.consensus.3.report.txt baseSingleCell.raw.consensus.2.mic
-      baseSingleCell.raw.consensus.3.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.raw.consensus.2.mic
     outputFiles:
@@ -867,8 +864,7 @@ mitool-consensus:
     readsFilteredByCount: 0
     readsFilteredNotInConsensus: 64
     consensuses: 27
-    commandLine: consensus --report baseSingleCell.raw.consensus.4.report.txt baseSingleCell.raw.consensus.3.mic
-      baseSingleCell.raw.consensus.4.mic
+    commandLine: ""
     inputFiles:
       - baseSingleCell.raw.consensus.3.mic
     outputFiles:
@@ -918,10 +914,9 @@ mitool-parse:
                       "0": 46879
             costDistributions:
               "0": 46879
+    perSampleMatched: []
   trimmerReport: null
-  commandLine: parse --report baseSingleCell.raw.parse.report.txt --preset local:baseSingleCell.raw.MiTool.preset
-    --save-output-file-names baseSingleCell.raw.parse.list.tsv single_cell_vdj_t_subset_R1.fastq.gz
-    single_cell_vdj_t_subset_R2.fastq.gz baseSingleCell.raw.parsed.mic
+  commandLine: ""
   inputFiles:
     - single_cell_vdj_t_subset_R1.fastq.gz
     - single_cell_vdj_t_subset_R2.fastq.gz
@@ -929,8 +924,7 @@ mitool-parse:
     - baseSingleCell.raw.parsed.mic
 mitool-refine-tags:
   type: MiTool.RefineTags
-  commandLine: refine-tags --report baseSingleCell.raw.refineTags.report.txt baseSingleCell.raw.parsed.mic
-    baseSingleCell.raw.refined.mic
+  commandLine: ""
   inputFiles:
     - baseSingleCell.raw.parsed.mic
   outputFiles:

@@ -476,6 +476,7 @@ properties:
       enum:
         - Sample
         - Cell
+        - Feature
         - Molecule
         - Targets
         - Technical
