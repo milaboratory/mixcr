@@ -46,7 +46,7 @@ align-amplicon:
           alignmentStopPenalty: 0
           absoluteMinScore: 150
           relativeMinScore: 0.8
-          maxHits: 2
+          maxHits: 15
           scoring:
             type: affine
             subsMatrix: simple(match = 10, mismatch = -19)
