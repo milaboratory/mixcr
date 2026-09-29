@@ -13,7 +13,7 @@ import io.repseq.core.VDJCLibraryRegistry
 import org.junit.Test
 
 /**
- * Species and chains added in the built-in reference library v6.4 must resolve from the packaged default library.
+ * Species and chains added in the built-in reference library (v6.4, v6.5) must resolve from the packaged default library.
  */
 class DefaultLibraryTest {
     private class Species(val name: String, val taxonId: Long, val chains: List<String>, val representativeV: String)
@@ -23,6 +23,9 @@ class DefaultLibraryTest {
         Species("pig", 9823, listOf("IGH", "IGK", "IGL", "TRA", "TRB", "TRD", "TRG"), "TRBV1*00"),
         Species("salmon", 8030, listOf("IGH", "IGK", "IGL", "TRA", "TRB", "TRD", "TRG"), "TRGV1-1*00"),
         Species("gallus", 9031, listOf("IGH", "IGL"), "IGLV1-1*00"),
+        Species("mmul", 9544, listOf("IGH", "IGK", "IGL", "TRA", "TRB"), "IGKV1-6*00"),
+        Species("mfas", 9541, listOf("IGH", "IGK", "IGL", "TRA", "TRB"), "IGKV1-6*00"),
+        Species("rat", 10116, listOf("IGH", "IGK", "IGL", "TRA", "TRB"), "IGHV1-8*00"),
     )
 
     @Test
