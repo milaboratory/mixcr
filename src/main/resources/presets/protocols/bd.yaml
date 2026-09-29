@@ -6317,10 +6317,10 @@
       species: mmu
     - type: SetTagPattern
       tagPattern: |
-        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) | \
-        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
-        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})| \
+        ^(CELL1:N{9})actgN{8}(CELL2:N{9})ggtaN{9}(CELL3:N{9})(UMI:N{8}) |
+        ^(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
+        ^a(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
+        ^gt(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8})|
         ^tca(CELL1:N{9})gtga(CELL2:N{9})gaca(CELL3:N{9})(UMI:N{8}) \
         ^aggttctgggttctggatgt(R2:*)|
         ^caatctctgcttttgatggctc(R2:*)|
