@@ -255,10 +255,14 @@ assembleContigs:
     minimalMeanNormalizedQuality: 5.0
     outputMinimalQualityShare: 0.75
     outputMinimalSumQuality: 0
-    subCloningRegions: null
-    assemblingRegions: null
+    subCloningRegions:
+      - VDJRegion
+    assemblingRegions:
+      - VDJRegion
     postFiltering:
-      type: NoFiltering
+      type: OnlyUnambiguouslyCovering
+      geneFeatures:
+        - VDJRegion
     trimmingParameters:
       averageQualityThreshold: 10.0
       windowSize: 8
