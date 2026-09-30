@@ -11,7 +11,8 @@
     - exportClones
   mixins:
     - type: MaterialTypeRNA
-    - type: AssembleContigsWithMaxLength
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
   align:
     inheritFrom: align-long-read
   assemble:
@@ -57,7 +58,8 @@
     - exportClones
   mixins:
     - type: MaterialTypeRNA
-    - type: AssembleContigsWithMaxLength
+    - type: SetContigAssemblingFeatures
+      features: [ "VDJRegion" ]
     - type: AddTagsValidation
       validation:
         type: MustContainTagType
