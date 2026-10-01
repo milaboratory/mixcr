@@ -517,7 +517,9 @@ object CommandAnalyze {
                 // choice to make.
                 val mitoolPresetPath = (intermediatesFolder ?: outputFolder)
                     .resolve("${outputNamePrefix.dotAfterIfNotBlank()}MiTool.preset.yaml")
-                mitoolPresetPath.toFile().deleteOnExit()
+                // A dry run keeps the preset, so the printed parse command can be run afterwards
+                if (!dryRun)
+                    mitoolPresetPath.toFile().deleteOnExit()
                 K_YAML_OM.writeValue(mitoolPresetPath.toFile(), mitoolPreset)
 
                 // Adding an option to save output files by parse
@@ -536,7 +538,10 @@ object CommandAnalyze {
 
                 planBuilder.executeSteps(dryRun)
                 // Taking into account that there are multiple outputs from the mitool parse command.
-                planBuilder.setActualOutputs(parse, sampleFileList.toPath())
+                // A dry run writes no list and keeps the planned names, which are the names parse
+                // writes unless it splits the reads by sample.
+                if (!dryRun)
+                    planBuilder.setActualOutputs(parse, sampleFileList.toPath())
 
                 pipeline
                     .drop(1) // without parse
