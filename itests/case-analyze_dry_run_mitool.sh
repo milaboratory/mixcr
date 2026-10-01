@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# The steps `analyze --dry-run` prints for a mitool preset, run one by one in a fresh folder, give the same clones as analyze
+# Runs the steps that `analyze --dry-run` prints for a mitool preset, one by one, in a fresh folder.
+# Checks that they give the same clones as analyze.
 
 assert() {
   expected=$(echo -ne "${2:-}")

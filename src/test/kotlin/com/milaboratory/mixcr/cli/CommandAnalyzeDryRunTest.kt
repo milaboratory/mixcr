@@ -42,7 +42,7 @@ class CommandAnalyzeDryRunTest {
                 listOf("mitool parse", "mitool refine-tags", "mitool consensus", "align")
         withClue("several consensus rounds") { (commands.count { it == "mitool consensus" } > 1) shouldBe true }
 
-        // Production steps read what the previous one wrote
+        // Each production step reads the output of the step before it
         val production = steps.filterNot { it[1].startsWith("export") || it[1] == "qc" }
         production.zipWithNext().forEach { (previous, next) ->
             withClue(next.joinToString(" ")) { next[next.size - 2] shouldBe previous.last() }
@@ -75,7 +75,7 @@ class CommandAnalyzeDryRunTest {
         }
     }
 
-    /** Printed steps, each split into words starting with `mixcr` */
+    /** Returns the printed steps. Each step is a list of words. The first word is `mixcr`. */
     private fun dryRun(output: Path, vararg presetArgs: String): List<List<String>> {
         val printed = captureStdout {
             run(
@@ -86,7 +86,7 @@ class CommandAnalyzeDryRunTest {
         return printed.lines().filter { it.startsWith("mixcr ") }.map { it.split(" ") }
     }
 
-    /** Sample file lists are analyze's own bookkeeping, removed when its JVM exits */
+    /** Ignores the sample file lists. Analyze writes them for its own use and deletes them when its JVM exits. */
     private fun Path.filesWithExtension(extension: String) =
         listDirectoryEntries()
             .filter { it.extension == extension && !it.name.endsWith(".list.tsv") }
