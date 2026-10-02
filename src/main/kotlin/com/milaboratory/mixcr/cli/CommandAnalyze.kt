@@ -35,6 +35,7 @@ import com.milaboratory.mixcr.presets.FullSampleSheetParsed
 import com.milaboratory.mixcr.presets.MiXCRParamsBundle
 import com.milaboratory.mixcr.presets.MiXCRParamsSpec
 import com.milaboratory.mixcr.presets.MiXCRPipeline
+import com.milaboratory.util.K_PRETTY_OM
 import com.milaboratory.util.K_YAML_OM
 import com.milaboratory.util.TempFileManager
 import com.milaboratory.util.PathPatternExpandException
@@ -229,6 +230,14 @@ object CommandAnalyze {
         private var dryRun: Boolean = false
 
         @Option(
+            description = ["Same as --dry-run, and also write the steps to the specified JSON file."],
+            names = ["--dry-run-json"],
+            paramLabel = "<steps.json>",
+            hidden = true
+        )
+        private var dryRunJson: Path? = null
+
+        @Option(
             description = ["Write intermediate files to the specified folder instead of next to the " +
                     "output files, creating it if needed. Intermediates are the step outputs that " +
                     "later steps read: the .mic and .vdjca files, and any .clns/.clna produced " +
@@ -388,9 +397,28 @@ object CommandAnalyze {
                 if (dir.exists() && !dir.isDirectory())
                     throw ValidationException("--intermediates-dir is not a folder: $dir")
             }
+
+            dryRunJson?.let { file ->
+                // The temp folder is removed when the dry run exits, so the written steps could not run
+                if (intermediatesInTemp)
+                    throw ValidationException("--dry-run-json can't be used with --intermediates-in-temp. Use --intermediates-dir.")
+                // The written steps carry no removal of intermediates
+                if (removeIntermediates)
+                    throw ValidationException("--dry-run-json can't be used with --remove-intermediates.")
+                // Per-sample outputs get their names at run time, so the written steps could not name them
+                if (inputSampleSheet != null)
+                    throw ValidationException("--dry-run-json can't be used with sample sheet input.")
+                if (file.exists())
+                    throw ValidationException("--dry-run-json file already exists: $file")
+                val parent = file.toAbsolutePath().parent
+                if (parent != null && !parent.isDirectory())
+                    throw ValidationException("--dry-run-json folder does not exist: $parent")
+            }
         }
 
         override fun run0() {
+            val planOnly = dryRun || dryRunJson != null
+
             // Calculating output folder and output file suffix
             val outputIsFolder = outSuffix.endsWith(File.separator)
             val outputPath = Path(outSuffix)
@@ -517,7 +545,12 @@ object CommandAnalyze {
                 // choice to make.
                 val mitoolPresetPath = (intermediatesFolder ?: outputFolder)
                     .resolve("${outputNamePrefix.dotAfterIfNotBlank()}MiTool.preset.yaml")
-                mitoolPresetPath.toFile().deleteOnExit()
+                // The written steps read the preset file, so it is kept and never overwritten
+                if (dryRunJson != null) {
+                    if (mitoolPresetPath.exists())
+                        throw ValidationException("--dry-run-json preset file already exists: $mitoolPresetPath")
+                } else
+                    mitoolPresetPath.toFile().deleteOnExit()
                 K_YAML_OM.writeValue(mitoolPresetPath.toFile(), mitoolPreset)
 
                 // Adding an option to save output files by parse
@@ -534,9 +567,12 @@ object CommandAnalyze {
                     }
                 }
 
-                planBuilder.executeSteps(dryRun)
+                planBuilder.executeSteps(planOnly)
                 // Taking into account that there are multiple outputs from the mitool parse command.
-                planBuilder.setActualOutputs(parse, sampleFileList.toPath())
+                // A dry run writes no list. The next steps use the planned names. These are the names
+                // that parse writes, unless parse splits the reads by sample.
+                if (!planOnly)
+                    planBuilder.setActualOutputs(parse, sampleFileList.toPath())
 
                 pipeline
                     .drop(1) // without parse
@@ -556,7 +592,7 @@ object CommandAnalyze {
             planBuilder.addStep(align) { _, _, sampleName ->
                 buildList {
                     this += listOf("--preset", presetName)
-                    if (bundle.align!!.splitBySample && !dryRun) {
+                    if (bundle.align!!.splitBySample && !planOnly) {
                         // Adding an option to save output files by align
                         val sampleFileList = (intermediatesFolder ?: outputFolder)
                             .resolve("${outputNamePrefix.dotAfterIfNotBlank()}${sampleName.dotAfterIfNotBlank()}align.list.tsv")
@@ -582,7 +618,7 @@ object CommandAnalyze {
                 }
             }
 
-            planBuilder.executeSteps(dryRun)
+            planBuilder.executeSteps(planOnly)
 
             // Taking into account that there are multiple outputs from the align command.
             // Even so, mitool could split into several files and then align could split each too
@@ -639,7 +675,14 @@ object CommandAnalyze {
                 }
 
             // Executing all actions after align
-            planBuilder.executeSteps(dryRun)
+            planBuilder.executeSteps(planOnly)
+
+            dryRunJson?.let { file ->
+                // The dry run itself may have written a file here, e.g. the MiTool preset
+                if (file.exists())
+                    throw ValidationException("--dry-run-json file already exists: $file")
+                K_PRETTY_OM.writeValue(file.toFile(), DryRunSteps(steps = planBuilder.printedSteps))
+            }
 
             println("Analysis finished successfully.")
 
@@ -743,10 +786,14 @@ object CommandAnalyze {
                 }
             }
 
+            /** The arguments to mixcr of every step that a dry run printed, in run order */
+            val printedSteps = mutableListOf<List<String>>()
+
             fun executeSteps(dryRun: Boolean) {
                 if (dryRun) {
                     // Printing commands that would have been executed
                     executionPlan.forEach { pe -> println(pe) }
+                    printedSteps += executionPlan.map { it.command.split(" ") + it.args }
                 } else {
                     // A file is freed after the last step of this batch that reads it, so one that an
                     // export or QC step still reads outlives the production step that consumed it.
@@ -946,5 +993,11 @@ object CommandAnalyze {
             val args get() = arguments + extraArgs + inputs + output
             override fun toString() = (listOf("mixcr") + command.split(" ") + args).joinToString(" ")
         }
+
+        /**
+         * The file that `analyze --dry-run-json` writes. Each step is the printed line without the
+         * leading `mixcr`. [formatVersion] changes when the shape changes in an incompatible way.
+         */
+        data class DryRunSteps(val formatVersion: Int = 1, val steps: List<List<String>>)
     }
 }
