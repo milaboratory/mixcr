@@ -536,7 +536,10 @@ object CommandAnalyze {
 
                 planBuilder.executeSteps(dryRun)
                 // Taking into account that there are multiple outputs from the mitool parse command.
-                planBuilder.setActualOutputs(parse, sampleFileList.toPath())
+                // A dry run writes no list. The next steps use the planned names. These are the names
+                // that parse writes, unless parse splits the reads by sample.
+                if (!dryRun)
+                    planBuilder.setActualOutputs(parse, sampleFileList.toPath())
 
                 pipeline
                     .drop(1) // without parse
