@@ -51,6 +51,22 @@ public class RunMiXCRTest {
         }
     }
 
+    @Test
+    public void alignEstimatesAssembleInitialClones() throws Exception {
+        RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
+                RunMiXCR.class.getResource("/sequences/sample_IGH_R1.fastq").getFile(),
+                RunMiXCR.class.getResource("/sequences/sample_IGH_R2.fastq").getFile());
+
+        RunMiXCR.AlignResult align = RunMiXCR.align(params);
+        RunMiXCR.AssembleResult assemble = RunMiXCR.assemble(align);
+
+        // Each HyperLogLog register collision costs one; at ~100 clones expect 0 to 2.
+        long expected = assemble.report.initialClonesCreated;
+        long estimate = align.report.estimatedInitialClones;
+        Assert.assertTrue(expected > 10);
+        Assert.assertTrue("estimate " + estimate + ", assemble " + expected, Math.abs(estimate - expected) <= 2);
+    }
+
     // @Test
     // public void testIO() throws Exception {
     //     RunMiXCR.RunMiXCRAnalysis params = new RunMiXCR.RunMiXCRAnalysis(
