@@ -29,6 +29,8 @@ properties:
     type: object
   date:
     type: string
+  estimatedInitialClones:
+    type: integer
   executionTimeMillis:
     type: integer
   inputFiles:
