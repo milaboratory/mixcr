@@ -1310,6 +1310,11 @@ object CommandAlign {
             reportBuilder.setInputFiles(inputFiles)
             reportBuilder.setOutputFiles(outputFiles)
             reportBuilder.commandLine = commandLineArguments
+            // Mixins are already applied, so --assemble-clonotypes-by and --split-clones-by are
+            // folded in. A bundle with no assemble step carries no estimate.
+            bpPair.first.assemble?.cloneAssemblerParameters?.let {
+                reportBuilder.setClonotypeEstimationParameters(it)
+            }
 
             // Attaching report to aligner
             aligner.setEventsListener(reportBuilder)

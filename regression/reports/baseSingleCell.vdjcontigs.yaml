@@ -71,6 +71,7 @@ align:
     CDR2_TO_FR4: 29710
     FR3_TO_FR4: 29713
     CDR3: 29910
+  estimatedInitialClones: 77
 assemble:
   type: assemblerReport
   commandLine: assemble -f --report baseSingleCell.vdjcontigs.assemble.report.txt

@@ -904,6 +904,7 @@ upstreams:
         CDR2_TO_FR4: 49350
         FR3_TO_FR4: 49344
         CDR3: 49134
+      estimatedInitialClones: 1392
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p02_Bmem_1_CGTACTAG-AAGGAGTA_L00M.vdjca
@@ -1809,6 +1810,7 @@ upstreams:
         CDR2_TO_FR4: 29009
         FR3_TO_FR4: 29009
         CDR3: 28953
+      estimatedInitialClones: 175
     assemble:
       type: assemblerReport
       commandLine: assemble align_corrected/MRK_p03_Bmem_1_TCCTGAGC-GTAAGGAG_L00M.vdjca
