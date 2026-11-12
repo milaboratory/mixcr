@@ -48,7 +48,7 @@ jobs:
       test-integration-cache-paths: |
         ./src/test/resources/sequences/big/**
       test-integration-cache-key: 'tests-sequences-v1'
-      test-integration-python-version: '3.9'
+      test-integration-python-version: '3.12'
 
       test-regression: true
       test-regression-before-tasks: shadowJarAfterObfuscation
