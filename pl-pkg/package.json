@@ -15,7 +15,7 @@
             "registry": "milaboratories",
             "name": "milaboratories/mixcr",
             "type": "java",
-            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.13.1.2",
             "root": "./dld/mixcr/"
           },
           "cmd": [
@@ -48,7 +48,7 @@
             "registry": "milaboratories",
             "name": "milaboratories/mixcr",
             "type": "java",
-            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.13.1.2",
             "root": "./dld/mixcr/"
           },
           "cmd": [
@@ -77,7 +77,7 @@
             "registry": "milaboratories",
             "name": "milaboratories/mixcr",
             "type": "java",
-            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.2.13.1",
+            "environment": "@platforma-open/milaboratories.runenv-java-corretto:21.0.13.1.2",
             "root": "./dld/mixcr/"
           },
           "cmd": [
@@ -116,7 +116,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@platforma-sdk/package-builder": "^3.15.0",
-    "@platforma-open/milaboratories.runenv-java-corretto": "^1.1.5",
+    "@platforma-open/milaboratories.runenv-java-corretto": "^1.2.0",
     "unzipper": "^0.12.3"
   }
 }
